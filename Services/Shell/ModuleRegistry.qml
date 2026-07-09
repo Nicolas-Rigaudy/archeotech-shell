@@ -7,7 +7,7 @@ import "../Persistence" as Persistence
 //
 // Scans two roots for self-describing modules (each a folder with a
 // `module.json` + entry QML):
-//   ~/.config/quickshell/modules/        — repo-tracked / bundled modules
+//   <shell dir>/modules/                 — bundled modules (ship with the shell)
 //   ~/.local/share/archeotech/modules/   — user-installed modules
 //
 // A module is referenced from shell-config.json by `plugin:<id>` (matching
@@ -24,6 +24,10 @@ import "../Persistence" as Persistence
 //   canLiveIn ∈ { "bar-zone", "strip-icon", "panel-content", "desktop-widget" }
 QtObject {
     id: root
+
+    // The shell's own bundled modules dir, resolved relative to this file so it
+    // works under any `qs -c <name>` location (not the hardcoded default config).
+    readonly property string _bundledDir: Qt.resolvedUrl("../../modules").toString().replace(/^file:\/\//, "")
 
     // Discovered modules: array of the parsed manifest objects, each with an
     // extra `dir` (absolute, trailing slash) injected by the scan.
@@ -98,7 +102,7 @@ QtObject {
             "[ -f \"$m\" ] || continue; " +
             "jq -c --arg dir \"$d\" '{dir:$dir, id, name, author, version, canLiveIn, entry, icon, defaultSize, panel, configSchema, verified, description}' \"$m\" 2>/dev/null; " +
             "done; }; " +
-            "scan \"$HOME/.config/quickshell/modules\"; " +
+            "scan \"" + root._bundledDir + "\"; " +
             "scan \"$HOME/.local/share/archeotech/modules\""
         ]
 

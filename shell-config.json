@@ -163,5 +163,5 @@
   },
   "outerGap": 6,
   "perScreen": {},
-  "$schema": "Sprint 17 — Unified Shell Surface. See .claude/ROADMAP.md §17 for the locked architecture."
+  "$schema": "Archeotech shell layout — `sides` maps each screen edge to a bar/strip and its widget content; `corners`/`outerGap` shape the frame; `perScreen` holds per-monitor overrides. Default layout; your live copy lives at ~/.config/archeotech/shell-config.json."
 }
