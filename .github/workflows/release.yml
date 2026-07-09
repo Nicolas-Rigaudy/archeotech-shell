@@ -1,0 +1,32 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build source tarball
+        run: |
+          ver="${GITHUB_REF_NAME}"
+          git archive --format=tar.gz --prefix="archeotech-${ver}/" \
+            -o "archeotech-${ver}.tar.gz" HEAD
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            "archeotech-${GITHUB_REF_NAME}.tar.gz" \
+            --title "Archeotech ${GITHUB_REF_NAME}" \
+            --generate-notes

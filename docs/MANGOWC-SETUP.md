@@ -55,16 +55,21 @@ sudo pacman -S waybar rofi-wayland dunst \
     networkmanager nm-applet
 ```
 
-### 3. Deploy Dotfiles
+### 3. Install the shell
 
 ```bash
-# Clone this repository
-git clone https://github.com/YOUR_USERNAME/archeotech-dotfiles.git ~/Projects/archeotech-dotfiles
+# Clone the shell
+git clone https://github.com/Nicolas-Rigaudy/archeotech-shell.git ~/Projects/archeotech-shell
 
-# Deploy configs using GNU Stow
-cd ~/Projects/archeotech-dotfiles
+# Wire it into place (symlinks the shell, themes, assets, scripts)
+cd ~/Projects/archeotech-shell
 ./scripts/install.sh
 ```
+
+Then add the required MangoWC rules + keybinds from
+[`examples/mangowc.conf.example`](../examples/mangowc.conf.example) to your
+`~/.config/mango/config.conf`, and launch with `qs -c archeotech`.
+See [INSTALL.md](INSTALL.md) for the full flow.
 
 ---
 
@@ -174,7 +179,11 @@ MangoWC supports multiple layout modes:
 
 ## Troubleshooting
 
-See [.claude/TROUBLESHOOTING.md](../.claude/TROUBLESHOOTING.md) for the full MangoWC troubleshooting section covering: XF86 media keys, touchpad scroll, `spawn_shell` vs `spawn`, screen sharing portals, swaync blur, and more.
+Common MangoWC gotchas: use `spawn_shell` (not `spawn`) for binds that need a
+shell (`&&`, pipes, `$(...)`); XF86 media keys need explicit binds (see the
+examples); screen sharing requires `xdg-desktop-portal-wlr` (wlroots), not the
+Hyprland portal; and layer blur is disabled globally (`blur_layer=0`) — the shell
+fakes glass with high-opacity panels.
 
 ---
 
@@ -219,6 +228,5 @@ monitorrule=name:DP-.*,x:1920,y:60,scale:1,rr:0
 
 ---
 
-**Last Updated:** 2025-12-08
-**For:** archeotech-dotfiles
+**For:** archeotech-shell
 **Compositor:** MangoWC (wlroots-based)
