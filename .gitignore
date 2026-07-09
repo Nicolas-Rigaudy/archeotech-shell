@@ -1,0 +1,16 @@
+# Claude Code / assistant artifacts — never in the public repo
+.claude/
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Editor / OS
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Runtime state that must never be committed (user-generated)
+theme.lock

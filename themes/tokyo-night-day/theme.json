@@ -1,0 +1,75 @@
+{
+  "name": "tokyo-night-day",
+  "family": "tokyo-night",
+  "flavor": "day",
+  "mode": "light",
+  "accent": "mauve",
+  "colors": {
+    "base": "#e1e2e7",
+    "mantle": "#d5d6db",
+    "crust": "#c4c8da",
+    "surface0": "#c4c8da",
+    "surface1": "#b7bbce",
+    "surface2": "#a8aecb",
+    "text": "#3760bf",
+    "subtext1": "#6172b0",
+    "subtext0": "#6172b0",
+    "overlay2": "#848cb5",
+    "overlay1": "#9aa0c4",
+    "overlay0": "#a8aecb",
+    "mauve": "#9854f1",
+    "blue": "#2e7de9",
+    "sapphire": "#007197",
+    "sky": "#007197",
+    "teal": "#118c74",
+    "green": "#587539",
+    "yellow": "#8c6c3e",
+    "peach": "#b15c00",
+    "maroon": "#f52a65",
+    "red": "#f52a65",
+    "pink": "#d4006a",
+    "flamingo": "#b15c00",
+    "rosewater": "#3760bf",
+    "lavender": "#7847bd"
+  },
+  "mango": {
+    "shadowscolor": "0x00000033",
+    "shadows_size": 20,
+    "bordercolor": "0xa8aecbff",
+    "focuscolor": "0x9854f1ff",
+    "urgentcolor": "0xf52a65ff"
+  },
+  "kitty": {
+    "theme": "tokyo-night-day"
+  },
+  "rofi": {
+    "bg": "#d5d6db",
+    "bg_alt": "#c4c8da",
+    "fg": "#3760bf",
+    "fg_alt": "#6172b0",
+    "border": "#9854f1",
+    "selected": "#b7bbce",
+    "urgent": "#f52a65"
+  },
+  "gtk": {
+    "theme": "Adwaita",
+    "icon": "Papirus-Light",
+    "cursor": "catppuccin-macchiato-mauve-cursors"
+  },
+  "vscode": {
+    "theme": "Tokyo Night Light",
+    "icon": "catppuccin-latte"
+  },
+  "obsidian": {
+    "css_theme": "Tokyo Night"
+  },
+  "card": {
+    "display": "Day",
+    "accents": [
+      "#9854f1",
+      "#2e7de9",
+      "#587539",
+      "#8c6c3e"
+    ]
+  }
+}

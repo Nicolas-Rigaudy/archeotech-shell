@@ -1,0 +1,75 @@
+{
+  "name": "archeotech-latte",
+  "family": "catppuccin",
+  "flavor": "latte",
+  "mode": "light",
+  "colors": {
+    "base": "#eff1f5",
+    "mantle": "#e6e9ef",
+    "crust": "#dce0e8",
+    "surface0": "#ccd0da",
+    "surface1": "#bcc0cc",
+    "surface2": "#acb0be",
+    "text": "#4c4f69",
+    "subtext1": "#5c5f77",
+    "subtext0": "#6c6f85",
+    "overlay2": "#7c7f93",
+    "overlay1": "#8c8fa1",
+    "overlay0": "#9ca0b0",
+    "mauve": "#8839ef",
+    "blue": "#1e66f5",
+    "sapphire": "#209fb5",
+    "sky": "#04a5e5",
+    "teal": "#179299",
+    "green": "#40a02b",
+    "yellow": "#df8e1d",
+    "peach": "#fe640b",
+    "maroon": "#e64553",
+    "red": "#d20f39",
+    "pink": "#ea76cb",
+    "flamingo": "#dd7878",
+    "rosewater": "#dc8a78",
+    "lavender": "#7287fd"
+  },
+  "mango": {
+    "shadowscolor": "0x00000033",
+    "shadows_size": 20,
+    "bordercolor": "0x9ca0b0ff",
+    "focuscolor": "0x8839efff",
+    "urgentcolor": "0xd20f39ff"
+  },
+  "kitty": {
+    "theme": "latte"
+  },
+  "rofi": {
+    "bg": "#e6e9ef",
+    "bg_alt": "#ccd0da",
+    "fg": "#4c4f69",
+    "fg_alt": "#5c5f77",
+    "border": "#8839ef",
+    "selected": "#bcc0cc",
+    "urgent": "#d20f39"
+  },
+  "gtk": {
+    "theme": "catppuccin-latte-mauve-standard+default",
+    "icon": "Papirus-Light",
+    "cursor": "catppuccin-latte-mauve-cursors"
+  },
+  "vscode": {
+    "theme": "Catppuccin Latte",
+    "icon": "catppuccin-latte"
+  },
+  "obsidian": {
+    "css_theme": "AnuPpuccin"
+  },
+  "card": {
+    "display": "Latte",
+    "accents": [
+      "#8839ef",
+      "#1e66f5",
+      "#40a02b",
+      "#df8e1d"
+    ]
+  },
+  "accent": "mauve"
+}

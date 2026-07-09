@@ -1,0 +1,11 @@
+{
+  "id": "hello",
+  "name": "Hello",
+  "author": "archeotech",
+  "version": "1.0.0",
+  "canLiveIn": ["bar-zone"],
+  "entry": "Hello.qml",
+  "icon": "󰜗",
+  "defaultSize": { "width": 0, "height": 0 },
+  "configSchema": {}
+}

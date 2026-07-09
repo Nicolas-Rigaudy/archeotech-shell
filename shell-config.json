@@ -1,0 +1,167 @@
+{
+  "sides": {
+    "top": {
+      "type": "bar",
+      "size": 30,
+      "content": [
+        {
+          "id": "workspaces",
+          "config": {},
+          "align": "left"
+        },
+        {
+          "id": "title",
+          "config": {},
+          "align": "left"
+        },
+        {
+          "id": "media",
+          "config": {},
+          "align": "left"
+        },
+        {
+          "id": "clock",
+          "config": {},
+          "align": "center"
+        },
+        {
+          "id": "dashboard",
+          "config": {},
+          "align": "center"
+        },
+        {
+          "id": "mic",
+          "config": {},
+          "align": "right"
+        },
+        {
+          "id": "volume",
+          "config": {},
+          "align": "right"
+        },
+        {
+          "id": "brightness",
+          "config": {},
+          "align": "right"
+        },
+        {
+          "id": "network",
+          "config": {},
+          "align": "right"
+        },
+        {
+          "id": "bluetooth",
+          "config": {},
+          "align": "right"
+        },
+        {
+          "id": "battery",
+          "config": {},
+          "align": "right"
+        },
+        {
+          "id": "notifications",
+          "config": {},
+          "align": "right"
+        },
+        {
+          "id": "settings",
+          "config": {},
+          "align": "right"
+        },
+        {
+          "id": "power",
+          "config": {},
+          "align": "right"
+        }
+      ]
+    },
+    "right": {
+      "type": "strip",
+      "size": 10,
+      "expanded": 240,
+      "content": [
+        {
+          "id": "notifications",
+          "config": {},
+          "align": "right"
+        },
+        {
+          "id": "settings",
+          "config": {},
+          "align": "right"
+        },
+        {
+          "id": "panel-opener",
+          "config": {
+            "panelId": "dashboard"
+          },
+          "align": "right"
+        },
+        {
+          "id": "panel-opener",
+          "config": {
+            "panelId": "media"
+          },
+          "align": "right"
+        },
+        {
+          "id": "nc",
+          "config": {},
+          "align": ""
+        },
+        {
+          "id": "settings",
+          "config": {},
+          "align": ""
+        }
+      ]
+    },
+    "bottom": {
+      "type": "strip",
+      "size": 10,
+      "expanded": 240,
+      "content": [
+        {
+          "id": "dashboard",
+          "config": {},
+          "align": ""
+        },
+        {
+          "id": "media",
+          "config": {},
+          "align": ""
+        },
+        {
+          "id": "wallpaper",
+          "config": {},
+          "align": ""
+        }
+      ]
+    },
+    "left": {
+      "type": "strip",
+      "size": 10,
+      "expanded": 240,
+      "content": [
+        {
+          "id": "launcher",
+          "config": {},
+          "align": ""
+        },
+        {
+          "id": "settings",
+          "config": {},
+          "align": ""
+        }
+      ]
+    }
+  },
+  "corners": {
+    "radius": 12,
+    "pillMode": false
+  },
+  "outerGap": 6,
+  "perScreen": {},
+  "$schema": "Sprint 17 — Unified Shell Surface. See .claude/ROADMAP.md §17 for the locked architecture."
+}

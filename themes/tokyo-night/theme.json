@@ -1,0 +1,66 @@
+{
+  "name": "tokyo-night",
+  "colors": {
+    "base": "#1a1b26",
+    "mantle": "#16161e",
+    "crust": "#16161e",
+    "surface0": "#292e42",
+    "surface1": "#3b4261",
+    "surface2": "#414868",
+    "text": "#c0caf5",
+    "subtext1": "#a9b1d6",
+    "subtext0": "#a9b1d6",
+    "overlay2": "#737aa2",
+    "overlay1": "#565f89",
+    "overlay0": "#545c7e",
+    "mauve": "#bb9af7",
+    "blue": "#7aa2f7",
+    "sapphire": "#2ac3de",
+    "sky": "#7dcfff",
+    "teal": "#73daca",
+    "green": "#9ece6a",
+    "yellow": "#e0af68",
+    "peach": "#ff9e64",
+    "maroon": "#f7768e",
+    "red": "#f7768e",
+    "pink": "#ff007c",
+    "flamingo": "#ff9e64",
+    "rosewater": "#c0caf5",
+    "lavender": "#9d7cd8"
+  },
+  "mango": {
+    "shadowscolor": "0x00000066",
+    "shadows_size": 20,
+    "bordercolor": "0x414868ff",
+    "focuscolor": "0xbb9af7ff",
+    "urgentcolor": "0xf7768eff"
+  },
+  "kitty": {
+    "theme": "tokyo-night"
+  },
+  "rofi": {
+    "bg": "#16161e",
+    "bg_alt": "#292e42",
+    "fg": "#c0caf5",
+    "fg_alt": "#a9b1d6",
+    "border": "#bb9af7",
+    "selected": "#3b4261",
+    "urgent": "#f7768e"
+  },
+  "gtk": {
+    "theme": "Adwaita-dark",
+    "icon":  "Papirus-Dark",
+    "cursor":"catppuccin-macchiato-mauve-cursors"
+  },
+  "vscode": {
+    "theme": "Tokyo Night",
+    "icon":  "catppuccin-macchiato"
+  },
+  "obsidian": {
+    "css_theme": "Tokyo Night"
+  },
+  "card": {
+    "display": "Tokyo Night",
+    "accents": ["#bb9af7", "#7aa2f7", "#9ece6a", "#e0af68"]
+  }
+}

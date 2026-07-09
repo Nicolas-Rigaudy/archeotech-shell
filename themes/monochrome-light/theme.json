@@ -1,0 +1,75 @@
+{
+  "name": "monochrome-light",
+  "family": "monochrome",
+  "flavor": "light",
+  "mode": "light",
+  "accent": "mauve",
+  "colors": {
+    "base": "#f5f5f5",
+    "mantle": "#ececec",
+    "crust": "#e2e2e2",
+    "surface0": "#dcdcdc",
+    "surface1": "#d0d0d0",
+    "surface2": "#c4c4c4",
+    "text": "#1c1c1c",
+    "subtext1": "#303030",
+    "subtext0": "#484848",
+    "overlay2": "#686868",
+    "overlay1": "#808080",
+    "overlay0": "#989898",
+    "mauve": "#303030",
+    "blue": "#404040",
+    "sapphire": "#484848",
+    "sky": "#505050",
+    "teal": "#585858",
+    "green": "#383838",
+    "yellow": "#2c2c2c",
+    "peach": "#484848",
+    "maroon": "#6a6a6a",
+    "red": "#5a5a5a",
+    "pink": "#303030",
+    "flamingo": "#484848",
+    "rosewater": "#1c1c1c",
+    "lavender": "#383838"
+  },
+  "mango": {
+    "shadowscolor": "0x00000033",
+    "shadows_size": 20,
+    "bordercolor": "0x989898ff",
+    "focuscolor": "0x303030ff",
+    "urgentcolor": "0x5a5a5aff"
+  },
+  "kitty": {
+    "theme": "monochrome-light"
+  },
+  "rofi": {
+    "bg": "#ececec",
+    "bg_alt": "#dcdcdc",
+    "fg": "#1c1c1c",
+    "fg_alt": "#303030",
+    "border": "#303030",
+    "selected": "#d0d0d0",
+    "urgent": "#5a5a5a"
+  },
+  "gtk": {
+    "theme": "Adwaita",
+    "icon": "Papirus-Light",
+    "cursor": "catppuccin-macchiato-mauve-cursors"
+  },
+  "vscode": {
+    "theme": "Default Light Modern",
+    "icon": "catppuccin-latte"
+  },
+  "obsidian": {
+    "css_theme": ""
+  },
+  "card": {
+    "display": "Light",
+    "accents": [
+      "#303030",
+      "#404040",
+      "#383838",
+      "#2c2c2c"
+    ]
+  }
+}
