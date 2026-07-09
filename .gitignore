@@ -1,4 +1,4 @@
-# Claude Code / assistant artifacts — never in the public repo
+# Local assistant / editor tooling — never in the public repo
 .claude/
 
 # Python bytecode

@@ -62,6 +62,17 @@ else
     link "$REPO_DIR/wallpapers" "$ARCH_DIR/wallpapers"
 fi
 
+# ── Shell layout — seed the default only if absent (a COPY, not a symlink, so
+#    your edit-mode changes live in ~/.config and never dirty the repo clone) ──
+if [[ -e "$ARCH_DIR/shell-config.json" ]]; then
+    info "shell-config.json exists — leaving your layout untouched"
+elif [[ $DRY -eq 1 ]]; then
+    info "would seed $ARCH_DIR/shell-config.json (copy of the default layout)"
+else
+    cp "$REPO_DIR/shell-config.json" "$ARCH_DIR/shell-config.json"
+    ok "seeded $ARCH_DIR/shell-config.json (default layout)"
+fi
+
 # ── Shell scripts on PATH ─────────────────────────────────────────────────────
 LOCAL_SCRIPTS=(
     theme-switch.sh wallpaper-set.sh

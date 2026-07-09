@@ -336,7 +336,7 @@ QtObject {
     }
 
     property FileView _file: FileView {
-        path: StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.config/quickshell/shell-config.json"
+        path: StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.config/archeotech/shell-config.json"
         watchChanges: true
         preload: true
         printErrors: false
