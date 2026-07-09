@@ -83,7 +83,7 @@ MangoWC is a wlroots-based compositor, so it uses `xdg-desktop-portal-wlr` for s
 
 The dotfiles include portal configuration files that tell the system to use the correct backend:
 
-**[~/.config/xdg-desktop-portal/mangowc-portals.conf](../config/.config/xdg-desktop-portal/mangowc-portals.conf)**
+**`~/.config/xdg-desktop-portal/mangowc-portals.conf`**
 ```ini
 [preferred]
 # Screen sharing, screenshots, screen casting - use wlr backend
@@ -94,7 +94,7 @@ org.freedesktop.impl.portal.ScreenCast=wlr
 org.freedesktop.impl.portal.Screenshot=wlr
 ```
 
-**[~/.config/xdg-desktop-portal/portals.conf](../config/.config/xdg-desktop-portal/portals.conf)**
+**`~/.config/xdg-desktop-portal/portals.conf`**
 ```ini
 [preferred]
 # Default portal configuration
@@ -103,7 +103,7 @@ default=wlr;gtk
 
 ### Autostart Configuration
 
-The [autostart.sh](../config/.config/mango/autostart.sh) script automatically starts the desktop portals:
+A compositor autostart script (e.g. `~/.config/mango/autostart.sh`) should start the desktop portals:
 
 ```bash
 # Desktop portal for screen sharing (Teams, Zoom, etc.)
@@ -144,20 +144,18 @@ sleep 1
 
 ### Key Files
 
-- **[~/.config/mango/config.conf](../config/.config/mango/config.conf)** - Main MangoWC configuration
-- **[~/.config/mango/autostart.sh](../config/.config/mango/autostart.sh)** - Startup applications
-- **[~/.config/waybar/config-mango](../config/.config/waybar/config-mango)** - Waybar configuration
-- **[~/.config/waybar/style-mango.css](../config/.config/waybar/style-mango.css)** - Waybar styling
-- **[~/.config/swaylock/config](../config/.config/swaylock/config)** - Lock screen
-- **[~/.config/swayidle/config.sh](../config/.config/swayidle/config.sh)** - Idle management
-- **[~/.config/swaync/config.json](../config/.config/swaync/config.json)** - Notification center config
-- **[~/.config/swaync/style.css](../config/.config/swaync/style.css)** - Notification center Catppuccin theme
+The shell only requires a small set of MangoWC settings — the `blur_layer=0` rule,
+the `qs -c archeotech` launcher, and the IPC keybinds — all in
+[`examples/mangowc.conf.example`](../examples/mangowc.conf.example). Everything else
+(`~/.config/mango/config.conf`, `autostart.sh`, lock/idle/notification daemons, etc.)
+is your own compositor setup, not part of the shell. See the author's personal
+[dotfiles](https://github.com/Nicolas-Rigaudy/archeotech-dotfiles) for a full
+reference configuration.
 
 ### Keybinds
 
-See [KEYBINDS-MANGO.md](KEYBINDS-MANGO.md) for complete keybind reference.
-
-Quick reference:
+The shell's own IPC keybinds (open/toggle panels, OSD) are in
+[`examples/mangowc.conf.example`](../examples/mangowc.conf.example). A quick reference:
 - `Super + Q` - Terminal
 - `Super + R` - App launcher
 - `Super + C` - Close window
