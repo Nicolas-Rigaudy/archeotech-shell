@@ -78,7 +78,7 @@ ok "Done."
 echo
 echo "Next steps:"
 echo "  1. Add the required compositor rules + keybinds — see examples/ and"
-echo "     docs/MANGOWC-SETUP.md (blur_layer=0, archeotech-drawer rules, and"
+echo "     docs/MANGOWC-SETUP.md (blur_layer=0, the shell layer rules, and"
 echo "     'qs -c archeotech' launch + IPC binds)."
 echo "  2. Launch:  qs -c archeotech"
 echo "  3. Ensure ~/.local/bin is on your PATH."
