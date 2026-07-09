@@ -1,0 +1,66 @@
+{
+  "name": "gruvbox",
+  "colors": {
+    "base": "#282828",
+    "mantle": "#1d2021",
+    "crust": "#1d2021",
+    "surface0": "#3c3836",
+    "surface1": "#504945",
+    "surface2": "#665c54",
+    "text": "#ebdbb2",
+    "subtext1": "#d5c4a1",
+    "subtext0": "#bdae93",
+    "overlay2": "#7c6f64",
+    "overlay1": "#928374",
+    "overlay0": "#a89984",
+    "mauve": "#fabd2f",
+    "blue": "#83a598",
+    "sapphire": "#83a598",
+    "sky": "#8ec07c",
+    "teal": "#689d6a",
+    "green": "#b8bb26",
+    "yellow": "#fabd2f",
+    "peach": "#fe8019",
+    "maroon": "#fb4934",
+    "red": "#fb4934",
+    "pink": "#d3869b",
+    "flamingo": "#fe8019",
+    "rosewater": "#fbf1c7",
+    "lavender": "#d3869b"
+  },
+  "mango": {
+    "shadowscolor": "0x00000066",
+    "shadows_size": 20,
+    "bordercolor": "0x665c54ff",
+    "focuscolor": "0xfabd2fff",
+    "urgentcolor": "0xfb4934ff"
+  },
+  "kitty": {
+    "theme": "gruvbox"
+  },
+  "rofi": {
+    "bg": "#1d2021",
+    "bg_alt": "#3c3836",
+    "fg": "#ebdbb2",
+    "fg_alt": "#d5c4a1",
+    "border": "#fabd2f",
+    "selected": "#504945",
+    "urgent": "#fb4934"
+  },
+  "gtk": {
+    "theme": "Adwaita-dark",
+    "icon":  "Papirus-Dark",
+    "cursor":"catppuccin-macchiato-mauve-cursors"
+  },
+  "vscode": {
+    "theme": "Gruvbox Dark Hard",
+    "icon":  "catppuccin-macchiato"
+  },
+  "obsidian": {
+    "css_theme": "Gruvbox"
+  },
+  "card": {
+    "display": "Gruvbox",
+    "accents": ["#fabd2f", "#83a598", "#b8bb26", "#fb4934"]
+  }
+}

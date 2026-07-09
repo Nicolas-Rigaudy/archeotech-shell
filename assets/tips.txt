@@ -1,0 +1,42 @@
+zoxide: `z proj` jumps to the most visited directory matching "proj" — no need to type the full path
+fish: `Ctrl+R` opens a fuzzy history search powered by fzf — start typing any part of a past command
+fzf: pipe any list into `fzf` for instant fuzzy filtering — try `ls | fzf` or `ps aux | fzf`
+lazygit: press `s` on a file in the diff view to stage individual hunks with a visual diff
+yazi: press `f` in yazi to fuzzy-jump to any file in the current tree
+kitty: `Ctrl+Shift+T` opens a new tab; `Ctrl+Shift+←/→` switches tabs without touching the mouse
+kitty: `Ctrl+Shift+Enter` splits the current window horizontally in kitty
+navi: `Ctrl+G` in the terminal opens navi's interactive cheatsheet search from anywhere
+btop: press `F2` in btop to open the options menu and change refresh rate or color theme
+git: `git stash -u` stashes everything including untracked files — safer than `git stash`
+git: `git log --oneline --graph --all` shows the full branch graph in one compact view
+git: `git diff --staged` shows only what's in the index — good sanity check before committing
+git: `git commit --fixup <hash>` + `git rebase -i --autosquash` for clean fixup commits
+lazygit: press `e` on a commit in the log view to reword it without leaving lazygit
+VSCode: `Ctrl+Shift+P` → "Git: Checkout to" switches branch without the terminal
+VSCode: `Ctrl+K Ctrl+S` opens the keyboard shortcuts editor — searchable, reassignable
+Obsidian: `[[` starts a wikilink — type to search all notes, `Enter` creates a new one if missing
+Obsidian: `Ctrl+O` opens the Quick Switcher — fastest way to jump between notes
+fish: `Alt+←/→` moves the cursor word by word; `Alt+Backspace` deletes the last word
+fish: `Alt+S` prepends `sudo` to the current command line without retyping
+fish: `Ctrl+Alt+F` fuzzy-completes the current path argument using fzf integration
+paru: `paru -Qu` lists all upgradable AUR and repo packages with their new versions
+paru: `paru -G <pkg>` clones the PKGBUILD for inspection before installing
+ssh: `ssh -L 8080:localhost:8080 server` forwards a remote port to your local machine
+tmux (if used): `Ctrl+B [` enters scroll/copy mode — use vim keys to navigate
+ripgrep: `rg -t py 'import'` restricts search to Python files — faster than grep -r
+fd: `fd -e rs` finds all Rust files recursively — cleaner syntax than `find . -name "*.rs"`
+cliphist: `Super+V` (if wired) opens clipboard history — find anything you copied today
+awww: wallpaper transitions are GPU-accelerated — no performance hit on rapid theme switches
+MangoWC: `Super+Shift+Space` toggles floating mode on the focused window
+MangoWC: you can assign a window to multiple tags simultaneously — it appears on all of them
+MangoWC: `Super+←/→/↑/↓` moves focus across the tiling grid without the mouse
+starship: the prompt shows git branch and dirty state — no `git status` needed to know where you are
+quickshell: `qs ipc call <target> <fn>` can drive any IPC handler from any script or keybind
+rofi: `Ctrl+H` while in rofi shows a shortcut reference for the current mode
+Zen Browser: `Ctrl+Shift+L` pins/unpins the current tab to the sidebar
+wl-clipboard: `wl-copy < file.txt` copies file contents; `wl-paste > out.txt` dumps clipboard
+grim + slurp: `grim -g "$(slurp)" - | wl-copy` captures a region directly to clipboard
+bat: `bat --plain file.txt` disables line numbers and paging — good for piping
+eza: `eza -la --git` shows git status flags next to each file in the listing
+delta: add `pager = delta` to ~/.gitconfig for syntax-highlighted diffs everywhere
+jq: `jq '.[0]'` extracts the first element — `jq '.[] | select(.active)'` filters arrays

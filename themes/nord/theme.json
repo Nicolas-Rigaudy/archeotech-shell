@@ -1,0 +1,66 @@
+{
+  "name": "nord",
+  "colors": {
+    "base": "#2e3440",
+    "mantle": "#2e3440",
+    "crust": "#2e3440",
+    "surface0": "#3b4252",
+    "surface1": "#434c5e",
+    "surface2": "#4c566a",
+    "text": "#eceff4",
+    "subtext1": "#e5e9f0",
+    "subtext0": "#d8dee9",
+    "overlay2": "#4c566a",
+    "overlay1": "#434c5e",
+    "overlay0": "#3b4252",
+    "mauve": "#88c0d0",
+    "blue": "#5e81ac",
+    "sapphire": "#81a1c1",
+    "sky": "#88c0d0",
+    "teal": "#8fbcbb",
+    "green": "#a3be8c",
+    "yellow": "#ebcb8b",
+    "peach": "#d08770",
+    "maroon": "#bf616a",
+    "red": "#bf616a",
+    "pink": "#b48ead",
+    "flamingo": "#d08770",
+    "rosewater": "#eceff4",
+    "lavender": "#81a1c1"
+  },
+  "mango": {
+    "shadowscolor": "0x00000066",
+    "shadows_size": 20,
+    "bordercolor": "0x4c566aff",
+    "focuscolor": "0x88c0d0ff",
+    "urgentcolor": "0xbf616aff"
+  },
+  "kitty": {
+    "theme": "nord"
+  },
+  "rofi": {
+    "bg": "#2e3440",
+    "bg_alt": "#3b4252",
+    "fg": "#eceff4",
+    "fg_alt": "#d8dee9",
+    "border": "#88c0d0",
+    "selected": "#434c5e",
+    "urgent": "#bf616a"
+  },
+  "gtk": {
+    "theme": "Adwaita-dark",
+    "icon":  "Papirus-Dark",
+    "cursor":"catppuccin-macchiato-mauve-cursors"
+  },
+  "vscode": {
+    "theme": "Nord",
+    "icon":  "catppuccin-macchiato"
+  },
+  "obsidian": {
+    "css_theme": "Nord"
+  },
+  "card": {
+    "display": "Nord",
+    "accents": ["#88c0d0", "#5e81ac", "#a3be8c", "#ebcb8b"]
+  }
+}

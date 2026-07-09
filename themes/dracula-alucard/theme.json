@@ -1,0 +1,75 @@
+{
+  "name": "dracula-alucard",
+  "family": "dracula",
+  "flavor": "alucard",
+  "mode": "light",
+  "accent": "mauve",
+  "colors": {
+    "base": "#fffbeb",
+    "mantle": "#f2eed9",
+    "crust": "#e8e4cf",
+    "surface0": "#cfcfde",
+    "surface1": "#c0c0d0",
+    "surface2": "#b0b0c2",
+    "text": "#1f1f1f",
+    "subtext1": "#3a3a3a",
+    "subtext0": "#555548",
+    "overlay2": "#6c664b",
+    "overlay1": "#847e63",
+    "overlay0": "#9b957a",
+    "mauve": "#644ac9",
+    "blue": "#644ac9",
+    "sapphire": "#036a96",
+    "sky": "#036a96",
+    "teal": "#14710a",
+    "green": "#14710a",
+    "yellow": "#846e15",
+    "peach": "#a34d14",
+    "maroon": "#cb3a2a",
+    "red": "#cb3a2a",
+    "pink": "#a3144d",
+    "flamingo": "#a34d14",
+    "rosewater": "#1f1f1f",
+    "lavender": "#644ac9"
+  },
+  "mango": {
+    "shadowscolor": "0x00000033",
+    "shadows_size": 20,
+    "bordercolor": "0x9b957aff",
+    "focuscolor": "0x644ac9ff",
+    "urgentcolor": "0xcb3a2aff"
+  },
+  "kitty": {
+    "theme": "alucard"
+  },
+  "rofi": {
+    "bg": "#f2eed9",
+    "bg_alt": "#cfcfde",
+    "fg": "#1f1f1f",
+    "fg_alt": "#3a3a3a",
+    "border": "#644ac9",
+    "selected": "#c0c0d0",
+    "urgent": "#cb3a2a"
+  },
+  "gtk": {
+    "theme": "Adwaita",
+    "icon": "Papirus-Light",
+    "cursor": "catppuccin-macchiato-mauve-cursors"
+  },
+  "vscode": {
+    "theme": "Default Light Modern",
+    "icon": "catppuccin-latte"
+  },
+  "obsidian": {
+    "css_theme": "Dracula"
+  },
+  "card": {
+    "display": "Alucard",
+    "accents": [
+      "#644ac9",
+      "#644ac9",
+      "#14710a",
+      "#846e15"
+    ]
+  }
+}

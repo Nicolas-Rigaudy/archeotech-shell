@@ -1,0 +1,66 @@
+{
+  "name": "dracula",
+  "colors": {
+    "base": "#282a36",
+    "mantle": "#21222c",
+    "crust": "#191a21",
+    "surface0": "#44475a",
+    "surface1": "#4d5068",
+    "surface2": "#565b72",
+    "text": "#f8f8f2",
+    "subtext1": "#e2e2dc",
+    "subtext0": "#c8c8c2",
+    "overlay2": "#8290b5",
+    "overlay1": "#7282a6",
+    "overlay0": "#6272a4",
+    "mauve": "#bd93f9",
+    "blue": "#6272a4",
+    "sapphire": "#8be9fd",
+    "sky": "#8be9fd",
+    "teal": "#50fa7b",
+    "green": "#50fa7b",
+    "yellow": "#f1fa8c",
+    "peach": "#ffb86c",
+    "maroon": "#ff5555",
+    "red": "#ff5555",
+    "pink": "#ff79c6",
+    "flamingo": "#ffb86c",
+    "rosewater": "#f8f8f2",
+    "lavender": "#bd93f9"
+  },
+  "mango": {
+    "shadowscolor": "0x00000066",
+    "shadows_size": 25,
+    "bordercolor": "0x6272a4ff",
+    "focuscolor": "0xbd93f9ff",
+    "urgentcolor": "0xff5555ff"
+  },
+  "kitty": {
+    "theme": "dracula"
+  },
+  "rofi": {
+    "bg": "#21222c",
+    "bg_alt": "#44475a",
+    "fg": "#f8f8f2",
+    "fg_alt": "#6272a4",
+    "border": "#bd93f9",
+    "selected": "#44475a",
+    "urgent": "#ff5555"
+  },
+  "gtk": {
+    "theme": "Adwaita-dark",
+    "icon":  "Papirus-Dark",
+    "cursor":"catppuccin-macchiato-mauve-cursors"
+  },
+  "vscode": {
+    "theme": "Dracula Theme Soft",
+    "icon":  "catppuccin-macchiato"
+  },
+  "obsidian": {
+    "css_theme": "Dracula"
+  },
+  "card": {
+    "display": "Dracula",
+    "accents": ["#bd93f9", "#8be9fd", "#50fa7b", "#ff79c6"]
+  }
+}
