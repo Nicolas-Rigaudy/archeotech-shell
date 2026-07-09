@@ -1,0 +1,59 @@
+################################################################################
+# Archeotech — required + recommended MangoWC settings
+#
+# This is NOT a full mango config — copy the relevant blocks into your own
+# ~/.config/mango/config.conf. Lines marked [REQUIRED] are load-bearing for the
+# shell to render/behave correctly; the rest are the reference setup's look.
+################################################################################
+
+# ── [REQUIRED] Layer blur off ────────────────────────────────────────────────
+# SceneFX layer blur throws a white-fringe halo around the shell's rounded layer
+# surfaces on some GPUs (Intel Xe). The shell fakes glass with high-opacity
+# translucent panels instead, so disable layer blur globally.
+blur_layer=0
+
+# ── [REQUIRED] Launch the shell ──────────────────────────────────────────────
+# The shell is a NAMED Quickshell config at ~/.config/quickshell/archeotech
+# (that's what install.sh symlinks). Launch it with -c archeotech. Use exactly
+# ONE launch point — Quickshell does not dedupe per config, so two launchers =
+# doubled bars + doubled exclusion zones.
+exec-once=env QT_WAYLAND_DECORATION=none quickshell -c archeotech
+
+# Optional: auto-show the dashboard briefly on login
+exec-once=sh -c "sleep 3 && qs -c archeotech ipc call dashboard openAuto"
+
+# ── [REQUIRED] IPC keybinds (open/toggle panels) ─────────────────────────────
+# Every panel is toggled over IPC against the named config.
+binds=SUPER,r,spawn_shell,qs -c archeotech ipc call launcher toggle
+binds=SUPER,space,spawn_shell,qs -c archeotech ipc call launcher toggle
+binds=SUPER,semicolon,spawn_shell,qs -c archeotech ipc call notifications toggle
+binds=SUPER,comma,spawn_shell,qs -c archeotech ipc call settings toggle
+binds=SUPER+SHIFT,e,spawn_shell,qs -c archeotech ipc call editmode toggle
+binds=SUPER,Home,spawn_shell,qs -c archeotech ipc call dashboard toggle
+binds=SUPER,w,spawn_shell,qs -c archeotech ipc call wallpaper toggle
+
+# On-screen display for volume/brightness (drive from your media keys)
+binds=NONE,XF86AudioRaiseVolume,spawn_shell,wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+ && qs -c archeotech ipc call osd volume
+binds=NONE,XF86AudioLowerVolume,spawn_shell,wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- && qs -c archeotech ipc call osd volume
+binds=NONE,XF86MonBrightnessUp,spawn_shell,brightnessctl set 5%+ -q && qs -c archeotech ipc call osd brightness
+binds=NONE,XF86MonBrightnessDown,spawn_shell,brightnessctl set 5%- -q && qs -c archeotech ipc call osd brightness
+
+# ── [RECOMMENDED] Flat shell surfaces ────────────────────────────────────────
+# The shell draws its own corners/shadows, so strip the compositor's shadow and
+# corner radius from its layer surfaces. Namespaces the shell uses:
+layerrule=noblur,isnoshadow,isnoradius,layer_name:archeotech-shell
+layerrule=isnoshadow,isnoradius,layer_name:quickshell:osd
+layerrule=isnoshadow,isnoradius,layer_name:quickshell:toasts
+layerrule=isnoshadow,isnoradius,layer_name:archeotech-exclude-top
+layerrule=isnoshadow,isnoradius,layer_name:archeotech-exclude-bottom
+layerrule=isnoshadow,isnoradius,layer_name:archeotech-exclude-left
+layerrule=isnoshadow,isnoradius,layer_name:archeotech-exclude-right
+
+# ── [RECOMMENDED] Let the shell own the outer gap ────────────────────────────
+# The shell reserves screen edges via its own exclusion zones; setting mango's
+# outer gaps to 0 avoids gaps stacking per-window.
+gappoh=0
+gappov=0
+# Scroller layout: structs=0 so the shell's exclusions are the only thing
+# reserving edge space.
+scroller_structs=0

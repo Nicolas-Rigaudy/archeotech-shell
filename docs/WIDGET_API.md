@@ -202,6 +202,4 @@ Old files using the split `zones: { left, center, right }` / `icons: [...]` form
 
 ## Plugins
 
-`plugin:<id>` ids are **not** resolved by the filename convention — `WidgetLoader` routes them to `Services/Shell/ModuleRegistry.qml`, which discovers self-describing module folders (`module.json` + entry QML) under `~/.config/quickshell/modules/` and `~/.local/share/archeotech/modules/`. Plugin widgets share this same contract (`holderRoot`, `config`, and — for external modules — the injected `appearance`). Authoring, `module.json`, `configSchema`, placement targets, and the external-import story live in [MODULE_API.md](MODULE_API.md).
-
-See `.claude/ANALYSIS.md` §12 for the chosen pattern (Noctalia-style filesystem convention + `plugin:<id>` namespacing).
+`plugin:<id>` ids are **not** resolved by the filename convention — `WidgetLoader` routes them to `Services/Shell/ModuleRegistry.qml`, which discovers self-describing module folders (`module.json` + entry QML) under `~/.config/quickshell/modules/` and `~/.local/share/archeotech/modules/`. Plugin widgets share this same contract (`holderRoot`, `config`, and — for external modules — the injected `appearance`). Authoring, `module.json`, `configSchema`, placement targets, and the external-import story live in [MODULE_API.md](MODULE_API.md). The resolution pattern is a Noctalia-style filesystem convention plus `plugin:<id>` namespacing.

@@ -1,0 +1,30 @@
+# Archeotech — required + recommended Hyprland settings
+#
+# Copy the relevant blocks into your ~/.config/hypr/hyprland.conf. Archeotech
+# targets MangoWC primarily; Hyprland works, but some features that read MangoWC
+# IPC (e.g. the lock-screen keyboard-layout label) degrade gracefully.
+
+# ── [REQUIRED] Launch the shell (named config; use exactly ONE launcher) ──────
+exec-once = quickshell -c archeotech
+# Optional: auto-show the dashboard briefly on login
+exec-once = sh -c "sleep 3 && qs -c archeotech ipc call dashboard openAuto"
+
+# ── [REQUIRED] IPC keybinds ───────────────────────────────────────────────────
+bind = SUPER, R, exec, qs -c archeotech ipc call launcher toggle
+bind = SUPER, SPACE, exec, qs -c archeotech ipc call launcher toggle
+bind = SUPER, SEMICOLON, exec, qs -c archeotech ipc call notifications toggle
+bind = SUPER, COMMA, exec, qs -c archeotech ipc call settings toggle
+bind = SUPER SHIFT, E, exec, qs -c archeotech ipc call editmode toggle
+bind = SUPER, HOME, exec, qs -c archeotech ipc call dashboard toggle
+bind = SUPER, W, exec, qs -c archeotech ipc call wallpaper toggle
+
+bindel = , XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+ && qs -c archeotech ipc call osd volume
+bindel = , XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- && qs -c archeotech ipc call osd volume
+bindel = , XF86MonBrightnessUp,  exec, brightnessctl set 5%+ -q && qs -c archeotech ipc call osd brightness
+bindel = , XF86MonBrightnessDown, exec, brightnessctl set 5%- -q && qs -c archeotech ipc call osd brightness
+
+# ── [RECOMMENDED] Flat shell surfaces (shell draws its own corners/shadows) ───
+layerrule = noshadow, archeotech-shell
+layerrule = noblur,   archeotech-shell
+layerrule = noshadow, quickshell:osd
+layerrule = noshadow, quickshell:toasts

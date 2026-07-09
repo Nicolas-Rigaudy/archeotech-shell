@@ -69,9 +69,11 @@ All fields are required unless noted *(optional)*. Hex colors are full
     "urgentcolor":  "0xed8796ff"
   },
 
-  "kitty": {                               // copies kitty/themes/<theme>.conf
-    "theme": "macchiato"                   //   → kitty/current-theme.conf
-  },
+  "kitty": {                               // kitty colors live in this theme's
+    "theme": "macchiato"                   // own package: themes/<variant>/kitty.conf
+  },                                       //   → copied to kitty/current-theme.conf
+                                           // (the "theme" value is a legacy label;
+                                           //  the applier reads the co-located file)
 
   "rofi": {                                // values for rofi-colors.rasi.tmpl
     "bg": "#1e2030",  "bg_alt": "#363a4f",
@@ -123,7 +125,7 @@ do not race. The optional second arg is an **accent** color name (see below).
 | Target     | Mechanism                                                                                                    | Reload signal                       |
 |------------|--------------------------------------------------------------------------------------------------------------|--------------------------------------|
 | Quickshell | Atomic write of `theme.json` → `~/.config/archeotech/theme.json`                                             | `qs ipc call theme reload`           |
-| Kitty      | Copy `themes/<kitty.theme>.conf` + append theme-aware `background_opacity` (0.9 light / 0.6 dark) → `current-theme.conf` | `pkill -USR1 kitty`     |
+| Kitty      | Copy the variant's co-located `themes/<variant>/kitty.conf` + append theme-aware `background_opacity` (0.9 light / 0.6 dark) → `current-theme.conf` | `pkill -USR1 kitty`     |
 | MangoWC    | Regex-patch `shadowscolor` / `shadows_size` / `bordercolor` / `focuscolor` / `urgentcolor` in `mango/config.conf` | `mmsg -s -d reload_config`           |
 | Rofi       | Render `rofi-colors.rasi.tmpl` → `~/.config/rofi/colors.rasi` (theme.rasi `@imports` it)                    | none (read on next rofi launch)      |
 | Starship   | Render `starship.toml.tmpl` → `~/.config/starship.toml`                                                       | none (read on next prompt)           |
@@ -185,7 +187,7 @@ warning but never breaks the rest of the switch.
    - `family` / `flavor` / `mode` / `accent` must be set (Sprint 25). `mode`
      is `"light"` or `"dark"` and is what the day-night scheduler keys off.
    - `shadowscolor` stays **neutral** (`0x00000066` dark / `0x00000033` light) —
-     never accent-colored. See `.claude/feedback_mangowc_shadow_color.md`.
+     never accent-colored (accent-tinted shadows look wrong under the frame).
    - light variants: GTK should use a real light theme (`Adwaita`, or
      `catppuccin-<flavor>-<accent>-standard+default` for Catppuccin) + a light
      icon set (`Papirus-Light`).
@@ -207,14 +209,21 @@ warning but never breaks the rest of the switch.
 - **Wallpaper.** Themes do not change the desktop wallpaper. Wallpaper picking
   is its own UI (right-strip wallpaper icon → grid panel). This decoupling means
   any wallpaper can be paired with any theme.
+
+  **The `~/.cache/wallpaper/current` contract.** `wallpaper-set.sh` maintains a
+  stable symlink `~/.cache/wallpaper/current` → the currently-applied wallpaper
+  image, updated on every apply. It exists so components that can only take a
+  *static* path — notably **hyprlock** (`background { path }` is read once at
+  launch) — always resolve the live wallpaper without being rewritten. Anything
+  needing "the current wallpaper as a fixed path" should read this symlink rather
+  than tracking the picker's state.
 - **Per-monitor variants.** A theme is a single palette. Per-screen rules live
   in `shell-config.json`'s `perScreen` block, not in `theme.json`.
 - **Per-flavor contrast steps.** Gruvbox's hard/medium/soft and similar are not
   modeled — each shipped flavor is one fixed palette. Add more flavor entries if
   you want them.
 - **Wallpaper-extracted colors (matugen / wallust / pywal).** Archeotech is
-  intentionally a **curated** theme system, not a dynamic one — see
-  `.claude/DECISIONS.md`.
+  intentionally a **curated** theme system, not a dynamic one.
 
 ---
 

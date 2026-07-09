@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Shell scripts — syntax check
+        run: |
+          fail=0
+          while IFS= read -r f; do
+            head -1 "$f" | grep -qE 'bash|sh' || continue
+            bash -n "$f" || { echo "::error file=$f::bash syntax error"; fail=1; }
+          done < <(find scripts -name '*.sh')
+          exit $fail
+
+      - name: Python — compile check
+        run: python3 -m py_compile scripts/theme-switch.py
+
+      - name: JSON — validate config + theme + module manifests
+        run: |
+          fail=0
+          for f in shell-config.json drawer-config.json \
+                   themes/*/theme.json modules/*/module.json; do
+            [ -e "$f" ] || continue
+            python3 -c "import json,sys; json.load(open('$f'))" \
+              || { echo "::error file=$f::invalid JSON"; fail=1; }
+          done
+          exit $fail
+
+      # Full QML linting requires Quickshell (not packaged on CI runners); run
+      # `qmllint` locally against Qt 6.11. Placeholder to wire up once a
+      # Quickshell CI image is available.
