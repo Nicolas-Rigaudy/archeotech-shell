@@ -92,8 +92,13 @@ Item {
     }
     onPinnedIdsChanged: _refreshRecents()
 
-    // usage → dep → _loadApps chain on startup
-    Component.onCompleted: usageReader.running = true
+    // usage → dep → _loadApps chain on startup. Also focus the search if the
+    // panel is already open at creation (covers first open if content is built
+    // on demand rather than persisting).
+    Component.onCompleted: {
+        usageReader.running = true
+        if (_panelOpen) _resetOnOpen()
+    }
 
     // re-index when new apps are installed
     Connections {
@@ -250,18 +255,24 @@ Item {
         if (root.panelRoot) root.panelRoot.close()
     }
 
-    // ── Reset on open — focus the search + clear query when the panel opens
-    Connections {
-        target: root.panelRoot
-        enabled: root.panelRoot !== null
-        function onPanelOpenChanged() {
-            if (!root.panelRoot || !root.panelRoot.panelOpen) return
-            root.query = ""
-            searchInput.text = ""
-            root._filter()
-            root._refreshRecents()
-            searchInput.forceActiveFocus()
-        }
+    // ── Reset on open — clear the query + focus the search box when the panel
+    //    opens. Driven by a *bound* property, not a `Connections { function
+    //    onPanelOpenChanged }`: panelRoot is an untyped `var`, so Qt can't
+    //    resolve the signal on it and the handler silently never fired — which
+    //    is why the search box wasn't focused on open (you had to click first).
+    //    A binding to `panelRoot.panelOpen` tracks the change at runtime.
+    readonly property bool _panelOpen: root.panelRoot ? root.panelRoot.panelOpen : false
+    on_PanelOpenChanged: if (_panelOpen) _resetOnOpen()
+
+    function _resetOnOpen() {
+        root.query = ""
+        searchInput.text = ""
+        root._filter()
+        root._refreshRecents()
+        searchInput.forceActiveFocus()
+        // Re-assert after the frame settles — at the instant the panel opens the
+        // layer surface may not have been granted keyboard focus yet.
+        Qt.callLater(function() { searchInput.forceActiveFocus() })
     }
 
     // ── Content container — fills Panel's Loader bounds. Panel.qml owns
