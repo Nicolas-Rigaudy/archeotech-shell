@@ -141,7 +141,7 @@ Item {
     Process {
         id: scanProc
         running: false
-        command: ["bash", "-lc",
+        command: ["bash", "-c",
             "find -L \"$HOME/.config/archeotech/wallpapers\" " +
             "-maxdepth 1 -type f -regextype posix-extended " +
             "-iregex '.*\\.(jpe?g|png|webp)$' | sort"]
@@ -164,7 +164,7 @@ Item {
     Process {
         id: currentReader
         running: false
-        command: ["bash", "-lc",
+        command: ["bash", "-c",
             "cat \"$HOME/.cache/wallpaper/last-wallpaper\" 2>/dev/null || true"]
         stdout: SplitParser {
             onRead: line => { var t = line.trim(); if (t) root.currentPath = t }
@@ -174,7 +174,7 @@ Item {
     Process {
         id: logoReader
         running: false
-        command: ["bash", "-lc",
+        command: ["bash", "-c",
             "cat \"$HOME/.cache/wallpaper/logo-active\" 2>/dev/null || true"]
         property string _buf: ""
         onRunningChanged: if (running) _buf = ""
