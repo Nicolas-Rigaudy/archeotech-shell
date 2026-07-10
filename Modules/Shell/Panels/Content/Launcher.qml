@@ -335,6 +335,10 @@ Item {
                                     anchors.fill: parent
                                     source: tileIconWrapper._cands[tileIconWrapper._idx] || ""
                                     fillMode: Image.PreserveAspectFit
+                                    // Request the icon at the box's pixel size so
+                                    // the provider renders it crisp instead of
+                                    // handing back a default size we scale (blur).
+                                    sourceSize: Qt.size(width, height)
                                     smooth: true
                                     onStatusChanged: {
                                         if (status === Image.Error
@@ -495,6 +499,8 @@ Item {
                             anchors.fill: parent
                             source:       iconWrapper._cands[iconWrapper._idx] || ""
                             fillMode:     Image.PreserveAspectFit
+                            // Render at the box's pixel size (crisp) — see tileIcon.
+                            sourceSize:   Qt.size(width, height)
                             smooth:       true
                             onStatusChanged: {
                                 if (status === Image.Error &&
