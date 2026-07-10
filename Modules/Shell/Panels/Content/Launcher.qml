@@ -505,23 +505,12 @@ Item {
 
                 ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
-                // §18.4 appearance motion — enter gently (decel fade), leave
-                // briskly (accel fade); survivors glide via `displaced`. Fade
-                // only, no per-item scale: the array model resets wholesale on
-                // every keystroke, so a scale-pop would wobble while typing —
-                // the overshoot lives in the interactive hover-grow instead.
-                populate: Transition {
-                    Commons.Anim { property: "opacity"; from: 0; to: 1; duration: Commons.Appearance.anim.effectsMed; curve: Commons.Appearance.curve.emphasizedDecel }
-                }
-                add: Transition {
-                    Commons.Anim { property: "opacity"; from: 0; to: 1; duration: Commons.Appearance.anim.effectsMed; curve: Commons.Appearance.curve.emphasizedDecel }
-                }
-                displaced: Transition {
-                    Commons.Anim { properties: "x,y"; duration: Commons.Appearance.anim.spatialFast; curve: Commons.Appearance.curve.emphasizedDecel }
-                }
-                remove: Transition {
-                    Commons.Anim { exit: true; property: "opacity"; from: 1; to: 0 }
-                }
+                // NB: no ListView add/remove/populate transitions here. The
+                // model is a plain JS array reassigned wholesale on every
+                // keystroke, so ListView reads each filter as remove-all +
+                // add-all; per-item enter/exit transitions then thrash and the
+                // list appears frozen while typing. Appearance stagger needs a
+                // stable keyed model (DelegateModel) — deferred, out of slice.
 
                 delegate: Item {
                     required property var modelData
