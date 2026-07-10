@@ -39,6 +39,16 @@ QtObject {
         return Qt.rgba(c.r, c.g, c.b, alpha)
     }
 
+    // Linear blend between two theme colors (t=0 → a, t=1 → b), preserving
+    // alpha. Used for accent-tinted "surface container" warmth (§18.2 warmth).
+    function _blend(a, b, t) {
+        var ca = Qt.color(a), cb = Qt.color(b)
+        return Qt.rgba(ca.r + (cb.r - ca.r) * t,
+                       ca.g + (cb.g - ca.g) * t,
+                       ca.b + (cb.b - ca.b) * t,
+                       ca.a + (cb.a - ca.a) * t)
+    }
+
     // Called by IpcHandler when theme-switch.sh writes a new theme.json.
     // Resets the file path to force FileView to re-read (watchChanges alone is unreliable).
     function reload() {
@@ -101,6 +111,18 @@ QtObject {
         readonly property color glassBg:      root._rgba("mantle",   "#1e2030", 0.96)
         readonly property color glassBgLight: root._rgba("mantle",   "#1e2030", 0.93)
         readonly property color glassBorder:  root._rgba("surface0", "#363a4f", 0.90)
+
+        // ── Warmth (§18.2) — accent-tinted surfaces, not flat grey. ──
+        // Resting container = surface0 nudged toward the accent, at the same
+        // 0.60 alpha as surface0Alpha so it drops in as a warm replacement.
+        readonly property color surfaceWarm: {
+            var c = root._blend(root._c("surface0", "#363a4f"),
+                                root._c(root._accentName, "#c6a0f6"), 0.08)
+            return Qt.rgba(c.r, c.g, c.b, 0.60)
+        }
+        // State-layer tints (M3 overlay alphas, accent-hued for warmth).
+        readonly property color stateHover:   root._rgba(root._accentName, "#c6a0f6", 0.10)
+        readonly property color statePressed: root._rgba(root._accentName, "#c6a0f6", 0.16)
     }
 
     // ── Typography ─────────────────────────────────────────────────────────────
@@ -142,12 +164,48 @@ QtObject {
     }
 
     // ── Animation ─────────────────────────────────────────────────────────────
+    // Durations. Kept `fast`/`base`/`panel` as-is (used across ~125 call sites);
+    // dropped the never-referenced `slow`/`spring`. New semantic names follow the
+    // §18.2 converged ranges: effects (opacity/colour) short, spatial (move/size)
+    // longer, and the enter/exit split ("enter gently, leave briskly").
     readonly property QtObject anim: QtObject {
         readonly property int fast:   100
         readonly property int base:   200
-        readonly property int slow:   300
-        readonly property int spring: 400
         // Strip popup → panel transitions (perp + axis growth).
         readonly property int panel:  240
+
+        // Effects — opacity / colour crossfades.
+        readonly property int effectsFast: 150
+        readonly property int effectsMed:  200
+        readonly property int effectsSlow: 300
+        // Spatial — position / size moves.
+        readonly property int spatialFast:    350
+        readonly property int spatialDefault: 500
+        readonly property int spatialSlow:    650
+        // Enter/exit asymmetry defaults.
+        readonly property int enter: 400
+        readonly property int exit:  200
+    }
+
+    // ── Motion curves (§18.2) ────────────────────────────────────────────────
+    // M3 bezier control-point lists for `easing.bezierCurve` (with
+    // `easing.type: Easing.BezierSpline`). The `expressive*Spatial` curves have
+    // a control-point y > 1 → overshoot-and-settle (no physics engine); use them
+    // ONLY on spatial props (position/size), never on colour/opacity (they'd
+    // flash). Effects/enter/exit pairs give the asymmetric "enter decel, exit
+    // accel" idiom.
+    readonly property QtObject curve: QtObject {
+        readonly property var standard:      [0.2, 0, 0, 1, 1, 1]
+        readonly property var standardAccel: [0.3, 0, 1, 1, 1, 1]
+        readonly property var standardDecel: [0, 0, 0, 1, 1, 1]
+
+        readonly property var emphasized:      [0.05, 0, 2/15, 0.06, 1/6, 0.4, 5/24, 0.82, 0.25, 1, 1, 1]
+        readonly property var emphasizedAccel: [0.3, 0, 0.8, 0.15, 1, 1]
+        readonly property var emphasizedDecel: [0.05, 0.7, 0.1, 1, 1, 1]
+
+        readonly property var expressiveFastSpatial:    [0.42, 1.67, 0.21, 0.90, 1, 1]
+        readonly property var expressiveDefaultSpatial: [0.38, 1.21, 0.22, 1.00, 1, 1]
+        readonly property var expressiveSlowSpatial:    [0.39, 1.29, 0.35, 0.98, 1, 1]
+        readonly property var expressiveEffects:        [0.34, 0.80, 0.34, 1.00, 1, 1]
     }
 }
