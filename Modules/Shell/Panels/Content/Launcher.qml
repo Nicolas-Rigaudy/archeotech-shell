@@ -1,8 +1,10 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
 import "../../../../Commons" as Commons
+import "../../../../Commons/Primitives"
 import "../../../../Services/Persistence" as Persistence
 
 // Launcher UI. Panel.qml provides chrome + slide anim + click-outside-to-close;
@@ -304,16 +306,45 @@ Item {
 
                     Repeater {
                         model: root.topRecents
-                        delegate: Rectangle {
+                        delegate: Item {
+                            id: tileDelegate
                             required property var modelData
                             // 4 tiles, share the row evenly minus spacing.
                             width:  (tilesRow.width - Commons.Appearance.spacing.base * (root.topRecents.length - 1)) / Math.max(1, root.topRecents.length)
                             height: 64
+
+                            readonly property bool _hov: tileState.hovered
+
+                            // Depth (§18.2) — soft two-state shadow drawn *behind*
+                            // the tile; blur/offset grow on hover for a lift. A
+                            // plain sibling (not layer.enabled) so the tile above
+                            // stays interactive (DECISIONS 2026-07-02).
+                            RectangularShadow {
+                                anchors.fill: tile
+                                radius:   tile.radius
+                                offset.x: 0
+                                offset.y: tileDelegate._hov ? 5 : 2
+                                blur:     tileDelegate._hov ? 14 : 6
+                                spread:   0
+                                color:    Qt.rgba(0, 0, 0, tileDelegate._hov ? 0.32 : 0.18)
+                                Behavior on offset.y { Commons.Anim { duration: Commons.Appearance.anim.spatialFast; curve: Commons.Appearance.curve.emphasizedDecel } }
+                                Behavior on blur     { Commons.Anim { duration: Commons.Appearance.anim.spatialFast; curve: Commons.Appearance.curve.emphasizedDecel } }
+                                Behavior on color    { Commons.ColorAnim {} }
+                            }
+
+                            Rectangle {
+                            id: tile
+                            anchors.fill: parent
+                            transformOrigin: Item.Center
                             radius: Commons.Appearance.radius.base
-                            color:  tileHov.hovered ? Commons.Appearance.colors.accentAlpha : Commons.Appearance.colors.surface0Alpha
-                            border.color: tileHov.hovered ? Commons.Appearance.colors.accentBorder : "transparent"
+                            // Warm resting surface (accent-tinted, not flat grey);
+                            // the accent hover wash comes from the StateLayer below.
+                            color:  Commons.Appearance.colors.surfaceWarm
+                            border.color: tileDelegate._hov ? Commons.Appearance.colors.accentBorder : "transparent"
                             border.width: 1
-                            Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                            Behavior on border.color { Commons.ColorAnim {} }
+                            // Hover-grow / press-depress overshoot (spatial only).
+                            Behavior on scale { Commons.Anim { duration: Commons.Appearance.anim.spatialFast; curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
 
                             Item {
                                 id: tileIconWrapper
@@ -360,21 +391,32 @@ Item {
                                 elide: Text.ElideRight
                             }
 
+                            // Hover/press wash + launch (§18.4 StateLayer).
+                            // Declared before tileUnpin so the corner button's
+                            // MouseArea stays on top and wins corner clicks;
+                            // sits above the icon/label as an accent wash.
+                            StateLayer {
+                                id: tileState
+                                anchors.fill: parent
+                                hoverScale: 1.03
+                                pressScale: 0.97
+                                onClicked: root._launch(tileDelegate.modelData)
+                            }
+
                             // Unpin overlay — top-right corner, fades in on
                             // tile hover. Pinned-tile-only since recents
                             // entries are either pinned or frecency-only;
                             // frecency entries can be re-pinned from the list.
                             Rectangle {
                                 id: tileUnpin
-                                readonly property bool _pinned: root.isPinned(modelData)
+                                readonly property bool _pinned: root.isPinned(tileDelegate.modelData)
                                 visible: _pinned
                                 anchors { top: parent.top; right: parent.right; margins: 4 }
                                 width: 20; height: 20
                                 radius: Commons.Appearance.radius.sm
-                                color:   _tileUnpinArea.containsMouse ? Commons.Appearance.colors.surface0 : "transparent"
-                                opacity: tileHov.hovered || _tileUnpinArea.containsMouse ? 1.0 : 0.0
-                                Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.fast } }
-                                Behavior on color   { ColorAnimation  { duration: Commons.Appearance.anim.fast } }
+                                color: "transparent"
+                                opacity: tileDelegate._hov || tileUnpinState.hovered ? 1.0 : 0.0
+                                Behavior on opacity { Commons.Anim { duration: Commons.Appearance.anim.fast; curve: Commons.Appearance.curve.standardDecel } }
 
                                 Text {
                                     anchors.centerIn: parent
@@ -383,17 +425,14 @@ Item {
                                     font { family: Commons.Appearance.font.family; pixelSize: 12 }
                                 }
 
-                                MouseArea {
-                                    id: _tileUnpinArea
+                                StateLayer {
+                                    id: tileUnpinState
                                     anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: root.togglePin(modelData)
+                                    pressScale: 1.0
+                                    onClicked: root.togglePin(tileDelegate.modelData)
                                 }
                             }
-
-                            HoverHandler { id: tileHov }
-                            TapHandler   { onTapped: root._launch(modelData) }
+                            }
                         }
                     }
                 }
@@ -466,6 +505,24 @@ Item {
 
                 ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
+                // §18.4 appearance motion — enter gently (decel fade), leave
+                // briskly (accel fade); survivors glide via `displaced`. Fade
+                // only, no per-item scale: the array model resets wholesale on
+                // every keystroke, so a scale-pop would wobble while typing —
+                // the overshoot lives in the interactive hover-grow instead.
+                populate: Transition {
+                    Commons.Anim { property: "opacity"; from: 0; to: 1; duration: Commons.Appearance.anim.effectsMed; curve: Commons.Appearance.curve.emphasizedDecel }
+                }
+                add: Transition {
+                    Commons.Anim { property: "opacity"; from: 0; to: 1; duration: Commons.Appearance.anim.effectsMed; curve: Commons.Appearance.curve.emphasizedDecel }
+                }
+                displaced: Transition {
+                    Commons.Anim { properties: "x,y"; duration: Commons.Appearance.anim.spatialFast; curve: Commons.Appearance.curve.emphasizedDecel }
+                }
+                remove: Transition {
+                    Commons.Anim { exit: true; property: "opacity"; from: 1; to: 0 }
+                }
+
                 delegate: Item {
                     required property var modelData
                     required property int index
@@ -533,9 +590,11 @@ Item {
                         anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
                         width: 22; height: 22
                         radius: Commons.Appearance.radius.sm
+                        transformOrigin: Item.Center
                         visible: _pinned || root.selectedIdx === index
-                        color:   _pinArea.containsMouse ? Commons.Appearance.colors.surface0Alpha : "transparent"
-                        Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                        color: "transparent"
+                        // Press-depress bounce on the button itself.
+                        Behavior on scale { Commons.Anim { duration: Commons.Appearance.anim.effectsFast; curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
 
                         Text {
                             anchors.centerIn: parent
@@ -543,16 +602,14 @@ Item {
                             color: pinBtn._pinned ? Commons.Appearance.colors.accent
                                                   : Commons.Appearance.colors.overlay0
                             font { family: Commons.Appearance.font.family; pixelSize: 14 }
-                            Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                            Behavior on color { Commons.ColorAnim {} }
                         }
 
-                        MouseArea {
-                            id: _pinArea
+                        // StateLayer's MouseArea consumes the click, so the row's
+                        // TapHandler won't also fire (old MouseArea behaviour).
+                        StateLayer {
                             anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            // MouseArea is on top of the row's TapHandler, so the
-                            // click is consumed and doesn't trigger launch.
+                            pressScale: 0.90
                             onClicked: root.togglePin(modelData)
                         }
                     }
