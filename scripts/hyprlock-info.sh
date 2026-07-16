@@ -15,14 +15,13 @@ case "$1" in
         fi
         ;;
     status)
-        # One-line status bar: user · layout · battery · uptime.
-        # Layout comes from mmsg (MangoWC); omitted gracefully elsewhere.
-        lay=$(mmsg -g -k 2>/dev/null | awk 'NR==1{print toupper($3)}')
+        # One-line status bar: user · battery · uptime.
+        # (Keyboard layout is shown separately via hyprlock's native $LAYOUT,
+        # which updates instantly on switch — a 30s-polled copy here lagged.)
         bat=$(cat /sys/class/power_supply/BAT0/capacity 2>/dev/null)
         up=$(uptime -p 2>/dev/null \
              | sed 's/^up //; s/ days\?,\?/d/g; s/ hours\?,\?/h/g; s/ minutes\?,\?/m/g; s/,//g')
         parts=("$USER")
-        [ -n "$lay" ] && parts+=("$lay")
         [ -n "$bat" ] && parts+=("󰁹 ${bat}%")
         [ -n "$up" ]  && parts+=("󰅐 up $up")
         out=""

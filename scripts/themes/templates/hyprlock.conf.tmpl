@@ -127,10 +127,25 @@ label {
     valign = center
 }
 
-# Bottom status bar: user · layout · battery · uptime (via helper)
+# Keyboard layout — hyprlock's native $LAYOUT, updates the instant you switch
+# (grp:alt_shift_toggle). Its own label just above the status bar; the polled
+# status line below no longer carries layout (it lagged 30s behind a switch).
 label {
     monitor =
-    text = cmd[update:1000] hyprlock-info.sh status
+    text = $LAYOUT
+    color = $subtext
+    font_size = 14
+    font_family = $font
+    shadow_passes = 0
+    position = 0, 72
+    halign = center
+    valign = bottom
+}
+
+# Bottom status bar: user · battery · uptime (via helper)
+label {
+    monitor =
+    text = cmd[update:30000] hyprlock-info.sh status
     color = $subtext
     font_size = 14
     font_family = $font
