@@ -103,9 +103,18 @@ Item {
         }
     }
 
+    // Thumbnail cache. Decoding the full-res wallpapers (up to 4K PNG / 6K JPEG)
+    // in the grid is what made it slow to appear — QML reads+decodes the whole
+    // file even with sourceSize. Generate small cached thumbnails once with
+    // ImageMagick and load those instead; the delegate falls back to the full
+    // image until a thumb is ready, then swaps it in when generation completes.
+    readonly property string _thumbsDir: Commons.Paths.cache + "/archeotech/wallpaper-thumbs"
+    property int _thumbGen: 0
+
     function _refresh() {
         root.wallpapers = []
         if (!scanProc.running)      scanProc.running = true
+        if (!thumbProc.running)     thumbProc.running = true
         if (!currentReader.running) currentReader.running = true
         if (!logoReader.running)    logoReader.running = true
     }
@@ -155,10 +164,28 @@ Item {
                 var dot   = p.lastIndexOf(".")
                 var stem  = p.substring(slash + 1, dot >= 0 ? dot : p.length)
                 var name  = stem.replace(/[_-]/g, " ")
-                scanProc._buf = (scanProc._buf || []).concat([{ path: p, name: name }])
+                // Thumb keyed by full basename (+.jpg) so a.png/a.jpg don't collide.
+                var thumb = root._thumbsDir + "/" + p.substring(slash + 1) + ".jpg"
+                scanProc._buf = (scanProc._buf || []).concat([{ path: p, name: name, thumb: thumb }])
             }
         }
         onExited: root.wallpapers = scanProc._buf || []
+    }
+
+    // Generates any missing/stale thumbnails in parallel, then bumps _thumbGen
+    // so delegates swap from the full-image fallback to the fresh thumbnail.
+    Process {
+        id: thumbProc
+        running: false
+        command: ["bash", "-c",
+            "export TH=\"$HOME/.cache/archeotech/wallpaper-thumbs\"; mkdir -p \"$TH\"; " +
+            "find -L \"$HOME/.config/archeotech/wallpapers\" -maxdepth 1 -type f " +
+            "-regextype posix-extended -iregex '.*\\.(jpe?g|png|webp)$' -print0 | " +
+            "xargs -0 -r -P4 -I{} bash -c '" +
+            "t=\"$TH/$(basename \"$1\").jpg\"; " +
+            "{ [ -f \"$t\" ] && [ ! \"$1\" -nt \"$t\" ]; } || " +
+            "magick \"$1\" -thumbnail 640x480 -strip -quality 82 \"$t\"' _ {}"]
+        onExited: root._thumbGen++
     }
 
     Process {
@@ -394,7 +421,16 @@ Item {
                 Image {
                     id: cellImg
                     anchors.fill: parent
-                    source: cell.modelData ? "file://" + cell.modelData.path : ""
+                    // Prefer the cached thumbnail; fall back to the full image
+                    // until it's generated, then swap in (root._thumbGen bumps
+                    // when generation finishes → retry the thumb).
+                    property bool _useThumb: true
+                    property int  _gen: root._thumbGen
+                    on_GenChanged: _useThumb = true
+                    source: cell.modelData
+                        ? "file://" + ((_useThumb && cell.modelData.thumb) ? cell.modelData.thumb : cell.modelData.path)
+                        : ""
+                    onStatusChanged: if (status === Image.Error && _useThumb) _useThumb = false
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     cache: true
