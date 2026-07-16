@@ -5,6 +5,7 @@ import Qt5Compat.GraphicalEffects
 import Quickshell.Io
 import "../../Commons" as Commons
 import "../../Services/Shell" as ShellServices
+import "../../Services/Theming" as Theming
 
 // Shared wallpaper + logo selection UI (Sprint 24). Lives once here and is
 // hosted by both the quick-switcher WallpaperPicker panel (full header) and
@@ -35,7 +36,9 @@ Item {
     // the remaining vertical space (quick-switcher panels).
     property int  carouselHeight: 0
 
-    property var wallpapers: []
+    // Wallpaper list comes from the persistent Wallpapers service — scanned once
+    // at startup and held, so opening the picker is instant (no re-scan/rebuild).
+    readonly property var wallpapers: Theming.Wallpapers.list
     property string currentPath: ""
     property string currentLogo: ""    // "", "arch", "rebel", "imperial"
 
@@ -103,18 +106,10 @@ Item {
         }
     }
 
-    // Thumbnail cache. Decoding the full-res wallpapers (up to 4K PNG / 6K JPEG)
-    // in the grid is what made it slow to appear — QML reads+decodes the whole
-    // file even with sourceSize. Generate small cached thumbnails once with
-    // ImageMagick and load those instead; the delegate falls back to the full
-    // image until a thumb is ready, then swaps it in when generation completes.
-    readonly property string _thumbsDir: Commons.Paths.cache + "/archeotech/wallpaper-thumbs"
-    property int _thumbGen: 0
-
+    // The wallpaper list + thumbnail cache live in the Wallpapers service now.
+    // On open we only refresh the cheap selection state (current wallpaper +
+    // logo) — the grid is already populated, so it stays instant.
     function _refresh() {
-        root.wallpapers = []
-        if (!scanProc.running)      scanProc.running = true
-        if (!thumbProc.running)     thumbProc.running = true
         if (!currentReader.running) currentReader.running = true
         if (!logoReader.running)    logoReader.running = true
     }
@@ -145,47 +140,6 @@ Item {
         id: logoRefreshTimer
         interval: 250
         onTriggered: { if (!logoReader.running) logoReader.running = true }
-    }
-
-    Process {
-        id: scanProc
-        running: false
-        command: ["bash", "-c",
-            "find -L \"$HOME/.config/archeotech/wallpapers\" " +
-            "-maxdepth 1 -type f -regextype posix-extended " +
-            "-iregex '.*\\.(jpe?g|png|webp)$' | sort"]
-        property var _buf: []
-        onRunningChanged: if (running) _buf = []
-        stdout: SplitParser {
-            onRead: line => {
-                var p = line.trim()
-                if (!p) return
-                var slash = p.lastIndexOf("/")
-                var dot   = p.lastIndexOf(".")
-                var stem  = p.substring(slash + 1, dot >= 0 ? dot : p.length)
-                var name  = stem.replace(/[_-]/g, " ")
-                // Thumb keyed by full basename (+.jpg) so a.png/a.jpg don't collide.
-                var thumb = root._thumbsDir + "/" + p.substring(slash + 1) + ".jpg"
-                scanProc._buf = (scanProc._buf || []).concat([{ path: p, name: name, thumb: thumb }])
-            }
-        }
-        onExited: root.wallpapers = scanProc._buf || []
-    }
-
-    // Generates any missing/stale thumbnails in parallel, then bumps _thumbGen
-    // so delegates swap from the full-image fallback to the fresh thumbnail.
-    Process {
-        id: thumbProc
-        running: false
-        command: ["bash", "-c",
-            "export TH=\"$HOME/.cache/archeotech/wallpaper-thumbs\"; mkdir -p \"$TH\"; " +
-            "find -L \"$HOME/.config/archeotech/wallpapers\" -maxdepth 1 -type f " +
-            "-regextype posix-extended -iregex '.*\\.(jpe?g|png|webp)$' -print0 | " +
-            "xargs -0 -r -P4 -I{} bash -c '" +
-            "t=\"$TH/$(basename \"$1\").jpg\"; " +
-            "{ [ -f \"$t\" ] && [ ! \"$1\" -nt \"$t\" ]; } || " +
-            "magick \"$1\" -thumbnail 640x480 -strip -quality 82 \"$t\"' _ {}"]
-        onExited: root._thumbGen++
     }
 
     Process {
@@ -376,56 +330,56 @@ Item {
             opacity: 0.5
         }
 
-        ListView {
+        // Wallpaper carousel — snap-to-centre; the centred item is the large
+        // "preview", scrolling brings others to centre (no apply), clicking
+        // applies. Only ~4 delegates are built, so it opens instantly.
+        Carousel {
             id: grid
             Layout.fillWidth:  true
             Layout.fillHeight: root.carouselHeight <= 0
-            Layout.preferredHeight: root.carouselHeight > 0 ? root.carouselHeight : -1
-            clip: true
-            orientation: ListView.Horizontal
-            spacing: 12
+            Layout.preferredHeight: root.carouselHeight > 0 ? root.carouselHeight : 200
             model: root.wallpapers
-            interactive: true
-            boundsBehavior: Flickable.StopAtBounds
-            ScrollBar.horizontal: ScrollBar { policy: ScrollBar.AsNeeded }
+            // Advance ≈ 0.86× item width → neighbours tuck slightly under the
+            // enlarged centre (tight, not gappy).
+            itemSpacing: Math.floor((grid.height - 8) * 3 / 2 * 0.86)
 
-            readonly property real _aspect: 3 / 2
-            readonly property int _cellH: Math.max(140, height - 14)
-            readonly property int _cellW: Math.floor(_cellH * _aspect)
-
-            WheelHandler {
-                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-                onWheel: (event) => {
-                    var step = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x
-                    grid.flick(step * 6, 0)
-                    event.accepted = true
-                }
+            // Start centred on the applied wallpaper.
+            onModelChanged: _syncCurrent()
+            Component.onCompleted: _syncCurrent()
+            function _syncCurrent() {
+                var i = root.wallpapers.findIndex(function(w) { return w.path === root.currentPath })
+                // StrictlyEnforceRange + highlight 0.5 auto-centres currentIndex.
+                if (i >= 0) currentIndex = i
             }
 
             delegate: Item {
                 id: cell
                 required property var modelData
                 required property int index
-                width:  grid._cellW
-                height: grid._cellH
 
+                readonly property bool _current: PathView.isCurrentItem
                 readonly property bool _active:  root.currentPath === modelData.path
-                property bool _hovered: false
+                readonly property int  _h: grid.height - 24
+                readonly property int  _w: Math.floor(_h * 3 / 2)
 
-                scale: cell._hovered && !cell._active && !root.applying ? 1.03 : 1.0
-                Behavior on scale { NumberAnimation { duration: Commons.Appearance.anim.fast; easing.type: Easing.OutCubic } }
+                width:  _w
+                height: _h
+                z: _current ? 2 : 1
 
-                opacity: root.applying && !cell._active ? 0.5 : 1.0
-                Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.fast } }
+                // Centre item full-size + opaque; neighbours shrink + dim.
+                scale:   _current ? 1.0 : 0.72
+                opacity: root.applying ? (_active ? 1.0 : 0.4) : (_current ? 1.0 : 0.6)
+                Behavior on scale   { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
 
                 Image {
                     id: cellImg
                     anchors.fill: parent
                     // Prefer the cached thumbnail; fall back to the full image
-                    // until it's generated, then swap in (root._thumbGen bumps
-                    // when generation finishes → retry the thumb).
+                    // until it's generated, then swap in (Wallpapers.thumbGen
+                    // bumps when generation finishes → retry the thumb).
                     property bool _useThumb: true
-                    property int  _gen: root._thumbGen
+                    property int  _gen: Theming.Wallpapers.thumbGen
                     on_GenChanged: _useThumb = true
                     source: cell.modelData
                         ? "file://" + ((_useThumb && cell.modelData.thumb) ? cell.modelData.thumb : cell.modelData.path)
@@ -434,8 +388,8 @@ Item {
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     cache: true
-                    sourceSize.width:  grid._cellW * 2
-                    sourceSize.height: grid._cellH * 2
+                    sourceSize.width:  cell._w * 2
+                    sourceSize.height: cell._h * 2
                     visible: false
                 }
                 Rectangle {
@@ -454,7 +408,7 @@ Item {
                     anchors.fill: parent
                     radius: 14
                     color: "transparent"
-                    border.width: cell._active ? 2 : (cell._hovered ? 1 : 0)
+                    border.width: cell._active ? 3 : (cell._current ? 2 : 0)
                     border.color: cell._active
                         ? Commons.Appearance.colors.accent
                         : Commons.Appearance.colors.subtext0
@@ -480,12 +434,15 @@ Item {
 
                 MouseArea {
                     anchors.fill: parent
-                    hoverEnabled: true
                     enabled: !root.applying
                     cursorShape: root.applying ? Qt.BusyCursor : Qt.PointingHandCursor
-                    onEntered: cell._hovered = true
-                    onExited:  cell._hovered = false
-                    onClicked: root._apply(cell.modelData.path)
+                    // Click a side item → bring it to centre (preview); click the
+                    // centred item → apply it. Matches "preview on scroll, apply
+                    // on click" without ever running the heavy script while browsing.
+                    onClicked: {
+                        if (cell._current) root._apply(cell.modelData.path)
+                        else grid.currentIndex = cell.index
+                    }
                 }
             }
         }
