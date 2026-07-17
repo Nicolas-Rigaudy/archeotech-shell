@@ -46,8 +46,10 @@ QtObject {
         wallpaper: {
             content:  _wallpaperComp,
             side:     "bottom",
-            size:     600,
-            axisSize: 1280
+            // Tall enough that the theme tab (mode + flavor + accent + carousel)
+            // fits above the strip's icon row without overflowing onto the bar.
+            size:     380,
+            axisSize: "auto"   // follows WallpaperPicker.implicitAxis per side
         }
     })
 

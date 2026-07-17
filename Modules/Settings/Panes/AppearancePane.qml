@@ -71,18 +71,26 @@ Item {
 
                 Item { implicitHeight: 10; Layout.fillWidth: true }
 
-                // ── Wallpaper & Logo ──────────────────────────────────────────
-                // Embeds the shared WallpaperPickerBody so theme + wallpaper +
-                // logo all live in one Appearance pane (Sprint 24). The bottom-
-                // strip WallpaperPicker panel reuses the same component.
-                SectionLabel { text: "WALLPAPER & LOGO" }
+                // ── Wallpaper ─────────────────────────────────────────────────
+                // Shares the exact WallpaperPickerBody the quick-switcher tab
+                // uses (Sprint 24/26). Settings stacks; the quick panel tabs.
+                SectionLabel { text: "WALLPAPER" }
 
                 Appearance.WallpaperPickerBody {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 64 + Commons.Appearance.spacing.md + 1
-                                          + Commons.Appearance.spacing.md + 200
+                    Layout.preferredHeight: 200
                     embedded: true
                     carouselHeight: 200
+                }
+
+                Item { implicitHeight: 10; Layout.fillWidth: true }
+
+                // ── Logo ──────────────────────────────────────────────────────
+                SectionLabel { text: "LOGO" }
+
+                Appearance.LogoCarousel {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 120
                 }
 
                 Item { implicitHeight: 10; Layout.fillWidth: true }

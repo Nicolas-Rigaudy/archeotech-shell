@@ -10,10 +10,17 @@ import QtQuick
 PathView {
     id: root
 
-    // X-distance between adjacent item centres. Set it a bit below the item
-    // width for a slight overlap of the enlarged centre onto its neighbours.
+    // Distance between adjacent item centres along the track. Set it a bit
+    // below the item extent for a slight overlap of the enlarged centre.
     property int itemSpacing: 170
+    // vertical: track runs top→bottom (side panels) instead of left→right
+    // (top/bottom panels). Callers pass !panelRoot._horizontal.
+    property bool vertical: false
     readonly property int _half: itemSpacing * pathItemCount / 2
+
+    // Accumulated scroll delta — touchpads emit many tiny events, so we advance
+    // one item only per threshold instead of on every event (that caused jitter).
+    property real _wheelAcc: 0
 
     pathItemCount: Math.max(1, Math.min(5, count))
     cacheItemCount: 4
@@ -21,28 +28,55 @@ PathView {
     highlightRangeMode: PathView.StrictlyEnforceRange
     preferredHighlightBegin: 0.5
     preferredHighlightEnd: 0.5
-    interactive: true
+    // Non-interactive: an interactive PathView swallows wheel/touchpad events
+    // along its own (horizontal) flick axis before the WheelHandler runs, which
+    // is why a side-to-side two-finger swipe did nothing. With flicking off, the
+    // WheelHandler below owns all scrolling and drives currentIndex directly
+    // (which still animates). Click-to-select in the delegates is unaffected.
+    interactive: false
+    // Never clip — neighbours peek off the edges (the "cards over the edges"
+    // look) in both orientations. In a vertical side panel the top card would
+    // peek up over the tabs, so the host draws the tab bar on top with its own
+    // backing to occlude just that top edge (the bottom card still peeks).
     clip: false
 
-    // Straight horizontal track centred on the view; items advance by exactly
-    // `itemSpacing`. z peaks at the middle so the enlarged current item overlaps
-    // its neighbours cleanly.
+    // Straight track centred on the view; items advance by exactly
+    // `itemSpacing` along the chosen axis. z peaks at the middle so the enlarged
+    // current item overlaps its neighbours cleanly.
+    readonly property real _cx: width / 2
+    readonly property real _cy: height / 2
     path: Path {
-        startX: root.width / 2 - root._half
-        startY: root.height / 2
+        startX: root.vertical ? root._cx : root._cx - root._half
+        startY: root.vertical ? root._cy - root._half : root._cy
         PathAttribute { name: "z"; value: 0 }
-        PathLine { x: root.width / 2; relativeY: 0 }
+        PathLine { x: root._cx; y: root._cy }
         PathAttribute { name: "z"; value: 2 }
-        PathLine { x: root.width / 2 + root._half; relativeY: 0 }
+        PathLine { x: root.vertical ? root._cx : root._cx + root._half
+                   y: root.vertical ? root._cy + root._half : root._cy }
         PathAttribute { name: "z"; value: 0 }
     }
 
     WheelHandler {
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
         onWheel: event => {
-            var d = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x
-            if (d < 0) root.incrementCurrentIndex()
-            else       root.decrementCurrentIndex()
+            // Scroll on the vertical (y) axis: MangoWC doesn't deliver horizontal
+            // two-finger scroll to this layer-shell surface (angleDelta.x is always
+            // 0; a side-to-side swipe sends no event at all), so y is the only axis
+            // we get — and it drives the strip fine for both mouse and touchpad.
+            //
+            // A touchpad sends high-res pixelDelta (small, many events, momentum);
+            // a mouse sends angleDelta in 120-unit notches. Pick the source, then
+            // ACCUMULATE to one item per threshold so a touchpad glides smoothly
+            // instead of jumping an item on every micro-event.
+            var isTouch = event.pixelDelta.y !== 0
+            var dy = isTouch ? event.pixelDelta.y : event.angleDelta.y
+            if (dy === 0) return
+            if ((dy < 0) !== (root._wheelAcc < 0)) root._wheelAcc = 0   // reset on reverse
+            root._wheelAcc += dy
+
+            var step = 120   // touch: ~120px per item · mouse: one 120-unit notch
+            while (root._wheelAcc <= -step) { root.incrementCurrentIndex(); root._wheelAcc += step }
+            while (root._wheelAcc >=  step) { root.decrementCurrentIndex(); root._wheelAcc -= step }
             event.accepted = true
         }
     }
