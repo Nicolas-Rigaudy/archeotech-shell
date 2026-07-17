@@ -1,8 +1,10 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
 import "../../../../Commons" as Commons
+import "../../../../Commons/Primitives"
 import "../../../../Services/Persistence" as Persistence
 
 // Launcher UI. Panel.qml provides chrome + slide anim + click-outside-to-close;
@@ -310,105 +312,136 @@ Item {
 
                 Row {
                     id: tilesRow
-                    spacing: Commons.Appearance.spacing.base
+                    spacing: Commons.Appearance.spacing.lg
                     anchors { left: parent.left; right: parent.right; top: recentsLbl.bottom; topMargin: 4 }
 
                     Repeater {
                         model: root.topRecents
-                        delegate: Rectangle {
+                        delegate: Item {
+                            id: tile
                             required property var modelData
                             // 4 tiles, share the row evenly minus spacing.
-                            width:  (tilesRow.width - Commons.Appearance.spacing.base * (root.topRecents.length - 1)) / Math.max(1, root.topRecents.length)
+                            width:  (tilesRow.width - tilesRow.spacing * (root.topRecents.length - 1)) / Math.max(1, root.topRecents.length)
                             height: 64
-                            radius: Commons.Appearance.radius.base
-                            color:  tileHov.hovered ? Commons.Appearance.colors.accentAlpha : Commons.Appearance.colors.surface0Alpha
-                            border.color: tileHov.hovered ? Commons.Appearance.colors.accentBorder : "transparent"
-                            border.width: 1
-                            Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
 
-                            Item {
-                                id: tileIconWrapper
-                                anchors { top: parent.top; topMargin: 8; horizontalCenter: parent.horizontalCenter }
-                                width: 26; height: 26
-                                property int _idx: 0
-                                property var _cands: {
-                                    var n = modelData.icon || "", id = modelData.id || "", c = []
-                                    if (n) {
-                                        c.push(n.startsWith("/") ? n : "image://icon/" + n)
-                                        if (n !== n.toLowerCase()) c.push("image://icon/" + n.toLowerCase())
-                                    }
-                                    if (id && id !== n && id !== n.toLowerCase())
-                                        c.push("image://icon/" + id)
-                                    return c
-                                }
-                                Image {
-                                    id: tileIcon
-                                    anchors.fill: parent
-                                    source: tileIconWrapper._cands[tileIconWrapper._idx] || ""
-                                    fillMode: Image.PreserveAspectFit
-                                    // Request the icon at the box's pixel size so
-                                    // the provider renders it crisp instead of
-                                    // handing back a default size we scale (blur).
-                                    sourceSize: Qt.size(width, height)
-                                    smooth: true
-                                    onStatusChanged: {
-                                        if (status === Image.Error
-                                                && tileIconWrapper._idx < tileIconWrapper._cands.length - 1)
-                                            tileIconWrapper._idx++
-                                    }
-                                }
-                                Text {
-                                    anchors.centerIn: parent
-                                    visible: tileIcon.status !== Image.Ready
-                                    text: ""
-                                    font { family: Commons.Appearance.font.family; pixelSize: 16 }
-                                    color: Commons.Appearance.colors.overlay1
-                                }
+                            // Depth (§18.2) — subtle key shadow behind the card.
+                            // A sibling *behind* `card`, never a layer on the
+                            // interactive rect (hit-testing rule, DECISIONS 2026-07-02).
+                            RectangularShadow {
+                                anchors.fill: card
+                                radius: card.radius
+                                blur:   16
+                                offset: Qt.vector2d(0, 5)
+                                spread: 0
+                                color:  Qt.rgba(0, 0, 0, 0.5)
                             }
 
-                            Text {
-                                anchors { bottom: parent.bottom; bottomMargin: 6; left: parent.left; right: parent.right }
-                                text:  modelData.name || ""
-                                color: Commons.Appearance.colors.subtext1
-                                font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeSm }
-                                horizontalAlignment: Text.AlignHCenter
-                                elide: Text.ElideRight
-                            }
-
-                            // Unpin overlay — top-right corner, fades in on
-                            // tile hover. Pinned-tile-only since recents
-                            // entries are either pinned or frecency-only;
-                            // frecency entries can be re-pinned from the list.
                             Rectangle {
-                                id: tileUnpin
-                                readonly property bool _pinned: root.isPinned(modelData)
-                                visible: _pinned
-                                anchors { top: parent.top; right: parent.right; margins: 4 }
-                                width: 20; height: 20
-                                radius: Commons.Appearance.radius.sm
-                                color:   _tileUnpinArea.containsMouse ? Commons.Appearance.colors.surface0 : "transparent"
-                                opacity: tileHov.hovered || _tileUnpinArea.containsMouse ? 1.0 : 0.0
-                                Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.fast } }
-                                Behavior on color   { ColorAnimation  { duration: Commons.Appearance.anim.fast } }
+                                id: card
+                                anchors.fill: parent
+                                radius: Commons.Appearance.radius.base
+                                // Warmth (§18.2) — accent-tinted surface, not flat grey.
+                                color:  Commons.Appearance.colors.surfaceWarm
+                                // Crisp accent edge on hover for definition.
+                                border.width: 1
+                                border.color: tileWash.hovered ? Commons.Appearance.colors.accentBorder : "transparent"
+                                Behavior on border.color { Commons.ColorAnim {} }
+
+                                Item {
+                                    id: tileIconWrapper
+                                    anchors { top: parent.top; topMargin: 8; horizontalCenter: parent.horizontalCenter }
+                                    width: 26; height: 26
+                                    property int _idx: 0
+                                    property var _cands: {
+                                        var n = tile.modelData.icon || "", id = tile.modelData.id || "", c = []
+                                        if (n) {
+                                            c.push(n.startsWith("/") ? n : "image://icon/" + n)
+                                            if (n !== n.toLowerCase()) c.push("image://icon/" + n.toLowerCase())
+                                        }
+                                        if (id && id !== n && id !== n.toLowerCase())
+                                            c.push("image://icon/" + id)
+                                        return c
+                                    }
+                                    Image {
+                                        id: tileIcon
+                                        anchors.fill: parent
+                                        source: tileIconWrapper._cands[tileIconWrapper._idx] || ""
+                                        fillMode: Image.PreserveAspectFit
+                                        // Request the icon at the box's pixel size so
+                                        // the provider renders it crisp instead of
+                                        // handing back a default size we scale (blur).
+                                        sourceSize: Qt.size(width, height)
+                                        smooth: true
+                                        onStatusChanged: {
+                                            if (status === Image.Error
+                                                    && tileIconWrapper._idx < tileIconWrapper._cands.length - 1)
+                                                tileIconWrapper._idx++
+                                        }
+                                    }
+                                    Text {
+                                        anchors.centerIn: parent
+                                        visible: tileIcon.status !== Image.Ready
+                                        text: ""
+                                        font { family: Commons.Appearance.font.family; pixelSize: 16 }
+                                        color: Commons.Appearance.colors.overlay1
+                                    }
+                                }
 
                                 Text {
-                                    anchors.centerIn: parent
-                                    text:  "󰐃"
-                                    color: Commons.Appearance.colors.accent
-                                    font { family: Commons.Appearance.font.family; pixelSize: 12 }
+                                    anchors { bottom: parent.bottom; bottomMargin: 6; left: parent.left; leftMargin: 6; right: parent.right; rightMargin: 6 }
+                                    text:  tile.modelData.name || ""
+                                    color: Commons.Appearance.colors.subtext1
+                                    font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeSm }
+                                    horizontalAlignment: Text.AlignHCenter
+                                    elide: Text.ElideRight
                                 }
 
-                                MouseArea {
-                                    id: _tileUnpinArea
+                                // Unpin overlay — top-right corner, fades in on
+                                // tile hover. Pinned-tile-only since recents
+                                // entries are either pinned or frecency-only;
+                                // frecency entries can be re-pinned from the list.
+                                // z:1 keeps it above the state-layer wash so its
+                                // click toggles the pin rather than launching.
+                                Rectangle {
+                                    id: tileUnpin
+                                    z: 1
+                                    readonly property bool _pinned: root.isPinned(tile.modelData)
+                                    visible: _pinned
+                                    anchors { top: parent.top; right: parent.right; margins: 4 }
+                                    width: 20; height: 20
+                                    radius: Commons.Appearance.radius.sm
+                                    color:   _tileUnpinArea.containsMouse ? Commons.Appearance.colors.surface0 : "transparent"
+                                    opacity: tileWash.hovered || _tileUnpinArea.containsMouse ? 1.0 : 0.0
+                                    Behavior on opacity { Commons.Anim { duration: Commons.Appearance.anim.fast; curve: Commons.Appearance.curve.standardDecel } }
+                                    Behavior on color   { Commons.ColorAnim {} }
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text:  "󰐃"
+                                        color: Commons.Appearance.colors.accent
+                                        font { family: Commons.Appearance.font.family; pixelSize: 12 }
+                                    }
+
+                                    MouseArea {
+                                        id: _tileUnpinArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.togglePin(tile.modelData)
+                                    }
+                                }
+
+                                // Shared hover/press primitive (§18.4) — accent
+                                // wash + hover-grow / press-depress on the tile.
+                                StateLayer {
+                                    id: tileWash
                                     anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: root.togglePin(modelData)
+                                    scaleTarget: tile
+                                    hoverScale:  1.05
+                                    pressScale:  0.96
+                                    onClicked:   root._launch(tile.modelData)
                                 }
                             }
-
-                            HoverHandler { id: tileHov }
-                            TapHandler   { onTapped: root._launch(modelData) }
                         }
                     }
                 }
@@ -417,29 +450,36 @@ Item {
             // ── Search box ─────────────────────────────────────────────────────
             Rectangle {
                 width:        parent.width
-                height:       38
-                color:        Commons.Appearance.colors.surface0Alpha
-                border.color: Commons.Appearance.colors.accentBorder
-                border.width: 1
-                radius:       Commons.Appearance.radius.base
+                height:       44
+                // Warmth (§18.2) — accent-tinted surface, not flat grey.
+                color:        Commons.Appearance.colors.surfaceWarm
+                // Border brightens + thickens on focus for a clear active state.
+                border.color: searchInput.activeFocus ? Commons.Appearance.colors.accent
+                                                       : Commons.Appearance.colors.accentBorder
+                border.width: searchInput.activeFocus ? 2 : 1
+                radius:       Commons.Appearance.radius.md
+                Behavior on border.color { Commons.ColorAnim {} }
 
                 Text {
                     id: searchGlyph
-                    anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
+                    anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
                     text:  ""
-                    font { family: Commons.Appearance.font.family; pixelSize: 14 }
-                    color: Commons.Appearance.colors.overlay1
+                    font { family: Commons.Appearance.font.family; pixelSize: 15 }
+                    color: searchInput.activeFocus ? Commons.Appearance.colors.accent
+                                                   : Commons.Appearance.colors.overlay1
+                    Behavior on color { Commons.ColorAnim {} }
                 }
                 TextInput {
                     id: searchInput
                     anchors {
-                        left: searchGlyph.right; leftMargin: 6
-                        right: parent.right;     rightMargin: 10
+                        left: searchGlyph.right; leftMargin: 10
+                        right: clearBtn.left;    rightMargin: 6
                         verticalCenter: parent.verticalCenter
                     }
                     color:         Commons.Appearance.colors.text
-                    font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeBase }
+                    font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeMd }
                     selectByMouse: true
+                    clip:          true
                     onTextChanged: root.query = text
                     Keys.onUpPressed: {
                         if (root.selectedIdx > 0) root.selectedIdx--
@@ -451,6 +491,38 @@ Item {
                     }
                     Keys.onReturnPressed: root._launch(root.filtered[root.selectedIdx])
                     Keys.onEscapePressed: if (root.panelRoot) root.panelRoot.close()
+
+                    // Placeholder — shown only when the field is empty.
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: searchInput.text.length === 0
+                        text:  "Search applications…"
+                        color: Commons.Appearance.colors.overlay0
+                        font:  searchInput.font
+                    }
+                }
+                // Clear button — appears once there's a query.
+                Rectangle {
+                    id: clearBtn
+                    anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
+                    width: 24; height: 24
+                    radius: Commons.Appearance.radius.sm
+                    visible: searchInput.text.length > 0
+                    color:  _clearArea.containsMouse ? Commons.Appearance.colors.surface0Alpha : "transparent"
+                    Behavior on color { Commons.ColorAnim {} }
+                    Text {
+                        anchors.centerIn: parent
+                        text:  ""
+                        font { family: Commons.Appearance.font.family; pixelSize: 12 }
+                        color: Commons.Appearance.colors.overlay1
+                    }
+                    MouseArea {
+                        id: _clearArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: { searchInput.text = ""; searchInput.forceActiveFocus() }
+                    }
                 }
             }
 
@@ -458,11 +530,14 @@ Item {
             ListView {
                 id:             resultList
                 width:          parent.width
-                // Shrink the cap when recents row is visible so the compact
-                // (axisSize:440) panel fits without overflow. When typing,
-                // recents hides and the list can grow back.
-                height:         recentsRow.visible ? Math.min(contentHeight, 6 * 40)
-                                                   : Math.min(contentHeight, 8 * 40)
+                spacing:        4
+                // Two-line rows (§ ref launchers: Caelestia 57 / Dank 52) — a
+                // 40px single-line row read like a menu, not a launcher.
+                readonly property int rowH: 52
+                // Cap the visible rows so the panel fits; recents row steals
+                // vertical budget, so show fewer while it's up.
+                height:         recentsRow.visible ? Math.min(contentHeight, 5 * (rowH + spacing))
+                                                   : Math.min(contentHeight, 7 * (rowH + spacing))
                 implicitHeight: height
                 clip:           true
                 model:          root.filtered
@@ -474,8 +549,8 @@ Item {
                 highlightMoveVelocity: -1
                 highlight: Rectangle {
                     width:  resultList.width
-                    height: 40
-                    radius: Commons.Appearance.radius.sm
+                    height: resultList.rowH
+                    radius: Commons.Appearance.radius.md
                     color:  Commons.Appearance.colors.accentAlpha
                 }
 
@@ -485,13 +560,13 @@ Item {
                     required property var modelData
                     required property int index
                     width:  ListView.view.width
-                    height: 40
+                    height: resultList.rowH
 
                     // ── Icon with fallback chain ───────────────────────────────
                     Item {
                         id: iconWrapper
-                        anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-                        width: 22; height: 22
+                        anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
+                        width: 34; height: 34
 
                         property int _idx: 0
                         property var _cands: {
@@ -523,23 +598,39 @@ Item {
                             anchors.centerIn: parent
                             visible: appIcon.status !== Image.Ready || iconWrapper._cands.length === 0
                             text:  ""
-                            font { family: Commons.Appearance.font.family; pixelSize: 16 }
+                            font { family: Commons.Appearance.font.family; pixelSize: 20 }
                             color: Commons.Appearance.colors.overlay1
                         }
                     }
 
-                    Text {
+                    // Name + secondary (comment / generic name) — the two-line
+                    // treatment every mature launcher uses.
+                    Column {
                         anchors {
-                            left:  iconWrapper.right; leftMargin:  10
+                            left:  iconWrapper.right; leftMargin:  12
                             right: pinBtn.left;       rightMargin: 6
                             verticalCenter: parent.verticalCenter
                         }
-                        text:  modelData.name || ""
-                        color: root.selectedIdx === index
-                                   ? Commons.Appearance.colors.text
-                                   : Commons.Appearance.colors.subtext1
-                        font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeBase }
-                        elide: Text.ElideRight
+                        spacing: 1
+
+                        Text {
+                            width: parent.width
+                            text:  modelData.name || ""
+                            color: root.selectedIdx === index
+                                       ? Commons.Appearance.colors.text
+                                       : Commons.Appearance.colors.subtext1
+                            font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeMd; weight: Font.Medium }
+                            elide: Text.ElideRight
+                        }
+                        Text {
+                            width: parent.width
+                            readonly property string _sub: modelData.comment || modelData.genericName || ""
+                            text:    _sub
+                            visible: _sub.length > 0
+                            color:   Commons.Appearance.colors.overlay1
+                            font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeSm }
+                            elide: Text.ElideRight
+                        }
                     }
 
                     // Pin/unpin toggle. Visible when the row is selected OR
@@ -547,12 +638,12 @@ Item {
                     Rectangle {
                         id: pinBtn
                         readonly property bool _pinned: root.isPinned(modelData)
-                        anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
-                        width: 22; height: 22
+                        anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
+                        width: 24; height: 24
                         radius: Commons.Appearance.radius.sm
                         visible: _pinned || root.selectedIdx === index
                         color:   _pinArea.containsMouse ? Commons.Appearance.colors.surface0Alpha : "transparent"
-                        Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                        Behavior on color { Commons.ColorAnim {} }
 
                         Text {
                             anchors.centerIn: parent
@@ -560,7 +651,7 @@ Item {
                             color: pinBtn._pinned ? Commons.Appearance.colors.accent
                                                   : Commons.Appearance.colors.overlay0
                             font { family: Commons.Appearance.font.family; pixelSize: 14 }
-                            Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                            Behavior on color { Commons.ColorAnim {} }
                         }
 
                         MouseArea {
@@ -583,12 +674,30 @@ Item {
             Item {
                 visible: root.filtered.length === 0
                 width:   parent.width
-                height:  40
-                Text {
+                height:  128
+                Column {
                     anchors.centerIn: parent
-                    text:  root.allApps.length === 0 ? "Loading…" : "No results"
-                    color: Commons.Appearance.colors.overlay1
-                    font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeBase }
+                    spacing: Commons.Appearance.spacing.sm
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text:  ""
+                        color: Commons.Appearance.colors.overlay0
+                        font { family: Commons.Appearance.font.family; pixelSize: 34 }
+                    }
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text:  root.allApps.length === 0 ? "Loading applications…" : "No results"
+                        color: Commons.Appearance.colors.subtext0
+                        font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeMd }
+                    }
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        visible: root.allApps.length > 0
+                        text:  "Try a different search"
+                        color: Commons.Appearance.colors.overlay0
+                        font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeSm }
+                    }
                 }
             }
         }

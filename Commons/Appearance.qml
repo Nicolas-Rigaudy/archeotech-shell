@@ -113,16 +113,20 @@ QtObject {
         readonly property color glassBorder:  root._rgba("surface0", "#363a4f", 0.90)
 
         // ── Warmth (§18.2) — accent-tinted surfaces, not flat grey. ──
-        // Resting container = surface0 nudged toward the accent, at the same
-        // 0.60 alpha as surface0Alpha so it drops in as a warm replacement.
+        // Resting container = surface0 pulled toward the accent, and more opaque
+        // than surface0Alpha (0.60) so cards read as solid raised surfaces over
+        // the glass rather than another sheet of the same grey. The M3 8%/0.60
+        // values were invisible on our dark glass — dialled up during the
+        // launcher taste-test (2026-07-17).
         readonly property color surfaceWarm: {
             var c = root._blend(root._c("surface0", "#363a4f"),
-                                root._c(root._accentName, "#c6a0f6"), 0.08)
-            return Qt.rgba(c.r, c.g, c.b, 0.60)
+                                root._c(root._accentName, "#c6a0f6"), 0.15)
+            return Qt.rgba(c.r, c.g, c.b, 0.85)
         }
-        // State-layer tints (M3 overlay alphas, accent-hued for warmth).
-        readonly property color stateHover:   root._rgba(root._accentName, "#c6a0f6", 0.10)
-        readonly property color statePressed: root._rgba(root._accentName, "#c6a0f6", 0.16)
+        // State-layer tints (accent-hued). Punchier than the M3 0.08/0.12
+        // canon — that wash didn't register on the dark palette.
+        readonly property color stateHover:   root._rgba(root._accentName, "#c6a0f6", 0.20)
+        readonly property color statePressed: root._rgba(root._accentName, "#c6a0f6", 0.30)
     }
 
     // ── Typography ─────────────────────────────────────────────────────────────
