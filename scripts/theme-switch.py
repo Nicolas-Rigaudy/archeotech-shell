@@ -23,6 +23,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List
 
@@ -75,6 +76,30 @@ def run(cmd: List[str], **kwargs: Any) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, check=False, capture_output=True, text=True, **kwargs)
 
 
+def _kb_layout() -> str:
+    """Active MangoWC keyboard layout name (e.g. 'us'), or '' if unavailable.
+    `mmsg -g -k` prints one '<output> kb_layout <name>' line per monitor."""
+    lines = run(["mmsg", "-g", "-k"]).stdout.strip().splitlines()
+    parts = lines[0].split() if lines else []
+    return parts[-1] if parts else ""
+
+
+def mango_reload_preserving_kb() -> None:
+    """`mmsg -s -d reload_config` re-reads xkb config and resets the active
+    layout to the first in xkb_rules_layout, silently switching it mid-session.
+    Capture it, reload, then cycle switch_keyboard_layout back to it (MangoWC
+    has no set-by-name; capped at 8, no-op if the reload didn't change it)."""
+    prev = _kb_layout()
+    run(["mmsg", "-s", "-d", "reload_config"])
+    if not prev:
+        return
+    for _ in range(8):
+        if _kb_layout() == prev:
+            break
+        run(["mmsg", "-s", "-d", "switch_keyboard_layout"])
+        time.sleep(0.1)
+
+
 def info(msg: str) -> None: print(f"\x1b[1;35m·\x1b[0m {msg}")
 def warn(msg: str) -> None: print(f"\x1b[1;33m!\x1b[0m {msg}", file=sys.stderr)
 def fail(msg: str) -> None:
@@ -93,7 +118,10 @@ def apply_quickshell(theme: dict, vars: Dict[str, str]) -> None:
     FileView watchChanges fires, but we also call `qs ipc call theme reload`
     since watchChanges alone is unreliable across atomic renames."""
     atomic_write(ACTIVE_THEME_FILE, json.dumps(theme, indent=2) + "\n")
-    run(["qs", "ipc", "call", "theme", "reload"])
+    # -c archeotech: without it `qs` targets the "default" config and the call
+    # never reaches the running shell, so the live theme reload silently no-ops
+    # and the shell keeps its old colors until a full restart (Super+Shift+R).
+    run(["qs", "-c", "archeotech", "ipc", "call", "theme", "reload"])
 
 
 def apply_kitty(theme: dict, vars: Dict[str, str]) -> None:
@@ -136,7 +164,7 @@ def apply_mango(theme: dict, vars: Dict[str, str]) -> None:
         if val:
             text = re.sub(rf"^{key}=.*$", f"{key}={val}", text, flags=re.M)
     atomic_write(path, text)
-    run(["mmsg", "-s", "-d", "reload_config"])
+    mango_reload_preserving_kb()
 
 
 def apply_rofi(theme: dict, vars: Dict[str, str]) -> None:
