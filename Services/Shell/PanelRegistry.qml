@@ -35,7 +35,7 @@ QtObject {
             content:  _dashboardComp,
             side:     "bottom",
             size:     600,
-            axisSize: 920
+            axisSize: 1000
         },
         media: {
             content:  _mediaComp,

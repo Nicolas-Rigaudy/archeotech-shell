@@ -4,13 +4,9 @@ import Quickshell.Io
 import "../../../Commons" as Commons
 import "../../../Services/Shell" as ShellServices
 
-Rectangle {
+DashCard {
     id: root
-    implicitHeight: noteCol.implicitHeight + 24
-    color: Commons.Appearance.colors.mantle
-    border.color: Commons.Appearance.colors.surface0
-    border.width: 1
-    radius: Commons.Appearance.radius.md
+    title: "SYSTEM NOTES"
 
     property string snap:    "…"
     property string updates: "…"
@@ -35,10 +31,8 @@ Rectangle {
         id: notesProc
         running: false
         // checkupdates (pacman-contrib) syncs to a temp DB without touching
-        // /var/lib/pacman/sync, so the count is always fresh — unlike plain
-        // `pacman -Qu` which only sees updates after a real `pacman -Sy`.
-        // `paru -Qua` queries AUR directly (no sync needed).
-        // Both fall back to `pacman -Qu` if their helper isn't installed.
+        // /var/lib/pacman/sync, so the count is always fresh. `paru -Qua` queries
+        // AUR directly. Both fall back to `pacman -Qu` if the helper is missing.
         command: ["bash", "-c",
             "snap=$(snapper -c root list 2>/dev/null | awk -F'│' " +
             "'NR>2 && NF>1 && length($4)>4 {gsub(/^[[:space:]]+|[[:space:]]+$/,\"\",$(4)); last=$(4)} " +
@@ -74,7 +68,7 @@ Rectangle {
         required property string value
         required property color  valueColor
         Layout.fillWidth: true
-        height: 22
+        implicitHeight: 22
 
         Text {
             text: label
@@ -94,50 +88,33 @@ Rectangle {
         }
     }
 
-    ColumnLayout {
-        id: noteCol
-        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
-        spacing: 8
-
-        Text {
-            text: "SYSTEM NOTES"
-            color: Commons.Appearance.colors.accent
-            font.family: Commons.Appearance.font.family
-            font.pixelSize: Commons.Appearance.font.sizeBase
-            font.letterSpacing: 1.5
-            opacity: 0.85
+    NoteRow {
+        label: "Last snapshot"
+        value: root.snap
+        valueColor: Commons.Appearance.colors.text
+    }
+    NoteRow {
+        label: "Pending updates"
+        value: {
+            var u = parseInt(root.updates) || 0
+            var a = parseInt(root.aur)     || 0
+            if (u === 0 && a === 0) return "up to date"
+            if (u === 0)            return a + " AUR"
+            if (a === 0)            return u + " packages"
+            return u + " + " + a + " AUR"
         }
-        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
-
-        NoteRow {
-            label: "Last snapshot"
-            value: root.snap
-            valueColor: Commons.Appearance.colors.text
-        }
-        NoteRow {
-            label: "Pending updates"
-            value: {
-                var u = parseInt(root.updates) || 0
-                var a = parseInt(root.aur)     || 0
-                if (u === 0 && a === 0) return "up to date"
-                if (u === 0)            return a + " AUR"
-                if (a === 0)            return u + " packages"
-                return u + " + " + a + " AUR"
-            }
-            valueColor: (root.updates === "0" && root.aur === "0")
-                ? Commons.Appearance.colors.green
-                : Commons.Appearance.colors.yellow
-        }
-        NoteRow {
-            label: "VPN"
-            value: root.vpn
-            valueColor: root.vpn === "inactive" ? Commons.Appearance.colors.overlay1 : Commons.Appearance.colors.green
-        }
-        NoteRow {
-            label: "AWS profile"
-            value: root.aws
-            valueColor: root.aws === "unset" ? Commons.Appearance.colors.overlay1 : Commons.Appearance.colors.blue
-        }
-
+        valueColor: (root.updates === "0" && root.aur === "0")
+            ? Commons.Appearance.colors.green
+            : Commons.Appearance.colors.yellow
+    }
+    NoteRow {
+        label: "VPN"
+        value: root.vpn
+        valueColor: root.vpn === "inactive" ? Commons.Appearance.colors.overlay1 : Commons.Appearance.colors.green
+    }
+    NoteRow {
+        label: "AWS profile"
+        value: root.aws
+        valueColor: root.aws === "unset" ? Commons.Appearance.colors.overlay1 : Commons.Appearance.colors.blue
     }
 }

@@ -1,19 +1,17 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell.Io
 import "../../../Commons" as Commons
 import "../../../Services/Shell" as ShellServices
 import "../../../Services/Persistence" as Persistence
 
-Rectangle {
+DashCard {
     id: root
-    implicitHeight: col.implicitHeight + 24
-    color: Commons.Appearance.colors.mantle
-    border.color: Commons.Appearance.colors.surface0
-    border.width: 1
-    radius: Commons.Appearance.radius.md
+    title: "ACTIVE PROJECTS"
 
     property var projects: []
+    readonly property int _rowH: 28
 
     Component.onCompleted: _refresh()
 
@@ -24,9 +22,7 @@ Rectangle {
         }
     }
 
-    // Scan roots are config-driven (Persistence.Config "dashboard.scanRoots",
-    // an array of dirs; "~/" expands to $HOME). Default: ~/Projects. Add more
-    // (e.g. work repos) via config without editing the shell.
+    // Scan roots are config-driven (Persistence.Config "dashboard.scanRoots").
     function _refresh() {
         root.projects = []
         var roots = Persistence.Config.get("dashboard.scanRoots", ["~/Projects"])
@@ -62,7 +58,7 @@ Rectangle {
     Process {
         id: projectsProc
         running: false
-        command: ["bash", "-c", ""]   // built per-run from config in _refresh()
+        command: ["bash", "-c", ""]
 
         property var _buf: []
         onRunningChanged: if (running) _buf = []
@@ -77,75 +73,71 @@ Rectangle {
         onExited: root.projects = projectsProc._buf
     }
 
-    ColumnLayout {
-        id: col
-        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
-        spacing: 8
+    Text {
+        visible: root.projects.length === 0
+        Layout.fillWidth: true
+        text: projectsProc.running ? "scanning…" : "no repositories found"
+        color: Commons.Appearance.colors.overlay1
+        font.family: Commons.Appearance.font.family
+        font.pixelSize: Commons.Appearance.font.sizeBase
+        font.italic: true
+    }
 
-        Text {
-            text: "ACTIVE PROJECTS"
-            color: Commons.Appearance.colors.accent
-            font.family: Commons.Appearance.font.family
-            font.pixelSize: Commons.Appearance.font.sizeBase
-            font.letterSpacing: 1.5
-            opacity: 0.85
-        }
-        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+    // Capped at 4 visible rows; scrolls inside the card when there are more.
+    ListView {
+        Layout.fillWidth: true
+        Layout.preferredHeight: Math.min(root.projects.length, 4) * root._rowH
+        visible: root.projects.length > 0
+        clip: true
+        interactive: root.projects.length > 4
+        boundsBehavior: Flickable.StopAtBounds
+        model: root.projects
+        spacing: 0
 
-        Text {
-            visible: root.projects.length === 0
-            text: projectsProc.running ? "scanning…" : "no repositories found"
-            color: Commons.Appearance.colors.overlay1
-            font.family: Commons.Appearance.font.family
-            font.pixelSize: Commons.Appearance.font.sizeBase
-            font.italic: true
-        }
+        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
-        Repeater {
-            model: root.projects.slice(0, 8)
-            delegate: Rectangle {
-                required property var modelData
-                Layout.fillWidth: true
-                height: 24
-                radius: Commons.Appearance.radius.sm
-                color: rowHov.containsMouse ? Commons.Appearance.colors.accentAlpha : "transparent"
-                Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+        delegate: Rectangle {
+            required property var modelData
+            width: ListView.view.width
+            height: root._rowH
+            radius: Commons.Appearance.radius.sm
+            color: rowHov.containsMouse ? Commons.Appearance.colors.accentAlpha : "transparent"
+            Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
 
-                Rectangle {
-                    width: 7; height: 7; radius: 4
-                    anchors { left: parent.left; leftMargin: 6; verticalCenter: parent.verticalCenter }
-                    color: modelData.dirty > 0 ? Commons.Appearance.colors.peach : Commons.Appearance.colors.green
-                }
-                Text {
-                    id: nameLbl
-                    text: modelData.name
-                    color: Commons.Appearance.colors.text
-                    font.family: Commons.Appearance.font.family
-                    font.pixelSize: Commons.Appearance.font.sizeBase
-                    anchors { left: parent.left; leftMargin: 21; verticalCenter: parent.verticalCenter }
-                    elide: Text.ElideRight
-                    width: parent.width * 0.50
-                }
-                Text {
-                    text: modelData.branch
-                    color: Commons.Appearance.colors.subtext0
-                    font.family: Commons.Appearance.font.family
-                    font.pixelSize: Commons.Appearance.font.sizeBase
-                    anchors { left: nameLbl.right; leftMargin: 8; verticalCenter: parent.verticalCenter }
-                    elide: Text.ElideRight
-                    width: parent.width * 0.28
-                }
-                Text {
-                    text: modelData.dirty > 0 ? "+" + modelData.dirty : "✔"
-                    color: modelData.dirty > 0 ? Commons.Appearance.colors.peach : Commons.Appearance.colors.green
-                    font.family: Commons.Appearance.font.family
-                    font.pixelSize: Commons.Appearance.font.sizeBase
-                    anchors { right: parent.right; rightMargin: 4; verticalCenter: parent.verticalCenter }
-                }
-
-                HoverHandler { id: rowHov }
-                TapHandler { onTapped: root.openProject(modelData.path) }
+            Rectangle {
+                width: 7; height: 7; radius: 4
+                anchors { left: parent.left; leftMargin: 6; verticalCenter: parent.verticalCenter }
+                color: modelData.dirty > 0 ? Commons.Appearance.colors.peach : Commons.Appearance.colors.green
             }
+            Text {
+                id: nameLbl
+                text: modelData.name
+                color: Commons.Appearance.colors.text
+                font.family: Commons.Appearance.font.family
+                font.pixelSize: Commons.Appearance.font.sizeBase
+                anchors { left: parent.left; leftMargin: 21; verticalCenter: parent.verticalCenter }
+                elide: Text.ElideRight
+                width: parent.width * 0.48
+            }
+            Text {
+                text: modelData.branch
+                color: Commons.Appearance.colors.subtext0
+                font.family: Commons.Appearance.font.family
+                font.pixelSize: Commons.Appearance.font.sizeBase
+                anchors { left: nameLbl.right; leftMargin: 8; verticalCenter: parent.verticalCenter }
+                elide: Text.ElideRight
+                width: parent.width * 0.28
+            }
+            Text {
+                text: modelData.dirty > 0 ? "+" + modelData.dirty : "✔"
+                color: modelData.dirty > 0 ? Commons.Appearance.colors.peach : Commons.Appearance.colors.green
+                font.family: Commons.Appearance.font.family
+                font.pixelSize: Commons.Appearance.font.sizeBase
+                anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
+            }
+
+            HoverHandler { id: rowHov }
+            TapHandler { onTapped: root.openProject(modelData.path) }
         }
     }
 }

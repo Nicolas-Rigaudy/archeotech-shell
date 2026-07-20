@@ -4,13 +4,9 @@ import Quickshell.Io
 import "../../../Commons" as Commons
 import "../../../Services/Shell" as ShellServices
 
-Rectangle {
+DashCard {
     id: root
-    implicitHeight: col.implicitHeight + 24
-    color: Commons.Appearance.colors.mantle
-    border.color: Commons.Appearance.colors.surface0
-    border.width: 1
-    radius: Commons.Appearance.radius.md
+    title: "SYSTEM STATUS"
 
     property int    cpu:       0
     property int    ram:       0
@@ -78,7 +74,7 @@ Rectangle {
         required property string label
         required property int    value
         required property color  barColor
-        height: 22
+        implicitHeight: 24
 
         Text {
             id: lbl
@@ -92,7 +88,7 @@ Rectangle {
 
         Rectangle {
             anchors { left: lbl.right; leftMargin: 8; right: valLbl.left; rightMargin: 8; verticalCenter: parent.verticalCenter }
-            height: 5
+            height: 6
             radius: 3
             color: Commons.Appearance.colors.surface0
 
@@ -117,29 +113,13 @@ Rectangle {
         }
     }
 
-    ColumnLayout {
-        id: col
-        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
-        spacing: 8
-
-        Text {
-            text: "SYSTEM STATUS"
-            color: Commons.Appearance.colors.accent
-            font.family: Commons.Appearance.font.family
-            font.pixelSize: Commons.Appearance.font.sizeBase
-            font.letterSpacing: 1.5
-            opacity: 0.85
-        }
-        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
-
-        StatRow { Layout.fillWidth: true; label: "CPU";  value: root.cpu;  barColor: Commons.Appearance.colors.blue }
-        StatRow { Layout.fillWidth: true; label: "RAM";  value: root.ram;  barColor: Commons.Appearance.colors.mauve }
-        StatRow { Layout.fillWidth: true; label: "Disk"; value: root.disk; barColor: Commons.Appearance.colors.peach }
-        StatRow {
-            Layout.fillWidth: true
-            label: "Bat " + (root.batStatus === "Charging" ? "↑" : root.batStatus === "Discharging" ? "↓" : "─")
-            value: root.bat
-            barColor: root.bat > 20 ? Commons.Appearance.colors.green : Commons.Appearance.colors.red
-        }
+    StatRow { Layout.fillWidth: true; label: "CPU";  value: root.cpu;  barColor: Commons.Appearance.colors.blue }
+    StatRow { Layout.fillWidth: true; label: "RAM";  value: root.ram;  barColor: Commons.Appearance.colors.mauve }
+    StatRow { Layout.fillWidth: true; label: "Disk"; value: root.disk; barColor: Commons.Appearance.colors.peach }
+    StatRow {
+        Layout.fillWidth: true
+        label: "Bat " + (root.batStatus === "Charging" ? "↑" : root.batStatus === "Discharging" ? "↓" : "─")
+        value: root.bat
+        barColor: root.bat > 20 ? Commons.Appearance.colors.green : Commons.Appearance.colors.red
     }
 }

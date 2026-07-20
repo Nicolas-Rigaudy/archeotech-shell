@@ -8,31 +8,44 @@ import "../../../Dashboard/panels"
 // provides chrome + slide anim + Esc + click-outside; this file is the inner
 // content only. `panelRoot` is injected by Loader.onLoaded.
 //
-// Auto-dismiss timer (4s) fires when `Commons.State.dashboardAutoOpen` is
-// true and closes via `panelRoot.close()`.
+// "Base of operations" layout (2026-07-20 rework): a welcoming hero (greeting +
+// name + big clock + date) over a 2×2 bento of cards. Sized to fit — no scroll.
+// Auto-dismiss timer (4s) fires when `Commons.State.dashboardAutoOpen` is true.
 Item {
     id: root
     anchors.fill: parent
 
     property var panelRoot
 
-    // Responsive: two columns side-by-side when the card is wide (bottom strip),
-    // stacked + scrollable when narrow (vertical side strip). Keys on the actual
-    // allocated width, so it's holder-agnostic — no per-side variant. (S26-C)
+    // Kept for the narrow (vertical-strip) edge case — stack to 1 column there.
     readonly property bool _wide: width >= 720
 
-    // Auto-dismiss when opened via autostart (openAuto IPC call)
+    // Live clock/greeting — tick while the panel is open.
+    property var _now: new Date()
+    function _greeting() {
+        var h = root._now.getHours()
+        var g = h < 5 ? "Good night" : h < 12 ? "Good morning"
+              : h < 18 ? "Good afternoon" : "Good evening"
+        // Derive the name from the home dir basename (Commons.Paths.home is
+        // StandardPaths-backed — no dependency on a Quickshell.env call).
+        var u = (Commons.Paths.home || "").split("/").filter(Boolean).pop() || ""
+        if (u.length) u = u.charAt(0).toUpperCase() + u.slice(1)
+        return u.length ? g + ", " + u : g
+    }
+    Timer {
+        interval: 1000; repeat: true
+        running: root.panelRoot ? root.panelRoot.panelOpen : false
+        onTriggered: root._now = new Date()
+    }
+
     Timer {
         id: autoDismiss
-        interval: 4000
-        repeat: false
-        running: false
+        interval: 4000; repeat: false; running: false
         onTriggered: {
             if (root.panelRoot) root.panelRoot.close()
             Commons.State.dashboardAutoOpen = false
         }
     }
-
     Connections {
         target: root.panelRoot
         enabled: root.panelRoot !== null
@@ -44,58 +57,55 @@ Item {
         }
     }
 
-    // Content container — fills Panel's Loader bounds. Panel.qml owns chrome
-    // (color/border/radius) + slide-from-bottom anim.
-    Item {
-        id: panel
+    // Content container — fills Panel's Loader bounds. Panel.qml owns chrome.
+    ColumnLayout {
         anchors.fill: parent
-        clip: true
+        anchors.leftMargin: 24; anchors.rightMargin: 24
+        anchors.topMargin: 20;  anchors.bottomMargin: 20
+        spacing: 16
 
-        // ── Header ──────────────────────────────────────────────────────
+        // ── Hero — human anchor: greeting + name, big clock, date ────────────
         Item {
-            id: header
-            anchors { top: parent.top; topMargin: 20; left: parent.left; leftMargin: 24; right: parent.right; rightMargin: 24 }
-            height: 28
+            Layout.fillWidth: true
+            implicitHeight: 56
 
-            Text {
-                text: "ARCHEOTECH-OS"
-                color: Commons.Appearance.colors.accent
-                font.family: Commons.Appearance.font.family
-                font.pixelSize: Commons.Appearance.font.sizeMd
-                font.letterSpacing: 3
-                font.bold: true
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
+            Column {
+                anchors { left: parent.left; verticalCenter: parent.verticalCenter }
+                spacing: 3
+                Text {
+                    text: root._greeting()
+                    color: Commons.Appearance.colors.text
+                    font.family: Commons.Appearance.font.family
+                    font.pixelSize: 22
+                    font.weight: Font.DemiBold
+                }
+                Text {
+                    text: Qt.formatDateTime(root._now, "dddd, d MMMM")
+                    color: Commons.Appearance.colors.subtext0
+                    font.family: Commons.Appearance.font.family
+                    font.pixelSize: Commons.Appearance.font.sizeMd
+                }
             }
 
+            // Big clock
             Text {
-                id: dateLbl
-                color: Commons.Appearance.colors.subtext0
+                anchors { right: closeBtn.left; rightMargin: 16; verticalCenter: parent.verticalCenter }
+                text: Qt.formatDateTime(root._now, "HH:mm")
+                color: Commons.Appearance.colors.accent
                 font.family: Commons.Appearance.font.family
-                font.pixelSize: Commons.Appearance.font.sizeMd
-                anchors { right: closeBtn.left; rightMargin: 12; verticalCenter: parent.verticalCenter }
-
-                property var _now: new Date()
-                text: Qt.formatDateTime(_now, "ddd yyyy-MM-dd")
-
-                Timer {
-                    interval: 60000
-                    repeat: true
-                    running: root.panelRoot ? root.panelRoot.panelOpen : false
-                    onTriggered: dateLbl._now = new Date()
-                }
+                font.pixelSize: 40
+                font.weight: Font.Light
             }
 
             // Close button
             Rectangle {
                 id: closeBtn
-                width: 26; height: 26
+                width: 28; height: 28
                 radius: Commons.Appearance.radius.sm
                 color: closeBtnHov.containsMouse ? Commons.Appearance.colors.accentAlpha : "transparent"
                 border.color: closeBtnHov.containsMouse ? Commons.Appearance.colors.accentBorder : "transparent"
-                anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+                anchors { right: parent.right; top: parent.top }
                 Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-
                 Text {
                     text: "✕"
                     color: closeBtnHov.containsMouse ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay1
@@ -108,54 +118,26 @@ Item {
             }
         }
 
-        Rectangle {
-            id: divider
-            anchors { top: header.bottom; topMargin: 8; left: parent.left; leftMargin: 24; right: parent.right; rightMargin: 24 }
-            height: 1
-            color: Commons.Appearance.colors.surface0
+        // ── Bento grid — 2×2. No Layout.alignment, so cards STRETCH to the
+        // row's height → the two cards in each row share a top AND bottom edge
+        // (fixes the misalignment). Content inside each card stays top-anchored.
+        GridLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            columns: root._wide ? 2 : 1
+            columnSpacing: 16
+            rowSpacing: 16
+
+            // fillHeight stretches cards to the row height (aligns them);
+            // minimumHeight floors each at its content so fillHeight can't
+            // shrink it below the content (which caused the overflow).
+            SystemStatus   { Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredWidth: 1; Layout.minimumHeight: implicitHeight }
+            ActiveProjects { Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredWidth: 1; Layout.minimumHeight: implicitHeight }
+            QuickLaunch    { Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredWidth: 1; Layout.minimumHeight: implicitHeight }
+            SystemNotes    { Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredWidth: 1; Layout.minimumHeight: implicitHeight }
         }
 
-        // ── Body — reflowing grid, scrollable when stacked ────────────────
-        Flickable {
-            anchors {
-                top:    divider.bottom; topMargin:    16
-                left:   parent.left;    leftMargin:   24
-                right:  parent.right;   rightMargin:  24
-                bottom: parent.bottom;  bottomMargin: 20
-            }
-            clip: true
-            contentWidth: width
-            contentHeight: grid.implicitHeight
-            boundsBehavior: Flickable.StopAtBounds
-            interactive: contentHeight > height
-
-            GridLayout {
-                id: grid
-                width: parent.width
-                columns: root._wide ? 2 : 1
-                columnSpacing: 16
-                rowSpacing: 16
-
-                // Two grouped column-containers. Wide → sit side-by-side;
-                // narrow → the grid drops to 1 column and they stack in order.
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 1   // equal split with the right group
-                    Layout.alignment: Qt.AlignTop
-                    spacing: 8
-                    SystemStatus { Layout.fillWidth: true }
-                    SystemNotes  { Layout.fillWidth: true }
-                }
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 1
-                    Layout.alignment: Qt.AlignTop
-                    spacing: 8
-                    ActiveProjects { Layout.fillWidth: true }
-                    QuickLaunch    { Layout.fillWidth: true }
-                    TipOfSession   { Layout.fillWidth: true }
-                }
-            }
-        }
+        // ── Tip — slim full-width strip at the bottom (its own line). ────────
+        TipOfSession { Layout.fillWidth: true }
     }
 }

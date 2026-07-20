@@ -142,6 +142,16 @@ QtObject {
         // canon — that wash didn't register on the dark palette.
         readonly property color stateHover:   root._rgba(root._accentName, "#c6a0f6", 0.20)
         readonly property color statePressed: root._rgba(root._accentName, "#c6a0f6", 0.30)
+
+        // Elevated card surface (dashboard): a LIGHTER translucent glass than the
+        // panel (surface0 > mantle) so it lifts off with the shadow, but stays
+        // glassy — not opaque/plasticky. Only a whisper of accent warmth (0.06);
+        // surfaceWarm's 0.15 was too much for a wall of cards.
+        readonly property color surfaceCard: {
+            var c = root._blend(root._c("surface0", "#363a4f"),
+                                root._c(root._accentName, "#c6a0f6"), 0.06)
+            return Qt.rgba(c.r, c.g, c.b, 0.58)
+        }
     }
 
     // ── Typography ─────────────────────────────────────────────────────────────

@@ -4,13 +4,9 @@ import Quickshell.Io
 import "../../../Commons" as Commons
 import "../../../Services/Shell" as ShellServices
 
-Rectangle {
+DashCard {
     id: root
-    implicitHeight: col.implicitHeight + 24
-    color: Commons.Appearance.colors.mantle
-    border.color: Commons.Appearance.colors.surface0
-    border.width: 1
-    radius: Commons.Appearance.radius.md
+    title: "QUICK LAUNCH"
 
     Process {
         id: launchProc
@@ -37,60 +33,44 @@ Rectangle {
         { label: "Cheatsheets", icon: _p + "apps/help-browser.svg",        cmd: "kitty --title navi -e navi" }
     ]
 
-    ColumnLayout {
-        id: col
-        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+    Flow {
+        Layout.fillWidth: true
         spacing: 8
 
-        Text {
-            text: "QUICK LAUNCH"
-            color: Commons.Appearance.colors.accent
-            font.family: Commons.Appearance.font.family
-            font.pixelSize: Commons.Appearance.font.sizeBase
-            font.letterSpacing: 1.5
-            opacity: 0.85
-        }
-        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+        Repeater {
+            model: root.apps
+            delegate: Rectangle {
+                required property var modelData
+                width: 110; height: 34
+                radius: Commons.Appearance.radius.base
+                color: hov.containsMouse ? Commons.Appearance.colors.accentAlpha : Commons.Appearance.colors.surface0Alpha
+                border.color: hov.containsMouse ? Commons.Appearance.colors.accentBorder : "transparent"
+                border.width: 1
+                Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
 
-        Flow {
-            Layout.fillWidth: true
-            spacing: 8
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 6
 
-            Repeater {
-                model: root.apps
-                delegate: Rectangle {
-                    required property var modelData
-                    width: 110; height: 34
-                    radius: Commons.Appearance.radius.base
-                    color: hov.containsMouse ? Commons.Appearance.colors.accentAlpha : Commons.Appearance.colors.surface0Alpha
-                    border.color: hov.containsMouse ? Commons.Appearance.colors.accentBorder : "transparent"
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-
-                    Row {
-                        anchors.centerIn: parent
-                        spacing: 6
-
-                        Image {
-                            source: modelData.icon
-                            width: 16; height: 16
-                            anchors.verticalCenter: parent.verticalCenter
-                            smooth: true
-                            visible: status === Image.Ready
-                        }
-
-                        Text {
-                            text: modelData.label
-                            color: Commons.Appearance.colors.text
-                            font.family: Commons.Appearance.font.family
-                            font.pixelSize: Commons.Appearance.font.sizeBase
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
+                    Image {
+                        source: modelData.icon
+                        width: 16; height: 16
+                        anchors.verticalCenter: parent.verticalCenter
+                        smooth: true
+                        visible: status === Image.Ready
                     }
 
-                    HoverHandler { id: hov }
-                    TapHandler { onTapped: root.launch(modelData.cmd) }
+                    Text {
+                        text: modelData.label
+                        color: Commons.Appearance.colors.text
+                        font.family: Commons.Appearance.font.family
+                        font.pixelSize: Commons.Appearance.font.sizeBase
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
                 }
+
+                HoverHandler { id: hov }
+                TapHandler { onTapped: root.launch(modelData.cmd) }
             }
         }
     }
