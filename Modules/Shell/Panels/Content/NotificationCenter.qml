@@ -64,26 +64,24 @@ Item {
                         elide: Text.ElideRight
                         Layout.fillWidth: true
                     }
-                    // Clear all (text pill) — only when there are notifications.
+                    // Clear all — compact trash-can icon, only when there are notifications.
                     Rectangle {
                         id: _clearBtn
                         visible: SystemServices.Notifications.count > 0
-                        Layout.preferredWidth:  _clearLabel.implicitWidth + 20
+                        Layout.preferredWidth: 28
                         Layout.preferredHeight: 28
                         radius: Commons.Appearance.radius.base
                         color: "transparent"
-                        border.color: Commons.Appearance.colors.glassBorder
-                        border.width: 1
                         Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
                         Text {
-                            id: _clearLabel
                             anchors.centerIn: parent
-                            text: "Clear all"
-                            color: Commons.Appearance.colors.subtext0
-                            font.pixelSize: Commons.Appearance.font.sizeSm
-                            font.family: Commons.Appearance.font.family
+                            text: "󰩺"
+                            color: _clearLayer.hovered ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0
+                            font.pixelSize: 15; font.family: Commons.Appearance.font.family
+                            Behavior on color { Commons.ColorAnim {} }
                         }
                         StateLayer {
+                            id: _clearLayer
                             anchors.fill: parent
                             onClicked: SystemServices.Notifications.clearAll()
                         }
@@ -94,31 +92,22 @@ Item {
                         Layout.preferredHeight: 28
                         radius: Commons.Appearance.radius.base
                         color: SystemServices.Notifications.dndEnabled
-                            ? Commons.Appearance.colors.accentAlpha
-                            : (_dndArea.containsMouse ? Commons.Appearance.colors.surface0 : "transparent")
-                        Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                            ? Commons.Appearance.colors.accentAlpha : "transparent"
+                        Behavior on color { Commons.ColorAnim {} }
+                        Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
                         Text {
                             anchors.centerIn: parent
                             text: SystemServices.Notifications.dndEnabled ? "󰂛" : "󰂚"
                             color: SystemServices.Notifications.dndEnabled
                                 ? Commons.Appearance.colors.accent
-                                : (_dndArea.containsMouse ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0)
+                                : (_dndLayer.hovered ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0)
                             font.pixelSize: 15; font.family: Commons.Appearance.font.family
-                            Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                            Behavior on color { Commons.ColorAnim {} }
                         }
-                        MouseArea {
-                            id: _dndArea
+                        StateLayer {
+                            id: _dndLayer
                             anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
                             onClicked: SystemServices.Notifications.dndEnabled = !SystemServices.Notifications.dndEnabled
-                        }
-
-                        ToolTip {
-                            visible: _dndArea.containsMouse
-                            delay: 400
-                            text: SystemServices.Notifications.dndEnabled
-                                ? "Do Not Disturb: on" : "Do Not Disturb: off"
                         }
                     }
 
@@ -126,17 +115,18 @@ Item {
                         Layout.preferredWidth: 28
                         Layout.preferredHeight: 28
                         radius: Commons.Appearance.radius.base
-                        color: _closeArea.containsMouse ? Commons.Appearance.colors.surface0 : "transparent"
-                        Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                        color: "transparent"
+                        Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
                         Text {
                             anchors.centerIn: parent
                             text: "✕"
-                            color: _closeArea.containsMouse ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0
+                            color: _closeLayer.hovered ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0
                             font.pixelSize: 14; font.family: Commons.Appearance.font.family
-                            Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                            Behavior on color { Commons.ColorAnim {} }
                         }
-                        MouseArea {
-                            id: _closeArea; anchors.fill: parent; hoverEnabled: true
+                        StateLayer {
+                            id: _closeLayer
+                            anchors.fill: parent
                             onClicked: if (root.panelRoot) root.panelRoot.close()
                         }
                     }
