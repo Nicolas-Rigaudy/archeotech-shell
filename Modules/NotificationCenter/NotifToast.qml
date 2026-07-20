@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
 import "../../Commons" as Commons
+import "../../Commons/Primitives"
 import "../../Services/System" as SystemServices
 
 Item {
@@ -15,13 +16,28 @@ Item {
     width: 316
     height: card.height
 
-    // Entrance: fade + shift up from below
+    // Enter/exit: fade + shift, decel in (~400) / accel out (~200). The host
+    // (shell.qml) removes us from its array on dismiss/timeout, which would
+    // destroy the delegate instantly — so we animate _progress → 0 first and
+    // only emit the removal signal once it lands (see _close / on_ProgressChanged).
     property real _progress: 0
+    property bool _closing: false
+    property bool _timedOut: false
     opacity: _progress
     transform: Translate { y: (1 - root._progress) * 10 }
 
-    Behavior on _progress { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+    Behavior on _progress { Commons.Anim { exit: root._closing } }
     Component.onCompleted: _progress = 1
+
+    function _close(viaTimeout) {
+        if (root._closing) return
+        root._timedOut = viaTimeout
+        root._closing = true
+        root._progress = 0
+    }
+    on_ProgressChanged: if (root._closing && root._progress <= 0.01) {
+        if (root._timedOut) root.timedOut(); else root.dismissClicked()
+    }
 
     // Screen-space sheen: like the strip cards, sample the ONE top-lit screen
     // gradient at this toast's on-screen Y instead of restarting a dark-bottomed
@@ -45,7 +61,7 @@ Item {
         }
         interval: ms
         running: ms > 0
-        onTriggered: root.timedOut()
+        onTriggered: root._close(true)
     }
 
     RectangularShadow {
@@ -77,86 +93,100 @@ Item {
         MouseArea {
             anchors.fill: parent
             z: -1
-            onClicked: root.dismissClicked()
+            onClicked: root._close(false)
         }
 
-        ColumnLayout {
+        RowLayout {
             id: cardContent
             anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
-            spacing: 4
+            spacing: 10
 
-            RowLayout {
+            // App icon — top-aligned so it spans the two text lines (matches the
+            // notification-center history rows).
+            Item {
+                Layout.preferredWidth: 24; Layout.preferredHeight: 24
+                Layout.alignment: Qt.AlignTop
+                Image {
+                    id: _toastIcon
+                    anchors.fill: parent
+                    source: (root.notification && root.notification.appIcon)
+                        ? (root.notification.appIcon.startsWith("/")
+                            ? root.notification.appIcon
+                            : "image://icon/" + root.notification.appIcon)
+                        : ""
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    visible: source !== "" && status === Image.Ready
+                }
+                Text {
+                    anchors.centerIn: parent
+                    visible: !_toastIcon.visible
+                    text: "󰂚"
+                    color: Commons.Appearance.colors.overlay1
+                    font.pixelSize: 16
+                    font.family: Commons.Appearance.font.family
+                }
+            }
+
+            ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 6
+                spacing: 3
 
-                // App icon
-                Item {
-                    width: 14; height: 14
-                    Image {
-                        id: _toastIcon
-                        anchors.fill: parent
-                        source: (root.notification && root.notification.appIcon)
-                            ? (root.notification.appIcon.startsWith("/")
-                                ? root.notification.appIcon
-                                : "image://icon/" + root.notification.appIcon)
-                            : ""
-                        fillMode: Image.PreserveAspectFit
-                        smooth: true
-                        visible: source !== "" && status === Image.Ready
-                    }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+
                     Text {
-                        anchors.centerIn: parent
-                        visible: !_toastIcon.visible
-                        text: "󰂚"
+                        text: (root.notification && root.notification.appName) ? root.notification.appName : "Notification"
                         color: Commons.Appearance.colors.overlay1
-                        font.pixelSize: 11
+                        font.pixelSize: Commons.Appearance.font.sizeSm
                         font.family: Commons.Appearance.font.family
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                    }
+                    // Close — StateLayer hit target.
+                    Rectangle {
+                        Layout.preferredWidth: 22; Layout.preferredHeight: 22
+                        radius: Commons.Appearance.radius.sm
+                        color: "transparent"
+                        Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
+                        Text {
+                            anchors.centerIn: parent
+                            text: "󰅖"
+                            color: _xLayer.hovered ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0
+                            font.pixelSize: 13; font.family: Commons.Appearance.font.family
+                            Behavior on color { Commons.ColorAnim {} }
+                        }
+                        StateLayer {
+                            id: _xLayer
+                            anchors.fill: parent
+                            onClicked: root._close(false)
+                        }
                     }
                 }
 
                 Text {
-                    text: (root.notification && root.notification.appName) ? root.notification.appName : "Notification"
-                    color: Commons.Appearance.colors.overlay1
+                    text: (root.notification && root.notification.summary) ? root.notification.summary : ""
+                    visible: text.length > 0
+                    color: Commons.Appearance.colors.text
+                    font.pixelSize: Commons.Appearance.font.sizeMd
+                    font.family: Commons.Appearance.font.family
+                    font.weight: Font.Medium
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                }
+
+                Text {
+                    text: (root.notification && root.notification.body) ? root.notification.body : ""
+                    visible: text.length > 0
+                    color: Commons.Appearance.colors.subtext1
                     font.pixelSize: Commons.Appearance.font.sizeSm
                     font.family: Commons.Appearance.font.family
                     Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    maximumLineCount: 3
                     elide: Text.ElideRight
                 }
-                Text {
-                    text: "󰅖"
-                    color: _xArea.containsMouse ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0
-                    font.pixelSize: 13; font.family: Commons.Appearance.font.family
-                    Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-                    MouseArea {
-                        id: _xArea
-                        anchors.fill: parent; anchors.margins: -4
-                        hoverEnabled: true
-                        onClicked: root.dismissClicked()
-                    }
-                }
-            }
-
-            Text {
-                text: (root.notification && root.notification.summary) ? root.notification.summary : ""
-                visible: text.length > 0
-                color: Commons.Appearance.colors.text
-                font.pixelSize: Commons.Appearance.font.sizeMd
-                font.family: Commons.Appearance.font.family
-                font.weight: Font.Medium
-                Layout.fillWidth: true
-                wrapMode: Text.WordWrap
-            }
-
-            Text {
-                text: (root.notification && root.notification.body) ? root.notification.body : ""
-                visible: text.length > 0
-                color: Commons.Appearance.colors.subtext1
-                font.pixelSize: Commons.Appearance.font.sizeSm
-                font.family: Commons.Appearance.font.family
-                Layout.fillWidth: true
-                wrapMode: Text.WordWrap
-                maximumLineCount: 3
-                elide: Text.ElideRight
             }
         }
     }
