@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell.Io
 import "../../../Commons" as Commons
+import "../../../Commons/Primitives"
 import "../../../Services/Shell" as ShellServices
 
 DashCard {
@@ -40,13 +41,14 @@ DashCard {
         Repeater {
             model: root.apps
             delegate: Rectangle {
+                id: tile
                 required property var modelData
                 width: 110; height: 34
                 radius: Commons.Appearance.radius.base
-                color: hov.containsMouse ? Commons.Appearance.colors.accentAlpha : Commons.Appearance.colors.surface0Alpha
-                border.color: hov.containsMouse ? Commons.Appearance.colors.accentBorder : "transparent"
+                color: Commons.Appearance.colors.surface0Alpha
+                border.color: launchLayer.hovered ? Commons.Appearance.colors.accentBorder : "transparent"
                 border.width: 1
-                Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
 
                 Row {
                     anchors.centerIn: parent
@@ -69,8 +71,13 @@ DashCard {
                     }
                 }
 
-                HoverHandler { id: hov }
-                TapHandler { onTapped: root.launch(modelData.cmd) }
+                StateLayer {
+                    id: launchLayer
+                    anchors.fill: parent
+                    hoverScale: 1.05
+                    pressScale: 0.96
+                    onClicked: root.launch(tile.modelData.cmd)
+                }
             }
         }
     }

@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell.Io
 import "../../../Commons" as Commons
+import "../../../Commons/Primitives"
 import "../../../Services/Shell" as ShellServices
 import "../../../Services/Persistence" as Persistence
 
@@ -97,12 +98,13 @@ DashCard {
         ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
         delegate: Rectangle {
+            id: projRow
             required property var modelData
             width: ListView.view.width
             height: root._rowH
             radius: Commons.Appearance.radius.sm
-            color: rowHov.containsMouse ? Commons.Appearance.colors.accentAlpha : "transparent"
-            Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+            color: "transparent"
+            Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
 
             Rectangle {
                 width: 7; height: 7; radius: 4
@@ -136,8 +138,12 @@ DashCard {
                 anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
             }
 
-            HoverHandler { id: rowHov }
-            TapHandler { onTapped: root.openProject(modelData.path) }
+            StateLayer {
+                anchors.fill: parent
+                hoverScale: 1.0
+                pressScale: 0.98
+                onClicked: root.openProject(projRow.modelData.path)
+            }
         }
     }
 }
