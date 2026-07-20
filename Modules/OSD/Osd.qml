@@ -67,7 +67,11 @@ PanelWindow {
             anchors.fill: parent
             radius: Commons.Appearance.radius.xl
             antialiasing: true
-            color: Commons.Appearance.colors.glassBg
+            // Liquid-glass sheen — top-lit gradient (same tokens as the chrome).
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
+                GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+            }
             opacity: osdWindow.shown ? 1.0 : 0.0
             Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
 

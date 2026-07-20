@@ -112,6 +112,21 @@ QtObject {
         readonly property color glassBgLight: root._rgba("mantle",   "#1e2030", 0.93)
         readonly property color glassBorder:  root._rgba("surface0", "#363a4f", 0.90)
 
+        // Liquid-glass sheen — endpoints for a subtle top-lit vertical gradient
+        // (see FrameBackground). SAME alpha as glassBgLight (no transparency
+        // change); only lightness varies: lifted toward surface1 at the top,
+        // sunk toward crust at the bottom.
+        readonly property color glassSheenTop: {
+            var c = root._blend(root._c("mantle", "#1e2030"),
+                                root._c("surface2", "#5b6078"), 0.38)
+            return Qt.rgba(c.r, c.g, c.b, 0.93)
+        }
+        readonly property color glassSheenBot: {
+            // crust is barely darker than mantle, so sink toward black instead.
+            var c = root._blend(root._c("mantle", "#1e2030"), "#000000", 0.22)
+            return Qt.rgba(c.r, c.g, c.b, 0.93)
+        }
+
         // ── Warmth (§18.2) — accent-tinted surfaces, not flat grey. ──
         // Resting container = surface0 pulled toward the accent, and more opaque
         // than surface0Alpha (0.60) so cards read as solid raised surfaces over

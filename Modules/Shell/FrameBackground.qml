@@ -101,7 +101,17 @@ Shape {
     }
 
     ShapePath {
-        fillColor:   Commons.Appearance.colors.glassBgLight
+        // Liquid-glass sheen: subtle top-lit vertical gradient over the whole
+        // frame instead of a flat fill — adds dimension without touching
+        // transparency/blur. One gradient for the unified multi-side shape →
+        // global top-down lighting (top lighter, bottom darker, side strips fade
+        // down their length), NOT a per-bar cross-thickness sheen (follow-up).
+        fillGradient: LinearGradient {
+            x1: 0; y1: 0
+            x2: 0; y2: frame.height
+            GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
+            GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+        }
         strokeWidth: 0
         strokeColor: "transparent"
         fillRule:    ShapePath.WindingFill

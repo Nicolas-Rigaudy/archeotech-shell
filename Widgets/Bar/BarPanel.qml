@@ -122,7 +122,14 @@ Item {
         }
 
         ShapePath {
-            fillColor:   Commons.Appearance.colors.glassBgLight
+            // Liquid-glass sheen — top-lit vertical gradient within the card
+            // (same tokens/look as the frame + panels).
+            fillGradient: LinearGradient {
+                x1: 0; y1: 0
+                x2: 0; y2: card.height
+                GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
+                GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+            }
             strokeWidth: 0
             strokeColor: "transparent"
             startX: card._p[0].x

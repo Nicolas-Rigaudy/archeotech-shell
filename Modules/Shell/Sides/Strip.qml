@@ -281,7 +281,17 @@ Item {
         }
 
         ShapePath {
-            fillColor:   Commons.Appearance.colors.glassBgLight
+            // Liquid-glass sheen — SCREEN-SPACE mapped: span the full surface
+            // height offset by the card's own y, so the card's gradient continues
+            // the frame's single top-lit light source instead of restarting
+            // within the card (which caused a colour seam where a popup meets the
+            // strip). strip fills the surface, so strip.height == screen height.
+            fillGradient: LinearGradient {
+                x1: 0; y1: -card.y
+                x2: 0; y2: strip.height - card.y
+                GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
+                GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+            }
             strokeWidth: 0
             strokeColor: "transparent"
 

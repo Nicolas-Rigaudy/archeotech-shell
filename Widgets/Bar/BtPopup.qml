@@ -31,7 +31,12 @@ Shape {
     Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
     ShapePath {
-        fillColor: Commons.Appearance.colors.glassBgLight
+        fillGradient: LinearGradient {
+            x1: 0; y1: 0
+            x2: 0; y2: card.height
+            GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
+            GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+        }
         strokeWidth: 0; strokeColor: "transparent"
         startX: 0; startY: 0
         PathLine { x: card._bw + card._r * 2; y: 0 }
