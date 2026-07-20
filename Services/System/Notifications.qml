@@ -32,18 +32,24 @@ Item {
         }
     }
 
+    // Empty the list first so the UI always clears, then best-effort dismiss
+    // each backing notif — an already-expired one throws and would otherwise
+    // abort the whole batch.
     function clearAll() {
-        for (var i = root.history.length - 1; i >= 0; i--)
-            root.history[i]._notif.dismiss()
+        var h = root.history
         root.history = []
         root.unreadCount = 0
+        for (var i = 0; i < h.length; i++) {
+            try { h[i]._notif.dismiss() } catch (e) {}
+        }
     }
 
     function dismiss(index) {
-        root.history[index]._notif.dismiss()
         var h = root.history.slice()
+        var entry = h[index]
         h.splice(index, 1)
         root.history = h
         if (root.unreadCount > 0) root.unreadCount--
+        try { entry._notif.dismiss() } catch (e) {}
     }
 }
