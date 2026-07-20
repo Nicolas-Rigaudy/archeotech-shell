@@ -180,7 +180,7 @@ Item {
                             Rectangle {
                                 id: _itemBg
                                 anchors { left: parent.left; right: parent.right; top: parent.top }
-                                height: _itemContent.implicitHeight + 20
+                                height: _itemContent.implicitHeight + 24
                                 radius: Commons.Appearance.radius.md
                                 color: Commons.Appearance.colors.surfaceCard
                                 border.color: modelData.urgency === 2
@@ -188,88 +188,101 @@ Item {
                                     : "transparent"
                                 border.width: 1
 
-                            ColumnLayout {
+                            RowLayout {
                                 id: _itemContent
                                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
-                                spacing: 4
+                                spacing: 10
 
-                                RowLayout {
+                                // App icon — top-aligned so it spans the two text lines.
+                                Item {
+                                    Layout.preferredWidth: 24; Layout.preferredHeight: 24
+                                    Layout.alignment: Qt.AlignTop
+                                    Image {
+                                        id: _ncIcon
+                                        anchors.fill: parent
+                                        source: modelData.appIcon
+                                            ? (modelData.appIcon.startsWith("/")
+                                                ? modelData.appIcon
+                                                : "image://icon/" + modelData.appIcon)
+                                            : ""
+                                        fillMode: Image.PreserveAspectFit
+                                        smooth: true
+                                        visible: source !== "" && status === Image.Ready
+                                    }
+                                    Text {
+                                        anchors.centerIn: parent
+                                        visible: !_ncIcon.visible
+                                        text: "󰂚"
+                                        color: Commons.Appearance.colors.overlay1
+                                        font.pixelSize: 16
+                                        font.family: Commons.Appearance.font.family
+                                    }
+                                }
+
+                                ColumnLayout {
                                     Layout.fillWidth: true
-                                    spacing: 6
+                                    spacing: 4
 
-                                    // App icon
-                                    Item {
-                                        width: 14; height: 14
-                                        Image {
-                                            id: _ncIcon
-                                            anchors.fill: parent
-                                            source: modelData.appIcon
-                                                ? (modelData.appIcon.startsWith("/")
-                                                    ? modelData.appIcon
-                                                    : "image://icon/" + modelData.appIcon)
-                                                : ""
-                                            fillMode: Image.PreserveAspectFit
-                                            smooth: true
-                                            visible: source !== "" && status === Image.Ready
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 6
+
+                                        Text {
+                                            text: modelData.appName || "Notification"
+                                            color: Commons.Appearance.colors.overlay1
+                                            font.pixelSize: Commons.Appearance.font.sizeSm
+                                            font.family: Commons.Appearance.font.family
+                                            Layout.fillWidth: true; elide: Text.ElideRight
                                         }
                                         Text {
-                                            anchors.centerIn: parent
-                                            visible: !_ncIcon.visible
-                                            text: "󰂚"
-                                            color: Commons.Appearance.colors.overlay1
-                                            font.pixelSize: 11
+                                            text: modelData.timestamp || ""
+                                            color: Commons.Appearance.colors.overlay0
+                                            font.pixelSize: Commons.Appearance.font.sizeSm - 1
                                             font.family: Commons.Appearance.font.family
                                         }
-                                    }
-
-                                    Text {
-                                        text: modelData.appName || "Notification"
-                                        color: Commons.Appearance.colors.overlay1
-                                        font.pixelSize: Commons.Appearance.font.sizeSm
-                                        font.family: Commons.Appearance.font.family
-                                        Layout.fillWidth: true; elide: Text.ElideRight
-                                    }
-                                    Text {
-                                        text: modelData.timestamp || ""
-                                        color: Commons.Appearance.colors.overlay0
-                                        font.pixelSize: Commons.Appearance.font.sizeSm - 1
-                                        font.family: Commons.Appearance.font.family
-                                    }
-                                    Text {
-                                        text: "󰅖"
-                                        color: _dismissArea.containsMouse ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0
-                                        font.pixelSize: 13; font.family: Commons.Appearance.font.family
-                                        Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-                                        MouseArea {
-                                            id: _dismissArea
-                                            anchors.fill: parent; anchors.margins: -4
-                                            hoverEnabled: true
-                                            onClicked: SystemServices.Notifications.dismiss(index)
+                                        // Dismiss — StateLayer hit target.
+                                        Rectangle {
+                                            Layout.preferredWidth: 22; Layout.preferredHeight: 22
+                                            radius: Commons.Appearance.radius.sm
+                                            color: "transparent"
+                                            Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: "󰅖"
+                                                color: _dismissLayer.hovered ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0
+                                                font.pixelSize: 13; font.family: Commons.Appearance.font.family
+                                                Behavior on color { Commons.ColorAnim {} }
+                                            }
+                                            StateLayer {
+                                                id: _dismissLayer
+                                                anchors.fill: parent
+                                                onClicked: SystemServices.Notifications.dismiss(index)
+                                            }
                                         }
                                     }
-                                }
 
-                                Text {
-                                    text: modelData.summary || ""
-                                    visible: text.length > 0
-                                    color: Commons.Appearance.colors.text
-                                    font.pixelSize: Commons.Appearance.font.sizeMd
-                                    font.family: Commons.Appearance.font.family
-                                    font.weight: Font.Medium
-                                    Layout.fillWidth: true
-                                    wrapMode: Text.WordWrap
-                                }
+                                    Text {
+                                        text: modelData.summary || ""
+                                        visible: text.length > 0
+                                        color: Commons.Appearance.colors.text
+                                        font.pixelSize: Commons.Appearance.font.sizeMd
+                                        font.family: Commons.Appearance.font.family
+                                        font.weight: Font.Medium
+                                        Layout.fillWidth: true
+                                        wrapMode: Text.WordWrap
+                                    }
 
-                                Text {
-                                    text: modelData.body || ""
-                                    visible: text.length > 0
-                                    color: Commons.Appearance.colors.subtext1
-                                    font.pixelSize: Commons.Appearance.font.sizeSm
-                                    font.family: Commons.Appearance.font.family
-                                    Layout.fillWidth: true
-                                    wrapMode: Text.WordWrap
-                                    maximumLineCount: 3
-                                    elide: Text.ElideRight
+                                    Text {
+                                        text: modelData.body || ""
+                                        visible: text.length > 0
+                                        color: Commons.Appearance.colors.subtext1
+                                        font.pixelSize: Commons.Appearance.font.sizeSm
+                                        font.family: Commons.Appearance.font.family
+                                        Layout.fillWidth: true
+                                        wrapMode: Text.WordWrap
+                                        maximumLineCount: 3
+                                        elide: Text.ElideRight
+                                    }
                                 }
                             }
                             }
