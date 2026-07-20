@@ -88,16 +88,21 @@ DashCard {
 
         Rectangle {
             anchors { left: lbl.right; leftMargin: 8; right: valLbl.left; rightMargin: 8; verticalCenter: parent.verticalCenter }
-            height: 6
-            radius: 3
-            color: Commons.Appearance.colors.surface0
+            height: 8
+            radius: 4
+            // Sunk/recessed track — darker than the card so the fill reads raised.
+            color: Qt.rgba(0, 0, 0, 0.22)
 
             Rectangle {
                 width: parent.width * Math.min(value, 100) / 100
                 height: parent.height
                 radius: parent.radius
-                color: barColor
-                Behavior on width { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+                // Top-lit sheen on the fill (same light language as the glass).
+                gradient: Gradient {
+                    GradientStop { position: 0.0; color: Qt.lighter(barColor, 1.18) }
+                    GradientStop { position: 1.0; color: Qt.darker(barColor, 1.12) }
+                }
+                Behavior on width { Commons.Anim {} }
             }
         }
 
