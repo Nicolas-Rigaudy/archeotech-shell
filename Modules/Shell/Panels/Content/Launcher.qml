@@ -331,17 +331,17 @@ Item {
                                 anchors.fill: card
                                 radius: card.radius
                                 blur:   16
-                                offset: Qt.vector2d(0, 5)
+                                offset: Qt.vector2d(0, 4)
                                 spread: 0
-                                color:  Qt.rgba(0, 0, 0, 0.5)
+                                color:  Qt.rgba(0, 0, 0, 0.45)
                             }
 
                             Rectangle {
                                 id: card
                                 anchors.fill: parent
                                 radius: Commons.Appearance.radius.base
-                                // Warmth (§18.2) — accent-tinted surface, not flat grey.
-                                color:  Commons.Appearance.colors.surfaceWarm
+                                // Shared elevated card surface — same as dashboard/notif cards.
+                                color:  Commons.Appearance.colors.surfaceCard
                                 // Crisp accent edge on hover for definition.
                                 border.width: 1
                                 border.color: tileWash.hovered ? Commons.Appearance.colors.accentBorder : "transparent"
@@ -451,11 +451,11 @@ Item {
             Rectangle {
                 width:        parent.width
                 height:       44
-                // Warmth (§18.2) — accent-tinted surface, not flat grey.
-                color:        Commons.Appearance.colors.surfaceWarm
-                // Border brightens + thickens on focus for a clear active state.
+                // Shared elevated card surface — matches the tiles below.
+                color:        Commons.Appearance.colors.surfaceCard
+                // Neutral at rest; border brightens + thickens on focus only.
                 border.color: searchInput.activeFocus ? Commons.Appearance.colors.accent
-                                                       : Commons.Appearance.colors.accentBorder
+                                                       : Commons.Appearance.colors.glassBorder
                 border.width: searchInput.activeFocus ? 2 : 1
                 radius:       Commons.Appearance.radius.md
                 Behavior on border.color { Commons.ColorAnim {} }
