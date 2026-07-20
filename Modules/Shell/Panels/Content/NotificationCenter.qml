@@ -140,6 +140,7 @@ Item {
                     visible: SystemServices.Notifications.count === 0
                     icon:  "󰂚"
                     title: "No notifications"
+                    hint:  "You're all caught up"
                 }
 
                 // ── Notification list ─────────────────────────────────────────
