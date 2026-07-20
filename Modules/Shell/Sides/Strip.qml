@@ -252,6 +252,17 @@ Item {
         visible: opacity > 0.01
         Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
+        // Card top in WINDOW coords. A horizontal (top/bottom) strip Item is only
+        // content-tall (strip.height ≠ screen height), so a strip-relative gradient
+        // seams against the frame. Map to the window via mapToItem, and span the
+        // real screen height (strip.screen.height — Window.height reads 0 here).
+        // Referencing the animating geometry first forces re-evaluation.
+        readonly property real _winY: {
+            var _d = card.y + card.height + strip._perp + strip.width + strip.height
+            return card.mapToItem(null, 0, 0).y
+        }
+        readonly property real _winH: strip.screen ? strip.screen.height : strip.height
+
         readonly property var _p: {
             const W = width, H = height, r = _r, rb = _rb
             if (strip.side === "right")  return [
@@ -287,8 +298,8 @@ Item {
             // within the card (which caused a colour seam where a popup meets the
             // strip). strip fills the surface, so strip.height == screen height.
             fillGradient: LinearGradient {
-                x1: 0; y1: -card.y
-                x2: 0; y2: strip.height - card.y
+                x1: 0; y1: -card._winY
+                x2: 0; y2: card._winH - card._winY
                 GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
                 GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
             }
