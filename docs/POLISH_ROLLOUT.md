@@ -11,7 +11,14 @@ via Super+Shift+R → commit on confirm), grouped by shared recipe.
 - ✅ **Strip-card seam fix** — window-space mapped sheen (`5695ace`).
 - ✅ **Dashboard rework** — hero + bento, `DashCard` shell, warm translucent
   `surfaceCard` cards (`4a99325`).
-- ▶ **NEXT: Notifications** (toast + notification center) — Round 2 remainder.
+- ✅ **Shared card style unified on `surfaceCard`** — launcher tiles + search
+  field moved off `surfaceWarm` onto the dashboard/notif `surfaceCard` + shadow
+  (0,4)/0.45 so all cards read identically (`bd6abfe`).
+- ✅ **Notifications** (toast + notification center) — screen-space glass sheen,
+  `surfaceCard` history rows + shadow, 24px icons, two-line layout, `StateLayer`
+  header/dismiss/close buttons, trash-can clear-all, toast enter/exit asymmetry
+  (`717b2be`, `b7a9f29`, `710ccc5`, `8a46a94`); clear-all root-cause fix (`a11cc62`).
+- ▶ **NEXT: Round 3 — settings controls.**
 
 Working rhythm that stuck: pilot on ONE surface → user live-tests → tune → commit.
 Cannot `qmllint` `Dashboard.qml` (pre-existing 255 from the panels-dir import);
@@ -85,9 +92,30 @@ Dead ends (tried and reverted — don't redo without a new idea):
   implicitHeight` to align without shrink-overflow. Still-open polish (Phase 3): StateLayer
   hover/press on QuickLaunch tiles & project rows, nicer stat bars, fill empty space in short
   cards. Follow-up features logged below (customizable grid, pinnable projects, hero quote).
-- [ ] **NotificationCenter + NotifToast** — toast: surfaceWarm + shadow, icon
-  14→24, close→StateLayer, enter 400 decel / add exit 200 accel; history rows:
-  icon→32, taller, StateLayer dismiss, optional per-index stagger (40ms).
+- [x] **NotificationCenter + NotifToast** — DONE. Toast: chrome **glass sheen**
+  (NOT surfaceWarm — a toast is chrome, kept the shared glass), 24px icon, two-line
+  layout, StateLayer close, enter 400 decel / exit 200 accel. History rows: DashCard
+  style (surfaceCard + shadow), 24px icon, StateLayer dismiss. Header: StateLayer
+  icon buttons, trash-can clear-all. Per-index stagger skipped (over-eager; add later).
+  Hard-won:
+  - **Toast fill is chrome glass, not a warm card** — user rejected both surfaceWarm
+    AND surfaceCard on the toast ("too purple"). Chrome cohesion rule wins: toast uses
+    the `glassSheenTop/Bot` gradient like the OSD/frame. surfaceCard is for the *panel*
+    history rows only.
+  - **Screen-space sheen on the toast** — a local 0→1 gradient darkens the card's
+    bottom; near the top of the screen that reads darker than the bar beside it. Sample
+    the screen-scale gradient at the card's window-Y (`_mix(top,bot, winY/screenH)`),
+    same principle as the strip cards. `Screen.height` (attached prop) works here.
+    Widen the toast layer-surface window (+48 / margins 24) or the drop shadow clips hard.
+  - **Toast exit before removal** — the host (`shell.qml`) splices the toast out of its
+    array on dismiss/timeout → instant destroy, no exit anim. Fix stays in NotifToast:
+    `_close()` sets `_closing`, animates `_progress→0`, and only emits the signal in
+    `on_ProgressChanged` once it lands. Host untouched.
+  - **clear-all was silently failing** — `_notif.dismiss()` throws on an already-expired
+    notif, aborting the loop before `history=[]`. Empty the array FIRST, then best-effort
+    dismiss each in try/catch. Same latent bug fixed in `dismiss(index)`.
+  - Tooltips: the default QtQuick.Controls `ToolTip` is an ugly white rect — dropped it;
+    icons (bell/bell-slash, trash-can) are self-explanatory. Style a glass tip if ever needed.
 
 ## Round 3 — settings controls
 - [ ] `Commons/Primitives/ToggleSwitch.qml` — thumb press-pulse (0.92, spring).
