@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 import "../../Commons" as Commons
 import "../../Services/System" as SystemServices
 
@@ -22,6 +23,19 @@ Item {
     Behavior on _progress { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
     Component.onCompleted: _progress = 1
 
+    // Screen-space sheen: like the strip cards, sample the ONE top-lit screen
+    // gradient at this toast's on-screen Y instead of restarting a dark-bottomed
+    // gradient inside the card — so a toast near the top reads light, matching
+    // the bar/frame next to it. `_d` refs animating geometry to force re-eval.
+    function _mix(a, b, t) {
+        return Qt.rgba(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t,
+                       a.b + (b.b - a.b) * t, a.a + (b.a - a.a) * t)
+    }
+    readonly property real _winH: Screen.height > 0 ? Screen.height : 1080
+    readonly property real _winY: { var _d = root.y + root._progress; return root.mapToItem(null, 0, 0).y }
+    readonly property real _fTop: Math.max(0, Math.min(1, _winY / _winH))
+    readonly property real _fBot: Math.max(0, Math.min(1, (_winY + card.height) / _winH))
+
     Timer {
         property int ms: {
             if (!root.notification) return 0
@@ -34,12 +48,27 @@ Item {
         onTriggered: root.timedOut()
     }
 
+    RectangularShadow {
+        anchors.fill: card
+        radius: card.radius
+        blur:   16
+        offset: Qt.vector2d(0, 4)
+        spread: 0
+        color:  Qt.rgba(0, 0, 0, 0.45)
+    }
+
     Rectangle {
         id: card
         anchors { left: parent.left; right: parent.right; top: parent.top }
         height: cardContent.implicitHeight + 20
         radius: Commons.Appearance.radius.md
-        color: Commons.Appearance.colors.glassBg
+        antialiasing: true
+        // Liquid-glass sheen — top-lit gradient (same tokens as the chrome),
+        // sampled at this toast's screen position (see root._fTop/_fBot).
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: root._mix(Commons.Appearance.colors.glassSheenTop, Commons.Appearance.colors.glassSheenBot, root._fTop) }
+            GradientStop { position: 1.0; color: root._mix(Commons.Appearance.colors.glassSheenTop, Commons.Appearance.colors.glassSheenBot, root._fBot) }
+        }
         border.color: (root.notification && root.notification.urgency === 2)
             ? Commons.Appearance.colors.red
             : Commons.Appearance.colors.glassBorder

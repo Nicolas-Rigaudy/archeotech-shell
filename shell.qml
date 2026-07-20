@@ -187,19 +187,21 @@ ShellRoot {
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
         anchors { top: true; right: true }
-        implicitWidth:  316 + 16
+        // +48 (24 each side) so the toast cards' drop shadow can bleed instead
+        // of being clipped hard by the layer-surface edge.
+        implicitWidth:  316 + 48
         implicitHeight: toastStack.implicitHeight
                       + Commons.Appearance.bar.marginTop
                       + Commons.Appearance.bar.height
-                      + 16
+                      + 48
         color: "transparent"
 
         Column {
             id: toastStack
             anchors.right:      parent.right
-            anchors.rightMargin: 8
+            anchors.rightMargin: 24
             anchors.top:        parent.top
-            anchors.topMargin:  Commons.Appearance.bar.marginTop + Commons.Appearance.bar.height + 8
+            anchors.topMargin:  Commons.Appearance.bar.marginTop + Commons.Appearance.bar.height + 16
             width: 316
             spacing: 8
 

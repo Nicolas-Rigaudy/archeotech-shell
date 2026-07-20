@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Effects
 import "../../../../Commons" as Commons
 import "../../../../Commons/Primitives"
 import "../../../../Services/System" as SystemServices
@@ -65,12 +66,15 @@ Item {
                     }
                     // Clear all (text pill) — only when there are notifications.
                     Rectangle {
+                        id: _clearBtn
                         visible: SystemServices.Notifications.count > 0
-                        Layout.preferredWidth:  _clearLabel.implicitWidth + 16
+                        Layout.preferredWidth:  _clearLabel.implicitWidth + 20
                         Layout.preferredHeight: 28
                         radius: Commons.Appearance.radius.base
-                        color:  _clearArea.containsMouse ? Commons.Appearance.colors.surface0 : Commons.Appearance.colors.base
-                        Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                        color: "transparent"
+                        border.color: Commons.Appearance.colors.glassBorder
+                        border.width: 1
+                        Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
                         Text {
                             id: _clearLabel
                             anchors.centerIn: parent
@@ -79,8 +83,8 @@ Item {
                             font.pixelSize: Commons.Appearance.font.sizeSm
                             font.family: Commons.Appearance.font.family
                         }
-                        MouseArea {
-                            id: _clearArea; anchors.fill: parent; hoverEnabled: true
+                        StateLayer {
+                            anchors.fill: parent
                             onClicked: SystemServices.Notifications.clearAll()
                         }
                     }
@@ -156,17 +160,33 @@ Item {
 
                     Repeater {
                         model: SystemServices.Notifications.history
-                        delegate: Rectangle {
+                        delegate: Item {
                             required property var modelData
                             required property int index
                             width: parent.width
-                            height: _itemContent.implicitHeight + 20
-                            radius: Commons.Appearance.radius.md
-                            color: Commons.Appearance.colors.base
-                            border.color: modelData.urgency === 2
-                                ? Commons.Appearance.colors.red
-                                : Commons.Appearance.colors.surface0
-                            border.width: 1
+                            height: _itemBg.height
+
+                            // Same elevated card shell as the dashboard cards:
+                            // translucent surfaceCard + soft drop shadow.
+                            RectangularShadow {
+                                anchors.fill: _itemBg
+                                radius: _itemBg.radius
+                                blur:   16
+                                offset: Qt.vector2d(0, 4)
+                                spread: 0
+                                color:  Qt.rgba(0, 0, 0, 0.45)
+                            }
+
+                            Rectangle {
+                                id: _itemBg
+                                anchors { left: parent.left; right: parent.right; top: parent.top }
+                                height: _itemContent.implicitHeight + 20
+                                radius: Commons.Appearance.radius.md
+                                color: Commons.Appearance.colors.surfaceCard
+                                border.color: modelData.urgency === 2
+                                    ? Commons.Appearance.colors.red
+                                    : "transparent"
+                                border.width: 1
 
                             ColumnLayout {
                                 id: _itemContent
@@ -251,6 +271,7 @@ Item {
                                     maximumLineCount: 3
                                     elide: Text.ElideRight
                                 }
+                            }
                             }
                         }
                     }
