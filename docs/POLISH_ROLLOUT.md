@@ -85,6 +85,16 @@ theme variants on top of this foundation — don't build them yet.
 - [ ] **Bar** — SAFE only (bar is deliberately flat): smoother icon recolor curve,
   HoverCard enter/exit (done). Hover-fill / active-border need explicit sign-off.
 
+## Dashboard follow-ups (user ideas 2026-07-20, after the hero+bento rework)
+- **Customizable grid** — user-arrangeable dashboard with custom cards + choice of
+  placement (cf. DankMaterialShell's drag-drop widget grid). The `DashCard` shell +
+  bento GridLayout are a decent base; would need a config-driven card registry +
+  placement persistence.
+- **Pinnable projects** in the ActiveProjects card (pin/unpin like the launcher's
+  pinned apps; pinned repos sort first).
+- **Quote under the welcome text** — a rotating quote/line beneath the hero greeting
+  (like the lockscreen's quote). (`tips.txt` / a quotes file + the existing tip picker.)
+
 ## Future ideas (user)
 - **Flat vs glass as a setting** (user 2026-07-17): a config flag (e.g.
   `shell-config` `style: flat | glass`) toggling the sheen gradient vs a flat
