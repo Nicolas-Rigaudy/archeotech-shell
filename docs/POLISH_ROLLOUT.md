@@ -4,24 +4,41 @@ Follows the Launcher taste-test slice (commit `556bc3a`, ANALYSIS.md §18). The
 Launcher is the quality bar. Rolled out in feel-gated rounds (apply → live-test
 via Super+Shift+R → commit on confirm), grouped by shared recipe.
 
+## Shipped so far (as of 2026-07-20)
+- ✅ **Launcher** — StateLayer hover, warmth, depth, two-line rows (`556bc3a`).
+- ✅ **Chrome liquid-glass sheen** — subtle vertical gradient on frame / strip &
+  bar-panel cards / OSD / popups (`glassSheenTop`/`glassSheenBot` tokens).
+- ✅ **Strip-card seam fix** — window-space mapped sheen (`5695ace`).
+- ✅ **Dashboard rework** — hero + bento, `DashCard` shell, warm translucent
+  `surfaceCard` cards (`4a99325`).
+- ▶ **NEXT: Notifications** (toast + notification center) — Round 2 remainder.
+
+Working rhythm that stuck: pilot on ONE surface → user live-tests → tune → commit.
+Cannot `qmllint` `Dashboard.qml` (pre-existing 255 from the panels-dir import);
+lint the individual card files instead.
+
 ## Main style: modern minimalist "liquid glass" (decided 2026-07-17)
 The DEFAULT aesthetic is modern, minimalist, translucent frosted glass. Named
 theme *personalities* (Warhammer 40k, Star Wars, cyberpunk, …) come LATER as
 theme variants on top of this foundation — don't build them yet.
 
-**Liquid glass = translucency + compositor blur + soft delimiting, cohesive.**
-- Translucency: shared `glassBg`/`glassBgLight` alphas lowered to 0.80/0.74
-  (`Commons/Appearance.qml`). All chrome shares them (cohesion). Tune to taste;
-  with blur on, can go lower (~0.6–0.7) for a stronger frost.
-- **Frost (the enabler):** MangoWC runs SceneFX with `blur=1` but shipped
-  `blur_layer=0`, which disabled blur for layer-shell surfaces (= our shell).
-  Set `blur_layer=1` in `config/.config/mango/config.conf` → real frosted blur
-  behind the bar/panels/OSD. Applied via `mango-reload.sh` (Super+Shift+R).
-  Blur radius/passes are `blur_params_*` in the same file.
-- Delimiting: frost + translucency already separate chrome from content; a soft
-  content-edge shadow (Caelestia `Elevation.qml`, end-4 `StyledRectangularShadow`)
-  can reinforce it. Our frame is one WindingFill `Shape` (FrameBackground.qml)
-  with no interactive children → a MultiEffect shadow on it is allowed.
+**Liquid glass — SHIPPED approach: a subtle vertical SHEEN GRADIENT** (no blur, no
+transparency change). `glassSheenTop`/`glassSheenBot` tokens (`Commons/Appearance.qml`)
+give chrome a top-lit gradient fill instead of flat glass — on `FrameBackground`,
+the strip & bar-panel cards, OSD, and popups. `glassBg` stays 0.96.
+
+Dead ends (tried and reverted — don't redo without a new idea):
+- **Compositor frost** (`blur_layer=1` + lowered `glassBg` alpha): SceneFX blurs the
+  WHOLE transparent layer-surface region → banding/wash on our full-screen surfaces.
+  Reverted; `blur_layer` stays 0, `glassBg` stays 0.96.
+- **Specular top-edge rim** and **diagonal gradient**: both seam at every attach edge
+  (surfaces have different coordinate origins). Plain vertical sheen is the only
+  seamless option. A small surface low on screen reading ~uniform is CORRECT (single
+  light source), not a bug.
+- **Strip-card seam fix (kept):** strip cards map their sheen to WINDOW space
+  (`mapToItem(null,0,0).y` + `screen.height`) because horizontal (top/bottom) strips
+  aren't full-height, so `strip.height` ≠ screen height. `Window.height` reads 0 in
+  Quickshell — use `screen.height`.
 
 ## The recipe (validated on the Launcher)
 - **Chrome vs nested — the cohesion rule (learned 2026-07-17):** the bar, strips,
@@ -62,10 +79,12 @@ theme variants on top of this foundation — don't build them yet.
   a shadow (it's a nested item, not the chrome).
 
 ## Round 2 — panel content
-- [ ] **Dashboard** cards (`Modules/Dashboard/panels/*`) — surfaceWarm container +
-  hover accent border; StateLayer on QuickLaunch tiles (→44px) & ActiveProjects
-  rows; animate SystemStatus bar via Commons.Anim. Depth: ONE subtle shadow per
-  card at most, or skip (cards sit inside an already-elevated panel).
+- [x] **Dashboard** — full rework: hero (greeting+clock+date), 2×2 bento + full-width
+  tip strip, shared `DashCard` shell (translucent `surfaceCard` + `RectangularShadow`),
+  ActiveProjects capped 4 rows + internal scroll. Cards `fillHeight` + `Layout.minimumHeight:
+  implicitHeight` to align without shrink-overflow. Still-open polish (Phase 3): StateLayer
+  hover/press on QuickLaunch tiles & project rows, nicer stat bars, fill empty space in short
+  cards. Follow-up features logged below (customizable grid, pinnable projects, hero quote).
 - [ ] **NotificationCenter + NotifToast** — toast: surfaceWarm + shadow, icon
   14→24, close→StateLayer, enter 400 decel / add exit 200 accel; history rows:
   icon→32, taller, StateLayer dismiss, optional per-index stagger (40ms).
