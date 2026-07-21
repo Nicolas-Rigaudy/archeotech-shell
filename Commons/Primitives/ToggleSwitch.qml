@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
 import ".." as Commons
 
 Item {
@@ -15,13 +16,35 @@ Item {
         anchors.fill: parent
         radius: height / 2
         antialiasing: true
-        color: root.checked ? Commons.Appearance.colors.accent : Commons.Appearance.colors.surface0
-        // Pill outline so the off-state track still reads as a switch on glass.
+        // Off = recessed groove (dark top lip shadow → lit bottom floor);
+        // on = raised accent track with a gentle top sheen.
+        gradient: root.checked ? onGrad : offGrad
         border.width: 1
-        border.color: root.checked ? "transparent" : Commons.Appearance.colors.overlay1
+        border.color: root.checked ? Commons.Appearance.colors.accent : Commons.Appearance.colors.overlay0
 
-        Behavior on color { Commons.ColorAnim {} }
         Behavior on border.color { Commons.ColorAnim {} }
+
+        Gradient {
+            id: onGrad
+            GradientStop { position: 0.0; color: Qt.lighter(Commons.Appearance.colors.accent, 1.12) }
+            GradientStop { position: 1.0; color: Qt.darker(Commons.Appearance.colors.accent, 1.08) }
+        }
+        Gradient {
+            id: offGrad
+            GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.26) }
+            GradientStop { position: 0.55; color: Qt.rgba(0, 0, 0, 0.10) }
+            GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.03) }
+        }
+
+        // Thumb shadow — raised knob "pops" off the track.
+        RectangularShadow {
+            anchors.fill: thumb
+            radius: thumb.radius
+            blur:   7
+            offset: Qt.vector2d(0, 1.5)
+            spread: 0
+            color:  Qt.rgba(0, 0, 0, 0.55)
+        }
 
         Rectangle {
             id: thumb
@@ -29,14 +52,19 @@ Item {
             antialiasing: true
             anchors.verticalCenter: parent.verticalCenter
             x: root.checked ? parent.width - width - 3 : 3
-            color: root.checked ? Commons.Appearance.colors.base : Commons.Appearance.colors.subtext0
 
-            // Press-pulse — thumb depresses then springs back (M3 spatial curve).
+            // Raised sphere — top-lit gradient reads as a 3d knob.
+            readonly property color _knob: root.checked ? Commons.Appearance.colors.base : Commons.Appearance.colors.overlay1
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Qt.lighter(thumb._knob, 1.22) }
+                GradientStop { position: 1.0; color: Qt.darker(thumb._knob, 1.15) }
+            }
+
+            // Press-pulse — depress then spring back (M3 spatial curve).
             scale: ma.pressed ? 0.92 : 1.0
 
             Behavior on x     { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
             Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
-            Behavior on color { Commons.ColorAnim {} }
         }
     }
 

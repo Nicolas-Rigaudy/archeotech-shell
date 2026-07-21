@@ -62,15 +62,20 @@ Item {
                 x: 0
                 y: (slider.height - height) / 2
                 width: slider.availableWidth
-                height: 4
-                radius: 2
-                color: Commons.Appearance.colors.surface1
+                height: 8
+                radius: 4
+                // Sunk/recessed track + top-lit sheen fill — same language as the
+                // dashboard stat bars for a consistent 3d feel.
+                color: Qt.rgba(0, 0, 0, 0.22)
 
                 Rectangle {
                     width: slider.visualPosition * parent.width
                     height: parent.height
                     radius: parent.radius
-                    color: Commons.Appearance.colors.accent
+                    gradient: Gradient {
+                        GradientStop { position: 0.0; color: Qt.lighter(Commons.Appearance.colors.accent, 1.18) }
+                        GradientStop { position: 1.0; color: Qt.darker(Commons.Appearance.colors.accent, 1.12) }
+                    }
                 }
             }
 
