@@ -11,6 +11,9 @@ import ".." as Commons
 // Text-only via `text`, or drop custom content (icon+label) as a child.
 Item {
     id: btn
+    // Consumer children (icon+label) land in the centered content Row; or just
+    // set `text` for a plain label button.
+    default property alias content: contentSlot.data
     property string text: ""
     property bool   active: false
     property real   hpad: 14
