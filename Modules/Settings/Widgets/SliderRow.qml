@@ -77,9 +77,11 @@ Item {
             handle: Rectangle {
                 x: slider.visualPosition * (slider.availableWidth - width)
                 y: (slider.height - height) / 2
-                width: 16; height: 16; radius: 8
-                color: slider.pressed ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext1
-                Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                width: 20; height: 20; radius: 10
+                color: (slider.pressed || slider.hovered) ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext1
+                scale: slider.pressed ? 0.92 : slider.hovered ? 1.08 : 1.0
+                Behavior on color { Commons.ColorAnim {} }
+                Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
             }
 
             onMoved: root.moved(value)
