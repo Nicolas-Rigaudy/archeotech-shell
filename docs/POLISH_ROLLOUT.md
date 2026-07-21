@@ -89,9 +89,12 @@ Dead ends (tried and reverted — don't redo without a new idea):
 - [x] **Dashboard** — full rework: hero (greeting+clock+date), 2×2 bento + full-width
   tip strip, shared `DashCard` shell (translucent `surfaceCard` + `RectangularShadow`),
   ActiveProjects capped 4 rows + internal scroll. Cards `fillHeight` + `Layout.minimumHeight:
-  implicitHeight` to align without shrink-overflow. Still-open polish (Phase 3): StateLayer
-  hover/press on QuickLaunch tiles & project rows, nicer stat bars, fill empty space in short
-  cards. Follow-up features logged below (customizable grid, pinnable projects, hero quote).
+  implicitHeight` to align without shrink-overflow. **Phase 3 DONE:** StateLayer hover/press
+  on QuickLaunch tiles & project rows; stat bars → sunk track + top-lit sheen fill (3d);
+  width/height fill (QuickLaunch 4×2 fillHeight tiles; SystemNotes 2-col + uptime/kernel/host/ip).
+  `DashCard.inner` now `fillHeight` so a card's content can opt into stretching. Follow-up
+  features logged below (customizable grid, pinnable projects, hero quote, customizable +
+  reliable System Notes).
 - [x] **NotificationCenter + NotifToast** — DONE. Toast: chrome **glass sheen**
   (NOT surfaceWarm — a toast is chrome, kept the shared glass), 24px icon, two-line
   layout, StateLayer close, enter 400 decel / exit 200 accel. History rows: DashCard
