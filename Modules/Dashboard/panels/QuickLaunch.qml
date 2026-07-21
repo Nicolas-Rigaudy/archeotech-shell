@@ -34,40 +34,51 @@ DashCard {
         { label: "Cheatsheets", icon: _p + "apps/help-browser.svg",        cmd: "kitty --title navi -e navi" }
     ]
 
-    Flow {
+    // 4×2 grid, tiles stretch to fill the card width AND height evenly.
+    GridLayout {
         Layout.fillWidth: true
-        spacing: 8
+        Layout.fillHeight: true
+        columns: 4
+        columnSpacing: 8
+        rowSpacing: 8
 
         Repeater {
             model: root.apps
             delegate: Rectangle {
                 id: tile
                 required property var modelData
-                width: 110; height: 34
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.preferredWidth: 1
+                Layout.preferredHeight: 34
                 radius: Commons.Appearance.radius.base
                 color: Commons.Appearance.colors.surface0Alpha
                 border.color: launchLayer.hovered ? Commons.Appearance.colors.accentBorder : "transparent"
                 border.width: 1
                 Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
 
-                Row {
-                    anchors.centerIn: parent
-                    spacing: 6
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 12; anchors.rightMargin: 12
+                    spacing: 8
 
                     Image {
-                        source: modelData.icon
-                        width: 16; height: 16
-                        anchors.verticalCenter: parent.verticalCenter
+                        source: tile.modelData.icon
+                        Layout.preferredWidth: 16; Layout.preferredHeight: 16
+                        Layout.alignment: Qt.AlignVCenter
+                        fillMode: Image.PreserveAspectFit
                         smooth: true
                         visible: status === Image.Ready
                     }
 
                     Text {
-                        text: modelData.label
+                        text: tile.modelData.label
                         color: Commons.Appearance.colors.text
                         font.family: Commons.Appearance.font.family
                         font.pixelSize: Commons.Appearance.font.sizeBase
-                        anchors.verticalCenter: parent.verticalCenter
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignVCenter
+                        elide: Text.ElideRight
                     }
                 }
 

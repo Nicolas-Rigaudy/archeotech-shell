@@ -35,7 +35,10 @@ Item {
 
         ColumnLayout {
             id: outer
-            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+            // bottom-anchored so `inner` can fillHeight — lets a card whose
+            // content opts into Layout.fillHeight (e.g. QuickLaunch) stretch to
+            // the stretched card height. Content without fillHeight stays at top.
+            anchors { left: parent.left; right: parent.right; top: parent.top; bottom: parent.bottom; margins: 12 }
             spacing: 8
 
             Text {
@@ -57,6 +60,7 @@ Item {
             ColumnLayout {
                 id: inner
                 Layout.fillWidth: true
+                Layout.fillHeight: true
                 spacing: 8
             }
         }

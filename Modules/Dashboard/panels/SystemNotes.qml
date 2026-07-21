@@ -13,6 +13,10 @@ DashCard {
     property string aur:     "0"
     property string vpn:     "…"
     property string aws:     "…"
+    property string uptime:  "…"
+    property string kernel:  "…"
+    property string host:    "…"
+    property string ip:      "…"
 
     Component.onCompleted: _refresh()
 
@@ -47,7 +51,12 @@ DashCard {
             "else aur=0; fi; echo aur:${aur:-0}; " +
             "vpn=$(nmcli con show --active 2>/dev/null | awk '/vpn/{print $1;exit}'); " +
             "echo vpn:${vpn:-inactive}; " +
-            "echo aws:${AWS_PROFILE:-unset}"
+            "echo aws:${AWS_PROFILE:-unset}; " +
+            "echo up:$(awk '{d=int($1/86400);h=int(($1%86400)/3600);m=int(($1%3600)/60); " +
+            "if(d>0)printf \"%dd %dh\",d,h; else if(h>0)printf \"%dh %dm\",h,m; else printf \"%dm\",m}' /proc/uptime); " +
+            "echo kern:$(uname -r); " +
+            "echo host:$(cat /etc/hostname 2>/dev/null || hostname); " +
+            "echo ip:$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i==\"src\"){print $(i+1);exit}}')"
         ]
         stdout: SplitParser {
             onRead: line => {
@@ -59,6 +68,10 @@ DashCard {
                 if (key === "aur")     root.aur     = val
                 if (key === "vpn")     root.vpn     = val
                 if (key === "aws")     root.aws     = val
+                if (key === "up")      root.uptime  = val || "N/A"
+                if (key === "kern")    root.kernel  = val || "N/A"
+                if (key === "host")    root.host    = val || "N/A"
+                if (key === "ip")      root.ip      = val || "offline"
             }
         }
     }
@@ -68,14 +81,17 @@ DashCard {
         required property string value
         required property color  valueColor
         Layout.fillWidth: true
+        Layout.preferredWidth: 1
         implicitHeight: 22
 
         Text {
+            id: noteLbl
             text: label
             color: Commons.Appearance.colors.subtext0
             font.family: Commons.Appearance.font.family
             font.pixelSize: Commons.Appearance.font.sizeBase
-            width: 120
+            width: 74
+            elide: Text.ElideRight
             anchors.verticalCenter: parent.verticalCenter
         }
         Text {
@@ -83,38 +99,67 @@ DashCard {
             color: valueColor
             font.family: Commons.Appearance.font.family
             font.pixelSize: Commons.Appearance.font.sizeBase
-            anchors { left: parent.left; leftMargin: 124; right: parent.right; verticalCenter: parent.verticalCenter }
+            anchors { left: noteLbl.right; leftMargin: 6; right: parent.right; verticalCenter: parent.verticalCenter }
+            horizontalAlignment: Text.AlignRight
             elide: Text.ElideRight
         }
     }
 
-    NoteRow {
-        label: "Last snapshot"
-        value: root.snap
-        valueColor: Commons.Appearance.colors.text
-    }
-    NoteRow {
-        label: "Pending updates"
-        value: {
-            var u = parseInt(root.updates) || 0
-            var a = parseInt(root.aur)     || 0
-            if (u === 0 && a === 0) return "up to date"
-            if (u === 0)            return a + " AUR"
-            if (a === 0)            return u + " packages"
-            return u + " + " + a + " AUR"
+    // 2-column key/value grid.
+    GridLayout {
+        Layout.fillWidth: true
+        columns: 2
+        columnSpacing: 20
+        rowSpacing: 4
+
+        NoteRow {
+            label: "Snapshot"
+            value: root.snap
+            valueColor: Commons.Appearance.colors.text
         }
-        valueColor: (root.updates === "0" && root.aur === "0")
-            ? Commons.Appearance.colors.green
-            : Commons.Appearance.colors.yellow
-    }
-    NoteRow {
-        label: "VPN"
-        value: root.vpn
-        valueColor: root.vpn === "inactive" ? Commons.Appearance.colors.overlay1 : Commons.Appearance.colors.green
-    }
-    NoteRow {
-        label: "AWS profile"
-        value: root.aws
-        valueColor: root.aws === "unset" ? Commons.Appearance.colors.overlay1 : Commons.Appearance.colors.blue
+        NoteRow {
+            label: "Uptime"
+            value: root.uptime
+            valueColor: Commons.Appearance.colors.text
+        }
+        NoteRow {
+            label: "Updates"
+            value: {
+                var u = parseInt(root.updates) || 0
+                var a = parseInt(root.aur)     || 0
+                if (u === 0 && a === 0) return "up to date"
+                if (u === 0)            return a + " AUR"
+                if (a === 0)            return u + " pkgs"
+                return u + " + " + a + " AUR"
+            }
+            valueColor: (root.updates === "0" && root.aur === "0")
+                ? Commons.Appearance.colors.green
+                : Commons.Appearance.colors.yellow
+        }
+        NoteRow {
+            label: "Kernel"
+            value: root.kernel
+            valueColor: Commons.Appearance.colors.subtext1
+        }
+        NoteRow {
+            label: "VPN"
+            value: root.vpn
+            valueColor: root.vpn === "inactive" ? Commons.Appearance.colors.overlay1 : Commons.Appearance.colors.green
+        }
+        NoteRow {
+            label: "Host"
+            value: root.host
+            valueColor: Commons.Appearance.colors.subtext1
+        }
+        NoteRow {
+            label: "AWS"
+            value: root.aws
+            valueColor: root.aws === "unset" ? Commons.Appearance.colors.overlay1 : Commons.Appearance.colors.blue
+        }
+        NoteRow {
+            label: "IP"
+            value: root.ip
+            valueColor: root.ip === "offline" ? Commons.Appearance.colors.overlay1 : Commons.Appearance.colors.blue
+        }
     }
 }
