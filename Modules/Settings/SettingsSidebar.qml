@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../../Commons" as Commons
+import "../../Commons/Primitives"
 
 Item {
     id: root
@@ -22,7 +23,9 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: Commons.Appearance.colors.mantle
+        // Chrome — stays part of the shared panel glass (was opaque mantle,
+        // which broke the translucent cohesion with the rest of the shell).
+        color: "transparent"
 
         ColumnLayout {
             anchors.fill: parent
@@ -38,10 +41,12 @@ Item {
                 Rectangle {
                     anchors { fill: parent; leftMargin: 8; rightMargin: 8 }
                     radius: Commons.Appearance.radius.base
-                    color: Commons.Appearance.colors.surface0
+                    // Nested input card — matches the launcher search field.
+                    color: Commons.Appearance.colors.surfaceCard
                     border.color: searchField.activeFocus
-                        ? Commons.Appearance.colors.accentBorder : "transparent"
-                    border.width: 1
+                        ? Commons.Appearance.colors.accent : Commons.Appearance.colors.glassBorder
+                    border.width: searchField.activeFocus ? 2 : 1
+                    Behavior on border.color { Commons.ColorAnim {} }
 
                     RowLayout {
                         anchors { fill: parent; leftMargin: 10; rightMargin: 8 }
@@ -96,22 +101,29 @@ Item {
             Repeater {
                 model: root._results
                 delegate: Item {
+                    id: resItem
                     required property var modelData
                     Layout.fillWidth: true
                     implicitHeight: 40
 
                     Rectangle {
+                        id: resBg
                         anchors { fill: parent; leftMargin: 8; rightMargin: 8 }
                         radius: Commons.Appearance.radius.base
-                        color: resMa.containsMouse ? Commons.Appearance.colors.surface0 : "transparent"
-                        Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                        color: "transparent"
+
+                        StateLayer {
+                            anchors.fill: parent
+                            pressScale: 1.0
+                            onClicked: root._go(resItem.modelData.pane)
+                        }
                     }
 
                     RowLayout {
                         anchors { fill: parent; leftMargin: 20; rightMargin: 16 }
                         spacing: 10
                         Text {
-                            text: modelData.paneIcon
+                            text: resItem.modelData.paneIcon
                             color: Commons.Appearance.colors.subtext0
                             font.pixelSize: 14; font.family: Commons.Appearance.font.family
                             Layout.alignment: Qt.AlignVCenter
@@ -120,7 +132,7 @@ Item {
                             Layout.fillWidth: true
                             spacing: 0
                             Text {
-                                text: modelData.label
+                                text: resItem.modelData.label
                                 color: Commons.Appearance.colors.text
                                 font.pixelSize: Commons.Appearance.font.sizeSm
                                 font.family: Commons.Appearance.font.family
@@ -128,20 +140,12 @@ Item {
                                 Layout.fillWidth: true
                             }
                             Text {
-                                text: modelData.paneLabel
+                                text: resItem.modelData.paneLabel
                                 color: Commons.Appearance.colors.overlay0
                                 font.pixelSize: Commons.Appearance.font.sizeSm - 1
                                 font.family: Commons.Appearance.font.family
                             }
                         }
-                    }
-
-                    MouseArea {
-                        id: resMa
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root._go(modelData.pane)
                     }
                 }
             }
@@ -162,9 +166,17 @@ Item {
                         anchors { fill: parent; leftMargin: 8; rightMargin: 8 }
                         radius: Commons.Appearance.radius.base
                         color: root.activeIndex === navItem.index
-                            ? Commons.Appearance.colors.accentAlpha
-                            : (navArea.containsMouse ? Commons.Appearance.colors.surface0 : "transparent")
-                        Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                            ? Commons.Appearance.colors.accentAlpha : "transparent"
+                        Behavior on color { Commons.ColorAnim {} }
+
+                        StateLayer {
+                            anchors.fill: parent
+                            pressScale: 1.0
+                            onClicked: {
+                                root.activeIndex = navItem.index
+                                root.paneSelected(navItem.index)
+                            }
+                        }
                     }
 
                     // Left accent bar for active state
@@ -202,16 +214,6 @@ Item {
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignVCenter
                             Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-                        }
-                    }
-
-                    MouseArea {
-                        id: navArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: {
-                            root.activeIndex = navItem.index
-                            root.paneSelected(navItem.index)
                         }
                     }
                 }
