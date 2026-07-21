@@ -100,17 +100,7 @@ Item {
 
                 SectionLabel { text: "MONITOR LAYOUT" }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    color: Commons.Appearance.colors.surface0
-                    radius: Commons.Appearance.radius.md
-                    implicitHeight: dspCol.implicitHeight + 16
-
-                    ColumnLayout {
-                        id: dspCol
-                        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 16; rightMargin: 16; topMargin: 8 }
-                        spacing: 0
-
+                SettingsCard {
                         ButtonGroupRow {
                             label: "Layout"
                             description: "Switch how your monitors are arranged"
@@ -124,7 +114,7 @@ Item {
                             onSelected: v => root._applyDisplay(v)
                         }
                         Item { implicitHeight: 8; Layout.fillWidth: true }
-                        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.base }
+                        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
                         Item { implicitHeight: 8; Layout.fillWidth: true }
                         RowLayout {
                             Layout.fillWidth: true
@@ -154,35 +144,23 @@ Item {
                                 }
                             }
                         }
-                    }
                 }
 
                 Item { implicitHeight: 10; Layout.fillWidth: true }
                 SectionLabel { text: "NIGHT LIGHT" }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    color: Commons.Appearance.colors.surface0
-                    radius: Commons.Appearance.radius.md
-                    implicitHeight: nlCol.implicitHeight + 16
-
-                    ColumnLayout {
-                        id: nlCol
-                        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 16; rightMargin: 16; topMargin: 8 }
-                        spacing: 0
-
-                        ButtonGroupRow {
-                            label: "Color temperature"
-                            description: "Reduce blue light during evening hours"
-                            options: [
-                                { value: "off",  label: "Off"   },
-                                { value: "4500", label: "4500K" },
-                                { value: "3500", label: "3500K" },
-                                { value: "2700", label: "2700K" }
-                            ]
-                            currentValue: root.nightLightMode
-                            onSelected: v => root._applyNightLight(v)
-                        }
+                SettingsCard {
+                    ButtonGroupRow {
+                        label: "Color temperature"
+                        description: "Reduce blue light during evening hours"
+                        options: [
+                            { value: "off",  label: "Off"   },
+                            { value: "4500", label: "4500K" },
+                            { value: "3500", label: "3500K" },
+                            { value: "2700", label: "2700K" }
+                        ]
+                        currentValue: root.nightLightMode
+                        onSelected: v => root._applyNightLight(v)
                     }
                 }
             }

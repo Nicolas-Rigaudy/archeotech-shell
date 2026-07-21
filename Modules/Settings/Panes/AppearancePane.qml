@@ -48,24 +48,12 @@ Item {
 
                 // ── Behavior ──────────────────────────────────────────────────
                 SectionLabel { text: "BEHAVIOR" }
-                Rectangle {
-                    Layout.fillWidth: true
-                    color: Commons.Appearance.colors.surface0
-                    radius: Commons.Appearance.radius.md
-                    implicitHeight: behCol.implicitHeight
-
-                    ColumnLayout {
-                        id: behCol
-                        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 16; rightMargin: 16 }
-                        spacing: 0
-                        Item { implicitHeight: 4; Layout.fillWidth: true }
-                        ToggleRow {
-                            label: "Restart Zen on theme change"
-                            description: "Zen only recolors on restart; auto-restart it (debounced) so it follows the theme"
-                            checked: Persistence.Config.get("colorScheme.restartZen", true)
-                            onToggled: v => Persistence.Config.set("colorScheme.restartZen", v)
-                        }
-                        Item { implicitHeight: 4; Layout.fillWidth: true }
+                SettingsCard {
+                    ToggleRow {
+                        label: "Restart Zen on theme change"
+                        description: "Zen only recolors on restart; auto-restart it (debounced) so it follows the theme"
+                        checked: Persistence.Config.get("colorScheme.restartZen", true)
+                        onToggled: v => Persistence.Config.set("colorScheme.restartZen", v)
                     }
                 }
 
@@ -98,27 +86,14 @@ Item {
                 // ── Typography ────────────────────────────────────────────────
                 SectionLabel { text: "TYPOGRAPHY" }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    color: Commons.Appearance.colors.surface0
-                    radius: Commons.Appearance.radius.md
-                    implicitHeight: typoCol.implicitHeight
-
-                    ColumnLayout {
-                        id: typoCol
-                        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 16; rightMargin: 16 }
-                        spacing: 0
-
-                        Item { implicitHeight: 4; Layout.fillWidth: true }
-                        SliderRow {
-                            label: "Font Size Scale"
-                            description: "Scales all text relative to the base size"
-                            from: 0.8; to: 1.4; stepSize: 0.05
-                            value: Persistence.Config.get("appearance.fontScale", 1.0)
-                            valueDisplay: Math.round(value * 100) + "%"
-                            onMoved: Persistence.Config.set("appearance.fontScale", value)
-                        }
-                        Item { implicitHeight: 4; Layout.fillWidth: true }
+                SettingsCard {
+                    SliderRow {
+                        label: "Font Size Scale"
+                        description: "Scales all text relative to the base size"
+                        from: 0.8; to: 1.4; stepSize: 0.05
+                        value: Persistence.Config.get("appearance.fontScale", 1.0)
+                        valueDisplay: Math.round(value * 100) + "%"
+                        onMoved: Persistence.Config.set("appearance.fontScale", value)
                     }
                 }
 
@@ -127,36 +102,23 @@ Item {
                 // ── Geometry ──────────────────────────────────────────────────
                 SectionLabel { text: "GEOMETRY" }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    color: Commons.Appearance.colors.surface0
-                    radius: Commons.Appearance.radius.md
-                    implicitHeight: geoCol.implicitHeight
-
-                    ColumnLayout {
-                        id: geoCol
-                        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 16; rightMargin: 16 }
-                        spacing: 0
-
-                        Item { implicitHeight: 4; Layout.fillWidth: true }
-                        SliderRow {
-                            label: "Corner Rounding"
-                            description: "Scales all border radii"
-                            from: 0.5; to: 2.0; stepSize: 0.1
-                            value: Persistence.Config.get("appearance.radiusScale", 1.0)
-                            valueDisplay: value.toFixed(1) + "×"
-                            onMoved: Persistence.Config.set("appearance.radiusScale", value)
-                        }
-                        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.base }
-                        SliderRow {
-                            label: "Padding Scale"
-                            description: "Scales spacing inside panels"
-                            from: 0.5; to: 2.0; stepSize: 0.1
-                            value: Persistence.Config.get("appearance.paddingScale", 1.0)
-                            valueDisplay: value.toFixed(1) + "×"
-                            onMoved: Persistence.Config.set("appearance.paddingScale", value)
-                        }
-                        Item { implicitHeight: 4; Layout.fillWidth: true }
+                SettingsCard {
+                    SliderRow {
+                        label: "Corner Rounding"
+                        description: "Scales all border radii"
+                        from: 0.5; to: 2.0; stepSize: 0.1
+                        value: Persistence.Config.get("appearance.radiusScale", 1.0)
+                        valueDisplay: value.toFixed(1) + "×"
+                        onMoved: Persistence.Config.set("appearance.radiusScale", value)
+                    }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                    SliderRow {
+                        label: "Padding Scale"
+                        description: "Scales spacing inside panels"
+                        from: 0.5; to: 2.0; stepSize: 0.1
+                        value: Persistence.Config.get("appearance.paddingScale", 1.0)
+                        valueDisplay: value.toFixed(1) + "×"
+                        onMoved: Persistence.Config.set("appearance.paddingScale", value)
                     }
                 }
             }

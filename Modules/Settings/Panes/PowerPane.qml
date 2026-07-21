@@ -113,112 +113,90 @@ Item {
 
                 SectionLabel { text: "POWER PROFILE" }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    color: Commons.Appearance.colors.surface0
-                    radius: Commons.Appearance.radius.md
-                    implicitHeight: ppCol.implicitHeight + 16
-
-                    ColumnLayout {
-                        id: ppCol
-                        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 16; rightMargin: 16; topMargin: 8 }
-                        spacing: 0
-
-                        ButtonGroupRow {
-                            label: "Mode"
-                            description: "Balance battery life and performance"
-                            options: [
-                                { value: "power-saver", label: "Power Saver" },
-                                { value: "balanced",    label: "Balanced"    },
-                                { value: "performance", label: "Performance" }
-                            ]
-                            currentValue: root.powerProfile
-                            onSelected: v => root._applyProfile(v)
-                        }
+                SettingsCard {
+                    ButtonGroupRow {
+                        label: "Mode"
+                        description: "Balance battery life and performance"
+                        options: [
+                            { value: "power-saver", label: "Power Saver" },
+                            { value: "balanced",    label: "Balanced"    },
+                            { value: "performance", label: "Performance" }
+                        ]
+                        currentValue: root.powerProfile
+                        onSelected: v => root._applyProfile(v)
                     }
                 }
 
                 Item { implicitHeight: 10; Layout.fillWidth: true }
                 SectionLabel { text: "IDLE & SLEEP" }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    color: Commons.Appearance.colors.surface0
-                    radius: Commons.Appearance.radius.md
-                    implicitHeight: idleCol.implicitHeight + 16
+                SettingsCard {
+                    ToggleRow {
+                        label: "Dim screen on idle"
+                        description: "Reduce brightness when inactive"
+                        checked: root.dimEnabled
+                        onToggled: v => { root.dimEnabled = v; root.applyIdleConfig() }
+                    }
+                    ButtonGroupRow {
+                        visible: root.dimEnabled
+                        label: ""
+                        description: ""
+                        options: [
+                            { value: "300",  label: "5 min"  },
+                            { value: "600",  label: "10 min" },
+                            { value: "900",  label: "15 min" },
+                            { value: "1800", label: "30 min" }
+                        ]
+                        currentValue: root.dimTimeout + ""
+                        onSelected: v => { root.dimTimeout = parseInt(v); root.applyIdleConfig() }
+                    }
 
-                    ColumnLayout {
-                        id: idleCol
-                        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 16; rightMargin: 16; topMargin: 8 }
-                        spacing: 0
+                    Item { implicitHeight: 8; Layout.fillWidth: true }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                    Item { implicitHeight: 8; Layout.fillWidth: true }
 
-                        ToggleRow {
-                            label: "Dim screen on idle"
-                            description: "Reduce brightness when inactive"
-                            checked: root.dimEnabled
-                            onToggled: v => { root.dimEnabled = v; root.applyIdleConfig() }
-                        }
-                        ButtonGroupRow {
-                            visible: root.dimEnabled
-                            label: ""
-                            description: ""
-                            options: [
-                                { value: "300",  label: "5 min"  },
-                                { value: "600",  label: "10 min" },
-                                { value: "900",  label: "15 min" },
-                                { value: "1800", label: "30 min" }
-                            ]
-                            currentValue: root.dimTimeout + ""
-                            onSelected: v => { root.dimTimeout = parseInt(v); root.applyIdleConfig() }
-                        }
+                    ToggleRow {
+                        label: "Lock screen"
+                        description: "Lock after inactivity"
+                        checked: root.lockEnabled
+                        onToggled: v => { root.lockEnabled = v; root.applyIdleConfig() }
+                    }
+                    ButtonGroupRow {
+                        visible: root.lockEnabled
+                        label: ""
+                        description: ""
+                        options: [
+                            { value: "600",  label: "10 min" },
+                            { value: "1200", label: "20 min" },
+                            { value: "1800", label: "30 min" },
+                            { value: "3600", label: "1 hr"   }
+                        ]
+                        currentValue: root.lockTimeout + ""
+                        onSelected: v => { root.lockTimeout = parseInt(v); root.applyIdleConfig() }
+                    }
 
-                        Item { implicitHeight: 8; Layout.fillWidth: true }
-                        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.base }
-                        Item { implicitHeight: 8; Layout.fillWidth: true }
+                    Item { implicitHeight: 8; Layout.fillWidth: true }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                    Item { implicitHeight: 8; Layout.fillWidth: true }
 
-                        ToggleRow {
-                            label: "Lock screen"
-                            description: "Lock after inactivity"
-                            checked: root.lockEnabled
-                            onToggled: v => { root.lockEnabled = v; root.applyIdleConfig() }
-                        }
-                        ButtonGroupRow {
-                            visible: root.lockEnabled
-                            label: ""
-                            description: ""
-                            options: [
-                                { value: "600",  label: "10 min" },
-                                { value: "1200", label: "20 min" },
-                                { value: "1800", label: "30 min" },
-                                { value: "3600", label: "1 hr"   }
-                            ]
-                            currentValue: root.lockTimeout + ""
-                            onSelected: v => { root.lockTimeout = parseInt(v); root.applyIdleConfig() }
-                        }
-
-                        Item { implicitHeight: 8; Layout.fillWidth: true }
-                        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.base }
-                        Item { implicitHeight: 8; Layout.fillWidth: true }
-
-                        ToggleRow {
-                            label: "Sleep displays"
-                            description: "Turn off displays after extended idle"
-                            checked: root.sleepEnabled
-                            onToggled: v => { root.sleepEnabled = v; root.applyIdleConfig() }
-                        }
-                        ButtonGroupRow {
-                            visible: root.sleepEnabled
-                            label: ""
-                            description: ""
-                            options: [
-                                { value: "1200", label: "20 min" },
-                                { value: "1800", label: "30 min" },
-                                { value: "3600", label: "1 hr"   },
-                                { value: "7200", label: "2 hr"   }
-                            ]
-                            currentValue: root.sleepTimeout + ""
-                            onSelected: v => { root.sleepTimeout = parseInt(v); root.applyIdleConfig() }
-                        }
+                    ToggleRow {
+                        label: "Sleep displays"
+                        description: "Turn off displays after extended idle"
+                        checked: root.sleepEnabled
+                        onToggled: v => { root.sleepEnabled = v; root.applyIdleConfig() }
+                    }
+                    ButtonGroupRow {
+                        visible: root.sleepEnabled
+                        label: ""
+                        description: ""
+                        options: [
+                            { value: "1200", label: "20 min" },
+                            { value: "1800", label: "30 min" },
+                            { value: "3600", label: "1 hr"   },
+                            { value: "7200", label: "2 hr"   }
+                        ]
+                        currentValue: root.sleepTimeout + ""
+                        onSelected: v => { root.sleepTimeout = parseInt(v); root.applyIdleConfig() }
                     }
                 }
             }

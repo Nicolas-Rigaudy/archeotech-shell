@@ -91,19 +91,7 @@ Item {
                 Item { implicitHeight: 10; Layout.fillWidth: true }
                 SectionLabel { text: "ENVIRONMENT" }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    color: Commons.Appearance.colors.surface0
-                    radius: Commons.Appearance.radius.md
-                    implicitHeight: infoCol.implicitHeight
-
-                    ColumnLayout {
-                        id: infoCol
-                        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 16; rightMargin: 16 }
-                        spacing: 0
-
-                        Item { implicitHeight: 8; Layout.fillWidth: true }
-
+                SettingsCard {
                         Repeater {
                             model: [
                                 { label: "Shell",      value: "Quickshell 0.2.1"    },
@@ -144,9 +132,6 @@ Item {
                                 }
                             }
                         }
-
-                        Item { implicitHeight: 8; Layout.fillWidth: true }
-                    }
                 }
 
                 Item { implicitHeight: 10; Layout.fillWidth: true }

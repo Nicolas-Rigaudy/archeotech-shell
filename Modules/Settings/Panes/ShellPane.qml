@@ -139,61 +139,37 @@ Item {
                 Item { implicitHeight: 10; Layout.fillWidth: true }
                 SectionLabel { text: "FRAME" }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    color: Commons.Appearance.colors.surface0
-                    radius: Commons.Appearance.radius.md
-                    implicitHeight: frameCol.implicitHeight
-
-                    ColumnLayout {
-                        id: frameCol
-                        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 16; rightMargin: 16 }
-                        spacing: 0
-
-                        Item { implicitHeight: 4; Layout.fillWidth: true }
-                        ToggleRow {
-                            label: "Pill frame"
-                            description: "Float the whole frame off the screen edges with rounded outer corners"
-                            checked: ShellServices.ShellConfig.pillMode()
-                            onToggled: value => ShellServices.ShellConfig.setPillMode(value)
-                        }
-                        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.base }
-                        SliderRow {
-                            label: "Corner Radius"
-                            description: "Roundness of the frame's inner corners"
-                            from: 0; to: 24; stepSize: 1
-                            value: ShellServices.ShellConfig.cornerRadius()
-                            valueDisplay: Math.round(value) + "px"
-                            onMoved: (v) => { root._pendingRadius = Math.round(v); _radiusTimer.restart() }
-                        }
-                        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.base }
-                        SliderRow {
-                            label: "Outer Gap"
-                            description: "Breathing space between the shell and tiled windows"
-                            from: 0; to: 20; stepSize: 1
-                            value: ShellServices.ShellConfig.outerGap()
-                            valueDisplay: Math.round(value) + "px"
-                            onMoved: (v) => { root._pendingGap = Math.round(v); _gapTimer.restart() }
-                        }
-                        Item { implicitHeight: 4; Layout.fillWidth: true }
+                SettingsCard {
+                    ToggleRow {
+                        label: "Pill frame"
+                        description: "Float the whole frame off the screen edges with rounded outer corners"
+                        checked: ShellServices.ShellConfig.pillMode()
+                        onToggled: value => ShellServices.ShellConfig.setPillMode(value)
+                    }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                    SliderRow {
+                        label: "Corner Radius"
+                        description: "Roundness of the frame's inner corners"
+                        from: 0; to: 24; stepSize: 1
+                        value: ShellServices.ShellConfig.cornerRadius()
+                        valueDisplay: Math.round(value) + "px"
+                        onMoved: (v) => { root._pendingRadius = Math.round(v); _radiusTimer.restart() }
+                    }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                    SliderRow {
+                        label: "Outer Gap"
+                        description: "Breathing space between the shell and tiled windows"
+                        from: 0; to: 20; stepSize: 1
+                        value: ShellServices.ShellConfig.outerGap()
+                        valueDisplay: Math.round(value) + "px"
+                        onMoved: (v) => { root._pendingGap = Math.round(v); _gapTimer.restart() }
                     }
                 }
 
                 Item { implicitHeight: 10; Layout.fillWidth: true }
                 SectionLabel { text: "SCROLLER" }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    color: Commons.Appearance.colors.surface0
-                    radius: Commons.Appearance.radius.md
-                    implicitHeight: scrollerCol.implicitHeight
-
-                    ColumnLayout {
-                        id: scrollerCol
-                        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 16; rightMargin: 16 }
-                        spacing: 0
-
-                        Item { implicitHeight: 4; Layout.fillWidth: true }
+                SettingsCard {
                         SliderRow {
                             id: propSlider
                             label: "Window width"
@@ -208,7 +184,7 @@ Item {
                                 _propTimer.restart()
                             }
                         }
-                        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.base }
+                        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
 
                         Item { implicitHeight: 8; Layout.fillWidth: true }
                         Rectangle {
@@ -254,32 +230,18 @@ Item {
                                 }
                             }
                         }
-                        Item { implicitHeight: 12; Layout.fillWidth: true }
-                    }
                 }
 
                 Item { implicitHeight: 10; Layout.fillWidth: true }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    color: Commons.Appearance.colors.surface0
-                    radius: Commons.Appearance.radius.md
-                    implicitHeight: noteCol.implicitHeight
-
-                    ColumnLayout {
-                        id: noteCol
-                        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 16; rightMargin: 16 }
-                        spacing: 0
-                        Item { implicitHeight: 10; Layout.fillWidth: true }
-                        Text {
-                            text: "󰋽  Add, remove and arrange widgets in the bar and edge strips from Edit Layout above. Frame changes apply live."
-                            color: Commons.Appearance.colors.overlay0
-                            font.pixelSize: Commons.Appearance.font.sizeSm
-                            font.family: Commons.Appearance.font.family
-                            wrapMode: Text.WordWrap
-                            Layout.fillWidth: true
-                        }
-                        Item { implicitHeight: 10; Layout.fillWidth: true }
+                SettingsCard {
+                    Text {
+                        text: "󰋽  Add, remove and arrange widgets in the bar and edge strips from Edit Layout above. Frame changes apply live."
+                        color: Commons.Appearance.colors.overlay0
+                        font.pixelSize: Commons.Appearance.font.sizeSm
+                        font.family: Commons.Appearance.font.family
+                        wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
                     }
                 }
             }

@@ -324,24 +324,12 @@ Item {
                 Item { implicitHeight: 10; Layout.fillWidth: true }
                 SectionLabel { text: "BEHAVIOUR" }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    color: Commons.Appearance.colors.surface0
-                    radius: Commons.Appearance.radius.md
-                    implicitHeight: behavCol.implicitHeight
-
-                    ColumnLayout {
-                        id: behavCol
-                        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 16; rightMargin: 16 }
-                        spacing: 0
-                        Item { implicitHeight: 4; Layout.fillWidth: true }
-                        ToggleRow {
-                            label: "Remember volume on restart"
-                            description: "Restore last volume level on login"
-                            checked: Persistence.Config.get("audio.rememberVolume", true)
-                            onToggled: value => Persistence.Config.set("audio.rememberVolume", value)
-                        }
-                        Item { implicitHeight: 4; Layout.fillWidth: true }
+                SettingsCard {
+                    ToggleRow {
+                        label: "Remember volume on restart"
+                        description: "Restore last volume level on login"
+                        checked: Persistence.Config.get("audio.rememberVolume", true)
+                        onToggled: value => Persistence.Config.set("audio.rememberVolume", value)
                     }
                 }
             }
