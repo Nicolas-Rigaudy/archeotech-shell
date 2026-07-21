@@ -141,6 +141,21 @@ Dead ends (tried and reverted — don't redo without a new idea):
   pinned apps; pinned repos sort first).
 - **Quote under the welcome text** — a rotating quote/line beneath the hero greeting
   (like the lockscreen's quote). (`tips.txt` / a quotes file + the existing tip picker.)
+- **Customizable System Notes** (user 2026-07-21) — let the user choose which stats
+  show in the SYSTEM NOTES card (snapshot/updates/vpn/aws/uptime/kernel/host/ip/…),
+  config-driven like `dashboard.scanRoots`. Card already renders a generic 2-col
+  NoteRow grid — would need a config key + a per-stat fetch registry.
+- **System Notes data reliability (PRE-1.0)** — the newer stats (uptime/kernel/host/ip)
+  are solid; the original left-column ones are flaky and need a hardening pass before
+  1.0 (pairs with customizable-notes: only surface sources that resolve):
+  - *AWS* — `$AWS_PROFILE` isn't inherited by the Quickshell process; nearly always
+    "unset". Needs a real source (read `~/.aws/config` current profile, or a login-shell env).
+  - *Snapshot* — parser wants a dated snapper row; returns N/A when only `#0 current`
+    exists. Handle the no-timeline-snapshots case.
+  - *VPN* — `awk '/vpn/'` on `nmcli --active` is fragile; match on TYPE (wireguard/vpn/tun)
+    instead of a substring.
+  - *Updates* — `checkupdates` syncs a temp DB (slow/network-dependent) + async count;
+    finicky. Consider caching / a loading state.
 
 ## Future ideas (user)
 - **Flat vs glass as a setting** (user 2026-07-17): a config flag (e.g.
