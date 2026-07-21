@@ -168,6 +168,10 @@ Dead ends (tried and reverted — don't redo without a new idea):
   glass look is dialed in and approved.
 - **Named theme personalities** (40k / Star Wars / cyberpunk / Shadow Spear / …)
   as variants layered on the main liquid-glass base — LATER, not now.
+- **Gradient / liquid-glass sheen on nested cards** (user 2026-07-21) — try the
+  `glassSheenTop`/`glassSheenBot` gradient (or a softer variant) on `DashCard`/
+  `SettingsCard`/notif cards to see if cards want the sheen treatment too, not just
+  flat `surfaceCard`. Experiment once the flat card language is settled.
 
 ## Deferred (over-eager in studies)
 Scrubber drag-thumb, marquee hover-underline, per-cell calendar hover borders,
