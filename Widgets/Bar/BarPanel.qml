@@ -85,6 +85,9 @@ Item {
     // Esc closes (the surface holds exclusive keyboard focus while open).
     focus: _open
     Keys.onEscapePressed: root.close()
+    // Claim activeFocus explicitly on open — the declarative `focus` binding
+    // doesn't always win it, so Esc wouldn't reach this handler.
+    on_OpenChanged: if (root._open) root.forceActiveFocus()
 
     // ── Neck card (same geometry as Strip.qml's card) ──────────────────────────
     Shape {

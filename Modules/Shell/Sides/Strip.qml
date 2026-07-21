@@ -171,6 +171,11 @@ Item {
     focus: _panelOpen
     Keys.priority: Keys.BeforeItem
     Keys.onEscapePressed: strip.close()
+    // `focus: _panelOpen` alone doesn't reliably win activeFocus (so Esc never
+    // reached this handler). Claim it explicitly on open — synchronous, so an
+    // input panel (Launcher) can still grab its TextField focus afterwards, and
+    // its Esc bubbles up to this ancestor.
+    on_PanelOpenChanged: if (strip._panelOpen) strip.forceActiveFocus()
 
     // Strip-level hover tracker. Hover-only (clicks pass through). The
     // containsMouseChanged handler funnels into _updateHover() so the popup
