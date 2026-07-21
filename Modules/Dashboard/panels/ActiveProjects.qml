@@ -87,6 +87,11 @@ DashCard {
     // Capped at 4 visible rows; scrolls inside the card when there are more.
     ListView {
         Layout.fillWidth: true
+        // Bleed 8px into the card padding on each side so the full-row hover
+        // highlight is wider than the text (doesn't clip at the content edges).
+        // Row content is re-padded to stay flush at 16px like the other cards.
+        Layout.leftMargin:  -8
+        Layout.rightMargin: -8
         Layout.preferredHeight: Math.min(root.projects.length, 4) * root._rowH
         visible: root.projects.length > 0
         clip: true
@@ -95,7 +100,21 @@ DashCard {
         model: root.projects
         spacing: 0
 
-        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+        // Thin scrollbar tucked into the card's edge margin so it never sits on
+        // top of the row items. -6 pushes it past the list's 8px bleed to the edge.
+        ScrollBar.vertical: ScrollBar {
+            id: projScroll
+            policy: ScrollBar.AsNeeded
+            implicitWidth: 8
+            anchors.rightMargin: -6
+            contentItem: Rectangle {
+                implicitWidth: 4
+                radius: 2
+                color: Commons.Appearance.colors.overlay0
+                opacity: projScroll.pressed ? 0.9 : 0.45
+                Behavior on opacity { Commons.ColorAnim {} }
+            }
+        }
 
         delegate: Rectangle {
             id: projRow
@@ -108,7 +127,8 @@ DashCard {
 
             Rectangle {
                 width: 7; height: 7; radius: 4
-                anchors { left: parent.left; leftMargin: 6; verticalCenter: parent.verticalCenter }
+                // +8 re-pad to sit flush at 16px from the card edge (list bleeds 8).
+                anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
                 color: modelData.dirty > 0 ? Commons.Appearance.colors.peach : Commons.Appearance.colors.green
             }
             Text {
@@ -117,7 +137,7 @@ DashCard {
                 color: Commons.Appearance.colors.text
                 font.family: Commons.Appearance.font.family
                 font.pixelSize: Commons.Appearance.font.sizeBase
-                anchors { left: parent.left; leftMargin: 21; verticalCenter: parent.verticalCenter }
+                anchors { left: parent.left; leftMargin: 23; verticalCenter: parent.verticalCenter }
                 elide: Text.ElideRight
                 width: parent.width * 0.48
             }
@@ -135,6 +155,7 @@ DashCard {
                 color: modelData.dirty > 0 ? Commons.Appearance.colors.peach : Commons.Appearance.colors.green
                 font.family: Commons.Appearance.font.family
                 font.pixelSize: Commons.Appearance.font.sizeBase
+                // +8 re-pad to sit flush at 16px from the card edge (list bleeds 8).
                 anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
             }
 

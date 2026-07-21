@@ -31,14 +31,14 @@ Item {
         anchors.fill: parent
         radius: Commons.Appearance.radius.md
         color:  Commons.Appearance.colors.surfaceCard
-        implicitHeight: outer.implicitHeight + 24
+        implicitHeight: outer.implicitHeight + 32
 
         ColumnLayout {
             id: outer
             // bottom-anchored so `inner` can fillHeight — lets a card whose
             // content opts into Layout.fillHeight (e.g. QuickLaunch) stretch to
             // the stretched card height. Content without fillHeight stays at top.
-            anchors { left: parent.left; right: parent.right; top: parent.top; bottom: parent.bottom; margins: 12 }
+            anchors { left: parent.left; right: parent.right; top: parent.top; bottom: parent.bottom; margins: 16 }
             spacing: 8
 
             Text {
