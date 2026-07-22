@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Effects
 import "../../Commons" as Commons
 import "../../Commons/Primitives"
 import "../../Services/Theming" as Theming
@@ -83,18 +84,32 @@ Item {
             rowSpacing: 8; columnSpacing: 8
             Repeater {
                 model: root._cat.families
-                delegate: Rectangle {
+                delegate: Item {
                     id: famCard
                     required property var modelData
                     readonly property bool _on: root._cs.family === modelData.id
                     Layout.fillWidth: true
                     Layout.preferredHeight: root.compact ? 50 : 64
-                    radius: Commons.Appearance.radius.md
-                    color: _on ? Commons.Appearance.colors.accentAlpha : Commons.Appearance.colors.surfaceCard
-                    border.width: _on ? 2 : 1
-                    border.color: _on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.glassBorder
-                    Behavior on color        { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-                    Behavior on border.color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+
+                    RectangularShadow {
+                        anchors.fill: famBg
+                        radius: famBg.radius
+                        blur: 10; offset: Qt.vector2d(0, 3); spread: 0
+                        color: Qt.rgba(0, 0, 0, 0.5)
+                    }
+                    Rectangle {
+                        id: famBg
+                        anchors.fill: parent
+                        radius: Commons.Appearance.radius.md
+                        antialiasing: true
+                        border.width: famCard._on ? 2 : 1
+                        border.color: famCard._on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.glassBorder
+                        // Top-lit gradient for depth — accent when selected.
+                        gradient: Gradient {
+                            GradientStop { position: 0.0; color: famCard._on ? Qt.lighter(Commons.Appearance.colors.accent, 1.08) : Qt.lighter(Commons.Appearance.colors.surfaceCard, 1.12) }
+                            GradientStop { position: 1.0; color: famCard._on ? Qt.darker(Commons.Appearance.colors.accent, 1.06)  : Commons.Appearance.colors.surfaceCard }
+                        }
+                        Behavior on border.color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
 
                     ColumnLayout {
                         anchors { fill: parent; margins: 10 }
@@ -134,6 +149,7 @@ Item {
                     StateLayer {
                         anchors.fill: parent
                         onClicked: root._cs.setFamily(famCard.modelData.id)
+                    }
                     }
                 }
             }
@@ -241,28 +257,12 @@ Item {
             spacing: 6
             Repeater {
                 model: fr.flavors
-                delegate: Rectangle {
+                delegate: GlassButton {
                     id: flavorPill
                     required property var modelData
-                    readonly property bool _on: fr.current === modelData.id
-                    implicitWidth: _ft.implicitWidth + 22; implicitHeight: 26
-                    radius: 13
-                    color: _on ? Commons.Appearance.colors.accentAlpha : Commons.Appearance.colors.surfaceCard
-                    border.color: _on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.glassBorder
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-                    Text {
-                        id: _ft
-                        anchors.centerIn: parent
-                        text: flavorPill.modelData.label
-                        color: flavorPill._on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext1
-                        font.pixelSize: Commons.Appearance.font.sizeSm
-                        font.family: Commons.Appearance.font.family
-                    }
-                    StateLayer {
-                        anchors.fill: parent
-                        onClicked: fr.pick(flavorPill.modelData.id)
-                    }
+                    active: fr.current === modelData.id
+                    text: modelData.label
+                    onClicked: fr.pick(flavorPill.modelData.id)
                 }
             }
         }
