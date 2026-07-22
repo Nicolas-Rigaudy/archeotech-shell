@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell.Io
 import "../../../Commons" as Commons
+import "../../../Commons/Primitives"
 import "../Widgets"
 
 Item {
@@ -42,50 +43,39 @@ Item {
                 spacing: 6
 
                 // ── Hero ──────────────────────────────────────────────────────
-                Rectangle {
-                    Layout.fillWidth: true
-                    color: Commons.Appearance.colors.surface0
-                    radius: Commons.Appearance.radius.md
-                    implicitHeight: heroCol.implicitHeight
+                SettingsCard {
+                    Item { implicitHeight: 14; Layout.fillWidth: true }
 
-                    ColumnLayout {
-                        id: heroCol
-                        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 24; rightMargin: 24 }
-                        spacing: 4
-
-                        Item { implicitHeight: 20; Layout.fillWidth: true }
-
-                        Text {
-                            text: "󰒓"
-                            color: Commons.Appearance.colors.accent
-                            font.pixelSize: 36
-                            font.family: Commons.Appearance.font.family
-                        }
-
-                        Text {
-                            text: "Archeotech Shell"
-                            color: Commons.Appearance.colors.text
-                            font.pixelSize: 22
-                            font.family: Commons.Appearance.font.family
-                            font.weight: Font.Bold
-                        }
-
-                        Text {
-                            text: "Quickshell-based Wayland shell for MangoWC"
-                            color: Commons.Appearance.colors.subtext0
-                            font.pixelSize: Commons.Appearance.font.sizeBase
-                            font.family: Commons.Appearance.font.family
-                        }
-
-                        Text {
-                            text: "Catppuccin Macchiato  ·  FiraCode Nerd Font"
-                            color: Commons.Appearance.colors.overlay0
-                            font.pixelSize: Commons.Appearance.font.sizeSm
-                            font.family: Commons.Appearance.font.family
-                        }
-
-                        Item { implicitHeight: 20; Layout.fillWidth: true }
+                    Text {
+                        text: "󰒓"
+                        color: Commons.Appearance.colors.accent
+                        font.pixelSize: 36
+                        font.family: Commons.Appearance.font.family
                     }
+
+                    Text {
+                        text: "Archeotech Shell"
+                        color: Commons.Appearance.colors.text
+                        font.pixelSize: 22
+                        font.family: Commons.Appearance.font.family
+                        font.weight: Font.Bold
+                    }
+
+                    Text {
+                        text: "Quickshell-based Wayland shell for MangoWC"
+                        color: Commons.Appearance.colors.subtext0
+                        font.pixelSize: Commons.Appearance.font.sizeBase
+                        font.family: Commons.Appearance.font.family
+                    }
+
+                    Text {
+                        text: "Catppuccin Macchiato  ·  FiraCode Nerd Font"
+                        color: Commons.Appearance.colors.overlay0
+                        font.pixelSize: Commons.Appearance.font.sizeSm
+                        font.family: Commons.Appearance.font.family
+                    }
+
+                    Item { implicitHeight: 14; Layout.fillWidth: true }
                 }
 
                 Item { implicitHeight: 10; Layout.fillWidth: true }
@@ -108,7 +98,7 @@ Item {
                                 Rectangle {
                                     visible: index > 0
                                     anchors { left: parent.left; right: parent.right; top: parent.top }
-                                    height: 1; color: Commons.Appearance.colors.base
+                                    height: 1; color: Commons.Appearance.colors.surface0
                                 }
 
                                 RowLayout {
@@ -137,19 +127,7 @@ Item {
                 Item { implicitHeight: 10; Layout.fillWidth: true }
                 SectionLabel { text: "LINKS" }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    color: Commons.Appearance.colors.surface0
-                    radius: Commons.Appearance.radius.md
-                    implicitHeight: linksCol.implicitHeight
-
-                    ColumnLayout {
-                        id: linksCol
-                        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 12; rightMargin: 12 }
-                        spacing: 0
-
-                        Item { implicitHeight: 6; Layout.fillWidth: true }
-
+                SettingsCard {
                         Repeater {
                             model: [
                                 { icon: "󰊤", label: "GitHub Repository",  cmd: "xdg-open https://github.com"                          },
@@ -166,14 +144,13 @@ Item {
                                 Rectangle {
                                     visible: index > 0
                                     anchors { left: parent.left; right: parent.right; top: parent.top }
-                                    height: 1; color: Commons.Appearance.colors.base
+                                    height: 1; color: Commons.Appearance.colors.surface0
                                 }
 
                                 Rectangle {
                                     anchors { fill: parent; topMargin: index > 0 ? 1 : 0 }
-                                    color: linkMa.containsMouse ? Commons.Appearance.colors.surface1 : "transparent"
+                                    color: "transparent"
                                     radius: Commons.Appearance.radius.sm
-                                    Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
 
                                     RowLayout {
                                         anchors { fill: parent; leftMargin: 8; rightMargin: 8 }
@@ -201,19 +178,13 @@ Item {
                                         }
                                     }
 
-                                    MouseArea {
-                                        id: linkMa
+                                    StateLayer {
                                         anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
                                         onClicked: { runner.cmd = modelData.cmd; runner.running = true }
                                     }
                                 }
                             }
                         }
-
-                        Item { implicitHeight: 6; Layout.fillWidth: true }
-                    }
                 }
             }
         }

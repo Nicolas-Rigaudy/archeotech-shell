@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell.Io
 import "../../../Commons" as Commons
+import "../../../Commons/Primitives"
 import "../Widgets"
 
 Item {
@@ -124,24 +125,9 @@ Item {
                                 Text { text: "Adjust manually"; color: Commons.Appearance.colors.text; font.pixelSize: Commons.Appearance.font.sizeBase; font.family: Commons.Appearance.font.family }
                                 Text { text: "Open wdisplays for per-monitor tweaks"; color: Commons.Appearance.colors.overlay0; font.pixelSize: Commons.Appearance.font.sizeSm; font.family: Commons.Appearance.font.family }
                             }
-                            Rectangle {
-                                height: 28; implicitWidth: 60
-                                color: openArea.containsMouse ? Commons.Appearance.colors.surface1 : Commons.Appearance.colors.base
-                                border.color: Commons.Appearance.colors.surface1
-                                border.width: 1
-                                radius: Commons.Appearance.radius.base
-                                Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "Open"
-                                    color: Commons.Appearance.colors.subtext1
-                                    font.pixelSize: Commons.Appearance.font.sizeSm
-                                    font.family: Commons.Appearance.font.family
-                                }
-                                MouseArea {
-                                    id: openArea; anchors.fill: parent; hoverEnabled: true
-                                    onClicked: root.run("wdisplays &")
-                                }
+                            GlassButton {
+                                text: "Open"
+                                onClicked: root.run("wdisplays &")
                             }
                         }
                 }

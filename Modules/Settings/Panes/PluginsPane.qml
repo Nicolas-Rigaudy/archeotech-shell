@@ -91,22 +91,12 @@ Item {
 
                 Repeater {
                     model: root._mods.modules
-                    delegate: Rectangle {
+                    delegate: SettingsCard {
                         id: modCard
                         required property var modelData
                         readonly property bool _enabled: root._mods.isEnabled(modelData.id)
                         property bool _confirming: false
-
-                        Layout.fillWidth: true
-                        implicitHeight: mc.implicitHeight + 20
-                        radius: Commons.Appearance.radius.md
-                        color: Commons.Appearance.colors.surface0
                         opacity: _enabled ? 1.0 : 0.6
-
-                        ColumnLayout {
-                            id: mc
-                            anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 14; rightMargin: 14; topMargin: 10 }
-                            spacing: 6
 
                             RowLayout {
                                 Layout.fillWidth: true
@@ -203,7 +193,6 @@ Item {
                                     Timer { id: _confirmReset; interval: 3000; onTriggered: modCard._confirming = false }
                                 }
                             }
-                        }
                     }
                 }
 
