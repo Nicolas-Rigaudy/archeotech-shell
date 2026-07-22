@@ -60,6 +60,8 @@ Item {
                                 required property var modelData
                                 required property int index
                                 Layout.fillWidth: true
+                                Layout.leftMargin: 4
+                                Layout.rightMargin: 4
                                 implicitHeight: 44 + (_expanded ? optsItem.implicitHeight : 0)
                                 clip: true
 
@@ -225,6 +227,8 @@ Item {
                                 required property var modelData
                                 required property int index
                                 Layout.fillWidth: true
+                                Layout.leftMargin: 4
+                                Layout.rightMargin: 4
                                 implicitHeight: 44
 
                                 readonly property bool isDefault: modelData.name === MediaServices.Audio.defaultSource
