@@ -172,7 +172,7 @@ Item {
                                         }
 
                                         Text {
-                                            text: "󰤭"
+                                            text: "󰏌"
                                             color: Commons.Appearance.colors.overlay0
                                             font.pixelSize: 12; font.family: Commons.Appearance.font.family
                                         }
