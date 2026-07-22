@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../../../Commons" as Commons
+import "../../../Commons/Primitives"
 import "../../../Services/Networking" as NetworkServices
 import "../Widgets"
 
