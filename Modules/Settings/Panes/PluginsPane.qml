@@ -209,39 +209,58 @@ Item {
                     wrapMode: Text.WordWrap
                 }
 
-                Flow {
+                // Icon grid of mini-cards (read-only catalogue).
+                GridLayout {
                     Layout.fillWidth: true
-                    spacing: 6
+                    columns: 4
+                    columnSpacing: 8
+                    rowSpacing: 8
+
                     Repeater {
                         model: root._reg.availableBarWidgets.concat(root._reg.availableStripIcons)
                         delegate: Rectangle {
-                            id: catTag
+                            id: catTile
                             required property var modelData
                             readonly property bool _cfg: Object.keys(root._reg.configSchemaFor(modelData.id)).length > 0
-                            height: 28
-                            width: _bt.implicitWidth + 20
-                            radius: Commons.Appearance.radius.base
-                            color: Commons.Appearance.colors.surface0
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: 1
+                            Layout.preferredHeight: 62
+                            radius: Commons.Appearance.radius.md
+                            color: Commons.Appearance.colors.surfaceCard
                             border.width: 1
-                            border.color: Commons.Appearance.colors.surface1
-                            Row {
-                                id: _bt
+                            border.color: Commons.Appearance.colors.glassBorder
+
+                            ColumnLayout {
                                 anchors.centerIn: parent
-                                spacing: 5
+                                width: parent.width - 12
+                                spacing: 3
                                 Text {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: modelData.icon || ""
+                                    text: catTile.modelData.icon || "󰏗"
                                     color: Commons.Appearance.colors.accent
                                     font.family: Commons.Appearance.font.family
-                                    font.pixelSize: Commons.Appearance.font.sizeSm
+                                    font.pixelSize: 18
+                                    Layout.alignment: Qt.AlignHCenter
                                 }
                                 Text {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: catTag.modelData.name + (catTag._cfg ? "  󰒓" : "")
+                                    text: catTile.modelData.name
                                     color: Commons.Appearance.colors.subtext1
                                     font.family: Commons.Appearance.font.family
                                     font.pixelSize: Commons.Appearance.font.sizeSm
+                                    elide: Text.ElideRight
+                                    horizontalAlignment: Text.AlignHCenter
+                                    Layout.fillWidth: true
+                                    Layout.alignment: Qt.AlignHCenter
                                 }
+                            }
+
+                            // Configurable badge (top-right).
+                            Text {
+                                visible: catTile._cfg
+                                text: "󰒓"
+                                color: Commons.Appearance.colors.accent
+                                font.family: Commons.Appearance.font.family
+                                font.pixelSize: Commons.Appearance.font.sizeSm
+                                anchors { top: parent.top; right: parent.right; topMargin: 5; rightMargin: 7 }
                             }
                         }
                     }
