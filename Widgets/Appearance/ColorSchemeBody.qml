@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../../Commons" as Commons
+import "../../Commons/Primitives"
 import "../../Services/Theming" as Theming
 
 // Sprint 25 — hierarchical theme picker (family → flavor + light/dark mode +
@@ -49,36 +50,26 @@ Item {
                     { id: "light", label: "Light", glyph: "󰖨" },
                     { id: "auto",  label: "Auto",  glyph: "󰃟" }
                 ]
-                delegate: Rectangle {
+                delegate: GlassButton {
+                    id: modeBtn
                     required property var modelData
                     readonly property bool _on: root._cs.mode === modelData.id
                     Layout.fillWidth: true
-                    implicitHeight: root.compact ? 28 : 30
-                    radius: Commons.Appearance.radius.base
-                    color: _on ? Commons.Appearance.colors.accentAlpha
-                         : (_mma.containsMouse ? Commons.Appearance.colors.surface0 : Commons.Appearance.colors.base)
-                    border.color: _on ? Commons.Appearance.colors.accentBorder : "transparent"
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                    active: _on
+                    onClicked: root._cs.setMode(modelData.id)
                     RowLayout {
-                        anchors.centerIn: parent
                         spacing: 6
                         Text {
-                            text: modelData.glyph
-                            color: parent.parent._on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext0
+                            text: modeBtn.modelData.glyph
+                            color: modeBtn._on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext0
                             font.pixelSize: 13; font.family: Commons.Appearance.font.family
                         }
                         Text {
-                            text: modelData.label
-                            color: parent.parent._on ? Commons.Appearance.colors.text : Commons.Appearance.colors.subtext0
+                            text: modeBtn.modelData.label
+                            color: modeBtn._on ? Commons.Appearance.colors.text : Commons.Appearance.colors.subtext0
                             font.pixelSize: Commons.Appearance.font.sizeBase; font.family: Commons.Appearance.font.family
-                            font.weight: parent.parent._on ? Font.Medium : Font.Normal
+                            font.weight: modeBtn._on ? Font.Medium : Font.Normal
                         }
-                    }
-                    MouseArea {
-                        id: _mma; anchors.fill: parent; hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root._cs.setMode(modelData.id)
                     }
                 }
             }
@@ -96,12 +87,10 @@ Item {
                     id: famCard
                     required property var modelData
                     readonly property bool _on: root._cs.family === modelData.id
-                    property bool _hov: false
                     Layout.fillWidth: true
                     Layout.preferredHeight: root.compact ? 50 : 64
                     radius: Commons.Appearance.radius.md
-                    color: _on ? Commons.Appearance.colors.surface1
-                         : (_hov ? Commons.Appearance.colors.surface0 : Commons.Appearance.colors.base)
+                    color: _on ? Commons.Appearance.colors.accentAlpha : "transparent"
                     border.width: _on ? 2 : 1
                     border.color: _on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.surface0
                     Behavior on color        { ColorAnimation { duration: Commons.Appearance.anim.fast } }
@@ -142,11 +131,8 @@ Item {
                             }
                         }
                     }
-                    MouseArea {
-                        anchors.fill: parent; hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onEntered: famCard._hov = true
-                        onExited:  famCard._hov = false
+                    StateLayer {
+                        anchors.fill: parent
                         onClicked: root._cs.setFamily(famCard.modelData.id)
                     }
                 }
@@ -256,27 +242,26 @@ Item {
             Repeater {
                 model: fr.flavors
                 delegate: Rectangle {
+                    id: flavorPill
                     required property var modelData
                     readonly property bool _on: fr.current === modelData.id
                     implicitWidth: _ft.implicitWidth + 22; implicitHeight: 26
                     radius: 13
-                    color: _on ? Commons.Appearance.colors.accentAlpha
-                         : (_fma.containsMouse ? Commons.Appearance.colors.surface1 : Commons.Appearance.colors.surface0)
+                    color: _on ? Commons.Appearance.colors.accentAlpha : "transparent"
                     border.color: _on ? Commons.Appearance.colors.accentBorder : "transparent"
                     border.width: 1
                     Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                     Text {
                         id: _ft
                         anchors.centerIn: parent
-                        text: modelData.label
-                        color: parent._on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext1
+                        text: flavorPill.modelData.label
+                        color: flavorPill._on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext1
                         font.pixelSize: Commons.Appearance.font.sizeSm
                         font.family: Commons.Appearance.font.family
                     }
-                    MouseArea {
-                        id: _fma; anchors.fill: parent; hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: fr.pick(modelData.id)
+                    StateLayer {
+                        anchors.fill: parent
+                        onClicked: fr.pick(flavorPill.modelData.id)
                     }
                 }
             }
