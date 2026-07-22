@@ -90,9 +90,9 @@ Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: root.compact ? 50 : 64
                     radius: Commons.Appearance.radius.md
-                    color: _on ? Commons.Appearance.colors.accentAlpha : "transparent"
+                    color: _on ? Commons.Appearance.colors.accentAlpha : Commons.Appearance.colors.surfaceCard
                     border.width: _on ? 2 : 1
-                    border.color: _on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.surface0
+                    border.color: _on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.glassBorder
                     Behavior on color        { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                     Behavior on border.color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
 
@@ -247,8 +247,8 @@ Item {
                     readonly property bool _on: fr.current === modelData.id
                     implicitWidth: _ft.implicitWidth + 22; implicitHeight: 26
                     radius: 13
-                    color: _on ? Commons.Appearance.colors.accentAlpha : "transparent"
-                    border.color: _on ? Commons.Appearance.colors.accentBorder : "transparent"
+                    color: _on ? Commons.Appearance.colors.accentAlpha : Commons.Appearance.colors.surfaceCard
+                    border.color: _on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.glassBorder
                     border.width: 1
                     Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                     Text {

@@ -620,38 +620,26 @@ Item {
     }
 
     // Segmented tab button (Wi-Fi | Bluetooth).
-    component TabButton: Rectangle {
+    component TabButton: GlassButton {
         id: tabBtn
         required property string label
         required property string glyph
         required property int idx
-        readonly property bool _on: root._tab === idx
-        implicitWidth: _tabRow.implicitWidth + 24
-        implicitHeight: 30
-        radius: Commons.Appearance.radius.base
-        color: _on ? Commons.Appearance.colors.accentAlpha : "transparent"
-        border.color: _on ? Commons.Appearance.colors.accentBorder : "transparent"
-        border.width: 1
-        Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+        active: root._tab === idx
+        onClicked: root._tab = tabBtn.idx
         RowLayout {
-            id: _tabRow
-            anchors.centerIn: parent
             spacing: 7
             Text {
                 text: tabBtn.glyph
-                color: tabBtn._on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext0
+                color: tabBtn.active ? Commons.Appearance.colors.base : Commons.Appearance.colors.subtext0
                 font.pixelSize: 13; font.family: Commons.Appearance.font.family
             }
             Text {
                 text: tabBtn.label
-                color: tabBtn._on ? Commons.Appearance.colors.text : Commons.Appearance.colors.subtext0
+                color: tabBtn.active ? Commons.Appearance.colors.base : Commons.Appearance.colors.subtext0
                 font.pixelSize: Commons.Appearance.font.sizeBase; font.family: Commons.Appearance.font.family
-                font.weight: tabBtn._on ? Font.Medium : Font.Normal
+                font.weight: tabBtn.active ? Font.Medium : Font.Normal
             }
-        }
-        StateLayer {
-            anchors.fill: parent
-            onClicked: root._tab = tabBtn.idx
         }
     }
 }
