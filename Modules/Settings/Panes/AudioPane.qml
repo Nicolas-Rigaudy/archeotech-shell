@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../../../Commons" as Commons
+import "../../../Commons/Primitives"
 import "../../../Services/Media" as MediaServices
 import "../../../Services/Persistence" as Persistence
 import "../Widgets"
@@ -42,19 +43,7 @@ Item {
 
                 SectionLabel { text: "OUTPUT DEVICE" }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    color: Commons.Appearance.colors.surface0
-                    radius: Commons.Appearance.radius.md
-                    implicitHeight: sinksCol.implicitHeight
-
-                    ColumnLayout {
-                        id: sinksCol
-                        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 12; rightMargin: 12 }
-                        spacing: 0
-
-                        Item { implicitHeight: 6; Layout.fillWidth: true }
-
+                SettingsCard {
                         Text {
                             visible: MediaServices.Audio.sinks.length === 0
                             text: "No audio output devices found."
@@ -82,7 +71,7 @@ Item {
                                 Rectangle {
                                     visible: index > 0
                                     anchors { left: parent.left; right: parent.right; top: parent.top }
-                                    height: 1; color: Commons.Appearance.colors.base
+                                    height: 1; color: Commons.Appearance.colors.surface0
                                 }
 
                                 // ── Main row ──────────────────────────────────
@@ -90,13 +79,9 @@ Item {
                                     id: sinkRow
                                     anchors { left: parent.left; right: parent.right; top: parent.top; topMargin: index > 0 ? 1 : 0 }
                                     height: 44
-                                    radius: index === 0
-                                        ? Commons.Appearance.radius.md
-                                        : (index === MediaServices.Audio.sinks.length - 1 && !sinkDelegate._expanded ? Commons.Appearance.radius.md : 0)
-                                    color: isDefault
-                                        ? Commons.Appearance.colors.accentAlpha
-                                        : (sinkMa.containsMouse ? Commons.Appearance.colors.surface1 : "transparent")
-                                    Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                                    radius: Commons.Appearance.radius.sm
+                                    color: isDefault ? Commons.Appearance.colors.accentAlpha : "transparent"
+                                    Behavior on color { Commons.ColorAnim {} }
 
                                     RowLayout {
                                         anchors { fill: parent; leftMargin: 12; rightMargin: 8 }
@@ -133,33 +118,27 @@ Item {
                                             Layout.preferredWidth: 28; Layout.preferredHeight: 28
                                             Layout.alignment: Qt.AlignVCenter
                                             radius: Commons.Appearance.radius.sm
-                                            color: gearMa.containsMouse ? Commons.Appearance.colors.surface1 : "transparent"
-                                            Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                                            color: "transparent"
                                             Text {
                                                 anchors.centerIn: parent
                                                 text: "󰢻"
                                                 rotation: sinkDelegate._expanded ? 90 : 0
                                                 Behavior on rotation { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                                                 color: sinkDelegate._expanded ? Commons.Appearance.colors.accent
-                                                     : (gearMa.containsMouse ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0)
+                                                     : (gearLayer.hovered ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0)
                                                 font.pixelSize: 14; font.family: Commons.Appearance.font.family
                                             }
-                                            MouseArea {
-                                                id: gearMa
+                                            StateLayer {
+                                                id: gearLayer
                                                 anchors.fill: parent
-                                                hoverEnabled: true
-                                                cursorShape: Qt.PointingHandCursor
                                                 onClicked: root.expandedSink = sinkDelegate._expanded ? "" : sinkDelegate.modelData.name
                                             }
                                         }
                                     }
 
-                                    MouseArea {
-                                        id: sinkMa
+                                    StateLayer {
                                         anchors { left: parent.left; right: parent.right; top: parent.top; bottom: parent.bottom; rightMargin: 40 }
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: if (!isDefault) MediaServices.Audio.setDefaultSink(modelData.name)
+                                        onClicked: if (!sinkDelegate.isDefault) MediaServices.Audio.setDefaultSink(sinkDelegate.modelData.name)
                                     }
                                 }
 
@@ -220,26 +199,12 @@ Item {
                             }
                         }
 
-                        Item { implicitHeight: 6; Layout.fillWidth: true }
-                    }
                 }
 
                 Item { implicitHeight: 10; Layout.fillWidth: true }
                 SectionLabel { text: "INPUT DEVICE" }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    color: Commons.Appearance.colors.surface0
-                    radius: Commons.Appearance.radius.md
-                    implicitHeight: sourcesCol.implicitHeight
-
-                    ColumnLayout {
-                        id: sourcesCol
-                        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 12; rightMargin: 12 }
-                        spacing: 0
-
-                        Item { implicitHeight: 6; Layout.fillWidth: true }
-
+                SettingsCard {
                         Text {
                             visible: MediaServices.Audio.sources.length === 0
                             text: "No audio input devices found."
@@ -262,18 +227,14 @@ Item {
                                 Rectangle {
                                     visible: index > 0
                                     anchors { left: parent.left; right: parent.right; top: parent.top }
-                                    height: 1; color: Commons.Appearance.colors.base
+                                    height: 1; color: Commons.Appearance.colors.surface0
                                 }
 
                                 Rectangle {
                                     anchors { fill: parent; topMargin: index > 0 ? 1 : 0 }
-                                    radius: index === 0
-                                        ? Commons.Appearance.radius.md
-                                        : (index === MediaServices.Audio.sources.length - 1 ? Commons.Appearance.radius.md : 0)
-                                    color: isDefault
-                                        ? Commons.Appearance.colors.accentAlpha
-                                        : (sourceMa.containsMouse ? Commons.Appearance.colors.surface1 : "transparent")
-                                    Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                                    radius: Commons.Appearance.radius.sm
+                                    color: isDefault ? Commons.Appearance.colors.accentAlpha : "transparent"
+                                    Behavior on color { Commons.ColorAnim {} }
 
                                     RowLayout {
                                         anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
@@ -306,19 +267,14 @@ Item {
                                         }
                                     }
 
-                                    MouseArea {
-                                        id: sourceMa
+                                    StateLayer {
                                         anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
                                         onClicked: if (!isDefault) MediaServices.Audio.setDefaultSource(modelData.name)
                                     }
                                 }
                             }
                         }
 
-                        Item { implicitHeight: 6; Layout.fillWidth: true }
-                    }
                 }
 
                 Item { implicitHeight: 10; Layout.fillWidth: true }

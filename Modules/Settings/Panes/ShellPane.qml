@@ -1,7 +1,9 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Effects
 import "../../../Commons" as Commons
+import "../../../Commons/Primitives"
 import "../../../Services/Persistence" as Persistence
 import "../../../Services/Shell" as ShellServices
 import "../../../Services/Compositor" as CompositorServices
@@ -79,15 +81,21 @@ Item {
                 // ── Edit layout (visual builder entry) ─────────────────────────
                 SectionLabel { text: "CUSTOMIZE" }
 
-                Rectangle {
+                Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 64
-                    radius: Commons.Appearance.radius.md
-                    color: editMa.containsMouse ? Commons.Appearance.colors.surface1 : Commons.Appearance.colors.surface0
-                    border.width: 1
-                    border.color: editMa.containsMouse ? Commons.Appearance.colors.accentBorder : "transparent"
-                    Behavior on color        { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-                    Behavior on border.color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+
+                    RectangularShadow {
+                        anchors.fill: editBg
+                        radius: editBg.radius
+                        blur: 16; offset: Qt.vector2d(0, 4); spread: 0
+                        color: Qt.rgba(0, 0, 0, 0.45)
+                    }
+                    Rectangle {
+                        id: editBg
+                        anchors.fill: parent
+                        radius: Commons.Appearance.radius.md
+                        color: Commons.Appearance.colors.surfaceCard
 
                     RowLayout {
                         anchors { fill: parent; leftMargin: 16; rightMargin: 16 }
@@ -127,12 +135,10 @@ Item {
                         }
                     }
 
-                    MouseArea {
-                        id: editMa
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root._enterEditMode()
+                        StateLayer {
+                            anchors.fill: parent
+                            onClicked: root._enterEditMode()
+                        }
                     }
                 }
 
@@ -191,11 +197,9 @@ Item {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 44
                             radius: Commons.Appearance.radius.md
-                            color: saveMa.containsMouse ? Commons.Appearance.colors.surface1 : Commons.Appearance.colors.surface0
+                            color: "transparent"
                             border.width: 1
-                            border.color: saveMa.containsMouse ? Commons.Appearance.colors.accentBorder : Commons.Appearance.colors.surface1
-                            Behavior on color        { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-                            Behavior on border.color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                            border.color: Commons.Appearance.colors.glassBorder
 
                             RowLayout {
                                 anchors { fill: parent; leftMargin: 14; rightMargin: 14 }
@@ -219,11 +223,8 @@ Item {
                                     font.family: Commons.Appearance.font.family
                                 }
                             }
-                            MouseArea {
-                                id: saveMa
+                            StateLayer {
                                 anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     CompositorServices.MangoWC.setDefaultProportion(propSlider.value)
                                     root._savedProp = true
