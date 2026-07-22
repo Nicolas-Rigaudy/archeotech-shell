@@ -80,7 +80,12 @@ Item {
                                     anchors { left: parent.left; right: parent.right; top: parent.top; topMargin: index > 0 ? 1 : 0 }
                                     height: 44
                                     radius: Commons.Appearance.radius.sm
-                                    color: isDefault ? Commons.Appearance.colors.accentAlpha : "transparent"
+                                    gradient: Gradient {
+                                        GradientStop { position: 0.0; color: isDefault ? Qt.lighter(Commons.Appearance.colors.accentAlpha, 1.2) : "transparent" }
+                                        GradientStop { position: 1.0; color: isDefault ? Commons.Appearance.colors.accentAlpha : "transparent" }
+                                    }
+                                    border.width: isDefault ? 1 : 0
+                                    border.color: Commons.Appearance.colors.accent
                                     Behavior on color { Commons.ColorAnim {} }
 
                                     RowLayout {
@@ -233,7 +238,12 @@ Item {
                                 Rectangle {
                                     anchors { fill: parent; topMargin: index > 0 ? 1 : 0 }
                                     radius: Commons.Appearance.radius.sm
-                                    color: isDefault ? Commons.Appearance.colors.accentAlpha : "transparent"
+                                    gradient: Gradient {
+                                        GradientStop { position: 0.0; color: isDefault ? Qt.lighter(Commons.Appearance.colors.accentAlpha, 1.2) : "transparent" }
+                                        GradientStop { position: 1.0; color: isDefault ? Commons.Appearance.colors.accentAlpha : "transparent" }
+                                    }
+                                    border.width: isDefault ? 1 : 0
+                                    border.color: Commons.Appearance.colors.accent
                                     Behavior on color { Commons.ColorAnim {} }
 
                                     RowLayout {
