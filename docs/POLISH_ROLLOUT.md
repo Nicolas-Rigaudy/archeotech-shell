@@ -18,7 +18,9 @@ via Super+Shift+R → commit on confirm), grouped by shared recipe.
   `surfaceCard` history rows + shadow, 24px icons, two-line layout, `StateLayer`
   header/dismiss/close buttons, trash-can clear-all, toast enter/exit asymmetry
   (`717b2be`, `b7a9f29`, `710ccc5`, `8a46a94`); clear-all root-cause fix (`a11cc62`).
-- ▶ **NEXT: Round 3 — settings controls.**
+- ✅ **Round 3 — Settings** — full redesign onto shared `GlassButton`/`SettingsCard`/
+  3D toggle/stat-bar slider; every pane unified (see Round 3 below). Reload script fixed.
+- ▶ **NEXT:** accent-swatch 3D, Edit Layout buttons, then a full Settings design pass.
 
 Working rhythm that stuck: pilot on ONE surface → user live-tests → tune → commit.
 Cannot `qmllint` `Dashboard.qml` (pre-existing 255 from the panels-dir import);
@@ -120,11 +122,53 @@ Dead ends (tried and reverted — don't redo without a new idea):
   - Tooltips: the default QtQuick.Controls `ToolTip` is an ugly white rect — dropped it;
     icons (bell/bell-slash, trash-can) are self-explanatory. Style a glass tip if ever needed.
 
-## Round 3 — settings controls
-- [ ] `Commons/Primitives/ToggleSwitch.qml` — thumb press-pulse (0.92, spring).
-- [ ] `Modules/Settings/Widgets/SliderRow.qml` — handle 16→20, hover 1.08 / press 0.92.
-- [ ] `SettingsSidebar.qml` — nav items → StateLayer; search field warmth + focus.
-- [ ] rows (`ToggleRow`/`SliderRow`/`TextFieldRow`) — surfaceWarm; field focus states.
+## Round 3 — settings controls + full Settings redesign (mostly DONE 2026-07-22)
+Settings was taken well past the original checklist into a full unify-everything pass.
+
+**New shared primitives (the Settings design language):**
+- `Commons/Primitives/GlassButton.qml` — the unified button. Flat translucent
+  `surfaceCard` resting + `glassBorder`, gentle top-lit gradient, soft drop shadow
+  (blur 10 / (0,3) / 0.5), `StateLayer` press-depress. `active:` → accent-gradient
+  fill (text→`base`). Default content slot for icon+label, or `text:`. Iterated hard:
+  a heavy accent gradient + bright bevel read as "wet plastic" — depth comes from the
+  SHADOW + a *gentle* gradient, no specular line.
+- `Modules/Settings/Widgets/SettingsCard.qml` — group container = dashboard card
+  language (`surfaceCard` + RectangularShadow, 16px padding). Rows as direct children.
+- `ToggleSwitch` — DONE: recessed off-groove (dark-top→lit-bottom gradient) / raised
+  accent-on track + shadowed knob (raised sphere gradient) + press-pulse.
+- `SliderRow` — DONE: 8px sunk track + top-lit sheen fill (stat-bar language),
+  handle 20px hover 1.08 / press 0.92.
+
+**Unified across ALL panes** (buttons→GlassButton, group boxes incl. device/network
+lists→SettingsCard, list rows/tabs→StateLayer, dividers `base`→`surface0`):
+Notifications, Display, About, Plugins, Shell, Audio, Connections (WiFi/BT pills +
+tabs→GlassButton), Appearance. Sidebar → translucent glass + StateLayer nav/results +
+launcher-style search. Appearance `ColorSchemeBody` (shared w/ bottom switcher): mode
+pills + flavor pills → GlassButton, theme family cards → shadow+gradient 3D. Plugins
+built-in widgets → icon-card grid. About links → open-in-new glyph (was wifi-off).
+Audio selected row → translucent accent gradient + border, inset 4px so it clears the
+card edge.
+
+**Hard-won (2026-07-22):**
+- **Missing-import crash:** a pane using `GlassButton`/`StateLayer` without
+  `import "../../../Commons/Primitives"` makes the WHOLE config fail to load → shell
+  won't start, reloads do nothing. `qmllint` reports it as **"unqualified access"** —
+  do NOT filter that out of lint checks (that's exactly what hid it). The running shell
+  is the real proof it loads.
+- **Reload script** (`archeotech-dotfiles/scripts/mango-reload.sh`): old `A || B || C`
+  kill chain stopped at the first "success" → left survivors → duplicate bars stacked.
+  Fixed: run every kill method + wait for exit before relaunch.
+- **Don't run file-rewriting subagents on the live-reloaded tree** without care — a
+  reload mid-write loads a half-file. Convert one pane fully, lint, then reload.
+- qmllint can't fully resolve cross-dir types; the live shell (0 errors on launch) is
+  the real check.
+
+**Still open (next session):**
+- [ ] Accent color swatches → more 3D (raised dots w/ shadow).
+- [ ] Edit Layout builder buttons (`EditOverlay`/`WidgetPalette`) → GlassButton/StateLayer.
+- [ ] **Full design pass** over all of Settings — consistency, spacing, readability
+  (use ui-ux-pro-max guidelines as a lens + multi-persona review).
+- [ ] Automated screenshot + multi-persona playtest harness (roadmap idea, user 2026-07-22).
 
 ## Round 4 — strip + bar
 - [ ] **Strip** openers — 44px rounded accent bg (statePressed active / stateHover
