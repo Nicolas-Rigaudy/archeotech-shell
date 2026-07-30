@@ -2,40 +2,34 @@ pragma Singleton
 import QtQuick
 import Quickshell.Io
 
-// MangoWC IPC service — streams compositor state via mmsg -w.
+// MangoWC IPC service — mangowm 0.15+ `mmsg` JSON IPC (get/watch/dispatch).
+// The pre-0.15 flag interface (`mmsg -w -O -t -l -c -f -m -k`, space-delimited
+// lines) was removed upstream; this consumes the JSON streams instead.
 //
-// mmsg watch-mode line format:
-//   <output> tag    <num> <selected> <occupied> <urgent>
-//   <output> title  <text...>
-//   <output> appid  <text...>
-//   <output> layout <symbol>
-//   <output> selmon <0|1>
-//   <output> float  <0|1>        (focused client floating state)
-//   <output> fullscreen <0|1>    (focused client fullscreen state)
-//   <output> kblayout <name>     (active keyboard layout)
+// Two watch streams feed the per-output registry:
+//   mmsg watch all-monitors    → {monitors:[{name,active,layout_symbol,
+//                                  tags:[{index,is_active,is_urgent,client_count}]}]}
+//   mmsg watch focusing-client → {id,title,appid,monitor,is_floating,is_fullscreen,…}
+//
+// Public API is unchanged from the pre-0.15 service, so call sites need no edits.
 
 QtObject {
     id: root
 
     // ── Output registry ────────────────────────────────────────────────────────
-    // Map of output name → OutputState QtObject. Use outputFor() to access.
     property var _outputs: ({})
-
-    // Convenience: name of the currently focused output
     property string focusedOutput: ""
 
-    // Component template for per-output state objects
     property Component _outputComponent: Component {
         QtObject {
-            property string name:          ""
-            property var    tags:          []   // [{num, selected, occupied, urgent}]
-            property string title:         ""
-            property string appid:         ""
-            property string layout:        ""
-            property bool   focused:       false
-            property bool   floating:      false
-            property bool   fullscreen:    false
-            property string keyboardLayout: ""
+            property string name:       ""
+            property var    tags:       []   // [{num, selected, occupied, urgent}]
+            property string title:      ""
+            property string appid:      ""
+            property string layout:     ""
+            property bool   focused:    false
+            property bool   floating:   false
+            property bool   fullscreen: false
         }
     }
 
@@ -48,180 +42,140 @@ QtObject {
         return _outputs[name]
     }
 
-    // ── Public accessors ───────────────────────────────────────────────────────
+    // ── Public accessors (unchanged API) ─────────────────────────────────────────
+    function outputFor(name)    { return _outputs[name] || null }
+    function tagsFor(name)      { var o = _outputs[name]; return o ? o.tags : [] }
+    function titleFor(name)     { var o = _outputs[name]; return o ? o.title : "" }
+    function layoutFor(name)    { var o = _outputs[name]; return o ? o.layout : "" }
+    function isFloating(name)   { var o = _outputs[name]; return o ? o.floating : false }
+    function isFullscreen(name) { var o = _outputs[name]; return o ? o.fullscreen : false }
 
-    function outputFor(name) {
-        return _outputs[name] || null
-    }
+    // ── Watch streams ────────────────────────────────────────────────────────────
+    Component.onCompleted: { _watchMonitors.running = true; _watchClient.running = true }
 
-    function tagsFor(name) {
-        var o = _outputs[name]
-        return o ? o.tags : []
-    }
-
-    function titleFor(name) {
-        var o = _outputs[name]
-        return o ? o.title : ""
-    }
-
-    function layoutFor(name) {
-        var o = _outputs[name]
-        return o ? o.layout : ""
-    }
-
-    function isFloating(name) {
-        var o = _outputs[name]
-        return o ? o.floating : false
-    }
-
-    function isFullscreen(name) {
-        var o = _outputs[name]
-        return o ? o.fullscreen : false
-    }
-
-    function keyboardLayoutFor(name) {
-        var o = _outputs[name]
-        return o ? o.keyboardLayout : ""
-    }
-
-    // ── Watch stream ───────────────────────────────────────────────────────────
-
-    Component.onCompleted: _watch.running = true
-
-    property var _watch: Process {
-        // -O output name  -t tags  -l layout  -c title+appid
-        // -f floating      -m fullscreen       -k keyboard layout
-        // -w watch mode    (selmon included implicitly with -O in watch mode)
-        command: ["mmsg", "-w", "-O", "-t", "-l", "-c", "-f", "-m", "-k"]
+    property var _watchMonitors: Process {
+        command: ["mmsg", "watch", "all-monitors"]
         running: false
-        stdout: SplitParser {
-            onRead: line => root._parseLine(line.trim())
-        }
-        onExited: (code, status) => {
-            // Exponential backoff: 500ms → 1s → 2s → 4s → cap 8s
-            _restartTimer.interval = Math.min(_restartTimer.interval * 2, 8000)
-            _restartTimer.start()
-        }
+        stdout: SplitParser { onRead: line => root._parseMonitors(line) }
+        onExited: (code, status) => root._scheduleRestart(root._monRestart)
+    }
+    property var _monRestart: Timer {
+        interval: 500; repeat: false
+        onTriggered: { root._watchMonitors.running = true; interval = 500 }
     }
 
-    property var _restartTimer: Timer {
-        interval: 500
-        repeat: false
-        onTriggered: {
-            root._watch.running = true
-            interval = 500 // reset after successful start
-        }
+    property var _watchClient: Process {
+        command: ["mmsg", "watch", "focusing-client"]
+        running: false
+        stdout: SplitParser { onRead: line => root._parseClient(line) }
+        onExited: (code, status) => root._scheduleRestart(root._cliRestart)
+    }
+    property var _cliRestart: Timer {
+        interval: 500; repeat: false
+        onTriggered: { root._watchClient.running = true; interval = 500 }
     }
 
-    // ── Line parser ────────────────────────────────────────────────────────────
+    // Exponential backoff 500ms → cap 8s (reset to 500 on each (re)start attempt).
+    function _scheduleRestart(timer) {
+        timer.interval = Math.min(timer.interval * 2, 8000)
+        timer.start()
+    }
 
-    function _parseLine(line) {
-        if (!line || line.startsWith("+") || line.startsWith("-")) return
-
-        var parts = line.split(" ")
-        if (parts.length < 2) return
-
-        var outputName = parts[0]
-        var field      = parts[1]
-        var entry      = _ensureOutput(outputName)
-
-        if (field === "tag" && parts.length >= 6) {
-            var num      = parseInt(parts[2])
-            var selected = parts[3] === "1"
-            var occupied = parts[4] === "1"
-            var urgent   = parts[5] === "1"
-            var tags = entry.tags.slice()
-            var found = false
-            for (var i = 0; i < tags.length; i++) {
-                if (tags[i].num === num) {
-                    tags[i] = { num: num, selected: selected, occupied: occupied, urgent: urgent }
-                    found = true
-                    break
-                }
+    // ── JSON parsers (one full-state object per stream event) ─────────────────────
+    function _parseMonitors(line) {
+        line = (line || "").trim()
+        if (!line || line[0] !== "{") return
+        var data
+        try { data = JSON.parse(line) } catch (e) { return }
+        if (!data || !data.monitors) return
+        for (var i = 0; i < data.monitors.length; i++) {
+            var m = data.monitors[i]
+            var entry = _ensureOutput(m.name)
+            entry.layout = m.layout_symbol || ""
+            var tags = []
+            var src = m.tags || []
+            for (var j = 0; j < src.length; j++) {
+                var t = src[j]
+                tags.push({
+                    num:      t.index,
+                    selected: !!t.is_active,
+                    occupied: (t.client_count || 0) > 0,
+                    urgent:   !!t.is_urgent
+                })
             }
-            if (!found) tags.push({ num: num, selected: selected, occupied: occupied, urgent: urgent })
-            tags.sort((a, b) => a.num - b.num)
             entry.tags = tags
-
-        } else if (field === "title") {
-            entry.title = parts.slice(2).join(" ")
-
-        } else if (field === "appid") {
-            entry.appid = parts.slice(2).join(" ")
-
-        } else if (field === "layout") {
-            entry.layout = parts[2] || ""
-
-        } else if (field === "selmon") {
-            entry.focused = parts[2] === "1"
-            if (entry.focused) root.focusedOutput = outputName
-
-        } else if (field === "float") {
-            entry.floating = parts[2] === "1"
-
-        } else if (field === "fullscreen") {
-            entry.fullscreen = parts[2] === "1"
-
-        } else if (field === "kblayout") {
-            entry.keyboardLayout = parts.slice(2).join(" ")
         }
+    }
+
+    function _parseClient(line) {
+        line = (line || "").trim()
+        if (!line || line[0] !== "{") return
+        var data
+        try { data = JSON.parse(line) } catch (e) { return }
+        if (!data) return
+        var mon = data.monitor || ""
+        // No focused client (empty desktop) → clear the last focused output's title.
+        if (data.id === undefined || mon === "") {
+            var prev = _outputs[root.focusedOutput]
+            if (prev) { prev.title = ""; prev.appid = "" }
+            return
+        }
+        root.focusedOutput = mon
+        var entry = _ensureOutput(mon)
+        entry.title      = data.title || ""
+        entry.appid      = data.appid || ""
+        entry.floating   = !!data.is_floating
+        entry.fullscreen = !!data.is_fullscreen
+        for (var k in _outputs) _outputs[k].focused = (k === mon)
     }
 
     // ── Actions ────────────────────────────────────────────────────────────────
+    // `view`/`toggleview` act on the focused monitor — mango's dispatch can only
+    // target a client, not a monitor, so outputName is advisory (matches the
+    // native Super+N bind). Clicking a tag on a non-focused monitor's bar acts on
+    // the focused monitor; acceptable for now (see Sprint 29 CompositorService).
+    function switchTag(outputName, tagNum) { dispatch("view " + tagNum) }
+    function toggleTag(outputName, tagNum) { dispatch("toggleview " + tagNum) }
 
-    // Switch to tag N on a given output (1-based)
-    function switchTag(outputName, tagNum) {
-        _cmd("mmsg -o " + outputName + " -s -t " + tagNum)
-    }
-
-    // Toggle tag N on a given output (adds/removes without deselecting others)
-    function toggleTag(outputName, tagNum) {
-        _cmd("mmsg -o " + outputName + " -s -t ^" + tagNum)
-    }
-
-    // Send a dispatch command to MangoWC (e.g. "togglefloating", "fullscreen 0")
-    // Up to 5 comma-separated args supported by mmsg -d protocol
+    // "func arg1 arg2" → `mmsg dispatch func,arg1,arg2` (mango joins args with commas).
     function dispatch(command) {
         var parts = command.split(" ")
-        var cmd   = parts[0]
+        var fn    = parts[0]
         var args  = parts.slice(1).join(",")
-        var mmsg  = args.length > 0
-            ? "mmsg -s -d " + cmd + "," + args
-            : "mmsg -s -d " + cmd
-        _cmd(mmsg)
+        _cmd(args.length > 0 ? ["mmsg", "dispatch", fn + "," + args]
+                             : ["mmsg", "dispatch", fn])
     }
 
-    // Convenience dispatches
-    function toggleFloating()  { dispatch("togglefloating") }
+    function toggleFloating()   { dispatch("togglefloating") }
     function toggleFullscreen() { dispatch("fullscreen 0") }
-    function closeWindow()     { dispatch("killclient") }
+    function closeWindow()      { dispatch("killclient") }
 
     // Live-set the focused scroller window's width fraction (0..1).
     function setProportion(p) { dispatch("set_proportion " + Number(p).toFixed(2)) }
 
-    // Persist the scroller default into mango's config.conf so windows opened in
-    // future sessions inherit it. Mango re-reads this global only on reload/login,
-    // so it affects *new* windows from then on — not the current ones. The sed is
-    // surgical (anchored single key line) and --follow-symlinks keeps the dotfiles
-    // symlink intact (it edits the repo file the symlink points at).
+    // Persist the scroller default into mango's config.conf so future sessions
+    // inherit it (mango re-reads this global only on reload/login). The sed is
+    // surgical (anchored single key line); --follow-symlinks edits the repo file
+    // the dotfiles symlink points at, keeping the symlink intact.
     function setDefaultProportion(p) {
         var v = Number(p).toFixed(2)
-        _cmd("sed --follow-symlinks -i "
-             + "'s|^scroller_default_proportion=.*|scroller_default_proportion=" + v + "|' "
-             + "\"$HOME/.config/mango/config.conf\"")
+        _cmd(["bash", "-c",
+              "sed --follow-symlinks -i "
+              + "'s|^scroller_default_proportion=.*|scroller_default_proportion=" + v + "|' "
+              + "\"$HOME/.config/mango/config.conf\""])
     }
 
     property var _cmdRunner: Process {
-        property string cmd: ""
-        command: ["bash", "-c", cmd]
+        property var argv: []
+        command: argv
         running: false
         onExited: (code, status) => {
             if (code !== 0) console.warn("MangoWC: command exited with code " + code)
         }
     }
 
-    function _cmd(shellCmd) {
-        _cmdRunner.cmd = shellCmd
+    function _cmd(argv) {
+        _cmdRunner.argv = argv
         _cmdRunner.running = true
     }
 }

@@ -77,26 +77,27 @@ def run(cmd: List[str], **kwargs: Any) -> subprocess.CompletedProcess:
 
 
 def _kb_layout() -> str:
-    """Active MangoWC keyboard layout name (e.g. 'us'), or '' if unavailable.
-    `mmsg -g -k` prints one '<output> kb_layout <name>' line per monitor."""
-    lines = run(["mmsg", "-g", "-k"]).stdout.strip().splitlines()
-    parts = lines[0].split() if lines else []
-    return parts[-1] if parts else ""
+    """Active keyboard layout name, or '' if unavailable. mangowm 0.15's mmsg IPC
+    is JSON: `mmsg get keyboardlayout` → {"layout":"English (US)"}."""
+    try:
+        return json.loads(run(["mmsg", "get", "keyboardlayout"]).stdout).get("layout", "")
+    except (ValueError, AttributeError):
+        return ""
 
 
 def mango_reload_preserving_kb() -> None:
-    """`mmsg -s -d reload_config` re-reads xkb config and resets the active
+    """`mmsg dispatch reload_config` re-reads xkb config and resets the active
     layout to the first in xkb_rules_layout, silently switching it mid-session.
     Capture it, reload, then cycle switch_keyboard_layout back to it (MangoWC
     has no set-by-name; capped at 8, no-op if the reload didn't change it)."""
     prev = _kb_layout()
-    run(["mmsg", "-s", "-d", "reload_config"])
+    run(["mmsg", "dispatch", "reload_config"])
     if not prev:
         return
     for _ in range(8):
         if _kb_layout() == prev:
             break
-        run(["mmsg", "-s", "-d", "switch_keyboard_layout"])
+        run(["mmsg", "dispatch", "switch_keyboard_layout"])
         time.sleep(0.1)
 
 
@@ -146,13 +147,28 @@ def apply_kitty(theme: dict, vars: Dict[str, str]) -> None:
 
 
 def apply_mango(theme: dict, vars: Dict[str, str]) -> None:
-    """Patch mango/config.conf lines for shadow/border/focus/urgent colors,
-    then trigger live reload via mmsg."""
+    """Patch mango/config.conf lines for shadow/border/focus/urgent colors and
+    the jump-label + group-bar decorations, then trigger live reload via mmsg."""
     path = HOME / ".config" / "mango" / "config.conf"
     if not path.exists():
         warn(f"mango config missing: {path}")
         return
     m = theme.get("mango", {})
+    colors = theme.get("colors", {})
+
+    def _hx(name: str, fallback: str) -> str:
+        """Palette '#rrggbb' → mango '0xrrggbbff'; fallback if the key is absent."""
+        v = colors.get(name)
+        return f"0x{v.lstrip('#')}ff" if v else fallback
+
+    # jump-label (Alt+Tab overview) + group-bar (window tabs) decorations track
+    # the palette: focused chip = accent, bg/text = base/surface/text. Keeps them
+    # in sync on every theme switch instead of the hardcoded Macchiato values.
+    accent = m.get("focuscolor") or _hx("mauve", "0xc6a0f6ff")
+    base   = _hx("base", "0x181926ff")
+    surf   = _hx("surface0", "0x363a4fff")
+    txt    = _hx("text", "0xcad3f5ff")
+
     text = path.read_text()
     for key, val in (
         ("shadowscolor", m.get("shadowscolor")),
@@ -160,6 +176,15 @@ def apply_mango(theme: dict, vars: Dict[str, str]) -> None:
         ("bordercolor",  m.get("bordercolor")),
         ("focuscolor",   m.get("focuscolor")),
         ("urgentcolor",  m.get("urgentcolor")),
+        ("jump_label_decorate_bg_color",       base),
+        ("jump_label_decorate_fg_color",       txt),
+        ("jump_label_decorate_border_color",   accent),
+        ("jump_label_decorate_focus_bg_color", accent),
+        ("jump_label_decorate_focus_fg_color", base),
+        ("group_bar_decorate_bg_color",        surf),
+        ("group_bar_decorate_fg_color",        txt),
+        ("group_bar_decorate_focus_bg_color",  accent),
+        ("group_bar_decorate_focus_fg_color",  base),
     ):
         if val:
             text = re.sub(rf"^{key}=.*$", f"{key}={val}", text, flags=re.M)
