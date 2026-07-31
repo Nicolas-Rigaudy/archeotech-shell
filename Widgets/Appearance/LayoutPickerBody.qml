@@ -19,14 +19,19 @@ Item {
 
     readonly property var _mango: CompositorServices.MangoWC
 
-    // Highlight is authoritative for what we last set (the user just picked it).
-    // On open we seed best-effort from the compositor's terse `layout_symbol`
-    // (the JSON carries no layout *name*). Only symbols confirmed unique on the
-    // live socket are mapped; an unknown symbol simply leaves nothing seeded, and
-    // the first pick corrects it. T/S verified live; the rest are first-letter
-    // guesses left OUT to avoid a wrong highlight (D is ambiguous: dwindle/deck).
+    // Highlight reflects what we last set (authoritative). On open we seed from
+    // the compositor's `layout_symbol` (the JSON has no layout *name*) via the
+    // full symbol→name map below — all 14 verified unique by cycling this mango
+    // 0.15 build in a headless session. Unknown symbol → nothing seeded; the
+    // first pick corrects it.
     property string _setLayout: ""
-    readonly property var _symbolToName: ({ "T": "tile", "S": "scroller" })
+    readonly property var _symbolToName: ({
+        "S":  "scroller",          "T":  "tile",       "DW": "dwindle",
+        "G":  "grid",              "M":  "monocle",    "F":  "fair",
+        "K":  "deck",              "CT": "center_tile","RT": "right_tile",
+        "VT": "vertical_tile",     "VS": "vertical_scroller",
+        "VG": "vertical_grid",     "VK": "vertical_deck", "VF": "vertical_fair"
+    })
     readonly property string _activeName:
         _setLayout !== "" ? _setLayout
                           : (_symbolToName[_mango.layoutFor(_mango.focusedOutput)] || "")
