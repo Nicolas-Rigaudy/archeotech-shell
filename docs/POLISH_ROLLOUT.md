@@ -22,6 +22,15 @@ via Super+Shift+R → commit on confirm), grouped by shared recipe.
   3D toggle/stat-bar slider; every pane unified (see Round 3 below). Reload script fixed.
 - ✅ **Accent swatches → raised 3D dots** — sibling shadow + top-lit sphere gradient +
   hover-scale 1.08 / press-pulse 0.92 (toggle-knob recipe), selection ring kept (`ColorSchemeBody`).
+- ✅ **Flat-mode toggle** (Settings→Appearance→Style) — `Appearance.flatMode` +
+  `shadowStrength` tokens flatten the sheen gradient, `surfaceCard` (translucent,
+  un-tinted — NOT opaque, per user 2026-07-31), and shared-primitive shadows
+  (`GlassButton`/`SettingsCard`/`DashCard`). Default glass; persisted `appearance.flatMode`.
+  **Extends per-surface as each is migrated** — a surface only responds to flat
+  mode once its sheen/shadows route through these tokens, so the un-migrated
+  Round-1/4 surfaces (popups, media, edit-mode, strip/bar openers) stay glassy
+  until then. (Gotcha fixed: `_c()` returns a hex STRING → `Qt.rgba(str.r,…)` is
+  solid black; go through `_rgba()`.)
 - ▶ **NEXT:** Edit Layout buttons, then a full Settings design pass.
 
 Working rhythm that stuck: pilot on ONE surface → user live-tests → tune → commit.

@@ -19,7 +19,7 @@ Item {
         blur:   16
         offset: Qt.vector2d(0, 4)
         spread: 0
-        color:  Qt.rgba(0, 0, 0, 0.45)
+        color:  Qt.rgba(0, 0, 0, 0.45 * Commons.Appearance.shadowStrength)
     }
 
     Rectangle {

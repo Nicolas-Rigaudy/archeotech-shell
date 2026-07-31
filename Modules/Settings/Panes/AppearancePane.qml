@@ -46,6 +46,19 @@ Item {
 
                 Item { implicitHeight: 10; Layout.fillWidth: true }
 
+                // ── Style ─────────────────────────────────────────────────────
+                SectionLabel { text: "STYLE" }
+                SettingsCard {
+                    ToggleRow {
+                        label: "Flat mode"
+                        description: "Drop the liquid-glass sheen + card shadows for a flatter look (some popups / edit-mode stay glassy until the polish rollout finishes)"
+                        checked: Persistence.Config.get("appearance.flatMode", false)
+                        onToggled: v => Persistence.Config.set("appearance.flatMode", v)
+                    }
+                }
+
+                Item { implicitHeight: 10; Layout.fillWidth: true }
+
                 // ── Behavior ──────────────────────────────────────────────────
                 SectionLabel { text: "BEHAVIOR" }
                 SettingsCard {

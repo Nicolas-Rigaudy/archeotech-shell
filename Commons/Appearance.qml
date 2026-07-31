@@ -6,6 +6,18 @@ import Quickshell.Io
 QtObject {
     id: root
 
+    // ── Aesthetic mode ───────────────────────────────────────────────────────
+    // flatMode flips the shell from the default "liquid glass" look to a flatter
+    // one: no sheen gradient, no drop shadows, flatter cards. Set from shell.qml
+    // (bound to Persistence.Config "appearance.flatMode"); Commons can't import a
+    // Service without inverting layers, so it's a plain settable prop driven from
+    // above. Tokens below branch on it; shared primitives multiply shadowStrength
+    // into their shadow alpha (1 = glass, 0 = flat). ponytail: spike wires the
+    // shared primitives (GlassButton/SettingsCard/DashCard) — one-off surfaces
+    // still shadow until the polish rollout routes them through this too.
+    property bool flatMode: false
+    readonly property real shadowStrength: flatMode ? 0.0 : 1.0
+
     // ── Theme hot-reload ───────────────────────────────────────────────────────
     property var _data: ({})
 
@@ -117,11 +129,14 @@ QtObject {
         // change); only lightness varies: lifted toward surface1 at the top,
         // sunk toward crust at the bottom.
         readonly property color glassSheenTop: {
+            // Flat mode: both stops collapse to the panel fill → no sheen gradient.
+            if (root.flatMode) return glassBg
             var c = root._blend(root._c("mantle", "#1e2030"),
                                 root._c("surface2", "#5b6078"), 0.38)
             return Qt.rgba(c.r, c.g, c.b, 0.93)
         }
         readonly property color glassSheenBot: {
+            if (root.flatMode) return glassBg
             // crust is barely darker than mantle, so sink toward black instead.
             var c = root._blend(root._c("mantle", "#1e2030"), "#000000", 0.22)
             return Qt.rgba(c.r, c.g, c.b, 0.93)
@@ -148,6 +163,12 @@ QtObject {
         // glassy — not opaque/plasticky. Only a whisper of accent warmth (0.06);
         // surfaceWarm's 0.15 was too much for a wall of cards.
         readonly property color surfaceCard: {
+            // Flat mode: opaque, un-tinted surface0 — no glassy translucency or
+            // accent warmth, so cards read as plain panels (shadow also off).
+            // NB: _c() returns a hex STRING; go through _rgba (which Qt.color-wraps
+            // it) — Qt.rgba(str.r,…) would be Qt.rgba(undefined,…) = solid black.
+            if (root.flatMode)
+                return root._rgba("surface0", "#363a4f", 0.90)
             var c = root._blend(root._c("surface0", "#363a4f"),
                                 root._c(root._accentName, "#c6a0f6"), 0.06)
             return Qt.rgba(c.r, c.g, c.b, 0.58)

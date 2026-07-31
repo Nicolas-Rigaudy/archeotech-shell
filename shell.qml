@@ -45,6 +45,15 @@ ShellRoot {
         _colorScheme.effectiveMode
     }
 
+    // Drive the flat/glass aesthetic from the persisted setting. Commons can't
+    // import a Service without inverting layers, so the token flag is set from
+    // here (reactive: Config.get re-evaluates when the value changes).
+    Binding {
+        target: Commons.Appearance
+        property: "flatMode"
+        value: Persistence.Config.get("appearance.flatMode", false)
+    }
+
     // ── IPC handlers ───────────────────────────────────────────────────────────
 
     IpcHandler {
