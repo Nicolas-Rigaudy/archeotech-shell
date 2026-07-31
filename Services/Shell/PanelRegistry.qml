@@ -50,6 +50,12 @@ QtObject {
             // fits above the strip's icon row without overflowing onto the bar.
             size:     380,
             axisSize: "auto"   // follows WallpaperPicker.implicitAxis per side
+        },
+        layout: {
+            content:  _layoutComp,
+            side:     "bottom",
+            size:     580,      // fits all 3 rows of the 14 layout cards + header
+            axisSize: "auto"    // follows LayoutPicker.implicitAxis per side
         }
     })
 
@@ -81,4 +87,5 @@ QtObject {
     property Component _mediaComp:     Component { Content.MediaPanel          {} }
     property Component _wallpaperComp: Component { Content.WallpaperPicker     {} }
     property Component _settingsComp:  Component { Content.SettingsPanel       {} }
+    property Component _layoutComp:    Component { Content.LayoutPicker        {} }
 }

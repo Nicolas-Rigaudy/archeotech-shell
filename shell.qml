@@ -109,6 +109,14 @@ ShellRoot {
         function close()  { ShellServices.ShellState.closeAllAcross()     }
     }
 
+    // Tiling-layout picker (Super+Shift+T). Visual alternative to the Super+T cycle.
+    IpcHandler {
+        target: "layout"
+        function toggle() { ShellServices.ShellState.toggleGlobal("layout") }
+        function open()   { ShellServices.ShellState.openGlobal("layout")  }
+        function close()  { ShellServices.ShellState.closeAllAcross()      }
+    }
+
     // Sprint 21 — visual builder edit mode (Super+Shift+E). Closes any open
     // panel when entering so the editor has the surface to itself.
     IpcHandler {
