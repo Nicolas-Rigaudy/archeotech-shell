@@ -102,8 +102,19 @@ Variants {
                         return point.position.x >= s.x && point.position.x < s.x + s.width
                             && point.position.y >= s.y && point.position.y < s.y + s.height
                     }
-                    if (!inside(_topSide) && !inside(_bottomSide)
-                        && !inside(_leftSide) && !inside(_rightSide)
+                    // For a strip with an open panel, hit-test the actual (narrower)
+                    // panel card rect, not the full-edge side — so a tap in the band
+                    // beside/above the card counts as outside and dismisses. Falls
+                    // back to the full side rect for resting strips (and for bars,
+                    // whose panels are covered by the bar-popup masks below).
+                    function sideRect(sideLoader) {
+                        var it = sideLoader.item
+                        if (it && it.panelRect !== undefined && it.panelRect.width > 0)
+                            return it.panelRect
+                        return Qt.rect(sideLoader.x, sideLoader.y, sideLoader.width, sideLoader.height)
+                    }
+                    if (!inside(sideRect(_topSide)) && !inside(sideRect(_bottomSide))
+                        && !inside(sideRect(_leftSide)) && !inside(sideRect(_rightSide))
                         // A bar-hosted panel lives outside its side's rect — its
                         // bounds are in the bar-popup masks; treat those as inside
                         // so clicking the panel doesn't close it.

@@ -82,6 +82,19 @@ Item {
     readonly property bool   _panelOpen:   _activePanel !== "" && _showsPanel(_activePanel)
     readonly property bool   _showCard:    _hov || _panelOpen
 
+    // Window-space rect of the actual panel card (which is narrower than the
+    // full edge — centred on the axis). ShellSurface's click-outside test uses
+    // this when a panel is open, so a tap in the dead band beside/above the
+    // compact card dismisses it instead of the whole edge counting as "inside".
+    // Zero-rect when no panel is open. The `_t` reference keeps the binding live
+    // as the card animates.
+    readonly property rect panelRect: {
+        if (!_panelOpen || !card.visible) return Qt.rect(0, 0, 0, 0)
+        var _t = card.x + card.y + card.width + card.height
+        var p = card.mapToItem(null, 0, 0)
+        return Qt.rect(p.x, p.y, card.width, card.height)
+    }
+
     // Panel meta + content mount live in the shared PanelHost kernel (declared
     // inside contentArea as `host`). Strip reads its size hints to drive the card
     // geometry below. `host` is referenced by id from component scope — it's
