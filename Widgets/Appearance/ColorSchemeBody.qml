@@ -187,27 +187,48 @@ Item {
             spacing: 8
             Repeater {
                 model: root._accents
-                delegate: Rectangle {
+                delegate: Item {
+                    id: swatch
                     required property string modelData
                     readonly property bool _on: root._activeAccent === modelData
                     readonly property color _swatch: Commons.Appearance.colors[modelData] || Commons.Appearance.colors.accent
-                    width: 26; height: 26; radius: 13
-                    color: _swatch
-                    border.width: _on ? 3 : (_ama.containsMouse ? 2 : 0)
-                    border.color: Commons.Appearance.colors.text
-                    Behavior on border.width { NumberAnimation { duration: Commons.Appearance.anim.fast } }
-                    // Inner ring to separate the border from the swatch fill.
+                    width: 26; height: 26
+
+                    // Raised dot — sibling shadow + press-pulse (toggle-knob recipe).
+                    RectangularShadow {
+                        anchors.fill: dot
+                        radius: dot.radius
+                        blur: 7; offset: Qt.vector2d(0, 1.5); spread: 0
+                        color: Qt.rgba(0, 0, 0, 0.5)
+                    }
                     Rectangle {
-                        anchors.fill: parent; anchors.margins: -3
-                        radius: width / 2; color: "transparent"
-                        border.width: _on ? 1 : 0
-                        border.color: Commons.Appearance.colors.base
-                        visible: _on
+                        id: dot
+                        anchors.fill: parent
+                        radius: 13
+                        antialiasing: true
+                        // Top-lit sphere shading.
+                        gradient: Gradient {
+                            GradientStop { position: 0.0; color: Qt.lighter(swatch._swatch, 1.18) }
+                            GradientStop { position: 1.0; color: Qt.darker(swatch._swatch, 1.12) }
+                        }
+                        border.width: swatch._on ? 3 : (_ama.containsMouse ? 2 : 0)
+                        border.color: Commons.Appearance.colors.text
+                        Behavior on border.width { NumberAnimation { duration: Commons.Appearance.anim.fast } }
+                        scale: _ama.pressed ? 0.92 : (_ama.containsMouse ? 1.08 : 1.0)
+                        Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
+                        // Inner ring to separate the border from the swatch fill.
+                        Rectangle {
+                            anchors.fill: parent; anchors.margins: -3
+                            radius: width / 2; color: "transparent"
+                            border.width: swatch._on ? 1 : 0
+                            border.color: Commons.Appearance.colors.base
+                            visible: swatch._on
+                        }
                     }
                     MouseArea {
                         id: _ama; anchors.fill: parent; hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: root._cs.setAccent(modelData)
+                        onClicked: root._cs.setAccent(swatch.modelData)
                     }
                 }
             }

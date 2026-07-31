@@ -20,7 +20,9 @@ via Super+Shift+R → commit on confirm), grouped by shared recipe.
   (`717b2be`, `b7a9f29`, `710ccc5`, `8a46a94`); clear-all root-cause fix (`a11cc62`).
 - ✅ **Round 3 — Settings** — full redesign onto shared `GlassButton`/`SettingsCard`/
   3D toggle/stat-bar slider; every pane unified (see Round 3 below). Reload script fixed.
-- ▶ **NEXT:** accent-swatch 3D, Edit Layout buttons, then a full Settings design pass.
+- ✅ **Accent swatches → raised 3D dots** — sibling shadow + top-lit sphere gradient +
+  hover-scale 1.08 / press-pulse 0.92 (toggle-knob recipe), selection ring kept (`ColorSchemeBody`).
+- ▶ **NEXT:** Edit Layout buttons, then a full Settings design pass.
 
 Working rhythm that stuck: pilot on ONE surface → user live-tests → tune → commit.
 Cannot `qmllint` `Dashboard.qml` (pre-existing 255 from the panels-dir import);
@@ -164,7 +166,7 @@ card edge.
   the real check.
 
 **Still open (next session):**
-- [ ] Accent color swatches → more 3D (raised dots w/ shadow).
+- [x] Accent color swatches → raised 3D dots (shadow + sphere gradient + hover/press scale).
 - [ ] Edit Layout builder buttons (`EditOverlay`/`WidgetPalette`) → GlassButton/StateLayer.
 - [ ] **Full design pass** over all of Settings — consistency, spacing, readability
   (use ui-ux-pro-max guidelines as a lens + multi-persona review).
