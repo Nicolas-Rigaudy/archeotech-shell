@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import Quickshell.Io
 import "../../Commons" as Commons
 
@@ -126,6 +127,18 @@ Item {
             opacity: root.applying ? (_active ? 1.0 : 0.4) : (_current ? 1.0 : 0.55)
             Behavior on scale   { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
             Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+
+            // Soft cast shadow under the hero (centred) tile only — lifts it off
+            // the panel; side tiles stay flat. Gated on shadowStrength.
+            RectangularShadow {
+                anchors.fill: parent
+                visible: cell._current
+                radius: Commons.Appearance.radius.md
+                blur:   32
+                offset: Qt.vector2d(0, 12)
+                spread: 2
+                color:  Qt.rgba(0, 0, 0, 0.55 * Commons.Appearance.shadowStrength)
+            }
 
             Rectangle {
                 anchors.fill: parent

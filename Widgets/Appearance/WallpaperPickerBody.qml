@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Effects
 import Qt5Compat.GraphicalEffects
 import Quickshell.Io
 import "../../Commons" as Commons
@@ -168,8 +169,8 @@ Item {
             // tuck slightly under the enlarged centre. Sizes are capped (see the
             // delegate) so a large panel centres the strip instead of ballooning.
             itemSpacing: root.vertical
-                ? Math.floor(Math.min(grid.width  - 24, 300) * 2 / 3 * 0.9)
-                : Math.floor(Math.min(grid.height - 24, 190) * 3 / 2 * 0.86)
+                ? Math.floor(Math.min(grid.width  - 24, 300) * 2 / 3 * 0.98)
+                : Math.floor(Math.min(grid.height - 24, 190) * 3 / 2 * 0.95)
 
             // Start centred on the applied wallpaper.
             onModelChanged: _syncCurrent()
@@ -204,6 +205,20 @@ Item {
                 opacity: root.applying ? (_active ? 1.0 : 0.4) : (_current ? 1.0 : 0.6)
                 Behavior on scale   { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
                 Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+
+                // Soft cast shadow UNDER the hero (centred) item only — lifts it
+                // off the panel. Sibling behind the image (never on the thumbnail
+                // itself), radius-matched to the rounded photo. Side thumbnails
+                // stay flat. Gated on shadowStrength so flat mode drops it.
+                RectangularShadow {
+                    anchors.fill: parent
+                    visible: cell._current
+                    radius: 14
+                    blur:   32
+                    offset: Qt.vector2d(0, 12)
+                    spread: 2
+                    color:  Qt.rgba(0, 0, 0, 0.55 * Commons.Appearance.shadowStrength)
+                }
 
                 Image {
                     id: cellImg
@@ -240,6 +255,7 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     radius: 14
+                    antialiasing: true
                     color: "transparent"
                     border.width: cell._active ? 3 : (cell._current ? 2 : 0)
                     border.color: cell._active

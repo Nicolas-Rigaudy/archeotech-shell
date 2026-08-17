@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 import "../../Commons" as Commons
 import "../../Services/Theming" as Theming
 
@@ -174,8 +175,8 @@ Item {
             model: root._cat.families
             vertical: root.vertical
             itemSpacing: root.vertical
-                ? Math.floor(Math.min(strip.width  - 12, 260) * 2 / 3 * 0.9)
-                : Math.floor(Math.min(strip.height - 12, 150) * 3 / 2 * 0.86)
+                ? Math.floor(Math.min(strip.width  - 12, 260) * 2 / 3 * 0.98)
+                : Math.floor(Math.min(strip.height - 12, 150) * 3 / 2 * 0.95)
 
             onModelChanged: _sync()
             Component.onCompleted: _sync()
@@ -208,6 +209,18 @@ Item {
                 opacity: _current ? 1.0 : 0.6
                 Behavior on scale   { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
                 Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+
+                // Soft cast shadow under the hero (centred) tile only — lifts it
+                // off the panel; side tiles stay flat. Gated on shadowStrength.
+                RectangularShadow {
+                    anchors.fill: parent
+                    visible: tile._current
+                    radius: Commons.Appearance.radius.md
+                    blur:   32
+                    offset: Qt.vector2d(0, 12)
+                    spread: 2
+                    color:  Qt.rgba(0, 0, 0, 0.55 * Commons.Appearance.shadowStrength)
+                }
 
                 Rectangle {
                     anchors.fill: parent
