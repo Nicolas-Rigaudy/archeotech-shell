@@ -207,9 +207,11 @@ auto-gains flat-mode support the moment it's migrated):
 **buttons** (wifi/bt raised) + **screen-space sheen** across Wifi/Bt/Calendar/BarPanel/
 HoverCard, ✅ #3 media **play button** (raised accent circle key), ✅ #4 settings
 **selection** (one coherent surface progression: subtle neutral pill on hover → raised
-`surfaceWarm` pill + shadow on active; dropped the conflicting accent-wash hover).
-**Remaining:** #5 pickers (wallpaper/theme/logo — hero-item shadow + crisper selection
-ring; DON'T shadow the image thumbnails), #6 appearance quick-switcher tabs (StateLayer
+`surfaceWarm` pill + shadow on active; dropped the conflicting accent-wash hover),
+✅ #5 pickers (wallpaper/theme/logo — hero-only cast shadow blur32/(0,12)/spread2/0.55α
+gated on shadowStrength; widened spacing 0.86→0.95h so the hero clears neighbours;
+wallpaper ring antialiased 3px; image thumbnails never shadowed — `007d64c`).
+**Remaining:** #6 appearance quick-switcher tabs (StateLayer
 hover + match the sidebar selection). **Deferred:** popup neck-card **shaped** drop-shadow
 (Shape-based, not RectangularShadow — the neck pokes out), media **album-art lift** +
 **3D progress knob** (both want a small layout wrapper). All unverified surfaces: use the
