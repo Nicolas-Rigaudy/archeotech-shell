@@ -205,9 +205,15 @@ auto-gains flat-mode support the moment it's migrated):
 
 **Progress (2026-08-17):** ✅ #1 strip icons (raised accent key), ✅ #2 bar-popup
 **buttons** (wifi/bt raised) + **screen-space sheen** across Wifi/Bt/Calendar/BarPanel/
-HoverCard (fixed the harsh local ramp). Still open on the popups: a **shaped drop
-shadow** on the neck cards themselves (lift off content) — needs a Shape-based shadow,
-deferred. Then #3 media, #4 settings-selection pill, #5 pickers, #6 tabs.
+HoverCard, ✅ #3 media **play button** (raised accent circle key), ✅ #4 settings
+**selection** (one coherent surface progression: subtle neutral pill on hover → raised
+`surfaceWarm` pill + shadow on active; dropped the conflicting accent-wash hover).
+**Remaining:** #5 pickers (wallpaper/theme/logo — hero-item shadow + crisper selection
+ring; DON'T shadow the image thumbnails), #6 appearance quick-switcher tabs (StateLayer
+hover + match the sidebar selection). **Deferred:** popup neck-card **shaped** drop-shadow
+(Shape-based, not RectangularShadow — the neck pokes out), media **album-art lift** +
+**3D progress knob** (both want a small layout wrapper). All unverified surfaces: use the
+direct-mount harness (below) to check headlessly.
 
 Two reusable wins:
 - **Popups ARE headless-viewable** — direct-mount a popup in a `qs -p` harness with a
