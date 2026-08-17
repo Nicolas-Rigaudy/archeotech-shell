@@ -203,6 +203,20 @@ auto-gains flat-mode support the moment it's migrated):
   popups are neck `Shape`s, so a `RectangularShadow` pokes out at the neck. Build a
   Shape-based shadow helper ONCE and reuse across all bar popups.
 
+**Progress (2026-08-17):** ✅ #1 strip icons (raised accent key), ✅ #2 bar-popup
+**buttons** (wifi/bt raised) + **screen-space sheen** across Wifi/Bt/Calendar/BarPanel/
+HoverCard (fixed the harsh local ramp). Still open on the popups: a **shaped drop
+shadow** on the neck cards themselves (lift off content) — needs a Shape-based shadow,
+deferred. Then #3 media, #4 settings-selection pill, #5 pickers, #6 tabs.
+
+Two reusable wins:
+- **Popups ARE headless-viewable** — direct-mount a popup in a `qs -p` harness with a
+  stub `holderRoot` (`_wifiPopupVisible: true`, `side: "top"`, a `screen{height}`); no
+  live bar/IPC needed. Same trick as the layout-picker body. (Extends testing Block 2.)
+- **`ponytail:` debt** — the screen-space sheen (`_winY`/`_winH` + mapped gradient) is now
+  copy-pasted in 6 cards (FrameBackground/Strip/BarPanel/Wifi/Bt/Calendar/HoverCard).
+  Extract a shared `GlassSheen` helper so none drift back to a local ramp.
+
 Feel-gated rhythm as before (one surface → `Super+Shift+R` → confirm → commit),
 priority order:
 
