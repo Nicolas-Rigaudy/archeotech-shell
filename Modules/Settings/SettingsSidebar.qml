@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Effects
 import "../../Commons" as Commons
 import "../../Commons/Primitives"
 
@@ -161,16 +162,32 @@ Item {
                     Layout.fillWidth: true
                     implicitHeight: 44
 
+                    // Raised selected pill: solid accent-tinted surface + soft shadow
+                    // (shadowStrength-gated) so the active row lifts instead of a flat tint.
+                    RectangularShadow {
+                        anchors.fill: activeBg; radius: activeBg.radius
+                        blur: 10; offset: Qt.vector2d(0, 2); spread: 0
+                        color: Qt.rgba(0, 0, 0, 0.33 * Commons.Appearance.shadowStrength)
+                        opacity: root.activeIndex === navItem.index ? 1 : 0
+                        Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.fast } }
+                    }
                     Rectangle {
                         id: activeBg
                         anchors { fill: parent; leftMargin: 8; rightMargin: 8 }
                         radius: Commons.Appearance.radius.base
-                        color: root.activeIndex === navItem.index
-                            ? Commons.Appearance.colors.accentAlpha : "transparent"
+                        // One surface-based progression (coherent with the raised-key
+                        // language): resting → subtle neutral pill on hover → raised
+                        // warm pill (+ the shadow above) on active. No separate accent
+                        // wash — StateLayer here is click + (disabled) tint only.
+                        color: root.activeIndex === navItem.index ? Commons.Appearance.colors.surfaceWarm
+                             : navSL.hovered                       ? Commons.Appearance.colors.surface0Alpha
+                             :                                       "transparent"
                         Behavior on color { Commons.ColorAnim {} }
 
                         StateLayer {
+                            id: navSL
                             anchors.fill: parent
+                            tint: "transparent"; pressTint: "transparent"
                             pressScale: 1.0
                             onClicked: {
                                 root.activeIndex = navItem.index
