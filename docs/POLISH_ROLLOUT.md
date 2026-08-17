@@ -190,6 +190,44 @@ card edge.
 - [ ] **Bar** — SAFE only (bar is deliberately flat): smoother icon recolor curve,
   HoverCard enter/exit (done). Hover-fill / active-border need explicit sign-off.
 
+## Design-pass plan — remaining "not-3D" surfaces (user list 2026-08-17)
+
+Shared vocabulary (ALL shadows go through `shadowStrength`, so each surface
+auto-gains flat-mode support the moment it's migrated):
+- on-panel card → `surfaceCard` + soft `RectangularShadow`
+- nested item (inside a card) → recessed `surface0Alpha`, no shadow
+- button → `GlassButton` (shadow + states) or a `StateLayer` overlay
+- selection / active → `accentAlpha` fill + `accentBorder` + accent text/glyph
+- hover / press → `StateLayer` (scale + `stateHover`/`statePressed`)
+- floating popup → keep the glass sheen; a lift needs a **shaped** shadow — the
+  popups are neck `Shape`s, so a `RectangularShadow` pokes out at the neck. Build a
+  Shape-based shadow helper ONCE and reuse across all bar popups.
+
+Feel-gated rhythm as before (one surface → `Super+Shift+R` → confirm → commit),
+priority order:
+
+1. **Strip widget icons — hover/active** (was Round 4). `PanelOpenerWidget` on a
+   strip: 44px rounded cell, `stateHover` on hover, `accentAlpha` + accent glyph
+   when its panel is active. Highest visibility (seen every session).
+2. **Bar-popup buttons + popup lift** (was Round 1) — wifi/BT/calendar/power popups:
+   action buttons → `GlassButton`, rows → `StateLayer`; AND give the popup card the
+   shaped shadow (build the Shape-shadow helper here, reuse for all four).
+3. **Music panel** (MediaPanel, was Round 1) — album-art/info as `surfaceCard`+shadow,
+   transport buttons → `StateLayer`/GlassButton, progress bar like the 3D `SliderRow`.
+4. **Settings section selection** — the sidebar ALREADY has `accentAlpha`+`StateLayer`;
+   if it still reads flat, promote the selected row to a *raised pill* (surfaceCard/
+   accent + subtle shadow + an accent left-bar) so selection pops, not just tints.
+5. **Wallpaper / theme / logo pickers** — thumbnails are IMAGES → keep the border-ring
+   highlight (do NOT shadow images — that's the "too much" trap). Add depth via a soft
+   shadow under the **centered/active** carousel item only (the hero) + a crisper accent
+   selection ring. Deliberately restrained.
+6. **Appearance quick-switcher tabs** — selected tab is already `accentAlpha`; just add
+   `StateLayer` hover + match the sidebar's selection style. Low effort.
+
+**Power menu = wlogout (external).** NOT QML — a CSS/layout-themed external tool like
+the lock screen. "3D" there is a **wlogout config-theming** task (palette-driven
+generator, mirroring hyprlock), tracked separately from this QML rollout.
+
 ## Dashboard follow-ups (user ideas 2026-07-20, after the hero+bento rework)
 - **Customizable grid** — user-arrangeable dashboard with custom cards + choice of
   placement (cf. DankMaterialShell's drag-drop widget grid). The `DashCard` shell +
