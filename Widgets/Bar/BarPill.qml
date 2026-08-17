@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 import "../../Commons" as Commons
 
 // Shared bar-widget capsule (Sprint 26-C). The single place the horizontal↔
@@ -44,19 +45,58 @@ Item {
     property int  activeBgSize: 44
 
     readonly property bool hovered: _ma.containsMouse
+    readonly property bool pressed: _ma.pressed
     readonly property color _iconColor: (interactive && highlightOnHover && hovered)
                                         ? hoverColor : iconColor
 
-    Rectangle {
+    // Strip-icon highlight (showActiveBg): a rounded cell that lifts + scales on
+    // hover/press and gains an accent ring + soft shadow when its panel is active.
+    // Shadow rides shadowStrength → drops in flat mode. Only shown on strips, so
+    // the flat bar (showActiveBg false) is unaffected.
+    Item {
+        id: activeCell
         anchors.centerIn: parent
         visible: pill.showActiveBg
         width:  pill.activeBgSize
         height: pill.activeBgSize
-        radius: Commons.Appearance.radius.md
-        color: pill.active  ? Commons.Appearance.colors.accentAlpha
-             : pill.hovered ? Commons.Appearance.colors.surface0Alpha
-             :                "transparent"
-        Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+        // Fade the key in on hover/active; scale for tactility (swatch-dot recipe).
+        opacity: (pill.active || pill.hovered) ? 1 : 0
+        scale:   pill.pressed ? 0.92 : (pill.interactive && pill.hovered ? 1.08 : 1.0)
+        Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.fast } }
+        Behavior on scale   { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
+
+        // A SOLID raised key (opaque surface1, accent-tinted when active) with a
+        // top-lit gradient + drop shadow → reads as a physical key, not a flat
+        // tint. Gradient collapses + shadow drops in flat mode.
+        // Active = the accent colour itself (raised, like the swatch dots) so the
+        // key reads as "on" with a dark glyph over it — no grey+purple fight.
+        // Hover = a neutral raised key with the accent glyph on top.
+        readonly property color _keyBase: pill.active
+            ? Commons.Appearance.colors.accent
+            : Commons.Appearance.colors.surface1
+
+        RectangularShadow {
+            anchors.fill: keyBg
+            radius: keyBg.radius
+            blur:   10
+            offset: Qt.vector2d(0, 3)
+            spread: 0
+            color:  Qt.rgba(0, 0, 0, 0.45 * Commons.Appearance.shadowStrength)
+        }
+        Rectangle {
+            id: keyBg
+            anchors.fill: parent
+            radius: Commons.Appearance.radius.md
+            antialiasing: true
+            gradient: Gradient {
+                GradientStop { position: 0.0
+                    color: Commons.Appearance.flatMode ? activeCell._keyBase
+                                                       : Qt.lighter(activeCell._keyBase, 1.16) }
+                GradientStop { position: 1.0
+                    color: Commons.Appearance.flatMode ? activeCell._keyBase
+                                                       : Qt.darker(activeCell._keyBase, 1.10) }
+            }
+        }
     }
 
     signal clicked()
@@ -79,7 +119,11 @@ Item {
         Text {
             id: _icon
             text: pill.icon
-            color: pill._iconColor
+            // Dark glyph over the accent key (contrast); otherwise the normal
+            // hover/resting colour.
+            color: (pill.showActiveBg && pill.active)
+                   ? Commons.Appearance.colors.base
+                   : pill._iconColor
             font.pixelSize: pill.iconSize
             font.family: Commons.Appearance.font.family
             anchors.verticalCenter: parent.verticalCenter
