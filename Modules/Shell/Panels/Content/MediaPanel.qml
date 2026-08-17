@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 import Quickshell.Io
 import "../../../../Commons" as Commons
 import "../../../../Services/Media" as MediaServices
@@ -220,12 +221,32 @@ Item {
 
                     Item { Layout.preferredWidth: 24 }
 
-                    Text {
-                        text: MediaServices.MprisService.playing ? "󰏤" : "󰐊"
-                        color: playArea.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.text
-                        font.pixelSize: 26; font.family: Commons.Appearance.font.family
-                        Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-                        MouseArea { id: playArea; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; onClicked: MediaServices.MprisService.togglePlay() }
+                    // Focal control — a raised accent circle key (swatch-dot language):
+                    // top-lit accent gradient + shadow + dark glyph + hover/press scale.
+                    Item {
+                        Layout.preferredWidth: 42; Layout.preferredHeight: 42
+                        Layout.alignment: Qt.AlignVCenter
+                        scale: playArea.pressed ? 0.92 : (playArea.containsMouse ? 1.06 : 1.0)
+                        Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
+                        RectangularShadow {
+                            anchors.fill: playKey; radius: playKey.radius
+                            blur: 10; offset: Qt.vector2d(0, 3); spread: 0
+                            color: Qt.rgba(0, 0, 0, 0.45 * Commons.Appearance.shadowStrength)
+                        }
+                        Rectangle {
+                            id: playKey; anchors.fill: parent; radius: width / 2; antialiasing: true
+                            gradient: Gradient {
+                                GradientStop { position: 0.0; color: Commons.Appearance.flatMode ? Commons.Appearance.colors.accent : Qt.lighter(Commons.Appearance.colors.accent, 1.12) }
+                                GradientStop { position: 1.0; color: Commons.Appearance.flatMode ? Commons.Appearance.colors.accent : Qt.darker(Commons.Appearance.colors.accent, 1.10) }
+                            }
+                        }
+                        Text {
+                            anchors.centerIn: parent
+                            text: MediaServices.MprisService.playing ? "󰏤" : "󰐊"
+                            color: Commons.Appearance.colors.base
+                            font.pixelSize: 20; font.family: Commons.Appearance.font.family
+                        }
+                        MouseArea { id: playArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: MediaServices.MprisService.togglePlay() }
                     }
 
                     Item { Layout.preferredWidth: 24 }
