@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 import "../../Commons" as Commons
 import "../../Services/Compositor" as CompositorServices
 
@@ -174,14 +175,24 @@ Item {
                 width: grid.cellWidth
                 height: grid.cellHeight
 
+                // Soft lift so cards read as raised surfaces on the panel (matches
+                // the launcher tiles); gated on shadowStrength so flat mode drops it.
+                RectangularShadow {
+                    anchors.fill: card
+                    radius: card.radius
+                    blur:   8
+                    offset: Qt.vector2d(0, 2)
+                    spread: 0
+                    color:  Qt.rgba(0, 0, 0, 0.30 * Commons.Appearance.shadowStrength)
+                }
                 Rectangle {
                     id: card
                     anchors.fill: parent
                     anchors.margins: Commons.Appearance.spacing.sm
                     radius: Commons.Appearance.radius.lg
                     color: cell._active ? Commons.Appearance.colors.accentAlpha
-                         : (cell._hov ? Commons.Appearance.colors.surface0Alpha
-                                      : Commons.Appearance.colors.glassBgLight)
+                         : (cell._hov ? Commons.Appearance.colors.surfaceWarm
+                                      : Commons.Appearance.colors.surfaceCard)
                     border.width: cell._active ? 3 : (cell._hov || cell._cursor ? 2 : 1)
                     border.color: cell._active ? Commons.Appearance.colors.accent
                                 : (cell._cursor ? Commons.Appearance.colors.accentBorder
