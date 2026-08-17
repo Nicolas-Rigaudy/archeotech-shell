@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Shapes
+import QtQuick.Effects
 import "../../Commons" as Commons
 import "../../Services/Networking" as NetworkServices
 
@@ -12,6 +13,10 @@ Shape {
     property real _r:  Commons.Appearance.radius.xl
     property real _rb: Commons.Appearance.radius.md
     property real _bw: 240
+
+    // Screen-space sheen — a slice of the one global top-lit gradient (see WifiPopup).
+    readonly property real _winY: { var _t = card.y + card.height; return card.mapToItem(null, 0, 0).y }
+    readonly property real _winH: (holderRoot && holderRoot.screen) ? holderRoot.screen.height : 1080
 
     x: Math.min(
            Math.max((holderRoot ? holderRoot._btAnchorX : 0) - width / 2,
@@ -32,8 +37,8 @@ Shape {
 
     ShapePath {
         fillGradient: LinearGradient {
-            x1: 0; y1: 0
-            x2: 0; y2: card.height
+            x1: 0; y1: -card._winY
+            x2: 0; y2: card._winH - card._winY
             GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
             GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
         }
@@ -168,13 +173,25 @@ Shape {
                             RotationAnimator { target: _btDevSpinner; running: _btDevSpinner.visible; loops: Animation.Infinite; from: 0; to: 360; duration: 900 }
                         }
 
+                        RectangularShadow {
+                            anchors.fill: _btDevBtn; radius: _btDevBtn.radius
+                            blur: 6; offset: Qt.vector2d(0, 1.5); spread: 0
+                            color: Qt.rgba(0, 0, 0, 0.35 * Commons.Appearance.shadowStrength)
+                            visible: !parent._busy
+                        }
                         Rectangle {
                             id: _btDevBtn
                             visible: !parent._busy
                             width: _btDevLbl.implicitWidth + 16; height: 22
                             radius: Commons.Appearance.radius.sm
-                            color: _btDevMA.containsMouse ? Commons.Appearance.colors.surface1 : Commons.Appearance.colors.surface0
-                            Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                            antialiasing: true
+                            readonly property color _base: _btDevMA.containsMouse ? Commons.Appearance.colors.surface1 : Commons.Appearance.colors.surface0
+                            scale: _btDevMA.pressed ? 0.94 : (_btDevMA.containsMouse ? 1.06 : 1.0)
+                            Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
+                            gradient: Gradient {
+                                GradientStop { position: 0.0; color: Commons.Appearance.flatMode ? _btDevBtn._base : Qt.lighter(_btDevBtn._base, 1.14) }
+                                GradientStop { position: 1.0; color: Commons.Appearance.flatMode ? _btDevBtn._base : Qt.darker(_btDevBtn._base, 1.08) }
+                            }
                             Text {
                                 id: _btDevLbl; anchors.centerIn: parent
                                 text: modelData.connected ? "Disconnect" : "Connect"

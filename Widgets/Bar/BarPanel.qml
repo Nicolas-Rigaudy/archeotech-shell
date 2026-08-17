@@ -27,6 +27,11 @@ Item {
     readonly property string _scr:    holderRoot && holderRoot.screen ? holderRoot.screen.name : ""
     readonly property bool   horizontal: holderRoot && holderRoot.horizontal
 
+    // Screen-space sheen — a slice of the one global top-lit gradient (like the
+    // strip card), not a harsh ramp restarting inside the panel.
+    readonly property real _winY: { var _t = card.x + card.y + card.height; return card.mapToItem(null, 0, 0).y }
+    readonly property real _winH: _screen ? _screen.height : 1080
+
     // Panels are global; show on the bar whose side matches the active side.
     readonly property string _activePanel: ShellServices.ShellState.activePanel(_scr)
     readonly property string _activeSide:  ShellServices.ShellState.activeSide(_scr)
@@ -128,8 +133,8 @@ Item {
             // Liquid-glass sheen — top-lit vertical gradient within the card
             // (same tokens/look as the frame + panels).
             fillGradient: LinearGradient {
-                x1: 0; y1: 0
-                x2: 0; y2: card.height
+                x1: 0; y1: -root._winY
+                x2: 0; y2: root._winH - root._winY
                 GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
                 GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
             }

@@ -15,6 +15,10 @@ Shape {
     property real _rb:   Commons.Appearance.radius.md
     property real _bw:   cellW * 7 + 24
 
+    // Screen-space sheen — a slice of the one global top-lit gradient (see WifiPopup).
+    readonly property real _winY: { var _t = card.y + card.height; return card.mapToItem(null, 0, 0).y }
+    readonly property real _winH: (holderRoot && holderRoot.screen) ? holderRoot.screen.height : 1080
+
     x: Math.max(
            Commons.Appearance.bar.marginSide + 4,
            Math.min((holderRoot ? holderRoot.width / 2 : 0) - (_bw + _r * 2) / 2,
@@ -49,8 +53,8 @@ Shape {
 
     ShapePath {
         fillGradient: LinearGradient {
-            x1: 0; y1: 0
-            x2: 0; y2: card.height
+            x1: 0; y1: -card._winY
+            x2: 0; y2: card._winH - card._winY
             GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
             GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
         }

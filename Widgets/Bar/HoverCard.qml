@@ -13,6 +13,11 @@ Shape {
     property real _rb: Commons.Appearance.radius.md
     property real _bw: _popupCol.implicitWidth + 28
 
+    // Screen-space sheen (matches the frame/strips) — a slice of the one global
+    // top-lit gradient, not a harsh ramp restarting inside this little card.
+    readonly property real _winY: { var _t = card.y + card.height; return card.mapToItem(null, 0, 0).y }
+    readonly property real _winH: (holderRoot && holderRoot.screen) ? holderRoot.screen.height : 1080
+
     x: Math.min(
            Math.max((holderRoot ? holderRoot._popupAnchorX : 0) - width / 2,
                     Commons.Appearance.bar.marginSide + 4),
@@ -35,8 +40,8 @@ Shape {
 
     ShapePath {
         fillGradient: LinearGradient {
-            x1: 0; y1: 0
-            x2: 0; y2: card.height
+            x1: 0; y1: -card._winY
+            x2: 0; y2: card._winH - card._winY
             GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
             GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
         }
