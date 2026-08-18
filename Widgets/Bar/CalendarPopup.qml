@@ -1,11 +1,12 @@
 import QtQuick
 import QtQuick.Shapes
+import QtQuick.Effects
 import "../../Commons" as Commons
 
 // Month calendar dropped from the bar's center. Same ear+arc shape as
 // HoverCard so it merges with the pill. Visibility + month state driven
 // by holderRoot._calendarVisible / _calendarMonth / _calendarYear.
-Shape {
+Item {
     id: card
     required property var holderRoot
 
@@ -26,9 +27,6 @@ Shape {
     y: Commons.Appearance.bar.marginTop + Commons.Appearance.bar.height
     width:  _bw + _r * 2
     height: _calCol.implicitHeight + 20
-
-    layer.enabled: true
-    layer.samples: 8
 
     transformOrigin: Item.Top
     scale:   (holderRoot && holderRoot._calendarVisible) ? 1.0 : 0.85
@@ -51,34 +49,53 @@ Shape {
         return days
     }
 
-    ShapePath {
-        fillGradient: LinearGradient {
-            x1: 0; y1: -card._winY
-            x2: 0; y2: card._winH - card._winY
-            GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
-            GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
-        }
-        strokeWidth: 0
-        strokeColor: "transparent"
+    // Soft lift — same RectangularShadow as the system cards, behind the body
+    // only so the neck still fuses to the bar (see WifiPopup). shadowStrength-gated.
+    RectangularShadow {
+        x: card._r; y: 0
+        width: card._bw; height: card.height
+        radius: card._rb
+        blur:   16
+        offset: Qt.vector2d(0, 4)
+        spread: 0
+        color:  Qt.rgba(0, 0, 0, 0.45 * Commons.Appearance.shadowStrength)
+    }
 
-        startX: 0; startY: 0
-        PathLine { x: card._bw + card._r * 2; y: 0 }
-        PathArc  { x: card._bw + card._r;     y: card._r
-                   radiusX: card._r; radiusY: card._r
-                   direction: PathArc.Counterclockwise }
-        PathLine { x: card._bw + card._r;     y: card.height - card._rb }
-        PathArc  { x: card._bw + card._r - card._rb; y: card.height
-                   radiusX: card._rb; radiusY: card._rb
-                   direction: PathArc.Clockwise }
-        PathLine { x: card._r + card._rb;     y: card.height }
-        PathArc  { x: card._r;                y: card.height - card._rb
-                   radiusX: card._rb; radiusY: card._rb
-                   direction: PathArc.Clockwise }
-        PathLine { x: card._r;                y: card._r }
-        PathArc  { x: 0;                      y: 0
-                   radiusX: card._r; radiusY: card._r
-                   direction: PathArc.Counterclockwise }
-        PathLine { x: 0;                      y: 0 }
+    Shape {
+        id: cardShape
+        anchors.fill: parent
+        layer.enabled: true
+        layer.samples: 8
+
+        ShapePath {
+            fillGradient: LinearGradient {
+                x1: 0; y1: -card._winY
+                x2: 0; y2: card._winH - card._winY
+                GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
+                GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+            }
+            strokeWidth: 0
+            strokeColor: "transparent"
+
+            startX: 0; startY: 0
+            PathLine { x: card._bw + card._r * 2; y: 0 }
+            PathArc  { x: card._bw + card._r;     y: card._r
+                       radiusX: card._r; radiusY: card._r
+                       direction: PathArc.Counterclockwise }
+            PathLine { x: card._bw + card._r;     y: card.height - card._rb }
+            PathArc  { x: card._bw + card._r - card._rb; y: card.height
+                       radiusX: card._rb; radiusY: card._rb
+                       direction: PathArc.Clockwise }
+            PathLine { x: card._r + card._rb;     y: card.height }
+            PathArc  { x: card._r;                y: card.height - card._rb
+                       radiusX: card._rb; radiusY: card._rb
+                       direction: PathArc.Clockwise }
+            PathLine { x: card._r;                y: card._r }
+            PathArc  { x: 0;                      y: 0
+                       radiusX: card._r; radiusY: card._r
+                       direction: PathArc.Counterclockwise }
+            PathLine { x: 0;                      y: 0 }
+        }
     }
 
     MouseArea {

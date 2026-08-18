@@ -8,7 +8,7 @@ import "../../Services/Shell" as ShellServices
 
 // WiFi popup — adapter toggle, network list, connect/disconnect, rescan.
 // Anchor x driven by holderRoot._wifiAnchorX (set by NetworkWidget on click).
-Shape {
+Item {
     id: card
     required property var holderRoot
 
@@ -31,8 +31,6 @@ Shape {
     width:  _bw + _r * 2
     height: _wifiContent.implicitHeight + 20
 
-    layer.enabled: true
-    layer.samples: 8
     transformOrigin: Item.Top
     scale:   (holderRoot && holderRoot._wifiPopupVisible) ? 1.0 : 0.85
     opacity: (holderRoot && holderRoot._wifiPopupVisible) ? 1.0 : 0.0
@@ -40,28 +38,49 @@ Shape {
     Behavior on scale   { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
     Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
-    ShapePath {
-        fillGradient: LinearGradient {
-            x1: 0; y1: -card._winY
-            x2: 0; y2: card._winH - card._winY
-            GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
-            GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+    // Soft lift — the SAME RectangularShadow the system cards use (blur 16 /
+    // (0,4) / 0.45α), sat behind the popup BODY only (the flat neck flares out to
+    // the bar above, so the shadow stops at the body and never strips the seam).
+    // shadowStrength-gated → flat mode drops it.
+    RectangularShadow {
+        x: card._r; y: 0
+        width: card._bw; height: card.height
+        radius: card._rb
+        blur:   16
+        offset: Qt.vector2d(0, 4)
+        spread: 0
+        color:  Qt.rgba(0, 0, 0, 0.45 * Commons.Appearance.shadowStrength)
+    }
+
+    Shape {
+        id: cardShape
+        anchors.fill: parent
+        layer.enabled: true
+        layer.samples: 8
+
+        ShapePath {
+            fillGradient: LinearGradient {
+                x1: 0; y1: -card._winY
+                x2: 0; y2: card._winH - card._winY
+                GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
+                GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+            }
+            strokeWidth: 0; strokeColor: "transparent"
+            startX: 0; startY: 0
+            PathLine { x: card._bw + card._r * 2; y: 0 }
+            PathArc  { x: card._bw + card._r;     y: card._r
+                       radiusX: card._r; radiusY: card._r; direction: PathArc.Counterclockwise }
+            PathLine { x: card._bw + card._r;     y: card.height - card._rb }
+            PathArc  { x: card._bw + card._r - card._rb; y: card.height
+                       radiusX: card._rb; radiusY: card._rb; direction: PathArc.Clockwise }
+            PathLine { x: card._r + card._rb;     y: card.height }
+            PathArc  { x: card._r;                y: card.height - card._rb
+                       radiusX: card._rb; radiusY: card._rb; direction: PathArc.Clockwise }
+            PathLine { x: card._r;                y: card._r }
+            PathArc  { x: 0;                      y: 0
+                       radiusX: card._r; radiusY: card._r; direction: PathArc.Counterclockwise }
+            PathLine { x: 0; y: 0 }
         }
-        strokeWidth: 0; strokeColor: "transparent"
-        startX: 0; startY: 0
-        PathLine { x: card._bw + card._r * 2; y: 0 }
-        PathArc  { x: card._bw + card._r;     y: card._r
-                   radiusX: card._r; radiusY: card._r; direction: PathArc.Counterclockwise }
-        PathLine { x: card._bw + card._r;     y: card.height - card._rb }
-        PathArc  { x: card._bw + card._r - card._rb; y: card.height
-                   radiusX: card._rb; radiusY: card._rb; direction: PathArc.Clockwise }
-        PathLine { x: card._r + card._rb;     y: card.height }
-        PathArc  { x: card._r;                y: card.height - card._rb
-                   radiusX: card._rb; radiusY: card._rb; direction: PathArc.Clockwise }
-        PathLine { x: card._r;                y: card._r }
-        PathArc  { x: 0;                      y: 0
-                   radiusX: card._r; radiusY: card._r; direction: PathArc.Counterclockwise }
-        PathLine { x: 0; y: 0 }
     }
 
     MouseArea {
