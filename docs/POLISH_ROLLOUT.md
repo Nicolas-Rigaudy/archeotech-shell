@@ -210,9 +210,18 @@ HoverCard, ✅ #3 media **play button** (raised accent circle key), ✅ #4 setti
 `surfaceWarm` pill + shadow on active; dropped the conflicting accent-wash hover),
 ✅ #5 pickers (wallpaper/theme/logo — hero-only cast shadow blur32/(0,12)/spread2/0.55α
 gated on shadowStrength; widened spacing 0.86→0.95h so the hero clears neighbours;
-wallpaper ring antialiased 3px; image thumbnails never shadowed — `007d64c`).
-**Remaining:** #6 appearance quick-switcher tabs (StateLayer
-hover + match the sidebar selection). **Deferred:** popup neck-card **shaped** drop-shadow
+wallpaper ring antialiased 3px; image thumbnails never shadowed — `007d64c`),
+✅ #6 quick-switcher tabs — extracted a shared `SegmentedControl` primitive
+(recessed track + sliding raised accent pill, `shadowStrength`-gated, StateLayer
+hover, base glyph on active) and moved the Wallpaper/Theme/Logo page tabs onto it;
+also the theme picker's mode + flavor toggles (`0487209`).
+**Theme picker rework** (`0487209`, feel-confirmed): the mode/flavor/accent cluster
+was cluttered + lopsided (controls hugged the top-left, focal carousel centred) and
+switching flavor jumped (active pill went `Font.Medium` → row rewidth) + a fixed 58px
+reserved zone left a blank gap for flavour/accent-less families. Fixed: cluster centred
+on the carousel axis; flavor is now a `SegmentedControl` (equal segments → width-stable,
+no jump); contextual zone inlined so invisible rows collapse to zero height (no blank gap).
+**Deferred:** popup neck-card **shaped** drop-shadow
 (Shape-based, not RectangularShadow — the neck pokes out), media **album-art lift** +
 **3D progress knob** (both want a small layout wrapper). All unverified surfaces: use the
 direct-mount harness (below) to check headlessly.
