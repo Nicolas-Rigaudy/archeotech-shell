@@ -312,3 +312,75 @@ Scrubber drag-thumb, marquee hover-underline, per-cell calendar hover borders,
 heavy shadows on every nested row, ripple-on-tap, elevation-tint token (add when
 M3-dark elevation is designed), per-card dashboard stagger via Qt.callLater
 (that API takes no delay arg — use a Timer if we do stagger).
+
+## Coherency / legibility audit backlog (2026-08-18)
+Full shell UI/UX pass (4-agent audit + visual checks). Fix in feel-gated slices,
+each screenshot-verified. Grouped by leverage — cross-cutting first (one fix
+cascades). `file:line` refs are anchors, re-verify before editing.
+
+### Slice 1 — vertical carousel overlap (CRITICAL, blocks the theme side-panel)
+- [ ] `Widgets/Appearance/Carousel.qml:19,49-56` — snap-path span unclamped
+  (`_half = itemSpacing·pathItemCount/2`) + `clip:false` → in a short side panel
+  the track needs ~975px, gets ~450px, top tiles bleed up through the mode/flavor/
+  accent rows. Clamp track span / `pathItemCount` to the cross-axis viewport. ONE
+  fix here fixes theme+wallpaper+logo vertical together.
+- [ ] `ThemeCarousel.qml:126,129-131,153` — drop `Layout.minimumHeight:200` (forces
+  overflow); size along-track off `strip.height/pathItemCount`, not panel width.
+- [ ] `Content/WallpaperPicker.qml:47,55-59` — the `z:1` glass header is a partial
+  workaround; removable once Carousel is clamped.
+
+### Slice 2 — selector unification + accent theming (your named contrast issue)
+- [x] `ColorSchemeBody` mode/flavor → `SegmentedControl`, family cards → accent
+  BORDER + base-glyph ✓ badge (done 2026-08-18, uncommitted with this doc).
+- [ ] `Widgets/ButtonGroupRow.qml:44-56` → route through `SegmentedControl`
+  (cascades: Display, Power ×4, ConfigForm).
+- [ ] `ConnectionsPane.qml:623` — Wifi/BT tabs → `SegmentedControl`.
+- [ ] `AudioPane.qml:85-90,245-248` — default-device row: accentAlpha fill + white
+  text → unified selected language (base glyph on accent, or surface+accent border).
+- [ ] `LogoCarousel.qml:146,166` & `LayoutPickerBody.qml:193-199,227,239` — accent-
+  tint fill + accent glyph/label (accent-on-accent) → surface fill + accent border.
+- [ ] `PluginsPane.qml:125-138` — "Verified" badge accent-on-accentAlpha.
+- [ ] `ThemeCarousel` accent dots are flat while `ColorSchemeBody` dots are raised —
+  unify (pick one).
+- [ ] **Hardcoded `mauve`→`colors.accent`** (breaks accent picker): `WifiPopup.qml:194,223`,
+  `BtPopup.qml:88,159,207`, `BluetoothWidget.qml:12`, `ConnectionsPane.qml:232,256,308,410,516`.
+
+### Slice 3 — flat-mode sweep
+- [ ] Root cause `Commons/Appearance.qml:15-17` — spike wired only shadows, not
+  accent GRADIENTS. Add a `flatMode`-aware accent-gradient helper (or `accentFlat`
+  pair); `MediaPanel.qml:239-240` is the correct reference. Then gate: `GlassButton.qml:44-47`,
+  `SegmentedControl.qml:51-52`, `ToggleSwitch.qml:29-30,58-61`, `SliderRow.qml:75-78`,
+  `SystemStatus.qml:101-104`, `ColorSchemeBody.qml:92-95,200-203`.
+- [ ] Shadows missing `× shadowStrength`: `ToggleSwitch.qml:46`, `Launcher.qml:336`,
+  `NotificationCenter.qml:168`, `NotifToast.qml:73`, `ColorSchemeBody.qml:76-81,188-193`,
+  `ShellPane.qml:92`.
+
+### Slice 4 — dedup + inputs
+- [ ] Inline `SectionLabel` re-declared in Display:156, Notifications:83, Power:206,
+  Connections:614 (dead), About:193 → use `Widgets/SectionLabel.qml`.
+- [ ] Unify text fields (sidebar search is the good ref) + style the `DropdownRow`/
+  TimePick ComboBox popup (currently unstyled Qt chrome). `DropdownRow.qml:52-58`.
+- [ ] Close buttons: `Dashboard.qml:101-118` & `MediaPanel.qml:80,214-260` → StateLayer/
+  GlassButton like NotificationCenter. App-tiles: unify `QuickLaunch` vs `Launcher` recents.
+- [ ] Popups `layer.enabled:true` (WifiPopup:49/BtPopup:43/CalendarPopup:59/HoverCard:46)
+  → `Shape.CurveRenderer` per the DECISIONS rule (Strip/BarPanel already do).
+
+### Slice 5 — one-offs + tokens
+- [ ] `AboutPane.qml:46-79` — hero content left-aligned; add `Layout.alignment: Qt.AlignHCenter`.
+- [ ] `Osd.qml` — only floating surface with no shadow; add a `shadowStrength`-gated one.
+- [ ] `MediaPanel.qml:182-183` — 950ms progress width tween rubber-bands; `:188-190` seek off-by-4px.
+- [ ] `Launcher.qml:550-555,619-621` — result selection accentAlpha wash, no base-glyph flip (decide).
+- [ ] `LogoCarousel.qml:172-179` — below-tile label collides with next tile in vertical.
+- [ ] `SettingsSidebar.qml:243-251` — wheel-scroll switches panes over search results (desync/clears query).
+- [ ] `ConnectionsPane` off-buttons `overlay0` (too dim); `EmptyState.qml:27` icon `surface1` (near-invisible on light).
+- [ ] Off-scale fonts (`PaneHeader` 18/30, `Dashboard` 22/40, `MediaPanel` 9px time labels);
+  promote recessed-track literal `rgba(0,0,0,0.22)` (×4) → a `colors.recessedTrack` token.
+- [ ] **Fullscreen auto-hide broken (user 2026-08-18)** — bars + strips should hide when a
+  window goes fullscreen; currently doesn't work. Trace the fullscreen signal → bar/strip
+  visibility path (compositor fullscreen state via mmsg/Compositor service → shell surfaces).
+
+### Confirmed GOOD (don't touch)
+`StateLayer`, `PanelShadow`, `Anim`/`ColorAnim`, `DashCard`/`SettingsCard` shells,
+`surfaceCard` token, `SystemNotes`, `TipOfSession`, `FrameBackground`, `BarPanel`/`Strip`
+(CurveRenderer + PanelShadow reference), `MediaPanel` play-key flat gating, Appearance
+token layer, SettingsSidebar active-pill (deliberate surfaceWarm selection).
