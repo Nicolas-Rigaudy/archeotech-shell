@@ -26,6 +26,12 @@ Item {
     // Active accent: the explicit choice, else the family's default (mauve).
     readonly property string _activeAccent: _cs.accent || "mauve"
 
+    readonly property var _modes: [
+        { id: "dark",  label: "Dark",  glyph: "󰖔" },
+        { id: "light", label: "Light", glyph: "󰖨" },
+        { id: "auto",  label: "Auto",  glyph: "󰃟" }
+    ]
+
     // 48 half-hour options for the schedule pickers.
     readonly property var _times: {
         var t = []
@@ -41,39 +47,15 @@ Item {
         spacing: root.compact ? 5 : 10
 
         // ── Mode ────────────────────────────────────────────────────────────────
+        // Shared segmented control — same language as the quick-switcher, base
+        // glyph/label on the accent pill (no accent-on-accent contrast issue).
         SLabel { text: "MODE" }
-        RowLayout {
+        SegmentedControl {
             Layout.fillWidth: true
-            spacing: 6
-            Repeater {
-                model: [
-                    { id: "dark",  label: "Dark",  glyph: "󰖔" },
-                    { id: "light", label: "Light", glyph: "󰖨" },
-                    { id: "auto",  label: "Auto",  glyph: "󰃟" }
-                ]
-                delegate: GlassButton {
-                    id: modeBtn
-                    required property var modelData
-                    readonly property bool _on: root._cs.mode === modelData.id
-                    Layout.fillWidth: true
-                    active: _on
-                    onClicked: root._cs.setMode(modelData.id)
-                    RowLayout {
-                        spacing: 6
-                        Text {
-                            text: modeBtn.modelData.glyph
-                            color: modeBtn._on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext0
-                            font.pixelSize: 13; font.family: Commons.Appearance.font.family
-                        }
-                        Text {
-                            text: modeBtn.modelData.label
-                            color: modeBtn._on ? Commons.Appearance.colors.text : Commons.Appearance.colors.subtext0
-                            font.pixelSize: Commons.Appearance.font.sizeBase; font.family: Commons.Appearance.font.family
-                            font.weight: modeBtn._on ? Font.Medium : Font.Normal
-                        }
-                    }
-                }
-            }
+            Layout.preferredHeight: 32
+            model: root._modes
+            currentIndex: Math.max(0, root._modes.findIndex(function(m) { return m.id === root._cs.mode }))
+            onActivated: index => root._cs.setMode(root._modes[index].id)
         }
 
         // ── Family ──────────────────────────────────────────────────────────────
@@ -102,14 +84,17 @@ Item {
                         anchors.fill: parent
                         radius: Commons.Appearance.radius.md
                         antialiasing: true
-                        border.width: famCard._on ? 2 : 1
+                        // Selection = crisp accent BORDER (not an accent fill), so
+                        // the label + swatches stay readable. Matches the quick-
+                        // switcher's family tiles.
+                        border.width: famCard._on ? 3 : 1
                         border.color: famCard._on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.glassBorder
-                        // Top-lit gradient for depth — accent when selected.
                         gradient: Gradient {
-                            GradientStop { position: 0.0; color: famCard._on ? Qt.lighter(Commons.Appearance.colors.accent, 1.08) : Qt.lighter(Commons.Appearance.colors.surfaceCard, 1.12) }
-                            GradientStop { position: 1.0; color: famCard._on ? Qt.darker(Commons.Appearance.colors.accent, 1.06)  : Commons.Appearance.colors.surfaceCard }
+                            GradientStop { position: 0.0; color: Qt.lighter(Commons.Appearance.colors.surfaceCard, 1.12) }
+                            GradientStop { position: 1.0; color: Commons.Appearance.colors.surfaceCard }
                         }
                         Behavior on border.color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                        Behavior on border.width { NumberAnimation { duration: Commons.Appearance.anim.fast } }
 
                     ColumnLayout {
                         anchors { fill: parent; margins: 10 }
@@ -125,10 +110,15 @@ Item {
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
-                            Text {
+                            Rectangle {
                                 visible: famCard._on
-                                text: "✓"; color: Commons.Appearance.colors.accent
-                                font.pixelSize: 13; font.bold: true
+                                width: 18; height: 18; radius: 9
+                                color: Commons.Appearance.colors.accent
+                                Text {
+                                    anchors.centerIn: parent; text: "✓"
+                                    color: Commons.Appearance.colors.base
+                                    font.pixelSize: 10; font.bold: true
+                                }
                             }
                         }
                         RowLayout {
@@ -273,19 +263,12 @@ Item {
         Layout.fillWidth: true
         spacing: 6
         SLabel { text: fr.label }
-        Flow {
+        SegmentedControl {
             Layout.fillWidth: true
-            spacing: 6
-            Repeater {
-                model: fr.flavors
-                delegate: GlassButton {
-                    id: flavorPill
-                    required property var modelData
-                    active: fr.current === modelData.id
-                    text: modelData.label
-                    onClicked: fr.pick(flavorPill.modelData.id)
-                }
-            }
+            Layout.preferredHeight: 30
+            model: fr.flavors
+            currentIndex: Math.max(0, fr.flavors.findIndex(function(f) { return f.id === fr.current }))
+            onActivated: index => fr.pick(fr.flavors[index].id)
         }
     }
 
