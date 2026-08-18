@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../../../../Commons" as Commons
+import "../../../../Commons/Primitives"
 import "../../../../Services/Shell" as ShellServices
 import "../../../../Widgets/Appearance" as Appearance
 
@@ -61,52 +62,14 @@ Item {
                 anchors.fill: parent
                 spacing: 6
 
-            Repeater {
+            // Page selector — shared segmented control (see SegmentedControl).
+            SegmentedControl {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 30
                 model: root._tabs
-                delegate: Rectangle {
-                    required property var modelData
-                    required property int index
-                    readonly property bool _on: root.tab === index
-                    property bool _hov: false
-                    // Equal fill-width so all three always fit (no pill can be
-                    // pushed off-panel) and they scale to any panel width.
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 30
-                    radius: Commons.Appearance.radius.base
-                    color: _on ? Commons.Appearance.colors.accentAlpha
-                         : (_hov ? Commons.Appearance.colors.surface0 : "transparent")
-                    border.color: _on ? Commons.Appearance.colors.accentBorder : "transparent"
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-
-                    Row {
-                        id: _tabRow
-                        anchors.centerIn: parent
-                        spacing: 6
-                        Text {
-                            text: modelData.glyph
-                            color: parent.parent._on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext0
-                            font.pixelSize: 14; font.family: Commons.Appearance.font.family
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                        Text {
-                            visible: !root._vertical
-                            text: modelData.label
-                            color: parent.parent._on ? Commons.Appearance.colors.text : Commons.Appearance.colors.subtext0
-                            font.pixelSize: Commons.Appearance.font.sizeBase
-                            font.family: Commons.Appearance.font.family
-                            font.weight: parent.parent._on ? Font.Medium : Font.Normal
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-                    MouseArea {
-                        anchors.fill: parent; hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onEntered: parent._hov = true
-                        onExited:  parent._hov = false
-                        onClicked: root.tab = index
-                    }
-                }
+                currentIndex: root.tab
+                iconOnly: root._vertical
+                onActivated: index => root.tab = index
             }
 
             Rectangle {

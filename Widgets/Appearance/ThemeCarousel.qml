@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
 import "../../Commons" as Commons
+import "../../Commons/Primitives"
 import "../../Services/Theming" as Theming
 
 // Sprint 26 — compact theme picker for the quick-switcher panel: a snap-to-
@@ -38,106 +39,59 @@ Item {
     readonly property var _accents: _cat.accentsFor(_cs.family)
     readonly property string _activeAccent: _cs.accent || "mauve"
 
+    readonly property var _modes: [
+        { id: "dark",  label: "Dark",  glyph: "󰖔" },
+        { id: "light", label: "Light", glyph: "󰖨" },
+        { id: "auto",  label: "Auto",  glyph: "󰃟" }
+    ]
+
     ColumnLayout {
         id: col
         anchors.fill: parent
         spacing: 6
 
         // ── Mode toggle ─────────────────────────────────────────────────────
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 6
-            Repeater {
-                model: [
-                    { id: "dark",  label: "Dark",  glyph: "󰖔" },
-                    { id: "light", label: "Light", glyph: "󰖨" },
-                    { id: "auto",  label: "Auto",  glyph: "󰃟" }
-                ]
-                delegate: Rectangle {
-                    required property var modelData
-                    readonly property bool _on: root._cs.mode === modelData.id
-                    Layout.fillWidth: true
-                    implicitHeight: 28
-                    radius: Commons.Appearance.radius.base
-                    color: _on ? Commons.Appearance.colors.accentAlpha
-                         : (_mma.containsMouse ? Commons.Appearance.colors.surface0 : Commons.Appearance.colors.base)
-                    border.color: _on ? Commons.Appearance.colors.accentBorder : "transparent"
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-                    RowLayout {
-                        anchors.centerIn: parent
-                        spacing: 6
-                        Text {
-                            text: modelData.glyph
-                            color: parent.parent._on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext0
-                            font.pixelSize: 13; font.family: Commons.Appearance.font.family
-                        }
-                        Text {
-                            text: modelData.label
-                            color: parent.parent._on ? Commons.Appearance.colors.text : Commons.Appearance.colors.subtext0
-                            font.pixelSize: Commons.Appearance.font.sizeBase; font.family: Commons.Appearance.font.family
-                            font.weight: parent.parent._on ? Font.Medium : Font.Normal
-                        }
-                    }
-                    MouseArea {
-                        id: _mma; anchors.fill: parent; hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root._cs.setMode(modelData.id)
-                    }
-                }
-            }
+        // Shared segmented control — same language as the panel's page selector,
+        // but a COMPACT secondary (the page selector is the primary full-width
+        // bar). Centred so the whole control cluster shares the carousel's
+        // vertical axis instead of hugging the left edge.
+        SegmentedControl {
+            Layout.fillWidth: root.vertical
+            Layout.preferredWidth: root.vertical ? 0 : 280
+            Layout.preferredHeight: 30
+            Layout.alignment: Qt.AlignHCenter
+            model: root._modes
+            iconOnly: root.vertical
+            currentIndex: Math.max(0, root._modes.findIndex(function(m) { return m.id === root._cs.mode }))
+            onActivated: index => root._cs.setMode(root._modes[index].id)
         }
 
-        // ── Contextual rows (flavor + accent) ────────────────────────────────
-        // Reserved height when horizontal so the carousel below keeps a constant
-        // size whether or not these are shown — switching families never resizes
-        // the tiles. Natural height when vertical (tiles size off width there, and
-        // the accent dots may wrap to several rows in a narrow panel).
-        Item {
-            Layout.fillWidth: true
-            Layout.preferredHeight: root.vertical ? _rows.implicitHeight : 58
-            ColumnLayout {
-                id: _rows
-                anchors { left: parent.left; right: parent.right; top: parent.top }
-                spacing: 6
+        // ── Contextual controls (flavor + accent) ────────────────────────────
+        // Shown ONLY when the selected family offers the choice, and collapse to
+        // zero height otherwise (a Layout skips invisible children) — a flavour/
+        // accent-less family leaves NO blank gap; the carousel just fills it.
+        // Both centred on the carousel axis.
 
-        // ── Flavor (only when this family+mode offers a choice) ──────────────
-        Flow {
-            Layout.fillWidth: true
+        // Flavor — reuse the segmented control (pick-one-of-N), so it matches the
+        // mode toggle and is width-stable: switching never shifts the row.
+        SegmentedControl {
+            Layout.fillWidth: root.vertical
+            Layout.preferredWidth: root.vertical ? 0 : Math.min(92 * root._flavors.length, 300)
+            Layout.preferredHeight: 28
+            Layout.alignment: Qt.AlignHCenter
             visible: root._flavors.length > 1
-            spacing: 6
-            Repeater {
-                model: root._flavors
-                delegate: Rectangle {
-                    required property var modelData
-                    readonly property bool _on: root._curFlavor === modelData.id
-                    implicitWidth: _ft.implicitWidth + 22; implicitHeight: 26
-                    radius: 13
-                    color: _on ? Commons.Appearance.colors.accentAlpha
-                         : (_fma.containsMouse ? Commons.Appearance.colors.surface1 : Commons.Appearance.colors.surface0)
-                    border.color: _on ? Commons.Appearance.colors.accentBorder : "transparent"
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-                    Text {
-                        id: _ft
-                        anchors.centerIn: parent
-                        text: modelData.label
-                        color: parent._on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext1
-                        font.pixelSize: Commons.Appearance.font.sizeSm
-                        font.family: Commons.Appearance.font.family
-                    }
-                    MouseArea {
-                        id: _fma; anchors.fill: parent; hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root._pickFlavor(modelData.id)
-                    }
-                }
-            }
+            model: root._flavors
+            iconOnly: root.vertical
+            currentIndex: Math.max(0, root._flavors.findIndex(function(f) { return f.id === root._curFlavor }))
+            onActivated: index => root._pickFlavor(root._flavors[index].id)
         }
 
-        // ── Accent (accent-capable families only — currently Catppuccin) ─────
+        // Accent dots (accent-capable families only — currently Catppuccin).
+        // Fixed-size dots (selection grows the border inward), so the centred row
+        // never shifts either.
         Flow {
-            Layout.fillWidth: true
+            Layout.fillWidth: root.vertical
+            Layout.alignment: Qt.AlignHCenter
             visible: root._accents.length > 0
             spacing: 8
             Repeater {
@@ -159,8 +113,6 @@ Item {
                 }
             }
         }
-            }   // ColumnLayout _rows
-        }       // reserved-height Item
 
         // ── Family carousel ─────────────────────────────────────────────────
         // Fills the space left after the mode toggle + reserved rows zone. Since
