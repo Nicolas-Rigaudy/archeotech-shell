@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Shapes
 import QtQuick.Effects
 import "../../Commons" as Commons
+import "../../Commons/Primitives"
 import "../../Services/Networking" as NetworkServices
 
 // Bluetooth popup — adapter toggle, paired device list, connect/disconnect.
@@ -33,17 +34,8 @@ Item {
     Behavior on scale   { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
     Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
-    // Soft lift — same RectangularShadow as the system cards, behind the body
-    // only so the neck still fuses to the bar (see WifiPopup). shadowStrength-gated.
-    RectangularShadow {
-        x: card._r; y: 0
-        width: card._bw; height: card.height
-        radius: card._rb
-        blur:   16
-        offset: Qt.vector2d(0, 4)
-        spread: 0
-        color:  Qt.rgba(0, 0, 0, 0.45 * Commons.Appearance.shadowStrength)
-    }
+    // Soft downward lift — shared neck-panel shadow (top-attached).
+    PanelShadow { side: "top"; perpInset: card._r; cornerRadius: card._rb }
 
     Shape {
         id: cardShape

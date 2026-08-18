@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Shapes
+import QtQuick.Effects
 import "../../../Commons" as Commons
+import "../../../Commons/Primitives"
 import "../../../Services/Shell" as ShellServices
 import "../Panels" as Panels
 
@@ -231,6 +233,18 @@ Item {
         anchors.bottom: (!strip._horizontal || strip.side === "bottom") ? parent.bottom : undefined
         width:  strip._horizontal ? undefined : strip.collapsedSize
         height: strip._horizontal ? strip.collapsedSize : undefined
+    }
+
+    // Soft downward lift for the floating panel — shared neck-panel shadow (one
+    // light from above; cuts the top + strip-seam edges). Sibling (the card can't
+    // be layered, see below), so pass the card's geometry + fade explicitly.
+    PanelShadow {
+        side: strip.side
+        perpInset: strip._r
+        cornerRadius: strip._rb
+        panelX: card.x; panelY: card.y; panelW: card.width; panelH: card.height
+        opacity: card.opacity
+        visible: card.visible
     }
 
     // ── Card (popup → panel) ───────────────────────────────────────────────────

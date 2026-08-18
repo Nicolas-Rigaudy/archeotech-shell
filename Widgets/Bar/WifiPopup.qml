@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Shapes
 import QtQuick.Effects
 import "../../Commons" as Commons
+import "../../Commons/Primitives"
 import "../../Services/Networking" as NetworkServices
 import "../../Services/Shell" as ShellServices
 
@@ -38,19 +39,9 @@ Item {
     Behavior on scale   { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
     Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
-    // Soft lift — the SAME RectangularShadow the system cards use (blur 16 /
-    // (0,4) / 0.45α), sat behind the popup BODY only (the flat neck flares out to
-    // the bar above, so the shadow stops at the body and never strips the seam).
-    // shadowStrength-gated → flat mode drops it.
-    RectangularShadow {
-        x: card._r; y: 0
-        width: card._bw; height: card.height
-        radius: card._rb
-        blur:   16
-        offset: Qt.vector2d(0, 4)
-        spread: 0
-        color:  Qt.rgba(0, 0, 0, 0.45 * Commons.Appearance.shadowStrength)
-    }
+    // Soft downward lift — shared neck-panel shadow (cuts the top/attach seam,
+    // one light from above). Top-attached.
+    PanelShadow { side: "top"; perpInset: card._r; cornerRadius: card._rb }
 
     Shape {
         id: cardShape

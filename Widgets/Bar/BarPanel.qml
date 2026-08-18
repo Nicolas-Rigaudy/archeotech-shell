@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Shapes
+import QtQuick.Effects
 import "../../Commons" as Commons
+import "../../Commons/Primitives"
 import "../../Services/Shell" as ShellServices
 import "../../Modules/Shell/Panels" as Panels
 
@@ -93,6 +95,9 @@ Item {
     // Claim activeFocus explicitly on open — the declarative `focus` binding
     // doesn't always win it, so Esc wouldn't reach this handler.
     on_OpenChanged: if (root._open) root.forceActiveFocus()
+
+    // Soft downward lift — shared neck-panel shadow (side-aware, one light from above).
+    PanelShadow { side: root._side; perpInset: root._r; cornerRadius: root._r }
 
     // ── Neck card (same geometry as Strip.qml's card) ──────────────────────────
     Shape {
