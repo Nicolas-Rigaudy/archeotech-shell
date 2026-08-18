@@ -221,15 +221,25 @@ switching flavor jumped (active pill went `Font.Medium` → row rewidth) + a fix
 reserved zone left a blank gap for flavour/accent-less families. Fixed: cluster centred
 on the carousel axis; flavor is now a `SegmentedControl` (equal segments → width-stable,
 no jump); contextual zone inlined so invisible rows collapse to zero height (no blank gap).
-**Deferred:** popup neck-card **shaped** drop-shadow
-(Shape-based, not RectangularShadow — the neck pokes out), media **album-art lift** +
-**3D progress knob** (both want a small layout wrapper). All unverified surfaces: use the
-direct-mount harness (below) to check headlessly.
+✅ **Popup lift** (`bdb0a29`, feel-confirmed) — wifi/bt/calendar. The "shaped
+shadow" worry was moot: the neck **flares OUT** to a full-width top and pinches to a
+`_bw` body, so a plain `RectangularShadow` behind the BODY (x `_r`, width `_bw`,
+radius `_rb`) is clean — the flare covers it at the top and the neck still fuses to
+the bar (no seam strip). Same params as the system cards (`blur16/(0,4)/0.45α`,
+`shadowStrength`-gated). Wrap the root neck-`Shape` in an `Item` (keep id `card` so
+content refs survive; AA `layer` moves to the inner `Shape`). Dead end: a `MultiEffect`
+layer shadow followed the alpha but haloed up into the bar seam and, when biased
+downward to fix that, left a gap above + a fat bottom — RectangularShadow like the
+rest is the right call.
+**Deferred:** media **album-art lift** + **3D progress knob** (both want a small
+layout wrapper). All unverified surfaces: use the direct-mount harness (below).
 
 Two reusable wins:
 - **Popups ARE headless-viewable** — direct-mount a popup in a `qs -p` harness with a
   stub `holderRoot` (`_wifiPopupVisible: true`, `side: "top"`, a `screen{height}`); no
   live bar/IPC needed. Same trick as the layout-picker body. (Extends testing Block 2.)
+  **Add a fake bar strip** (a 30px `Rectangle` at the top) to the harness — without it
+  you can't see the neck-to-bar seam, which is exactly where popup-shadow bugs live.
 - **`ponytail:` debt** — the screen-space sheen (`_winY`/`_winH` + mapped gradient) is now
   copy-pasted in 6 cards (FrameBackground/Strip/BarPanel/Wifi/Bt/Calendar/HoverCard).
   Extract a shared `GlassSheen` helper so none drift back to a local ramp.
