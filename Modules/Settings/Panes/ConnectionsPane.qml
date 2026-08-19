@@ -40,14 +40,17 @@ Item {
                 width: root.width - 48
                 spacing: 6
 
-                // ── Segmented Wi-Fi | Bluetooth tabs ──────────────────────────
-                RowLayout {
-                    Layout.fillWidth: true
+                // ── Wi-Fi | Bluetooth tabs — shared SegmentedControl ──────────
+                SegmentedControl {
+                    Layout.preferredWidth: 260
+                    Layout.preferredHeight: 30
                     Layout.bottomMargin: 4
-                    spacing: 6
-                    TabButton { label: "Wi-Fi";     glyph: "󰖩"; idx: 0 }
-                    TabButton { label: "Bluetooth"; glyph: "󰂯"; idx: 1 }
-                    Item { Layout.fillWidth: true }
+                    model: [
+                        { label: "Wi-Fi",     glyph: "󰖩" },
+                        { label: "Bluetooth", glyph: "󰂯" }
+                    ]
+                    currentIndex: root._tab
+                    onActivated: index => root._tab = index
                 }
 
                 // ── WiFi ──────────────────────────────────────────────────────
@@ -619,27 +622,4 @@ Item {
         font.letterSpacing: 1.5
     }
 
-    // Segmented tab button (Wi-Fi | Bluetooth).
-    component TabButton: GlassButton {
-        id: tabBtn
-        required property string label
-        required property string glyph
-        required property int idx
-        active: root._tab === idx
-        onClicked: root._tab = tabBtn.idx
-        RowLayout {
-            spacing: 7
-            Text {
-                text: tabBtn.glyph
-                color: tabBtn.active ? Commons.Appearance.colors.base : Commons.Appearance.colors.subtext0
-                font.pixelSize: 13; font.family: Commons.Appearance.font.family
-            }
-            Text {
-                text: tabBtn.label
-                color: tabBtn.active ? Commons.Appearance.colors.base : Commons.Appearance.colors.subtext0
-                font.pixelSize: Commons.Appearance.font.sizeBase; font.family: Commons.Appearance.font.family
-                font.weight: tabBtn.active ? Font.Medium : Font.Normal
-            }
-        }
-    }
 }
