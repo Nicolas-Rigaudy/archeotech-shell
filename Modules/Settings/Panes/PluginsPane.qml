@@ -126,12 +126,14 @@ Item {
                                             visible: modCard.modelData.verified === true
                                             height: 16; width: _vt.implicitWidth + 12
                                             radius: Commons.Appearance.radius.sm
-                                            color: Commons.Appearance.colors.accentAlpha
+                                            // Accent fill + base glyph (matches the ✓ theme-card
+                                            // badges), not accent-on-accentAlpha.
+                                            color: Commons.Appearance.colors.accent
                                             Text {
                                                 id: _vt
                                                 anchors.centerIn: parent
                                                 text: "󰄬 Verified"
-                                                color: Commons.Appearance.colors.accent
+                                                color: Commons.Appearance.colors.base
                                                 font.family: Commons.Appearance.font.family
                                                 font.pixelSize: Commons.Appearance.font.sizeSm
                                             }

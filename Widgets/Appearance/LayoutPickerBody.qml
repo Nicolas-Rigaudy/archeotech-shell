@@ -190,7 +190,10 @@ Item {
                     anchors.fill: parent
                     anchors.margins: Commons.Appearance.spacing.sm
                     radius: Commons.Appearance.radius.lg
-                    color: cell._active ? Commons.Appearance.colors.accentAlpha
+                    // Selected = surfaceWarm + accent border (below), NOT an accent
+                    // fill — so the accent label/diagram read clearly, not accent-
+                    // on-accent. The 3px accent border marks active vs hover.
+                    color: cell._active ? Commons.Appearance.colors.surfaceWarm
                          : (cell._hov ? Commons.Appearance.colors.surfaceWarm
                                       : Commons.Appearance.colors.surfaceCard)
                     border.width: cell._active ? 3 : (cell._hov || cell._cursor ? 2 : 1)

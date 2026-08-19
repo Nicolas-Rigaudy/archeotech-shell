@@ -99,15 +99,36 @@ Item {
             spacing: 8
             Repeater {
                 model: root._accents
-                delegate: Rectangle {
+                delegate: Item {
+                    id: swatch
                     required property string modelData
                     readonly property bool _on: root._activeAccent === modelData
                     readonly property color _swatch: Commons.Appearance.colors[modelData] || Commons.Appearance.colors.accent
-                    width: 24; height: 24; radius: 12
-                    color: _swatch
-                    border.width: _on ? 3 : (_ama.containsMouse ? 2 : 0)
-                    border.color: Commons.Appearance.colors.text
-                    Behavior on border.width { NumberAnimation { duration: Commons.Appearance.anim.fast } }
+                    width: 24; height: 24
+                    // Raised dot — same recipe as the ColorSchemeBody accent
+                    // swatches (top-lit sphere + lift shadow + press pulse) so both
+                    // accent pickers are identical. Shadow gated on shadowStrength.
+                    RectangularShadow {
+                        anchors.fill: dot
+                        radius: dot.radius
+                        blur: 7; offset: Qt.vector2d(0, 1.5); spread: 0
+                        color: Qt.rgba(0, 0, 0, 0.5 * Commons.Appearance.shadowStrength)
+                    }
+                    Rectangle {
+                        id: dot
+                        anchors.fill: parent
+                        radius: 12
+                        antialiasing: true
+                        gradient: Gradient {
+                            GradientStop { position: 0.0; color: Qt.lighter(swatch._swatch, 1.18) }
+                            GradientStop { position: 1.0; color: Qt.darker(swatch._swatch, 1.12) }
+                        }
+                        border.width: swatch._on ? 3 : (_ama.containsMouse ? 2 : 0)
+                        border.color: Commons.Appearance.colors.text
+                        Behavior on border.width { NumberAnimation { duration: Commons.Appearance.anim.fast } }
+                        scale: _ama.pressed ? 0.92 : (_ama.containsMouse ? 1.08 : 1.0)
+                        Behavior on scale { NumberAnimation { duration: Commons.Appearance.anim.fast } }
+                    }
                     MouseArea {
                         id: _ama; anchors.fill: parent; hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor

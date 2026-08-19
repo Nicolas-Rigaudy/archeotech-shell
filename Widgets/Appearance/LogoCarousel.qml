@@ -143,7 +143,8 @@ Item {
             Rectangle {
                 anchors.fill: parent
                 radius: Commons.Appearance.radius.md
-                color: cell._active ? Commons.Appearance.colors.accentAlpha : Commons.Appearance.colors.surface0
+                // Selected = surfaceWarm + accent border (not accent-on-accent).
+                color: cell._active ? Commons.Appearance.colors.surfaceWarm : Commons.Appearance.colors.surface0
                 border.width: cell._active ? 2 : (cell._current ? 1 : 0)
                 border.color: Commons.Appearance.colors.accent
                 Behavior on color        { ColorAnimation  { duration: Commons.Appearance.anim.fast } }
