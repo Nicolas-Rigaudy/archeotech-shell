@@ -41,22 +41,18 @@ Item {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: Commons.Appearance.spacing.lg
-        // No gap below the header when vertical, so the carousel's top card
-        // peeks straight up behind the header backing (occluded) with no strip
-        // of it showing in a gap.
-        spacing: root._vertical ? 0 : Commons.Appearance.spacing.md
+        // Carousels are height-fitted now (their top card no longer peeks up into
+        // the header), so the header needs no occluding backing and the layout
+        // keeps its normal gap in both orientations.
+        spacing: Commons.Appearance.spacing.md
 
         // Header — tab bar + shortcut to full appearance settings. A RowLayout
         // (not absolute anchors) so the tabs and the More button can never
         // overlap; labels collapse to icons when vertical (narrow side panels).
-        // Backed + drawn above the carousel in vertical mode so the top card
-        // peeking up is occluded here — clipping only the top edge, while the
-        // bottom card still peeks off the panel.
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 32
-            z: 1
-            color: root._vertical ? Commons.Appearance.colors.glassBgLight : "transparent"
+            color: "transparent"
 
             RowLayout {
                 anchors.fill: parent

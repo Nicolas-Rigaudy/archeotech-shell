@@ -17,12 +17,29 @@ PathView {
     // (top/bottom panels). Callers pass !panelRoot._horizontal.
     property bool vertical: false
     readonly property int _half: itemSpacing * pathItemCount / 2
+    // Along-track viewport — height in a side panel, width in a top/bottom bar.
+    readonly property real _trackExtent: vertical ? height : width
 
     // Accumulated scroll delta — touchpads emit many tiny events, so we advance
     // one item only per threshold instead of on every event (that caused jitter).
     property real _wheelAcc: 0
 
-    pathItemCount: Math.max(1, Math.min(5, count))
+    // Number of on-path tiles. Horizontally the track runs off the left/right
+    // SCREEN edges (clip:false, intended peek) so we always want the full 5 —
+    // overflow there is harmless. VERTICALLY the top of the track sits under the
+    // mode/flavor/accent rows, so an over-long track bleeds up through them; there
+    // we cap to what the along-track viewport holds at the natural itemSpacing
+    // (short panel → fewer neighbours, spacing unchanged, no overlap).
+    // Result MUST stay odd: this is a centre-hero carousel (highlight range 0.5),
+    // so an even count pushes the hero off-centre → asymmetric neighbours + a cut
+    // edge tile. Round any capped value down to the nearest odd number.
+    readonly property int _maxOnPath: {
+        var n = Math.min(5, count)
+        if (vertical) n = Math.min(n, Math.floor(_trackExtent / itemSpacing))
+        if (n % 2 === 0) n -= 1          // even → nearest lower odd
+        return Math.max(1, n)
+    }
+    pathItemCount: _maxOnPath
     cacheItemCount: 4
     snapMode: PathView.SnapToItem
     highlightRangeMode: PathView.StrictlyEnforceRange

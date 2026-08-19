@@ -165,16 +165,31 @@ Item {
             Layout.preferredHeight: root.carouselHeight > 0 ? root.carouselHeight : 200
             model: root.wallpapers
             vertical: root.vertical
-            // Advance ≈ 0.86–0.9× the item's along-track extent so neighbours
-            // tuck slightly under the enlarged centre. Sizes are capped (see the
-            // delegate) so a large panel centres the strip instead of ballooning.
+            // Tile cross-axis extent (drives both spacing and the delegate size,
+            // so they can't diverge). Vertically the tiles STACK, so cap the cross
+            // by the panel height too (·0.5 → along-track tile ≈ height/3): that
+            // lets ~3 thumbnails fit instead of one big tile crowding the others
+            // out of a short side panel. Horizontally it's the old height-derived
+            // width. Landscape 3:2 either way.
+            readonly property int _tileCross: root.vertical
+                ? Math.min(grid.width - 24, 300, Math.floor(grid.height * 0.5))
+                : Math.min(grid.height - 24, 190)
+            // 0.95 (matches horizontal) → a real gap between tiles, not overlap.
+            // Safe against bleed because _tileCross is height-capped above.
             itemSpacing: root.vertical
-                ? Math.floor(Math.min(grid.width  - 24, 300) * 2 / 3 * 0.98)
-                : Math.floor(Math.min(grid.height - 24, 190) * 3 / 2 * 0.95)
+                ? Math.floor(_tileCross * 2 / 3 * 0.95)
+                : Math.floor(_tileCross * 3 / 2 * 0.95)
 
-            // Start centred on the applied wallpaper.
+            // Start centred on the applied wallpaper. The current path is read
+            // asynchronously (currentReader), so it usually lands AFTER these two
+            // fire — re-centre when it does, else the picker opens on item 0
+            // instead of the active wallpaper. (Theme/Logo carousels do the same.)
             onModelChanged: _syncCurrent()
             Component.onCompleted: _syncCurrent()
+            Connections {
+                target: root
+                function onCurrentPathChanged() { grid._syncCurrent() }
+            }
             function _syncCurrent() {
                 var i = root.wallpapers.findIndex(function(w) { return w.path === root.currentPath })
                 // StrictlyEnforceRange + highlight 0.5 auto-centres currentIndex.
@@ -188,11 +203,9 @@ Item {
 
                 readonly property bool _current: PathView.isCurrentItem
                 readonly property bool _active:  root.currentPath === modelData.path
-                // Size from the cross-axis: height when horizontal, width when
-                // vertical. Landscape 3:2 either way.
-                readonly property int  _cross: root.vertical
-                    ? Math.min(grid.width  - 24, 300)
-                    : Math.min(grid.height - 24, 190)
+                // Size from the shared cross extent (capped by height in vertical
+                // so thumbnails stack). Landscape 3:2 either way.
+                readonly property int  _cross: grid._tileCross
                 readonly property int  _w: root.vertical ? _cross : Math.floor(_cross * 3 / 2)
                 readonly property int  _h: root.vertical ? Math.floor(_cross * 2 / 3) : _cross
 

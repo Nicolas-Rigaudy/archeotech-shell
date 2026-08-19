@@ -81,7 +81,10 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             visible: root._flavors.length > 1
             model: root._flavors
-            iconOnly: root.vertical
+            // Flavors have NO glyphs (Macchiato/Mocha/…), so icon-only would render
+            // blank pills — always show their text labels, even in a vertical panel
+            // (the control is full-width there, so the names fit).
+            iconOnly: false
             currentIndex: Math.max(0, root._flavors.findIndex(function(f) { return f.id === root._curFlavor }))
             onActivated: index => root._pickFlavor(root._flavors[index].id)
         }
@@ -123,12 +126,26 @@ Item {
             id: strip
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.minimumHeight: root.vertical ? 200 : 96
+            // Only a horizontal floor — vertical tiles now size off the panel
+            // height, so the old ·200 vertical floor (which forced overflow in a
+            // short side panel) is gone.
+            Layout.minimumHeight: root.vertical ? 0 : 96
             model: root._cat.families
             vertical: root.vertical
+            // Tile cross-axis extent (drives both spacing and the delegate size,
+            // so they can never diverge). Vertically the tiles STACK, so cap the
+            // cross by the panel height too (·0.5 → along-track tile ≈ height/3):
+            // that lets ~3 tiles fit instead of one big tile crowding the others
+            // out of a short side panel. Horizontally it's the old height-derived
+            // width. Landscape 3:2 either way.
+            readonly property int _tileCross: root.vertical
+                ? Math.min(strip.width - 12, 260, Math.floor(strip.height * 0.5))
+                : Math.min(strip.height - 12, 150)
+            // 0.95 (matches horizontal) → a real gap between tiles, not overlap.
+            // Safe against bleed because _tileCross is height-capped above.
             itemSpacing: root.vertical
-                ? Math.floor(Math.min(strip.width  - 12, 260) * 2 / 3 * 0.98)
-                : Math.floor(Math.min(strip.height - 12, 150) * 3 / 2 * 0.95)
+                ? Math.floor(_tileCross * 2 / 3 * 0.95)
+                : Math.floor(_tileCross * 3 / 2 * 0.95)
 
             onModelChanged: _sync()
             Component.onCompleted: _sync()
@@ -148,10 +165,9 @@ Item {
                 required property int index
                 readonly property bool _current: PathView.isCurrentItem
                 readonly property bool _active:  root._cs.family === modelData.id
-                // Size off the cross-axis; landscape 3:2 either orientation.
-                readonly property int  _cross: root.vertical
-                    ? Math.min(strip.width  - 12, 260)
-                    : Math.min(strip.height - 12, 150)
+                // Size off the shared cross extent (capped by height in vertical
+                // so tiles stack); landscape 3:2 either orientation.
+                readonly property int  _cross: strip._tileCross
                 readonly property int  _w: root.vertical ? _cross : Math.floor(_cross * 3 / 2)
                 readonly property int  _h: root.vertical ? Math.floor(_cross * 2 / 3) : _cross
 
