@@ -229,7 +229,7 @@ Item {
 
                                     Text {
                                         text: modelData.connected ? "󰂱" : "󰂯"
-                                        color: modelData.connected ? Commons.Appearance.colors.mauve : Commons.Appearance.colors.overlay0
+                                        color: modelData.connected ? Commons.Appearance.colors.accent : Commons.Appearance.colors.overlay0
                                         font.pixelSize: 16; font.family: Commons.Appearance.font.family
                                         Layout.alignment: Qt.AlignVCenter
                                         Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
@@ -253,7 +253,7 @@ Item {
                                             text: "Connected"
                                                 + (modelData.battery !== undefined && modelData.battery !== null
                                                    ? "  ·  󰁹 " + modelData.battery + "%" : "")
-                                            color: Commons.Appearance.colors.mauve
+                                            color: Commons.Appearance.colors.accent
                                             font.pixelSize: Commons.Appearance.font.sizeSm
                                             font.family: Commons.Appearance.font.family
                                         }
@@ -305,7 +305,7 @@ Item {
                                             Text {
                                                 id: btActionTxt
                                                 text: modelData.connected ? "Disconnect" : "Connect"
-                                                color: modelData.connected ? Commons.Appearance.colors.red : Commons.Appearance.colors.mauve
+                                                color: modelData.connected ? Commons.Appearance.colors.red : Commons.Appearance.colors.accent
                                                 font.pixelSize: Commons.Appearance.font.sizeSm
                                                 font.family: Commons.Appearance.font.family
                                             }
@@ -407,7 +407,7 @@ Item {
                                             onClicked: NetworkServices.Bluetooth.pairDevice(modelData.address)
                                             Text {
                                                 id: pairTxt
-                                                text: "Pair"; color: Commons.Appearance.colors.mauve
+                                                text: "Pair"; color: Commons.Appearance.colors.accent
                                                 font.pixelSize: Commons.Appearance.font.sizeSm
                                                 font.family: Commons.Appearance.font.family
                                             }
@@ -513,7 +513,7 @@ Item {
                     Text {
                         id: actionTxt
                         text: modelData.active ? "Disconnect" : "Connect"
-                        color: modelData.active ? Commons.Appearance.colors.red : Commons.Appearance.colors.mauve
+                        color: modelData.active ? Commons.Appearance.colors.red : Commons.Appearance.colors.accent
                         font.pixelSize: Commons.Appearance.font.sizeSm
                         font.family: Commons.Appearance.font.family
                     }

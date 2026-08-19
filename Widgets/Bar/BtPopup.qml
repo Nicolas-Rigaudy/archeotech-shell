@@ -85,7 +85,7 @@ Item {
                 anchors.fill: parent; spacing: 8
                 Rectangle {
                     width: 28; height: 28; radius: Commons.Appearance.radius.base
-                    color: NetworkServices.Bluetooth.enabled ? Commons.Appearance.colors.mauve : Commons.Appearance.colors.surface0
+                    color: NetworkServices.Bluetooth.enabled ? Commons.Appearance.colors.accent : Commons.Appearance.colors.surface0
                     Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                     Text {
                         anchors.centerIn: parent
@@ -156,7 +156,7 @@ Item {
                     anchors.fill: parent; spacing: 8
                     Text {
                         text: modelData.connected ? "󰂱" : "󰂯"
-                        color: modelData.connected ? Commons.Appearance.colors.mauve : Commons.Appearance.colors.overlay0
+                        color: modelData.connected ? Commons.Appearance.colors.accent : Commons.Appearance.colors.overlay0
                         font.pixelSize: 14; font.family: Commons.Appearance.font.family
                     }
                     Text {
@@ -204,7 +204,7 @@ Item {
                             Text {
                                 id: _btDevLbl; anchors.centerIn: parent
                                 text: modelData.connected ? "Disconnect" : "Connect"
-                                color: modelData.connected ? Commons.Appearance.colors.red : Commons.Appearance.colors.mauve
+                                color: modelData.connected ? Commons.Appearance.colors.red : Commons.Appearance.colors.accent
                                 font.pixelSize: Commons.Appearance.font.sizeSm - 1; font.family: Commons.Appearance.font.family
                             }
                             MouseArea {

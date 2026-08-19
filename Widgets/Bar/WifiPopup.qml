@@ -191,7 +191,7 @@ Item {
                                 text: modelData.active ? "Disconnect" : (_needsPw ? "Open CC" : "Connect")
                                 color: modelData.active ? Commons.Appearance.colors.red
                                     : _needsPw ? Commons.Appearance.colors.subtext0
-                                    : Commons.Appearance.colors.mauve
+                                    : Commons.Appearance.colors.accent
                                 font.pixelSize: Commons.Appearance.font.sizeSm - 1; font.family: Commons.Appearance.font.family
                             }
                             MouseArea {
@@ -220,7 +220,7 @@ Item {
             Text {
                 anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
                 text: NetworkServices.Network.scanning ? "Scanning…" : "󰑙  Rescan"
-                color: NetworkServices.Network.scanning ? Commons.Appearance.colors.overlay0 : Commons.Appearance.colors.mauve
+                color: NetworkServices.Network.scanning ? Commons.Appearance.colors.overlay0 : Commons.Appearance.colors.accent
                 font.pixelSize: Commons.Appearance.font.sizeSm - 1; font.family: Commons.Appearance.font.family
                 MouseArea {
                     anchors.fill: parent; anchors.margins: -4
