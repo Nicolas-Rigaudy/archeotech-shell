@@ -138,8 +138,17 @@ def apply_kitty(theme: dict, vars: Dict[str, str]) -> None:
     # light themes must be (near-)opaque — at the dark transparency the
     # wallpaper shows through and dark-on-light text is unreadable. kitty.conf
     # no longer hardcodes opacity; it lives here, after the include.
+    content = src.read_text()
+    # Accent picker (Catppuccin): make the active tab + mark2 follow the chosen
+    # accent instead of the package's baked mauve. apply_accent stored the hex
+    # under theme['kitty']['accent']; absent it, the baked colors stay untouched.
+    accent_hex = theme.get("kitty", {}).get("accent")
+    if accent_hex:
+        for key in ("active_tab_background", "mark2_background"):
+            content = re.sub(rf"(?m)^({key}\s+)#[0-9A-Fa-f]{{6}}",
+                             rf"\g<1>{accent_hex}", content)
     opacity = "0.9" if theme.get("mode") == "light" else "0.6"
-    content = (src.read_text()
+    content = (content
                + f"\n# Theme-aware opacity (theme-switch.py): {theme.get('mode','dark')}\n"
                + f"background_opacity {opacity}\n")
     atomic_write(dst, content)
@@ -452,6 +461,11 @@ def apply_accent(theme: dict, vars: Dict[str, str], accent: str) -> None:
     # Obsidian accent = the resolved hex.
     if "obsidian" in theme:
         theme["obsidian"]["accent"] = hexv
+
+    # kitty: active tab + mark2 follow the accent (apply_kitty substitutes them).
+    # If this never runs (no accent override / non-Catppuccin family) the theme
+    # package's baked tab colors stay, so other families keep their own accent.
+    theme.setdefault("kitty", {})["accent"] = hexv
 
 
 def _gtk_theme_installed(name: str) -> bool:
