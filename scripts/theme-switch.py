@@ -194,11 +194,24 @@ def apply_mango(theme: dict, vars: Dict[str, str]) -> None:
         ("group_bar_decorate_fg_color",        txt),
         ("group_bar_decorate_focus_bg_color",  accent),
         ("group_bar_decorate_focus_fg_color",  base),
+        # Compositor cursor follows the accent (Catppuccin per-accent packages);
+        # apply_accent only sets this when the package is installed.
+        ("cursor_theme",  theme.get("cursor_theme")),
     ):
         if val:
             text = re.sub(rf"^{key}=.*$", f"{key}={val}", text, flags=re.M)
     atomic_write(path, text)
     mango_reload_preserving_kb()
+
+    # Login-time counterpart: keep XCURSOR_THEME (env.d) in sync with the
+    # compositor cursor — affects Xwayland/toolkits that read the env at launch
+    # (takes effect next login). Symlink-aware atomic_write writes through stow.
+    cur = theme.get("cursor_theme")
+    envf = HOME / ".config" / "environment.d" / "cursor.conf"
+    if cur and envf.exists():
+        et = re.sub(r"^XCURSOR_THEME=.*$", f"XCURSOR_THEME={cur}",
+                    envf.read_text(), flags=re.M)
+        atomic_write(envf, et)
 
 
 def apply_rofi(theme: dict, vars: Dict[str, str]) -> None:
@@ -467,9 +480,27 @@ def apply_accent(theme: dict, vars: Dict[str, str], accent: str) -> None:
     # package's baked tab colors stay, so other families keep their own accent.
     theme.setdefault("kitty", {})["accent"] = hexv
 
+    # System cursor (mango compositor + XCURSOR env): Catppuccin ships a cursor
+    # package per accent, so track it when installed. Independent of the GTK
+    # cursor above (gsettings, gated on the GTK *theme*). Missing package →
+    # leave the configured cursor so we never point at a cursor that isn't there.
+    if theme.get("family") == "catppuccin" and theme.get("flavor"):
+        cur = f"catppuccin-{theme['flavor']}-{accent}-cursors"
+        if _cursor_installed(cur):
+            theme["cursor_theme"] = cur
+        else:
+            warn(f"cursor theme '{cur}' not installed — keeping configured cursor")
+
 
 def _gtk_theme_installed(name: str) -> bool:
     for base in (HOME / ".themes", Path("/usr/share/themes")):
+        if (base / name).is_dir():
+            return True
+    return False
+
+
+def _cursor_installed(name: str) -> bool:
+    for base in (HOME / ".icons", HOME / ".local/share/icons", Path("/usr/share/icons")):
         if (base / name).is_dir():
             return True
     return False
