@@ -1,3 +1,7 @@
+//@ pragma UseQApplication
+// QApplication mode (QtWidgets) is required for platform menus — the tray
+// widget's right-click context menu (QsMenuAnchor) needs it. Harmless for the
+// rest of the shell (QApplication is a superset of QGuiApplication).
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io

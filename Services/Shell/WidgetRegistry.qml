@@ -33,6 +33,7 @@ QtObject {
         { id: "bluetooth",     name: "Bluetooth",          icon: "󰂯", bar: true,  strip: false },
         { id: "battery",       name: "Battery",            icon: "󰁹", bar: true,  strip: false },
         { id: "notifications", name: "Notifications",      icon: "󰂚", bar: true,  strip: false },
+        { id: "tray",          name: "System Tray",        icon: "󰀻", bar: true,  strip: false },
         { id: "settings",      name: "Settings",           icon: "󰒓", bar: true,  strip: true  },
         { id: "power",         name: "Power",              icon: "󰐥", bar: true,  strip: false },
         // Panel openers — placed directly (like strip icons); on a bar each drops
