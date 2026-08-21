@@ -32,7 +32,9 @@ while [ $# -gt 0 ]; do
   esac
 done
 OUT="${OUT:-/tmp/archeotech-shot.png}"
-rm -f "$OUT"
+RAW="$OUT.tmp"          # grim writes here first; atomic mv → OUT so the teardown
+                       # loop below never observes a half-written PNG (race fix).
+rm -f "$OUT" "$RAW"
 
 if [ -n "$QML" ]; then
   LAUNCH="qs -p '$QML'"
@@ -47,7 +49,7 @@ STARTUP="bash -c '
   sleep 2
   $LAUNCH > /tmp/archeotech-shot-qs.log 2>&1 &
   sleep $WAIT
-  grim \"$OUT\"
+  grim \"$RAW\" && sync && mv -f \"$RAW\" \"$OUT\"
 '"
 
 # Launch the nested headless compositor in the background; remember ITS pid.
