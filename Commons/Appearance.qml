@@ -36,7 +36,12 @@ QtObject {
         }
     }
 
+    // Colour lookup with pack overlay (adr_027 Layer A): the active pack's tokens
+    // win, then base theme.json, then the hardcoded fallback.
     function _c(key, fallback) {
+        var p = root._packData
+        if (p && p.colors && p.colors[key] !== undefined && p.colors[key] !== null)
+            return p.colors[key]
         var d = root._data
         return (d && d.colors && d.colors[key]) || fallback
     }
@@ -44,7 +49,9 @@ QtObject {
     // Palette color name that drives `accent` (Sprint 25 accent picker). The
     // theme's top-level `accent` key holds a color name (e.g. "blue"); falls
     // back to "mauve" so themes without the key behave as before.
-    readonly property string _accentName: (root._data && root._data.accent) || "mauve"
+    readonly property string _accentName:
+        (root._packData && root._packData.accent)
+        || (root._data && root._data.accent) || "mauve"
 
     function _rgba(key, fallback, alpha) {
         var c = Qt.color(root._c(key, fallback))
@@ -67,6 +74,41 @@ QtObject {
         var p = root._themePath
         root._themeFile.path = ""
         root._themeFile.path = p
+    }
+
+    // ── Active theme pack (adr_027 Layer A: token overlay) ───────────────────────
+    // A pack is a plugin-style dir under $XDG_DATA_HOME
+    // (~/.local/share/archeotech/packs/<id>/) shipping a tokens.json that OVERLAYS
+    // the base theme.json. `activePack` is a plain settable prop driven from
+    // shell.qml (bound to Persistence.Config "appearance.activePack"), same wiring
+    // as flatMode. Empty string = base look, no overlay. `inherits` chaining is not
+    // resolved yet — single-level overlay for now (Wave 1).
+    property string activePack: ""
+    property var _packData: ({})
+    onActivePackChanged: root._packData = ({})   // reset; _packFile repopulates if a tokens.json exists
+
+    readonly property string _packsDir:
+        StandardPaths.writableLocation(StandardPaths.GenericDataLocation) + "/archeotech/packs"
+
+    property FileView _packFile: FileView {
+        path: root.activePack ? (root._packsDir + "/" + root.activePack + "/tokens.json") : ""
+        watchChanges: true
+        preload: true
+        printErrors: false
+        onTextChanged: {
+            var content = text()
+            if (!content || !content.trim()) { root._packData = ({}); return }
+            try { root._packData = JSON.parse(content) } catch (_) { root._packData = ({}) }
+        }
+    }
+
+    // Non-colour token lookup with pack overlay: pack[group][key] wins, else the
+    // base literal supplied by the caller. Used by radius/spacing/font/bar below.
+    function _tok(group, key, fallback) {
+        var p = root._packData
+        if (p && p[group] && p[group][key] !== undefined && p[group][key] !== null)
+            return p[group][key]
+        return fallback
     }
 
     // ── Palette (Macchiato defaults; all bindings re-evaluate on _data change) ─
@@ -177,40 +219,40 @@ QtObject {
 
     // ── Typography ─────────────────────────────────────────────────────────────
     readonly property QtObject font: QtObject {
-        readonly property string family: "FiraCode Nerd Font"
-        readonly property int sizeSm:   11
-        readonly property int sizeBase: 12
-        readonly property int sizeMd:   13
-        readonly property int sizeLg:   14
-        readonly property int sizeXl:   16
-        readonly property int sizeIcon: 16
+        readonly property string family: root._tok("font", "family", "FiraCode Nerd Font")
+        readonly property int sizeSm:   root._tok("font", "sizeSm",   11)
+        readonly property int sizeBase: root._tok("font", "sizeBase", 12)
+        readonly property int sizeMd:   root._tok("font", "sizeMd",   13)
+        readonly property int sizeLg:   root._tok("font", "sizeLg",   14)
+        readonly property int sizeXl:   root._tok("font", "sizeXl",   16)
+        readonly property int sizeIcon: root._tok("font", "sizeIcon", 16)
     }
 
     // ── Geometry ───────────────────────────────────────────────────────────────
     readonly property QtObject radius: QtObject {
-        readonly property int sm:   6
-        readonly property int base: 8
-        readonly property int md:   10
-        readonly property int lg:   14
-        readonly property int xl:   18
-        readonly property int pill: 999
+        readonly property int sm:   root._tok("radius", "sm",   6)
+        readonly property int base: root._tok("radius", "base", 8)
+        readonly property int md:   root._tok("radius", "md",   10)
+        readonly property int lg:   root._tok("radius", "lg",   14)
+        readonly property int xl:   root._tok("radius", "xl",   18)
+        readonly property int pill: root._tok("radius", "pill", 999)
     }
 
     readonly property QtObject spacing: QtObject {
-        readonly property int xs:  4
-        readonly property int sm:  6
-        readonly property int base: 8
-        readonly property int md:  10
-        readonly property int lg:  12
-        readonly property int xl:  16
+        readonly property int xs:   root._tok("spacing", "xs",   4)
+        readonly property int sm:   root._tok("spacing", "sm",   6)
+        readonly property int base: root._tok("spacing", "base", 8)
+        readonly property int md:   root._tok("spacing", "md",   10)
+        readonly property int lg:   root._tok("spacing", "lg",   12)
+        readonly property int xl:   root._tok("spacing", "xl",   16)
     }
 
     // ── Bar geometry ───────────────────────────────────────────────────────────
     readonly property QtObject bar: QtObject {
-        readonly property int height:      30
-        readonly property int marginTop:    0
-        readonly property int marginSide:   0
-        readonly property int innerPadding: 4
+        readonly property int height:       root._tok("bar", "height",       30)
+        readonly property int marginTop:    root._tok("bar", "marginTop",     0)
+        readonly property int marginSide:   root._tok("bar", "marginSide",    0)
+        readonly property int innerPadding: root._tok("bar", "innerPadding",  4)
     }
 
     // ── Animation ─────────────────────────────────────────────────────────────

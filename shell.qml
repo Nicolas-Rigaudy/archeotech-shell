@@ -58,6 +58,14 @@ ShellRoot {
         value: Persistence.Config.get("appearance.flatMode", false)
     }
 
+    // Drive the active theme pack (adr_027 Layer A) from the persisted setting,
+    // same reason/wiring as flatMode. Empty string = base look (no token overlay).
+    Binding {
+        target: Commons.Appearance
+        property: "activePack"
+        value: Persistence.Config.get("appearance.activePack", "")
+    }
+
     // ── IPC handlers ───────────────────────────────────────────────────────────
 
     IpcHandler {
