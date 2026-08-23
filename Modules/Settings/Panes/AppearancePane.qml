@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import "../../../Commons" as Commons
 import "../../../Services/Persistence" as Persistence
+import "../../../Services/Shell" as ShellServices
 import "../../../Widgets/Appearance" as Appearance
 import "../Widgets"
 
@@ -54,6 +55,26 @@ Item {
                         description: "Drop the liquid-glass sheen + card shadows for a flatter look (some popups / edit-mode stay glassy until the polish rollout finishes)"
                         checked: Persistence.Config.get("appearance.flatMode", false)
                         onToggled: v => Persistence.Config.set("appearance.flatMode", v)
+                    }
+                }
+
+                Item { implicitHeight: 10; Layout.fillWidth: true }
+
+                // ── Theme pack (adr_027 Layer A) ──────────────────────────────
+                SectionLabel { text: "THEME PACK" }
+                SettingsCard {
+                    DropdownRow {
+                        label: "Theme pack"
+                        description: "Swap the shell's identity — colours, shape, type — over the base. Base = default glass."
+                        currentValue: Persistence.Config.get("appearance.activePack", "")
+                        options: {
+                            var opts = [{ value: "", label: "Base (glass)" }]
+                            var ps = ShellServices.PackRegistry.packs
+                            for (var i = 0; i < ps.length; i++)
+                                opts.push({ value: ps[i].id, label: ps[i].name || ps[i].id })
+                            return opts
+                        }
+                        onSelected: v => Persistence.Config.set("appearance.activePack", v)
                     }
                 }
 

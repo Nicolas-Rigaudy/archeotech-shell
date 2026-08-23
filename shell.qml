@@ -60,10 +60,17 @@ ShellRoot {
 
     // Drive the active theme pack (adr_027 Layer A) from the persisted setting,
     // same reason/wiring as flatMode. Empty string = base look (no token overlay).
+    // activePackDir is resolved via PackRegistry here (Commons can't import a
+    // Service); the binding re-evaluates when discovery finishes (packs changes).
     Binding {
         target: Commons.Appearance
         property: "activePack"
         value: Persistence.Config.get("appearance.activePack", "")
+    }
+    Binding {
+        target: Commons.Appearance
+        property: "activePackDir"
+        value: ShellServices.PackRegistry.dirFor(Persistence.Config.get("appearance.activePack", ""))
     }
 
     // ── IPC handlers ───────────────────────────────────────────────────────────

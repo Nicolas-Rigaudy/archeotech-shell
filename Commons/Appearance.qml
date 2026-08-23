@@ -83,15 +83,15 @@ QtObject {
     // shell.qml (bound to Persistence.Config "appearance.activePack"), same wiring
     // as flatMode. Empty string = base look, no overlay. `inherits` chaining is not
     // resolved yet — single-level overlay for now (Wave 1).
-    property string activePack: ""
+    property string activePack: ""       // pack id (informational; set from shell.qml)
+    // Absolute pack dir (trailing slash), resolved from PackRegistry in shell.qml
+    // and pushed here — Commons can't import a Service. Empty = base look.
+    property string activePackDir: ""
     property var _packData: ({})
-    onActivePackChanged: root._packData = ({})   // reset; _packFile repopulates if a tokens.json exists
-
-    readonly property string _packsDir:
-        StandardPaths.writableLocation(StandardPaths.GenericDataLocation) + "/archeotech/packs"
+    onActivePackDirChanged: root._packData = ({})   // reset; _packFile repopulates from the new dir
 
     property FileView _packFile: FileView {
-        path: root.activePack ? (root._packsDir + "/" + root.activePack + "/tokens.json") : ""
+        path: root.activePackDir ? (root.activePackDir + "tokens.json") : ""
         watchChanges: true
         preload: true
         printErrors: false
