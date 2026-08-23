@@ -4,11 +4,21 @@ import QtQuick.Layouts
 import "../../../Commons" as Commons
 import "../../../Services/Persistence" as Persistence
 import "../../../Services/Shell" as ShellServices
+import "../../../Commons/Primitives"
 import "../../../Widgets/Appearance" as Appearance
 import "../Widgets"
 
 Item {
     id: root
+
+    // Theme-pack options for the selector: Base + discovered packs (adr_027).
+    readonly property var _packModel: {
+        var m = [{ id: "", label: "Base" }]
+        var ps = ShellServices.PackRegistry.packs
+        for (var i = 0; i < ps.length; i++)
+            m.push({ id: ps[i].id, label: ps[i].name || ps[i].id })
+        return m
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -61,21 +71,20 @@ Item {
                 Item { implicitHeight: 10; Layout.fillWidth: true }
 
                 // ── Theme pack (adr_027 Layer A) ──────────────────────────────
+                // Same SegmentedControl language as the Mode/Theme pickers — no
+                // native dropdown popup (which mispositions in a layer-shell window).
                 SectionLabel { text: "THEME PACK" }
-                SettingsCard {
-                    DropdownRow {
-                        label: "Theme pack"
-                        description: "Swap the shell's identity — colours, shape, type — over the base. Base = default glass."
-                        currentValue: Persistence.Config.get("appearance.activePack", "")
-                        options: {
-                            var opts = [{ value: "", label: "Base (glass)" }]
-                            var ps = ShellServices.PackRegistry.packs
-                            for (var i = 0; i < ps.length; i++)
-                                opts.push({ value: ps[i].id, label: ps[i].name || ps[i].id })
-                            return opts
-                        }
-                        onSelected: v => Persistence.Config.set("appearance.activePack", v)
+                SegmentedControl {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 32
+                    model: root._packModel
+                    currentIndex: {
+                        var id = Persistence.Config.get("appearance.activePack", "")
+                        for (var i = 0; i < root._packModel.length; i++)
+                            if (root._packModel[i].id === id) return i
+                        return 0
                     }
+                    onActivated: index => Persistence.Config.set("appearance.activePack", root._packModel[index].id)
                 }
 
                 Item { implicitHeight: 10; Layout.fillWidth: true }
