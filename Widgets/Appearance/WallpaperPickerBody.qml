@@ -226,7 +226,7 @@ Item {
                 RectangularShadow {
                     anchors.fill: parent
                     visible: cell._current
-                    radius: 14
+                    radius: Commons.Appearance.radius.lg
                     blur:   32
                     offset: Qt.vector2d(0, 12)
                     spread: 2
@@ -256,7 +256,7 @@ Item {
                 Rectangle {
                     id: cellMask
                     anchors.fill: parent
-                    radius: 14
+                    radius: Commons.Appearance.radius.lg
                     visible: false
                 }
                 OpacityMask {
@@ -267,7 +267,7 @@ Item {
 
                 Rectangle {
                     anchors.fill: parent
-                    radius: 14
+                    radius: Commons.Appearance.radius.lg
                     antialiasing: true
                     color: "transparent"
                     border.width: cell._active ? 3 : (cell._current ? 2 : 0)
