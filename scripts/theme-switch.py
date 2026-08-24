@@ -508,6 +508,36 @@ def _cursor_installed(name: str) -> bool:
 
 # ── Driver ───────────────────────────────────────────────────────────────────
 
+def apply_pack_palette(theme: dict, pack_dir: str) -> "str | None":
+    """Overlay a theme pack's tokens.json palette onto the resolved theme so the
+    cross-app appliers render the PACK's colours, not the base family's (adr_027:
+    the pack sits atop the hierarchy pack > mode > theme > flavor > accent and
+    overrides everything beneath it). Returns the pack's accent name — which also
+    overrides the accent arg — or None.
+
+    NB: only appliers that RENDER from the palette (rofi/fish/starship/swaylock/
+    hyprlock/quickshell) follow this today. Baked/app-specific targets (kitty copies
+    themes/<v>/kitty.conf; gtk/vscode/obsidian/zen) need per-applier generalization
+    to render from the palette before a pack fully reskins them — see item_083."""
+    p = Path(pack_dir) / "tokens.json"
+    if not p.exists():
+        warn(f"pack palette not found: {p}")
+        return None
+    try:
+        with p.open() as f:
+            tok = json.load(f)
+    except (OSError, ValueError) as e:
+        warn(f"pack palette unreadable: {e}")
+        return None
+    colors = theme.setdefault("colors", {})
+    for k, v in (tok.get("colors") or {}).items():
+        colors[k] = v
+    if tok.get("name"):
+        theme["name"] = tok["name"]
+    info(f"pack palette overlay: {Path(pack_dir).name}")
+    return tok.get("accent")
+
+
 def build_vars(theme: dict) -> Dict[str, str]:
     """Flatten the theme into a single name→hex map for template rendering.
     Includes the rofi sub-block so rofi-colors.rasi can reference rofi_bg etc."""
@@ -520,9 +550,17 @@ def build_vars(theme: dict) -> Dict[str, str]:
 
 
 def main() -> None:
-    if len(sys.argv) < 2:
-        fail("usage: theme-switch.py <variant>")
-    variant = sys.argv[1]
+    # Optional `--pack <dir>`: overlay that pack's palette atop the variant
+    # (adr_027). Parsed out first so the positional variant/accent stay simple.
+    args = sys.argv[1:]
+    pack_dir = None
+    if "--pack" in args:
+        i = args.index("--pack")
+        pack_dir = args[i + 1] if i + 1 < len(args) else None
+        del args[i:i + 2]
+    if not args:
+        fail("usage: theme-switch.py <variant> [accent] [--pack <dir>]")
+    variant = args[0]
 
     src = THEMES_DIR / variant / "theme.json"
     if not src.exists():
@@ -544,13 +582,20 @@ def main() -> None:
     # Expose the variant's own dir so appliers can read co-located assets
     # (e.g. kitty.conf) — keeps each theme package self-contained.
     theme["_dir"] = str(src.parent)
+
+    # Pack palette overlay (overrides mode/theme/flavor/accent beneath it).
+    pack_accent = apply_pack_palette(theme, pack_dir) if pack_dir else None
+
     vars = build_vars(theme)
 
-    accent = sys.argv[2] if len(sys.argv) > 2 else ""
+    # Pack accent wins over the positional accent arg (pack is above accent).
+    accent = pack_accent or (args[1] if len(args) > 1 else "")
     if accent:
         apply_accent(theme, vars, accent)
 
-    info(f"switching to {variant}" + (f" (accent: {accent})" if accent else ""))
+    info(f"switching to {variant}"
+         + (f" +pack:{Path(pack_dir).name}" if pack_dir else "")
+         + (f" (accent: {accent})" if accent else ""))
     for name, applier in REGISTRY:
         try:
             applier(theme, vars)
