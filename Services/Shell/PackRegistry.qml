@@ -37,6 +37,45 @@ QtObject {
         return p ? p.dir : ""
     }
 
+    // Component ids a pack ships a style delegate for (adr_027 Layer C): the
+    // basenames of `<packDir>/styles/*.qml`. Empty for the base look / no styles.
+    function stylesFor(id) {
+        if (!id) return []
+        var p = packFor(id)
+        return (p && p.styles) ? p.styles : []
+    }
+
+    // pack.json minShellVersion, or "" if unset (treated as compatible).
+    function minVersionFor(id) {
+        var p = packFor(id)
+        return (p && p.minShellVersion) ? p.minShellVersion : ""
+    }
+
+    // Dotted-numeric semver compare: is `a` >= `b`? ("0.3.0" >= "0.3" → true).
+    function _verGte(a, b) {
+        var pa = String(a).split("."), pb = String(b).split(".")
+        var n = Math.max(pa.length, pb.length)
+        for (var i = 0; i < n; i++) {
+            var x = parseInt(pa[i] || "0", 10), y = parseInt(pb[i] || "0", 10)
+            if (x > y) return true
+            if (x < y) return false
+        }
+        return true
+    }
+
+    // Style-delegate ids for a pack, but ONLY if the shell satisfies the pack's
+    // minShellVersion (adr_027 Layer C versioned contract). Incompatible pack ⇒
+    // [] (its delegates are ignored, base visuals stand) + a warning.
+    function stylesCompatible(id, shellVer) {
+        var mv = minVersionFor(id)
+        if (mv && !_verGte(shellVer, mv)) {
+            console.warn("[PackRegistry] pack", id, "needs shell >=", mv,
+                "but shell is", shellVer, "— style delegates disabled")
+            return []
+        }
+        return stylesFor(id)
+    }
+
     function rescan() { if (!_scan.running) _scan.running = true }
 
     property Process _scan: Process {
@@ -44,7 +83,11 @@ QtObject {
         command: ["bash", "-c",
             "scan(){ [ -d \"$1\" ] || return; for d in \"$1\"/*/; do m=\"${d}pack.json\"; " +
             "[ -f \"$m\" ] || continue; " +
-            "jq -c --arg dir \"$d\" '{dir:$dir, id, name, tier, minShellVersion, inherits}' \"$m\" 2>/dev/null; " +
+            "styles='[]'; " +
+            "if [ -d \"${d}styles\" ]; then " +
+            "styles=$(cd \"${d}styles\" && ls *.qml 2>/dev/null | sed 's/\\.qml$//' | jq -R . | jq -sc .); " +
+            "[ -n \"$styles\" ] || styles='[]'; fi; " +
+            "jq -c --arg dir \"$d\" --argjson styles \"$styles\" '{dir:$dir, id, name, tier, minShellVersion, inherits, styles:$styles}' \"$m\" 2>/dev/null; " +
             "done; }; " +
             "scan \"" + root._bundledDir + "\"; " +
             "scan \"$HOME/.local/share/archeotech/packs\""

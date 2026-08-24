@@ -72,6 +72,15 @@ ShellRoot {
         property: "activePackDir"
         value: ShellServices.PackRegistry.dirFor(Persistence.Config.get("appearance.activePack", ""))
     }
+    // Component style-delegate ids for the active pack (adr_027 Layer C),
+    // minShellVersion-gated in PackRegistry. Empty ⇒ base visuals everywhere.
+    Binding {
+        target: Commons.Appearance
+        property: "activePackStyles"
+        value: ShellServices.PackRegistry.stylesCompatible(
+                   Persistence.Config.get("appearance.activePack", ""),
+                   Commons.Appearance.shellVersion)
+    }
 
     // Apply the active pack's window decoration to the compositor (adr_027 — the
     // theme reaching the real windows: corner radius + border). Fires when the

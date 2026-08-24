@@ -132,6 +132,20 @@ QtObject {
     // shell.qml (Commons can't import a Service). Empty ⇒ base window decoration.
     readonly property var packWindow: (root._packData && root._packData.window) ? root._packData.window : ({})
 
+    // ── Component style delegates (adr_027 Layer C) ──────────────────────────────
+    // Current shell version, checked against a pack's minShellVersion before its
+    // style delegates are honoured (the delegate prop contract is versioned).
+    readonly property string shellVersion: "0.3.0"
+    // Component ids the active pack ships a style delegate for, pushed from
+    // shell.qml (PackRegistry, minShellVersion-gated — Commons can't import a
+    // Service). A StyleDelegate loads `<packDir>/styles/<id>.qml` for these.
+    property var activePackStyles: []
+    // Resolve a component's pack style delegate URL, or "" to use the base visual.
+    function styleUrl(componentId) {
+        if (!root.activePackDir || root.activePackStyles.indexOf(componentId) === -1) return ""
+        return "file://" + root.activePackDir + "styles/" + componentId + ".qml"
+    }
+
     // Resolve an fx colour string: a palette name ("accent","mauve",…) maps to
     // the live theme colour; anything else is passed through as a literal colour.
     function fxColor(name, fallback) {
