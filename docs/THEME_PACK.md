@@ -123,8 +123,34 @@ The shell reads the active pack from the persisted key
 in the Settings / Plugin Manager arrives with pack discovery; for now it is a
 config value.
 
-## Not yet shipped
+## `pack.json` — `configSchema` (Layer D pack settings)
 
-Per-component style delegates (`minShellVersion`-gated) and pack-scoped
-`configSchema` settings are specified in adr_027 Layers C–D and land in later
-waves.
+A pack may expose its own settings in **Settings → Appearance → Pack Settings**
+(shown only while the pack is active). Declare a `configSchema` in `pack.json`
+using the shared ConfigForm shape, keyed by the **dotted token path the setting
+overrides** — so the control drives the real look, no extra wiring:
+
+```json
+{
+  "configSchema": {
+    "fx.glow.strength":    { "type": "real", "label": "Glow strength", "min": 0, "max": 1, "step": 0.05, "default": 0.6 },
+    "fx.brackets.enabled": { "type": "bool", "label": "Window brackets", "default": true },
+    "window.cornerRadius": { "type": "int",  "label": "Window corner radius", "min": 0, "max": 16, "unit": "px", "default": 0 }
+  }
+}
+```
+
+- Field `type` ∈ `bool` (toggle), `int`/`real` (slider), `enum` (`options` →
+  buttons/dropdown), `string` (text field).
+- Set `default` to match the pack's `tokens.json` value so the control starts at
+  the pack's own look.
+- Values persist under Config `packs.<id>` and **override the matching token
+  path** in the pack's data (colours, tokens, `fx.*`, `window.*` all honoured) —
+  live, via the same reactive getters. Component style-delegates (Layer C) also
+  receive pack state, so a delegate can read settings through its `api`.
+
+## Component style delegates (Layer C)
+
+To replace a component's *visual* wholesale (beyond tokens), ship
+`<packDir>/styles/<ComponentId>.qml` — see **docs/STYLE_API.md** for the curated
+set and the versioned `api` contract.
