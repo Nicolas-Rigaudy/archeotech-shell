@@ -1,0 +1,7 @@
+{
+  "id": "hud",
+  "name": "HUD",
+  "tier": "official",
+  "minShellVersion": "0.3.0",
+  "inherits": "base"
+}
