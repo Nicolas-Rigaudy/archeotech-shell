@@ -64,6 +64,11 @@ token repaints the whole shell live — no per-component work.
                                        // Settings→Shell corner value (theme wins;
                                        // user value is the fallback with no pack).
 
+  "window":  { "cornerRadius": 0, "borderWidth": 2 },   // the theme reaching the
+                                       // REAL windows: drives mango's border_radius
+                                       // + borderpx (applied live on pack switch;
+                                       // restored to 12/2 on base). Omit ⇒ base.
+
   "anim":    { "fast": 100, "base": 200, "panel": 240,
                "effectsFast": 150, "effectsMed": 200, "effectsSlow": 300,
                "spatialFast": 350, "spatialDefault": 500, "spatialSlow": 650,
@@ -104,10 +109,12 @@ colour.
   hole stays clean). `opacity` keeps it subtle.
 - **glow** — an accent rim glow hugging the content-hole edge, `strength` (0–1
   alpha) and `size` (px falloff).
-- **brackets** — HUD corner brackets at the content-region corners; `length`/
+- **brackets** — HUD corner brackets drawn at **every window's** corners (live
+  from compositor client geometry, not just the screen corners). `length`/
   `thickness`/`inset` shape them, `radius` rounds the bend (0 = sharp; match your
-  window corner rounding so they echo the windows rather than clash). Note: this
-  frames the whole tiled content region (4 corners), not each window.
+  `window.cornerRadius` so brackets and windows agree). Focused window's brackets
+  read full-strength, unfocused dim back — so with `window.borderWidth: 0` the
+  brackets alone carry focus indication (no window border needed).
 
 ## Activation
 
