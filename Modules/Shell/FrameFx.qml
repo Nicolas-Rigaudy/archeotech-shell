@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Effects
+import QtQuick.Shapes
 import "../../Commons" as Commons
 
 // Decorator/FX overlay for the shell frame (adr_027 Wave 2, Layer B).
@@ -94,7 +95,10 @@ Item {
     readonly property int   _brLen:   _br.length    !== undefined ? _br.length    : 18
     readonly property int   _brThick: _br.thickness !== undefined ? _br.thickness : 2
     readonly property int   _brInset: _br.inset     !== undefined ? _br.inset     : 6
-    readonly property color _brColor: Commons.Appearance.fxColor(_br.color, Commons.Appearance.colors.accent)
+    // Bend radius: rounds the corner of the L so it echoes the windows' rounded
+    // corners instead of a hard right angle (0 → sharp).
+    readonly property int   _brRadius: _br.radius !== undefined ? _br.radius : 0
+    readonly property color _brColor:  Commons.Appearance.fxColor(_br.color, Commons.Appearance.colors.accent)
 
     // Four corners: {left, top} flags picking which hole corner each bracket hugs.
     readonly property var _corners: [
@@ -103,21 +107,34 @@ Item {
     ]
     Repeater {
         model: fx._brOn ? fx._corners : []
-        // Delegate carries NO custom properties (Quickshell marks delegate
-        // context props FINAL); arm positions compute inline from modelData.
-        // Corner anchor = the hole corner inset inward; each arm grows away from it.
-        delegate: Item {
-            Rectangle {   // horizontal arm
-                color:  fx._brColor
-                width:  fx._brLen; height: fx._brThick
-                x: fx.contentRect.x + (modelData.left ? fx._brInset : fx.contentRect.width  - fx._brInset - width)
-                y: fx.contentRect.y + (modelData.top  ? fx._brInset : fx.contentRect.height - fx._brInset - height)
-            }
-            Rectangle {   // vertical arm
-                color:  fx._brColor
-                width:  fx._brThick; height: fx._brLen
-                x: fx.contentRect.x + (modelData.left ? fx._brInset : fx.contentRect.width  - fx._brInset - width)
-                y: fx.contentRect.y + (modelData.top  ? fx._brInset : fx.contentRect.height - fx._brInset - height)
+        // Delegate ROOT carries no custom properties (Quickshell marks delegate
+        // context props FINAL); geometry lives on the ShapePath, read from
+        // modelData. Each bracket = horizontal arm → rounded bend → vertical arm.
+        delegate: Shape {
+            anchors.fill: parent
+            preferredRendererType: Shape.CurveRenderer
+            ShapePath {
+                id: sp
+                strokeColor: fx._brColor
+                strokeWidth: fx._brThick
+                fillColor: "transparent"
+                capStyle: ShapePath.RoundCap
+                joinStyle: ShapePath.RoundJoin
+                // Corner anchor (inset into the hole) + arm directions + bend radius.
+                readonly property real ax: fx.contentRect.x + (modelData.left ? fx._brInset : fx.contentRect.width  - fx._brInset)
+                readonly property real ay: fx.contentRect.y + (modelData.top  ? fx._brInset : fx.contentRect.height - fx._brInset)
+                readonly property real dx: modelData.left ? 1 : -1
+                readonly property real dy: modelData.top  ? 1 : -1
+                readonly property real r:  Math.max(0.5, Math.min(fx._brRadius, fx._brLen))
+                startX: ax + dx * fx._brLen
+                startY: ay
+                PathLine { x: sp.ax + sp.dx * sp.r; y: sp.ay }
+                PathArc {
+                    x: sp.ax; y: sp.ay + sp.dy * sp.r
+                    radiusX: sp.r; radiusY: sp.r
+                    direction: (sp.dx * sp.dy > 0) ? PathArc.Counterclockwise : PathArc.Clockwise
+                }
+                PathLine { x: sp.ax; y: sp.ay + sp.dy * fx._brLen }
             }
         }
     }
