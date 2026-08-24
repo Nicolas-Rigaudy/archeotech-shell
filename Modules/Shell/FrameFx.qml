@@ -108,6 +108,37 @@ Item {
         }
     }
 
+    // ── Bevel (adr_027 / item_083: depth) ───────────────────────────────────────
+    // A thin machined "lip" tracing the content-hole edge — reads as the metal
+    // bezel of a recessed screen, restoring dimension a flat matte fill loses.
+    // fx.bevel = { enabled, color, width }.
+    readonly property var   _bev:      _fx.bevel || ({})
+    readonly property bool  _bevOn:    !!_bev.enabled && _hasHole
+    readonly property color _bevColor: Commons.Appearance.fxColor(_bev.color, Commons.Appearance.colors.overlay1)
+    readonly property int   _bevW:     _bev.width !== undefined ? _bev.width : 2
+    Rectangle {
+        visible: fx._bevOn
+        x: fx.contentRect.x; y: fx.contentRect.y
+        width: fx.contentRect.width; height: fx.contentRect.height
+        radius: fx.cornerRadius
+        color: "transparent"
+        antialiasing: true
+        border.width: fx._bevW
+        border.color: fx._bevColor
+    }
+    // Soft inner shadow just inside the lip → the screen reads as recessed.
+    Rectangle {
+        visible: fx._bevOn
+        x: fx.contentRect.x + fx._bevW; y: fx.contentRect.y + fx._bevW
+        width:  fx.contentRect.width  - 2 * fx._bevW
+        height: fx.contentRect.height - 2 * fx._bevW
+        radius: Math.max(0, fx.cornerRadius - fx._bevW)
+        color: "transparent"
+        antialiasing: true
+        border.width: 1
+        border.color: Qt.rgba(0, 0, 0, 0.5)
+    }
+
     // ── Ornament overlay (adr_027 / item_083) ───────────────────────────────────
     // Pack-supplied SVG/PNG art (gothic filigree, sigils — non-IP / open assets)
     // placed at frame anchors. fx.ornaments = [{ source, anchor, size, opacity }].
