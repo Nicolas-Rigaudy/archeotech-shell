@@ -95,7 +95,7 @@ colour.
   "fx": {
     "texture":  { "source": "textures/weave.png", "opacity": 0.10 },
     "glow":     { "enabled": true, "color": "accent", "strength": 0.45, "size": 40 },
-    "brackets": { "enabled": true, "color": "accent", "length": 28, "thickness": 3, "inset": 8 }
+    "brackets": { "enabled": true, "color": "accent", "length": 28, "thickness": 3, "inset": 8, "radius": 12 }
   }
 }
 ```
@@ -104,8 +104,10 @@ colour.
   hole stays clean). `opacity` keeps it subtle.
 - **glow** — an accent rim glow hugging the content-hole edge, `strength` (0–1
   alpha) and `size` (px falloff).
-- **brackets** — HUD corner brackets at the hole corners; `length`/`thickness`/
-  `inset` shape them.
+- **brackets** — HUD corner brackets at the content-region corners; `length`/
+  `thickness`/`inset` shape them, `radius` rounds the bend (0 = sharp; match your
+  window corner rounding so they echo the windows rather than clash). Note: this
+  frames the whole tiled content region (4 corners), not each window.
 
 ## Activation
 
