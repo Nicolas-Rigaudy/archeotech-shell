@@ -80,6 +80,13 @@ token repaints the whole shell live — no per-component work.
 ```
 
 Notes:
+- **Own palette**: a pack MAY override the whole `colors` block, not just the
+  accent — a strongly-themed pack (e.g. a grimdark 40K identity) can carry its own
+  scheme where the base's modern palette is off-identity. Keep it coherent.
+- **Display font hook** (adr_027 / item_083): `font.displayFamily` (an installed
+  family) or `font.displayFile` (a pack-relative `.ttf`/`.otf` loaded via
+  FontLoader) sets a header/display face; body text stays the mono base for
+  legibility. Read as `Appearance.font.display`. Ship open (OFL) fonts only.
 - `accent` names one of the palette colours (e.g. `"red"`); the semantic
   `accent`, `accentBorder`, `accentAlpha`, state tints and accent-warmth surfaces
   all derive from it, so one line re-tints the whole accent system.
@@ -109,6 +116,12 @@ colour.
   hole stays clean). `opacity` keeps it subtle.
 - **glow** — an accent rim glow hugging the content-hole edge, `strength` (0–1
   alpha) and `size` (px falloff).
+- **ornaments** — pack-supplied SVG/PNG art placed at frame anchors (adr_027 /
+  item_083): `fx.ornaments: [{ source, anchor, size, opacity }]`. `anchor`
+  `"corners"` places art at all four content-hole corners, auto-rotated so a
+  graphic drawn for the top-left hugs each corner (also `top-left`/`top-right`/
+  `bottom-left`/`bottom-right`). Use for gothic filigree, sigils, framing — ship
+  **open / non-IP** assets only. SVG renders via Qt's svg plugin.
 - **brackets** — HUD corner brackets drawn at **every window's** corners (live
   from compositor client geometry, not just the screen corners). `length`/
   `thickness`/`inset` shape them, `radius` rounds the bend (0 = sharp; match your
