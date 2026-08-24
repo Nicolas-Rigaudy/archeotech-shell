@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import "../../Commons" as Commons
 
 // Decorator/FX overlay for the shell frame (adr_027 Wave 2, Layer B).
@@ -53,9 +54,11 @@ Item {
     }
 
     // ── Accent rim glow ──────────────────────────────────────────────────────
-    // Four gradient bands hugging the hole edges, accent strongest at the edge
-    // and fading into the frame. Gradient-based (no blur/layer) — robust, cheap,
-    // no clipping. Corner overlaps are invisible at glow alphas.
+    // A soft accent rim tracing the ROUNDED content-hole edge, blurred so it is
+    // continuous through the corners (the old 4-band version left the corner arc
+    // dark — a harsh seam). A transparent rounded rect whose accent border is
+    // blurred by MultiEffect; the layer is grown by _glSize so the outward blur
+    // isn't clipped. Non-interactive, so layer.enabled is fine here.
     readonly property var   _gl:         _fx.glow || ({})
     readonly property bool  _glOn:       !!_gl.enabled && _hasHole
     readonly property color _glColor:    Commons.Appearance.fxColor(_gl.color, Commons.Appearance.colors.accent)
@@ -63,42 +66,25 @@ Item {
     readonly property int   _glSize:     _gl.size !== undefined ? _gl.size : 24
     readonly property color _glEdge:     Qt.rgba(_glColor.r, _glColor.g, _glColor.b, _glStrength)
 
-    Rectangle {   // top edge — accent at the bottom (hole side)
+    Item {
         visible: fx._glOn
-        x: fx.contentRect.x; y: fx.contentRect.y - fx._glSize
-        width: fx.contentRect.width; height: fx._glSize
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: "transparent" }
-            GradientStop { position: 1.0; color: fx._glEdge }
+        x: fx.contentRect.x - fx._glSize
+        y: fx.contentRect.y - fx._glSize
+        width:  fx.contentRect.width  + 2 * fx._glSize
+        height: fx.contentRect.height + 2 * fx._glSize
+        layer.enabled: fx._glOn
+        layer.effect: MultiEffect {
+            blurEnabled: true
+            blur: 1.0
+            blurMax: fx._glSize
         }
-    }
-    Rectangle {   // bottom edge — accent at the top (hole side)
-        visible: fx._glOn
-        x: fx.contentRect.x; y: fx.contentRect.y + fx.contentRect.height
-        width: fx.contentRect.width; height: fx._glSize
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: fx._glEdge }
-            GradientStop { position: 1.0; color: "transparent" }
-        }
-    }
-    Rectangle {   // left edge — accent at the right (hole side)
-        visible: fx._glOn
-        x: fx.contentRect.x - fx._glSize; y: fx.contentRect.y
-        width: fx._glSize; height: fx.contentRect.height
-        gradient: Gradient {
-            orientation: Gradient.Horizontal
-            GradientStop { position: 0.0; color: "transparent" }
-            GradientStop { position: 1.0; color: fx._glEdge }
-        }
-    }
-    Rectangle {   // right edge — accent at the left (hole side)
-        visible: fx._glOn
-        x: fx.contentRect.x + fx.contentRect.width; y: fx.contentRect.y
-        width: fx._glSize; height: fx.contentRect.height
-        gradient: Gradient {
-            orientation: Gradient.Horizontal
-            GradientStop { position: 0.0; color: fx._glEdge }
-            GradientStop { position: 1.0; color: "transparent" }
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: fx._glSize        // inner rect == the content hole
+            radius: fx.cornerRadius            // follow the frame's rounded corner
+            color: "transparent"
+            border.color: fx._glEdge
+            border.width: Math.max(2, Math.round(fx._glSize / 5))
         }
     }
 
