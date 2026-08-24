@@ -111,6 +111,16 @@ QtObject {
         return fallback
     }
 
+    // Frame corner radius override for the active pack (adr_027 Wave 2: shape).
+    // The bar/strip corner connections are always-visible chrome, so a pack's
+    // shape wins over the user's Settings→Shell corner radius; -1 = pack unset,
+    // ShellConfig.cornerRadius() then falls back to the user config value.
+    // Reads _packData so callers binding through cornerRadius() re-evaluate on
+    // pack change (FrameBackground rebuilds imperatively — see its Connections).
+    function packFrameRadius() {
+        return root._tok("frame", "cornerRadius", -1)
+    }
+
     // ── Palette (Macchiato defaults; all bindings re-evaluate on _data change) ─
     readonly property QtObject colors: QtObject {
         // Base surfaces

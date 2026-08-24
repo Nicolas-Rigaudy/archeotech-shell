@@ -36,6 +36,12 @@ Shape {
         target: ShellServices.ShellConfig
         function onDataChanged() { frame._rebuild() }
     }
+    // A theme pack can override the frame corner radius (adr_027 Wave 2); its
+    // tokens load async, so rebuild when the pack data changes too.
+    Connections {
+        target: Commons.Appearance
+        function on_packDataChanged() { frame._rebuild() }
+    }
 
     function _build() {
         var cfg = ShellServices.ShellConfig

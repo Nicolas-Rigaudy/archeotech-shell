@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import QtCore
 import Quickshell.Io
+import "../../Commons" as Commons
 
 QtObject {
     id: root
@@ -150,7 +151,13 @@ QtObject {
         return sideSize(sideName, screenName)
     }
 
+    // Frame corner radius. A theme pack's shape wins over the user's layout
+    // setting (adr_027 Wave 2: the corner connections are always-visible chrome,
+    // so the theme owns them); the user's Settings→Shell value is the fallback
+    // when no pack (or a pack without a frame radius) is active.
     function cornerRadius() {
+        var pr = Commons.Appearance.packFrameRadius()
+        if (pr >= 0) return pr
         return (data.corners && data.corners.radius !== undefined) ? data.corners.radius : _defaults.corners.radius
     }
 
