@@ -117,7 +117,7 @@ Item {
     readonly property var _orn: _fx.ornaments || []
     readonly property var _ornMarks: {
         var out = []
-        if (!_hasHole || packDir === "") return out
+        if (!_hasHole || packDir === "" || _fx.ornamentsEnabled === false) return out
         var cx0 = contentRect.x, cy0 = contentRect.y
         var cx1 = contentRect.x + contentRect.width, cy1 = contentRect.y + contentRect.height
         for (var i = 0; i < _orn.length; i++) {

@@ -64,8 +64,11 @@ Item {
                 Item { implicitHeight: 10; Layout.fillWidth: true }
 
                 // ── Style ─────────────────────────────────────────────────────
-                SectionLabel { text: "STYLE" }
+                // Flat mode is the BASE look's material control — hidden when a
+                // pack is active, since the pack owns material (adr_027).
+                SectionLabel { text: "STYLE"; visible: root._activePack === "" }
                 SettingsCard {
+                    visible: root._activePack === ""
                     ToggleRow {
                         label: "Flat mode"
                         description: "Drop the liquid-glass sheen + card shadows for a flatter look (some popups / edit-mode stay glassy until the polish rollout finishes)"
@@ -74,7 +77,7 @@ Item {
                     }
                 }
 
-                Item { implicitHeight: 10; Layout.fillWidth: true }
+                Item { implicitHeight: 10; Layout.fillWidth: true; visible: root._activePack === "" }
 
                 // ── Theme pack (adr_027 Layer A) ──────────────────────────────
                 // Same SegmentedControl language as the Mode/Theme pickers — no

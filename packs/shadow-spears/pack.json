@@ -5,10 +5,10 @@
   "minShellVersion": "0.3.0",
   "inherits": "base",
   "configSchema": {
-    "fx.texture.opacity":  { "type": "real", "label": "Parchment grain", "min": 0, "max": 0.4, "step": 0.02, "default": 0.16 },
-    "fx.glow.strength":    { "type": "real", "label": "Sigil glow", "min": 0, "max": 1, "step": 0.05, "default": 0.5 },
-    "fx.brackets.enabled": { "type": "bool", "label": "Purity-seal corners", "default": true },
-    "fx.brackets.length":  { "type": "int",  "label": "Seal size", "min": 8, "max": 40, "step": 2, "unit": "px", "default": 26 },
-    "window.cornerRadius": { "type": "int",  "label": "Window corner radius", "min": 0, "max": 16, "step": 1, "unit": "px", "default": 0 }
+    "material": { "type": "enum", "label": "Material",
+                  "options": [ { "value": "flat", "label": "Matte slab" }, { "value": "glass", "label": "Frosted glass" } ],
+                  "default": "flat" },
+    "fx.ornamentsEnabled": { "type": "bool", "label": "Gothic corners", "default": true },
+    "window.cornerRadius": { "type": "int", "label": "Window corner radius", "min": 0, "max": 16, "step": 1, "unit": "px", "default": 0 }
   }
 }
