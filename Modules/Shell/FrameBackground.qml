@@ -27,6 +27,11 @@ Shape {
 
     // Rebuild whenever the config or the surface size changes.
     property string _d: ""
+    // Content-hole geometry (the inner rect the frame surrounds) + the inner
+    // corner radius, published for the FX overlay (adr_027 Wave 2) so brackets/
+    // glow anchor to the exact corners the frame draws. Set by _build().
+    property rect contentRect: Qt.rect(0, 0, 0, 0)
+    property int  cornerR: 0
     function _rebuild() { _d = _build() }
     Component.onCompleted: _rebuild()
     onWidthChanged:  _rebuild()
@@ -46,7 +51,7 @@ Shape {
     function _build() {
         var cfg = ShellServices.ShellConfig
         var w = width, h = height
-        if (w <= 0 || h <= 0) return ""
+        if (w <= 0 || h <= 0) { frame.contentRect = Qt.rect(0, 0, 0, 0); return "" }
 
         var pill = cfg.pillMode()
         var o  = pill ? cfg.pillGap() : 0
@@ -61,6 +66,10 @@ Shape {
         var cl = o + lg, ct = o + tg, cr = w - o - rg, cb = h - o - bg
         var vTop = tg > 0 ? ct : o          // vertical bands sit between the
         var vBot = bg > 0 ? cb : h - o      // horizontal bands
+
+        // Publish the content-hole rect + corner radius for the FX overlay.
+        frame.contentRect = Qt.rect(cl, ct, cr - cl, cb - ct)
+        frame.cornerR = R
 
         // CW rounded rectangle with per-corner radii (0 → sharp via SVG line).
         function rr(x0, y0, x1, y1, rtl, rtr, rbr, rbl) {

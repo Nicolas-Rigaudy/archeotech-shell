@@ -153,9 +153,21 @@ Variants {
         // and only host widgets; this owns the resting frame fill. z:0 — under the
         // sides (z:10) so widgets/icons sit on top.
         FrameBackground {
+            id: _frameBg
             z: 0
             anchors.fill: parent
             screenName: _surface._screenName
+        }
+
+        // Pack-gated decorator/FX overlay (adr_027 Wave 2). Additive chrome over
+        // the frame glass; empty/no-op unless the active pack declares an `fx`
+        // block. z:1 — above the glass, below the sides (z:10) and panels (z:5).
+        FrameFx {
+            z: 1
+            anchors.fill: parent
+            contentRect:  _frameBg.contentRect
+            cornerRadius: _frameBg.cornerR
+            packDir:      Commons.Appearance.activePackDir
         }
 
         // ── Sides ─────────────────────────────────────────────────────────────

@@ -121,6 +121,21 @@ QtObject {
         return root._tok("frame", "cornerRadius", -1)
     }
 
+    // Decorator/FX block from the active pack (adr_027 Wave 2). Consumed by the
+    // FrameFx overlay: { glow{}, brackets{}, texture{} }, each optional. Empty
+    // object when no pack (or no fx) — the base look stays untouched. Re-evaluates
+    // on pack change (reads _packData) so the overlay reacts live.
+    readonly property var fx: (root._packData && root._packData.fx) ? root._packData.fx : ({})
+
+    // Resolve an fx colour string: a palette name ("accent","mauve",…) maps to
+    // the live theme colour; anything else is passed through as a literal colour.
+    function fxColor(name, fallback) {
+        if (!name) return fallback
+        if (name === "accent") return root.colors.accent
+        if (root.colors.hasOwnProperty(name)) return root.colors[name]
+        return name
+    }
+
     // ── Palette (Macchiato defaults; all bindings re-evaluate on _data change) ─
     readonly property QtObject colors: QtObject {
         // Base surfaces
