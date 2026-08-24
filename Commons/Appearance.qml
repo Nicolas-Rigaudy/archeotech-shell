@@ -270,23 +270,25 @@ QtObject {
     // dropped the never-referenced `slow`/`spring`. New semantic names follow the
     // §18.2 converged ranges: effects (opacity/colour) short, spatial (move/size)
     // longer, and the enter/exit split ("enter gently, leave briskly").
+    // Durations route through _tok so a pack's `anim` group can retune the whole
+    // shell's motion (adr_027 Wave 2) — components already read these tokens.
     readonly property QtObject anim: QtObject {
-        readonly property int fast:   100
-        readonly property int base:   200
+        readonly property int fast:   root._tok("anim", "fast",   100)
+        readonly property int base:   root._tok("anim", "base",   200)
         // Strip popup → panel transitions (perp + axis growth).
-        readonly property int panel:  240
+        readonly property int panel:  root._tok("anim", "panel",  240)
 
         // Effects — opacity / colour crossfades.
-        readonly property int effectsFast: 150
-        readonly property int effectsMed:  200
-        readonly property int effectsSlow: 300
+        readonly property int effectsFast: root._tok("anim", "effectsFast", 150)
+        readonly property int effectsMed:  root._tok("anim", "effectsMed",  200)
+        readonly property int effectsSlow: root._tok("anim", "effectsSlow", 300)
         // Spatial — position / size moves.
-        readonly property int spatialFast:    350
-        readonly property int spatialDefault: 500
-        readonly property int spatialSlow:    650
+        readonly property int spatialFast:    root._tok("anim", "spatialFast",    350)
+        readonly property int spatialDefault: root._tok("anim", "spatialDefault", 500)
+        readonly property int spatialSlow:    root._tok("anim", "spatialSlow",    650)
         // Enter/exit asymmetry defaults.
-        readonly property int enter: 400
-        readonly property int exit:  200
+        readonly property int enter: root._tok("anim", "enter", 400)
+        readonly property int exit:  root._tok("anim", "exit",  200)
     }
 
     // ── Motion curves (§18.2) ────────────────────────────────────────────────
@@ -296,18 +298,20 @@ QtObject {
     // ONLY on spatial props (position/size), never on colour/opacity (they'd
     // flash). Effects/enter/exit pairs give the asymmetric "enter decel, exit
     // accel" idiom.
+    // A pack's `curve` group may override any bezier control-point list (adr_027
+    // Wave 2) — _tok returns the pack array when present, else the M3 default.
     readonly property QtObject curve: QtObject {
-        readonly property var standard:      [0.2, 0, 0, 1, 1, 1]
-        readonly property var standardAccel: [0.3, 0, 1, 1, 1, 1]
-        readonly property var standardDecel: [0, 0, 0, 1, 1, 1]
+        readonly property var standard:      root._tok("curve", "standard",      [0.2, 0, 0, 1, 1, 1])
+        readonly property var standardAccel: root._tok("curve", "standardAccel", [0.3, 0, 1, 1, 1, 1])
+        readonly property var standardDecel: root._tok("curve", "standardDecel", [0, 0, 0, 1, 1, 1])
 
-        readonly property var emphasized:      [0.05, 0, 2/15, 0.06, 1/6, 0.4, 5/24, 0.82, 0.25, 1, 1, 1]
-        readonly property var emphasizedAccel: [0.3, 0, 0.8, 0.15, 1, 1]
-        readonly property var emphasizedDecel: [0.05, 0.7, 0.1, 1, 1, 1]
+        readonly property var emphasized:      root._tok("curve", "emphasized",      [0.05, 0, 2/15, 0.06, 1/6, 0.4, 5/24, 0.82, 0.25, 1, 1, 1])
+        readonly property var emphasizedAccel: root._tok("curve", "emphasizedAccel", [0.3, 0, 0.8, 0.15, 1, 1])
+        readonly property var emphasizedDecel: root._tok("curve", "emphasizedDecel", [0.05, 0.7, 0.1, 1, 1, 1])
 
-        readonly property var expressiveFastSpatial:    [0.42, 1.67, 0.21, 0.90, 1, 1]
-        readonly property var expressiveDefaultSpatial: [0.38, 1.21, 0.22, 1.00, 1, 1]
-        readonly property var expressiveSlowSpatial:    [0.39, 1.29, 0.35, 0.98, 1, 1]
-        readonly property var expressiveEffects:        [0.34, 0.80, 0.34, 1.00, 1, 1]
+        readonly property var expressiveFastSpatial:    root._tok("curve", "expressiveFastSpatial",    [0.42, 1.67, 0.21, 0.90, 1, 1])
+        readonly property var expressiveDefaultSpatial: root._tok("curve", "expressiveDefaultSpatial", [0.38, 1.21, 0.22, 1.00, 1, 1])
+        readonly property var expressiveSlowSpatial:    root._tok("curve", "expressiveSlowSpatial",    [0.39, 1.29, 0.35, 0.98, 1, 1])
+        readonly property var expressiveEffects:        root._tok("curve", "expressiveEffects",        [0.34, 0.80, 0.34, 1.00, 1, 1])
     }
 }

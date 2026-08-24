@@ -40,7 +40,7 @@ Shape {
     // tokens load async, so rebuild when the pack data changes too.
     Connections {
         target: Commons.Appearance
-        function on_packDataChanged() { frame._rebuild() }
+        function on_PackDataChanged() { frame._rebuild() }
     }
 
     function _build() {
