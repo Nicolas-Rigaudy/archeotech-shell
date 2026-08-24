@@ -129,16 +129,23 @@ def apply_kitty(theme: dict, vars: Dict[str, str]) -> None:
     # kitty colors ship co-located with the theme package (themes/<v>/kitty.conf),
     # so a theme is self-contained and the applier skips gracefully if kitty
     # isn't installed on this machine.
-    src = Path(theme["_dir"]) / "kitty.conf"
     dst = HOME / ".config" / "kitty" / "current-theme.conf"
-    if not src.exists():
-        warn(f"kitty theme file missing: {src}")
-        return
+    if theme.get("_pack"):
+        # A theme pack overrides the palette → render kitty's colours from it
+        # (the baked per-variant kitty.conf is Catppuccin-specific and would
+        # ignore the pack). All template tokens exist in the merged theme (pack
+        # overrides layered over the base variant's full token set).
+        content = render("kitty-colors.conf.tmpl", vars)
+    else:
+        src = Path(theme["_dir"]) / "kitty.conf"
+        if not src.exists():
+            warn(f"kitty theme file missing: {src}")
+            return
+        content = src.read_text()
     # Background opacity is theme-aware: dark themes keep the glass look, but
     # light themes must be (near-)opaque — at the dark transparency the
     # wallpaper shows through and dark-on-light text is unreadable. kitty.conf
     # no longer hardcodes opacity; it lives here, after the include.
-    content = src.read_text()
     # Accent picker (Catppuccin): make the active tab + mark2 follow the chosen
     # accent instead of the package's baked mauve. apply_accent stored the hex
     # under theme['kitty']['accent']; absent it, the baked colors stay untouched.
@@ -585,6 +592,8 @@ def main() -> None:
 
     # Pack palette overlay (overrides mode/theme/flavor/accent beneath it).
     pack_accent = apply_pack_palette(theme, pack_dir) if pack_dir else None
+    if pack_dir:
+        theme["_pack"] = pack_dir      # appliers render from the palette, not baked assets
 
     vars = build_vars(theme)
 

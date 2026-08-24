@@ -74,13 +74,26 @@ QtObject {
         var v = _resolveVariant()
         if (!v) return
         var a = _resolveAccent()
-        var key = v + "|" + a
+        var pack = Commons.Appearance.activePackDir   // "" = base look
+        var key = v + "|" + a + "|" + pack
         if (key === root._lastApplied) return
         root._lastApplied = key
-        _applyProc.command = a ? [Commons.Paths.themeSwitch, v, a]
-                               : [Commons.Paths.themeSwitch, v]
+        // A theme pack sits atop the hierarchy (adr_027): passing its dir makes
+        // theme-switch overlay the pack's palette over the variant across every
+        // app; clearing it (base) re-applies the plain variant → reversible.
+        var cmd = [Commons.Paths.themeSwitch, v]
+        if (a) cmd.push(a)
+        if (pack) { cmd.push("--pack"); cmd.push(pack) }
+        _applyProc.command = cmd
         _applyProc.running = true
         Persistence.Config.set("theme.variant", v)
+    }
+
+    // Re-apply cross-app theming when the active pack changes (activePackDir is
+    // resolved + pushed onto Appearance from shell.qml after pack discovery).
+    property var _packConn: Connections {
+        target: Commons.Appearance
+        function onActivePackDirChanged() { root._apply() }
     }
 
     // Auto-mode clock — re-resolve every minute; applies on day↔night crossing.
@@ -103,7 +116,7 @@ QtObject {
         // Seed the dedup key to the on-disk state so a steady-state boot doesn't
         // redundantly re-run the whole switch — but a resolved difference (e.g.
         // auto-mode now resolves to the day flavor) still applies.
-        root._lastApplied = applied + "|" + _resolveAccent()
+        root._lastApplied = applied + "|" + _resolveAccent() + "|" + Commons.Appearance.activePackDir
         root._apply()
     }
     property var _readyConn: Connections {
