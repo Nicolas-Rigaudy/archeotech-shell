@@ -31,7 +31,9 @@ Item {
                 text: title
                 color: Commons.Appearance.colors.text
                 font.pixelSize: 18
-                font.family: Commons.Appearance.font.family
+                // Display face (adr_027 font hook) — a pack's header font when it
+                // ships one; the body family otherwise.
+                font.family: Commons.Appearance.font.display
                 font.weight: Font.Bold
             }
 

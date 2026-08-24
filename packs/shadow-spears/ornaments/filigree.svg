@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <g fill="none" stroke="#c8a44d" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <!-- corner L rail -->
+    <path d="M5 30 L5 5 L30 5"/>
+    <!-- inner scroll curls, one down one across -->
+    <path d="M5 30 q0 11 11 11 q7 0 7 -7 q0 -4.5 -4.5 -4.5"/>
+    <path d="M30 5 q11 0 11 11 q0 7 -7 7 q-4.5 0 -4.5 -4.5"/>
+    <!-- short spurs -->
+    <path d="M13 5 L13 11 M5 13 L11 13"/>
+  </g>
+  <!-- filled gothic corner triangle + stud -->
+  <path d="M5 5 L15 5 L5 15 Z" fill="#c8a44d"/>
+  <circle cx="22" cy="22" r="2.4" fill="#c8a44d"/>
+</svg>

@@ -289,8 +289,23 @@ QtObject {
     }
 
     // ── Typography ─────────────────────────────────────────────────────────────
+    // Font hook (adr_027 / item_083): a pack MAY ship its own display face for
+    // headers (gothic/blackletter for a 40K pack) while body text stays the mono
+    // base for legibility. `font.displayFile` (pack-relative .ttf/.otf) is loaded
+    // here via FontLoader; `font.displayFamily` names an already-installed family.
+    // `font.display` resolves loaded-file → declared-family → body family.
+    property FontLoader _displayFont: FontLoader {
+        source: (root.activePackDir && root._mergedPack.font && root._mergedPack.font.displayFile)
+                ? ("file://" + root.activePackDir + root._mergedPack.font.displayFile) : ""
+    }
+
     readonly property QtObject font: QtObject {
         readonly property string family: root._tok("font", "family", "FiraCode Nerd Font")
+        // Display/header face — falls back to the body family when the pack ships none.
+        readonly property string display:
+            (root._displayFont.status === FontLoader.Ready && root._displayFont.name)
+                ? root._displayFont.name
+                : root._tok("font", "displayFamily", family)
         readonly property int sizeSm:   root._tok("font", "sizeSm",   11)
         readonly property int sizeBase: root._tok("font", "sizeBase", 12)
         readonly property int sizeMd:   root._tok("font", "sizeMd",   13)

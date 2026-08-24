@@ -108,7 +108,52 @@ Item {
         }
     }
 
+    // ── Ornament overlay (adr_027 / item_083) ───────────────────────────────────
+    // Pack-supplied SVG/PNG art (gothic filigree, sigils — non-IP / open assets)
+    // placed at frame anchors. fx.ornaments = [{ source, anchor, size, opacity }].
+    // anchor "corners" = all four content-hole corners, auto-rotated so art drawn
+    // for the top-left hugs each corner; single-corner anchors also supported.
+    // This is the engine capability WH40K needs beyond geometric primitives.
+    readonly property var _orn: _fx.ornaments || []
+    readonly property var _ornMarks: {
+        var out = []
+        if (!_hasHole || packDir === "") return out
+        var cx0 = contentRect.x, cy0 = contentRect.y
+        var cx1 = contentRect.x + contentRect.width, cy1 = contentRect.y + contentRect.height
+        for (var i = 0; i < _orn.length; i++) {
+            var o = _orn[i]
+            if (!o || !o.source) continue
+            var src = "file://" + packDir + o.source
+            var sz = o.size !== undefined ? o.size : 40
+            var op = o.opacity !== undefined ? o.opacity : 1.0
+            var a = o.anchor || "corners"
+            var cells = []
+            if (a === "corners")
+                cells = [[cx0, cy0, 0], [cx1 - sz, cy0, 90], [cx1 - sz, cy1 - sz, 180], [cx0, cy1 - sz, 270]]
+            else if (a === "top-left")     cells = [[cx0, cy0, 0]]
+            else if (a === "top-right")    cells = [[cx1 - sz, cy0, 90]]
+            else if (a === "bottom-right") cells = [[cx1 - sz, cy1 - sz, 180]]
+            else if (a === "bottom-left")  cells = [[cx0, cy1 - sz, 270]]
+            for (var j = 0; j < cells.length; j++)
+                out.push({ source: src, x: cells[j][0], y: cells[j][1], size: sz, rot: cells[j][2], opacity: op })
+        }
+        return out
+    }
+    Repeater {
+        model: fx._ornMarks
+        delegate: Image {
+            source: modelData.source
+            x: modelData.x; y: modelData.y
+            width: modelData.size; height: modelData.size
+            sourceSize.width: modelData.size; sourceSize.height: modelData.size
+            rotation: modelData.rot
+            opacity: modelData.opacity
+            smooth: true
+            antialiasing: true
+        }
+    }
+
     // NB: HUD corner brackets moved out of FrameFx — they now draw per-WINDOW
     // (on each window's corners) in WindowBrackets.qml, driven by live client
-    // geometry. FrameFx keeps only the frame-scoped effects (texture, glow).
+    // geometry.
 }
