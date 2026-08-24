@@ -81,6 +81,16 @@ ShellRoot {
                    Persistence.Config.get("appearance.activePack", ""),
                    Commons.Appearance.shellVersion)
     }
+    // Pack-scoped settings (adr_027 Layer D): the active pack's Config object
+    // { "<dotted token path>": value }, overriding matching pack token paths.
+    Binding {
+        target: Commons.Appearance
+        property: "packSettings"
+        value: {
+            var id = Persistence.Config.get("appearance.activePack", "")
+            return id ? Persistence.Config.get("packs." + id, ({})) : ({})
+        }
+    }
 
     // Apply the active pack's window decoration to the compositor (adr_027 — the
     // theme reaching the real windows: corner radius + border). Fires when the
@@ -99,8 +109,9 @@ ShellRoot {
         Component.onCompleted: apply()
         Connections {
             target: Commons.Appearance
-            function on_PackDataChanged()  { _winDecor.apply() }
-            function onActivePackChanged() { _winDecor.apply() }
+            function on_PackDataChanged()   { _winDecor.apply() }
+            function onActivePackChanged()  { _winDecor.apply() }
+            function onPackSettingsChanged() { _winDecor.apply() }   // window.* pack settings
         }
     }
 

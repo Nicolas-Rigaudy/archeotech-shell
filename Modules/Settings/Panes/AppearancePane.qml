@@ -20,6 +20,12 @@ Item {
         return m
     }
 
+    // Active pack + its settings schema (adr_027 Layer D). The schema section
+    // shows only when the active pack declares one.
+    readonly property string _activePack: Persistence.Config.get("appearance.activePack", "")
+    readonly property var _packSchema: ShellServices.PackRegistry.configSchemaFor(_activePack)
+    readonly property bool _hasPackSettings: _packSchema && Object.keys(_packSchema).length > 0
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
@@ -88,6 +94,23 @@ Item {
                 }
 
                 Item { implicitHeight: 10; Layout.fillWidth: true }
+
+                // ── Pack settings (adr_027 Layer D) ───────────────────────────
+                // Rendered from the active pack's configSchema via the shared
+                // ConfigForm; values persist under packs.<id> and override the
+                // matching pack token paths live (real settings, not fake toggles).
+                SectionLabel { text: "PACK SETTINGS"; visible: root._hasPackSettings }
+                SettingsCard {
+                    visible: root._hasPackSettings
+                    ConfigForm {
+                        Layout.fillWidth: true
+                        schema: root._packSchema
+                        config: Persistence.Config.get("packs." + root._activePack, ({}))
+                        onChanged: cfg => Persistence.Config.set("packs." + root._activePack, cfg)
+                    }
+                }
+
+                Item { implicitHeight: 10; Layout.fillWidth: true; visible: root._hasPackSettings }
 
                 // ── Behavior ──────────────────────────────────────────────────
                 SectionLabel { text: "BEHAVIOR" }

@@ -39,7 +39,7 @@ QtObject {
     // Colour lookup with pack overlay (adr_027 Layer A): the active pack's tokens
     // win, then base theme.json, then the hardcoded fallback.
     function _c(key, fallback) {
-        var p = root._packData
+        var p = root._mergedPack
         if (p && p.colors && p.colors[key] !== undefined && p.colors[key] !== null)
             return p.colors[key]
         var d = root._data
@@ -50,7 +50,7 @@ QtObject {
     // theme's top-level `accent` key holds a color name (e.g. "blue"); falls
     // back to "mauve" so themes without the key behave as before.
     readonly property string _accentName:
-        (root._packData && root._packData.accent)
+        (root._mergedPack && root._mergedPack.accent)
         || (root._data && root._data.accent) || "mauve"
 
     function _rgba(key, fallback, alpha) {
@@ -102,10 +102,37 @@ QtObject {
         }
     }
 
+    // Pack-scoped settings (adr_027 Layer D): a flat map { "<dotted token path>":
+    // value } persisted under Config `packs.<id>` and pushed here from shell.qml
+    // (Commons can't import a Service). Each entry OVERRIDES that path in the
+    // pack's token data, so a settings slider/toggle drives the real look through
+    // the same getters below — no separate wiring, no fake toggles.
+    property var packSettings: ({})
+
+    // Active pack tokens with pack-settings overrides applied. Everything
+    // pack-aware (_c, _accentName, _tok, fx, packWindow) reads THIS, not the raw
+    // _packData, so overrides reach colours, tokens, fx and window decor alike.
+    readonly property var _mergedPack: root._mergePackSettings(root._packData, root.packSettings)
+
+    function _mergePackSettings(base, ov) {
+        var m = base ? JSON.parse(JSON.stringify(base)) : ({})
+        if (ov) for (var k in ov) root._setPath(m, k, ov[k])
+        return m
+    }
+    function _setPath(obj, path, val) {
+        var parts = String(path).split(".")
+        var o = obj
+        for (var i = 0; i < parts.length - 1; i++) {
+            if (typeof o[parts[i]] !== "object" || o[parts[i]] === null) o[parts[i]] = {}
+            o = o[parts[i]]
+        }
+        o[parts[parts.length - 1]] = val
+    }
+
     // Non-colour token lookup with pack overlay: pack[group][key] wins, else the
     // base literal supplied by the caller. Used by radius/spacing/font/bar below.
     function _tok(group, key, fallback) {
-        var p = root._packData
+        var p = root._mergedPack
         if (p && p[group] && p[group][key] !== undefined && p[group][key] !== null)
             return p[group][key]
         return fallback
@@ -125,12 +152,12 @@ QtObject {
     // FrameFx overlay: { glow{}, brackets{}, texture{} }, each optional. Empty
     // object when no pack (or no fx) — the base look stays untouched. Re-evaluates
     // on pack change (reads _packData) so the overlay reacts live.
-    readonly property var fx: (root._packData && root._packData.fx) ? root._packData.fx : ({})
+    readonly property var fx: (root._mergedPack && root._mergedPack.fx) ? root._mergedPack.fx : ({})
 
     // Window-decoration block from the active pack (adr_027 — theme touches real
     // windows): { cornerRadius, borderWidth }. Applied to the compositor from
     // shell.qml (Commons can't import a Service). Empty ⇒ base window decoration.
-    readonly property var packWindow: (root._packData && root._packData.window) ? root._packData.window : ({})
+    readonly property var packWindow: (root._mergedPack && root._mergedPack.window) ? root._mergedPack.window : ({})
 
     // ── Component style delegates (adr_027 Layer C) ──────────────────────────────
     // Current shell version, checked against a pack's minShellVersion before its

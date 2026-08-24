@@ -45,6 +45,15 @@ QtObject {
         return (p && p.styles) ? p.styles : []
     }
 
+    // Pack-scoped settings schema (adr_027 Layer D): a ConfigForm schema object
+    // { "<dotted token path>": {type,label,...} } from pack.json, or {} if none.
+    // Rendered in Settings → Appearance when the pack is active; values persist
+    // under Config `packs.<id>` and override the matching pack token paths.
+    function configSchemaFor(id) {
+        var p = packFor(id)
+        return (p && p.configSchema) ? p.configSchema : ({})
+    }
+
     // pack.json minShellVersion, or "" if unset (treated as compatible).
     function minVersionFor(id) {
         var p = packFor(id)
@@ -87,7 +96,7 @@ QtObject {
             "if [ -d \"${d}styles\" ]; then " +
             "styles=$(cd \"${d}styles\" && ls *.qml 2>/dev/null | sed 's/\\.qml$//' | jq -R . | jq -sc .); " +
             "[ -n \"$styles\" ] || styles='[]'; fi; " +
-            "jq -c --arg dir \"$d\" --argjson styles \"$styles\" '{dir:$dir, id, name, tier, minShellVersion, inherits, styles:$styles}' \"$m\" 2>/dev/null; " +
+            "jq -c --arg dir \"$d\" --argjson styles \"$styles\" '{dir:$dir, id, name, tier, minShellVersion, inherits, styles:$styles, configSchema}' \"$m\" 2>/dev/null; " +
             "done; }; " +
             "scan \"" + root._bundledDir + "\"; " +
             "scan \"$HOME/.local/share/archeotech/packs\""

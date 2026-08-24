@@ -3,5 +3,11 @@
   "name": "HUD",
   "tier": "official",
   "minShellVersion": "0.3.0",
-  "inherits": "base"
+  "inherits": "base",
+  "configSchema": {
+    "fx.glow.strength":    { "type": "real", "label": "Glow strength", "min": 0, "max": 1, "step": 0.05, "default": 0.6 },
+    "fx.texture.opacity":  { "type": "real", "label": "Grid texture", "min": 0, "max": 0.4, "step": 0.02, "default": 0.18 },
+    "fx.brackets.enabled": { "type": "bool", "label": "Window brackets", "default": true },
+    "window.cornerRadius": { "type": "int", "label": "Window corner radius", "min": 0, "max": 16, "step": 1, "unit": "px", "default": 0 }
+  }
 }
