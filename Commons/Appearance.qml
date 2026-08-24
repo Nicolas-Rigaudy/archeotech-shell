@@ -127,6 +127,11 @@ QtObject {
     // on pack change (reads _packData) so the overlay reacts live.
     readonly property var fx: (root._packData && root._packData.fx) ? root._packData.fx : ({})
 
+    // Window-decoration block from the active pack (adr_027 — theme touches real
+    // windows): { cornerRadius, borderWidth }. Applied to the compositor from
+    // shell.qml (Commons can't import a Service). Empty ⇒ base window decoration.
+    readonly property var packWindow: (root._packData && root._packData.window) ? root._packData.window : ({})
+
     // Resolve an fx colour string: a palette name ("accent","mauve",…) maps to
     // the live theme colour; anything else is passed through as a literal colour.
     function fxColor(name, fallback) {

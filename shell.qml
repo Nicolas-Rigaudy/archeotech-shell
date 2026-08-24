@@ -73,6 +73,28 @@ ShellRoot {
         value: ShellServices.PackRegistry.dirFor(Persistence.Config.get("appearance.activePack", ""))
     }
 
+    // Apply the active pack's window decoration to the compositor (adr_027 — the
+    // theme reaching the real windows: corner radius + border). Fires when the
+    // pack (re)loads or changes; MangoWC.applyWindowDecor is idempotent (only
+    // seds + reloads mango when a value actually differs), so no-op cases —
+    // including every base-look startup — cost nothing. No `window` block ⇒ base
+    // decoration (radius 12, border 2), so switching back to base restores it.
+    Item {
+        id: _winDecor
+        function apply() {
+            var w  = Commons.Appearance.packWindow
+            var r  = (w && w.cornerRadius !== undefined) ? w.cornerRadius : 12
+            var bp = (w && w.borderWidth  !== undefined) ? w.borderWidth  : 2
+            CompositorServices.MangoWC.applyWindowDecor(r, bp)
+        }
+        Component.onCompleted: apply()
+        Connections {
+            target: Commons.Appearance
+            function on_PackDataChanged()  { _winDecor.apply() }
+            function onActivePackChanged() { _winDecor.apply() }
+        }
+    }
+
     // ── IPC handlers ───────────────────────────────────────────────────────────
 
     IpcHandler {

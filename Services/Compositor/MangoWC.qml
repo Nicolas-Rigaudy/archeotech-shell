@@ -30,7 +30,34 @@ QtObject {
             property bool   focused:    false
             property bool   floating:   false
             property bool   fullscreen: false
+            // Monitor position/size in the global layout (for coord mapping).
+            property int    x:          0
+            property int    y:          0
+            property int    mw:         0
+            property int    mh:         0
         }
+    }
+
+    // ── Client (window) geometry ─────────────────────────────────────────────────
+    // Live list of all windows with GLOBAL geometry, from `watch all-clients`.
+    // Used by the per-window bracket overlay (adr_027 window chrome).
+    property var clients: []
+
+    // Visible windows on a monitor, converted to that monitor's LOCAL coords
+    // (subtracting its layout offset) so a per-monitor overlay can place chrome
+    // directly. Reads `clients` + the monitor's geometry, so bindings on it
+    // re-evaluate when either changes.
+    function clientsFor(monitorName) {
+        var mo = _outputs[monitorName]
+        if (!mo) return []
+        var out = []
+        for (var i = 0; i < clients.length; i++) {
+            var c = clients[i]
+            if (c.monitor !== monitorName || !c.visible) continue
+            out.push({ x: c.x - mo.x, y: c.y - mo.y, width: c.width, height: c.height,
+                       focused: c.focused, id: c.id })
+        }
+        return out
     }
 
     function _ensureOutput(name) {
@@ -51,7 +78,7 @@ QtObject {
     function isFullscreen(name) { var o = _outputs[name]; return o ? o.fullscreen : false }
 
     // ── Watch streams ────────────────────────────────────────────────────────────
-    Component.onCompleted: { _watchMonitors.running = true; _watchClient.running = true }
+    Component.onCompleted: { _watchMonitors.running = true; _watchClient.running = true; _watchClients.running = true }
 
     property var _watchMonitors: Process {
         command: ["mmsg", "watch", "all-monitors"]
@@ -75,6 +102,17 @@ QtObject {
         onTriggered: { root._watchClient.running = true; interval = 500 }
     }
 
+    property var _watchClients: Process {
+        command: ["mmsg", "watch", "all-clients"]
+        running: false
+        stdout: SplitParser { onRead: line => root._parseClients(line) }
+        onExited: (code, status) => root._scheduleRestart(root._clisRestart)
+    }
+    property var _clisRestart: Timer {
+        interval: 500; repeat: false
+        onTriggered: { root._watchClients.running = true; interval = 500 }
+    }
+
     // Exponential backoff 500ms → cap 8s (reset to 500 on each (re)start attempt).
     function _scheduleRestart(timer) {
         timer.interval = Math.min(timer.interval * 2, 8000)
@@ -92,6 +130,10 @@ QtObject {
             var m = data.monitors[i]
             var entry = _ensureOutput(m.name)
             entry.layout = m.layout_symbol || ""
+            if (m.x !== undefined) entry.x = m.x
+            if (m.y !== undefined) entry.y = m.y
+            if (m.width !== undefined)  entry.mw = m.width
+            if (m.height !== undefined) entry.mh = m.height
             var tags = []
             var src = m.tags || []
             for (var j = 0; j < src.length; j++) {
@@ -129,6 +171,23 @@ QtObject {
         for (var k in _outputs) _outputs[k].focused = (k === mon)
     }
 
+    function _parseClients(line) {
+        line = (line || "").trim()
+        if (!line || line[0] !== "{") return
+        var data
+        try { data = JSON.parse(line) } catch (e) { return }
+        if (!data || !data.clients) return
+        var out = []
+        for (var i = 0; i < data.clients.length; i++) {
+            var c = data.clients[i]
+            out.push({ id: c.id, monitor: c.monitor || "",
+                       x: c.x, y: c.y, width: c.width, height: c.height,
+                       visible: !!c.is_visible, focused: !!c.is_focused,
+                       floating: !!c.is_floating, fullscreen: !!c.is_fullscreen })
+        }
+        root.clients = out
+    }
+
     // ── Actions ────────────────────────────────────────────────────────────────
     // `view`/`toggleview` act on the focused monitor — mango's dispatch can only
     // target a client, not a monitor, so outputName is advisory (matches the
@@ -163,6 +222,32 @@ QtObject {
               "sed --follow-symlinks -i "
               + "'s|^scroller_default_proportion=.*|scroller_default_proportion=" + v + "|' "
               + "\"$HOME/.config/mango/config.conf\""])
+    }
+
+    // Apply a theme pack's window decoration to the compositor (adr_027 — the
+    // theme touching real windows). border_radius + borderpx are mango globals,
+    // live only after `reload_config`. This is IDEMPOTENT: it reads the current
+    // config values first and only seds + reloads when something actually differs
+    // — so shell startup with a matching config does nothing (no needless reload,
+    // no keyboard-layout cycle). reload_config resets the keyboard layout, so the
+    // active one is saved and cycled back (matches mango-reload.sh). Surgical
+    // anchored seds via --follow-symlinks edit the repo file behind the dotfiles
+    // symlink, keeping the symlink intact.
+    function applyWindowDecor(radius, borderpx) {
+        var r  = Math.round(radius)
+        var bp = Math.round(borderpx)
+        _cmd(["bash", "-c",
+              "CFG=\"$HOME/.config/mango/config.conf\"; [ -f \"$CFG\" ] || exit 0; CH=0; "
+            + "if [ \"$(grep -oP '^border_radius=\\K[0-9]+' \"$CFG\")\" != \"" + r + "\" ]; then "
+            + "sed --follow-symlinks -i 's|^border_radius=.*|border_radius=" + r + "|' \"$CFG\"; CH=1; fi; "
+            + "if [ \"$(grep -oP '^borderpx=\\K[0-9]+' \"$CFG\")\" != \"" + bp + "\" ]; then "
+            + "sed --follow-symlinks -i 's|^borderpx=.*|borderpx=" + bp + "|' \"$CFG\"; CH=1; fi; "
+            + "if [ \"$CH\" = \"1\" ]; then "
+            + "PREV_KB=$(mmsg get keyboardlayout 2>/dev/null | jq -r '.layout // empty' 2>/dev/null); "
+            + "mmsg dispatch reload_config; "
+            + "if [ -n \"$PREV_KB\" ]; then for _ in $(seq 1 6); do "
+            + "[ \"$(mmsg get keyboardlayout 2>/dev/null | jq -r '.layout // empty' 2>/dev/null)\" = \"$PREV_KB\" ] && break; "
+            + "mmsg dispatch switch_keyboard_layout 2>/dev/null; sleep 0.1; done; fi; fi"])
     }
 
     property var _cmdRunner: Process {

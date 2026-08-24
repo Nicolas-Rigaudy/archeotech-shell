@@ -1,6 +1,4 @@
 import QtQuick
-import QtQuick.Effects
-import QtQuick.Shapes
 import "../../Commons" as Commons
 
 // Decorator/FX overlay for the shell frame (adr_027 Wave 2, Layer B).
@@ -12,12 +10,12 @@ import "../../Commons" as Commons
 // corners the frame draws. Purely decorative: it never adds to the input mask, so
 // the content hole stays click-through.
 //
-// Supported effects (each optional, all off by default):
+// Frame-scoped effects (each optional, all off by default):
 //   fx.texture  { source, opacity }               — tiled texture over the frame chrome
-//   fx.glow     { enabled, color, strength, size } — accent rim glow along the hole edge
-//   fx.brackets { enabled, color, length, thickness, inset } — HUD corner brackets
+//   fx.glow     { enabled, color, strength, size } — accent glow on the frame's content edge
+// (fx.brackets draws per-WINDOW in WindowBrackets.qml, not here.)
 //
-// Paint order (declaration order at equal z): texture ▸ glow ▸ brackets.
+// Paint order (declaration order at equal z): texture ▸ glow.
 Item {
     id: fx
 
@@ -67,75 +65,50 @@ Item {
     readonly property int   _glSize:     _gl.size !== undefined ? _gl.size : 24
     readonly property color _glEdge:     Qt.rgba(_glColor.r, _glColor.g, _glColor.b, _glStrength)
 
-    Item {
+    // Glow lives ON THE FRAME (bar/strip side of the content edge), NOT over the
+    // windows: four gradient bands, accent strongest at the content edge, fading
+    // out into the frame. Top/bottom span the FULL width so the corners (frame
+    // above/below the side strips) are covered — no dark corner seam.
+    Rectangle {   // top — on the bar, accent at the content edge, fading up
         visible: fx._glOn
-        x: fx.contentRect.x - fx._glSize
-        y: fx.contentRect.y - fx._glSize
-        width:  fx.contentRect.width  + 2 * fx._glSize
-        height: fx.contentRect.height + 2 * fx._glSize
-        layer.enabled: fx._glOn
-        layer.effect: MultiEffect {
-            blurEnabled: true
-            blur: 1.0
-            blurMax: fx._glSize
+        x: 0; y: fx.contentRect.y - fx._glSize
+        width: fx.width; height: fx._glSize
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: "transparent" }
+            GradientStop { position: 1.0; color: fx._glEdge }
         }
-        Rectangle {
-            anchors.fill: parent
-            anchors.margins: fx._glSize        // inner rect == the content hole
-            radius: fx.cornerRadius            // follow the frame's rounded corner
-            color: "transparent"
-            border.color: fx._glEdge
-            border.width: Math.max(2, Math.round(fx._glSize / 5))
+    }
+    Rectangle {   // bottom
+        visible: fx._glOn
+        x: 0; y: fx.contentRect.y + fx.contentRect.height
+        width: fx.width; height: fx._glSize
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: fx._glEdge }
+            GradientStop { position: 1.0; color: "transparent" }
+        }
+    }
+    Rectangle {   // left strip — accent at the content edge, fading left
+        visible: fx._glOn
+        x: fx.contentRect.x - fx._glSize; y: fx.contentRect.y
+        width: fx._glSize; height: fx.contentRect.height
+        gradient: Gradient {
+            orientation: Gradient.Horizontal
+            GradientStop { position: 0.0; color: "transparent" }
+            GradientStop { position: 1.0; color: fx._glEdge }
+        }
+    }
+    Rectangle {   // right strip
+        visible: fx._glOn
+        x: fx.contentRect.x + fx.contentRect.width; y: fx.contentRect.y
+        width: fx._glSize; height: fx.contentRect.height
+        gradient: Gradient {
+            orientation: Gradient.Horizontal
+            GradientStop { position: 0.0; color: fx._glEdge }
+            GradientStop { position: 1.0; color: "transparent" }
         }
     }
 
-    // ── HUD corner brackets ──────────────────────────────────────────────────
-    readonly property var   _br:      _fx.brackets || ({})
-    readonly property bool  _brOn:    !!_br.enabled && _hasHole
-    readonly property int   _brLen:   _br.length    !== undefined ? _br.length    : 18
-    readonly property int   _brThick: _br.thickness !== undefined ? _br.thickness : 2
-    readonly property int   _brInset: _br.inset     !== undefined ? _br.inset     : 6
-    // Bend radius: rounds the corner of the L so it echoes the windows' rounded
-    // corners instead of a hard right angle (0 → sharp).
-    readonly property int   _brRadius: _br.radius !== undefined ? _br.radius : 0
-    readonly property color _brColor:  Commons.Appearance.fxColor(_br.color, Commons.Appearance.colors.accent)
-
-    // Four corners: {left, top} flags picking which hole corner each bracket hugs.
-    readonly property var _corners: [
-        { left: true,  top: true  }, { left: false, top: true  },
-        { left: false, top: false }, { left: true,  top: false }
-    ]
-    Repeater {
-        model: fx._brOn ? fx._corners : []
-        // Delegate ROOT carries no custom properties (Quickshell marks delegate
-        // context props FINAL); geometry lives on the ShapePath, read from
-        // modelData. Each bracket = horizontal arm → rounded bend → vertical arm.
-        delegate: Shape {
-            anchors.fill: parent
-            preferredRendererType: Shape.CurveRenderer
-            ShapePath {
-                id: sp
-                strokeColor: fx._brColor
-                strokeWidth: fx._brThick
-                fillColor: "transparent"
-                capStyle: ShapePath.RoundCap
-                joinStyle: ShapePath.RoundJoin
-                // Corner anchor (inset into the hole) + arm directions + bend radius.
-                readonly property real ax: fx.contentRect.x + (modelData.left ? fx._brInset : fx.contentRect.width  - fx._brInset)
-                readonly property real ay: fx.contentRect.y + (modelData.top  ? fx._brInset : fx.contentRect.height - fx._brInset)
-                readonly property real dx: modelData.left ? 1 : -1
-                readonly property real dy: modelData.top  ? 1 : -1
-                readonly property real r:  Math.max(0.5, Math.min(fx._brRadius, fx._brLen))
-                startX: ax + dx * fx._brLen
-                startY: ay
-                PathLine { x: sp.ax + sp.dx * sp.r; y: sp.ay }
-                PathArc {
-                    x: sp.ax; y: sp.ay + sp.dy * sp.r
-                    radiusX: sp.r; radiusY: sp.r
-                    direction: (sp.dx * sp.dy > 0) ? PathArc.Counterclockwise : PathArc.Clockwise
-                }
-                PathLine { x: sp.ax; y: sp.ay + sp.dy * fx._brLen }
-            }
-        }
-    }
+    // NB: HUD corner brackets moved out of FrameFx — they now draw per-WINDOW
+    // (on each window's corners) in WindowBrackets.qml, driven by live client
+    // geometry. FrameFx keeps only the frame-scoped effects (texture, glow).
 }

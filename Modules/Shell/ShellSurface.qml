@@ -170,6 +170,15 @@ Variants {
             packDir:      Commons.Appearance.activePackDir
         }
 
+        // Per-window HUD brackets (adr_027 — chrome on the real windows). On the
+        // Overlay surface, so it draws above windows. z:2 — above the frame FX,
+        // below the sides (z:10) so the bar/strips stay on top at screen corners.
+        WindowBrackets {
+            z: 2
+            anchors.fill: parent
+            screenName: _surface._screenName
+        }
+
         // ── Sides ─────────────────────────────────────────────────────────────
         // Transparent containers anchored to each edge; they position widgets/
         // icons over the FrameBackground glass. Inset by `neighbourGap + _r` at a
