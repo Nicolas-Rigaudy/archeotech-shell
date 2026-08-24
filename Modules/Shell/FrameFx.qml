@@ -139,6 +139,47 @@ Item {
         border.color: Qt.rgba(0, 0, 0, 0.5)
     }
 
+    // ── Rivets (adr_027 / item_083: machined-panel studs) ───────────────────────
+    // Bolt-heads run along the frame bands just outside the content edge — the
+    // biggest "physical machined object" tell. fx.rivets = { enabled, color, size,
+    // spacing, inset }. Marks flattened to avoid delegate context-prop clashes.
+    readonly property var   _rv:        _fx.rivets || ({})
+    readonly property bool  _rvOn:      !!_rv.enabled && _hasHole
+    readonly property color _rvColor:   Commons.Appearance.fxColor(_rv.color, Commons.Appearance.colors.overlay1)
+    readonly property int   _rvSize:    _rv.size    !== undefined ? _rv.size    : 4
+    readonly property int   _rvSpacing: _rv.spacing !== undefined ? _rv.spacing : 44
+    readonly property int   _rvInset:   _rv.inset   !== undefined ? _rv.inset   : 8
+    readonly property var _rivetMarks: {
+        var out = []
+        if (!_rvOn) return out
+        var cx0 = contentRect.x, cy0 = contentRect.y
+        var cx1 = contentRect.x + contentRect.width, cy1 = contentRect.y + contentRect.height
+        var sp = Math.max(14, _rvSpacing)
+        // top + bottom rows (start/stop inset from corners so they don't crowd the ornament)
+        for (var x = cx0 + sp; x < cx1 - sp * 0.5; x += sp) {
+            out.push({ cx: x, cy: cy0 - _rvInset })
+            out.push({ cx: x, cy: cy1 + _rvInset })
+        }
+        // left + right columns
+        for (var y = cy0 + sp; y < cy1 - sp * 0.5; y += sp) {
+            out.push({ cx: cx0 - _rvInset, cy: y })
+            out.push({ cx: cx1 + _rvInset, cy: y })
+        }
+        return out
+    }
+    Repeater {
+        model: fx._rivetMarks
+        delegate: Rectangle {
+            width: fx._rvSize; height: fx._rvSize; radius: fx._rvSize / 2
+            x: modelData.cx - fx._rvSize / 2
+            y: modelData.cy - fx._rvSize / 2
+            color: fx._rvColor
+            antialiasing: true
+            border.width: 1
+            border.color: Qt.darker(fx._rvColor, 1.6)   // bolt-head ring
+        }
+    }
+
     // ── Ornament overlay (adr_027 / item_083) ───────────────────────────────────
     // Pack-supplied SVG/PNG art (gothic filigree, sigils — non-IP / open assets)
     // placed at frame anchors. fx.ornaments = [{ source, anchor, size, opacity }].
