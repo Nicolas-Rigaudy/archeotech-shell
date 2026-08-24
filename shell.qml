@@ -55,7 +55,10 @@ ShellRoot {
     Binding {
         target: Commons.Appearance
         property: "flatMode"
-        value: Persistence.Config.get("appearance.flatMode", false)
+        // The active pack's material can force flat/matte (drops glass) — adr_027;
+        // else the persisted user toggle. (flatMode → base-pack setting is a later
+        // refactor; the OR keeps the user toggle working until then.)
+        value: Persistence.Config.get("appearance.flatMode", false) || Commons.Appearance.packMaterialFlat
     }
 
     // Drive the active theme pack (adr_027 Layer A) from the persisted setting,

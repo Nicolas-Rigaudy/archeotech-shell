@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- heavy outer corner frame (miter, square = gothic/industrial) -->
+  <path d="M4 44 L4 4 L44 4" fill="none" stroke="#a8683c" stroke-width="3"
+        stroke-linecap="square" stroke-linejoin="miter"/>
+  <!-- inner rule (double-line ceremonial framing) -->
+  <path d="M10 37 L10 10 L37 10" fill="none" stroke="#a8683c" stroke-width="1.4"
+        stroke-linecap="square"/>
+  <!-- pointed gothic arch sitting into the corner, apex to the diagonal -->
+  <path d="M12 31 Q12 15 22 11 Q22 8 22 8 Q22 8 22 11 Q32 15 32 31"
+        fill="none" stroke="#a8683c" stroke-width="1.7"/>
+  <!-- finial boss at the apex + solid corner gusset -->
+  <circle cx="22" cy="8" r="2.4" fill="#a8683c"/>
+  <path d="M4 4 L15 4 L4 15 Z" fill="#a8683c"/>
+</svg>

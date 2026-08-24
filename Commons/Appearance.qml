@@ -159,6 +159,12 @@ QtObject {
     // shell.qml (Commons can't import a Service). Empty ⇒ base window decoration.
     readonly property var packWindow: (root._mergedPack && root._mergedPack.window) ? root._mergedPack.window : ({})
 
+    // Pack material (adr_027 / item_083): a pack may drop the base frosted-glass
+    // look for a flat/matte "slab" (dataslate). Drives flatMode from shell.qml so
+    // all the existing glass/flat branches follow — no per-component work.
+    readonly property bool packMaterialFlat:
+        !!(root._mergedPack && (root._mergedPack.material === "flat" || root._mergedPack.material === "matte"))
+
     // ── Component style delegates (adr_027 Layer C) ──────────────────────────────
     // Current shell version, checked against a pack's minShellVersion before its
     // style delegates are honoured (the delegate prop contract is versioned).
