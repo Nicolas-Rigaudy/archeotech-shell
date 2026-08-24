@@ -169,14 +169,24 @@ Item {
     }
     Repeater {
         model: fx._rivetMarks
-        delegate: Rectangle {
-            width: fx._rvSize; height: fx._rvSize; radius: fx._rvSize / 2
-            x: modelData.cx - fx._rvSize / 2
-            y: modelData.cy - fx._rvSize / 2
-            color: fx._rvColor
-            antialiasing: true
-            border.width: 1
-            border.color: Qt.darker(fx._rvColor, 1.6)   // bolt-head ring
+        delegate: Item {
+            Rectangle {   // bolt head
+                width: fx._rvSize; height: fx._rvSize; radius: fx._rvSize / 2
+                x: modelData.cx - fx._rvSize / 2
+                y: modelData.cy - fx._rvSize / 2
+                color: fx._rvColor
+                antialiasing: true
+                border.width: 1
+                border.color: Qt.darker(fx._rvColor, 1.8)   // seated ring
+            }
+            Rectangle {   // top-left specular highlight → domed bolt, not a flat dot
+                readonly property real _h: Math.max(1.5, fx._rvSize * 0.34)
+                width: _h; height: _h; radius: _h / 2
+                x: modelData.cx - fx._rvSize * 0.26
+                y: modelData.cy - fx._rvSize * 0.26
+                color: Qt.lighter(fx._rvColor, 1.6)
+                antialiasing: true
+            }
         }
     }
 
