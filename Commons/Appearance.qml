@@ -239,8 +239,11 @@ QtObject {
         readonly property color accentBorder:  root._rgba(root._accentName, "#c6a0f6", 0.40)
 
         // Glass panel backgrounds
-        readonly property color glassBg:      root._rgba("mantle",   "#1e2030", 0.96)
-        readonly property color glassBgLight: root._rgba("mantle",   "#1e2030", 0.93)
+        // Flat/matte material (pack `material:"flat"` → flatMode) makes the panel
+        // fills fully OPAQUE — a solid slab, no wallpaper bleed. Glass mode keeps
+        // the translucent frost.
+        readonly property color glassBg:      root.flatMode ? root._c("mantle", "#1e2030") : root._rgba("mantle", "#1e2030", 0.96)
+        readonly property color glassBgLight: root.flatMode ? root._c("mantle", "#1e2030") : root._rgba("mantle", "#1e2030", 0.93)
         readonly property color glassBorder:  root._rgba("surface0", "#363a4f", 0.90)
 
         // Liquid-glass sheen — endpoints for a subtle top-lit vertical gradient
@@ -287,7 +290,7 @@ QtObject {
             // NB: _c() returns a hex STRING; go through _rgba (which Qt.color-wraps
             // it) — Qt.rgba(str.r,…) would be Qt.rgba(undefined,…) = solid black.
             if (root.flatMode)
-                return root._rgba("surface0", "#363a4f", 0.90)
+                return root._rgba("surface0", "#363a4f", 1.0)   // opaque slab, no bleed
             var c = root._blend(root._c("surface0", "#363a4f"),
                                 root._c(root._accentName, "#c6a0f6"), 0.06)
             return Qt.rgba(c.r, c.g, c.b, 0.58)
