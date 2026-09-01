@@ -46,13 +46,23 @@ Item {
         anchors.margins: Commons.Appearance.spacing.lg
         spacing: Commons.Appearance.spacing.md
 
-        Text {
-            text: "󰝚  Media"
-            color: Commons.Appearance.colors.text
-            font.pixelSize: Commons.Appearance.font.sizeLg
-            font.family: Commons.Appearance.font.family
-            font.weight: Font.Medium
+        RowLayout {
             Layout.fillWidth: true
+            spacing: 8
+            Text {                                  // icon stays on the icon font
+                text: "󰝚"
+                color: Commons.Appearance.colors.text
+                font.pixelSize: Commons.Appearance.font.sizeLg
+                font.family: Commons.Appearance.font.family
+            }
+            Text {                                  // label = display face (Cinzel under the pack)
+                text: "Media"
+                color: Commons.Appearance.colors.text
+                font.pixelSize: Commons.Appearance.font.sizeLg
+                font.family: Commons.Appearance.font.display
+                font.weight: Font.Medium
+                Layout.fillWidth: true
+            }
         }
 
         Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0; opacity: 0.5 }
@@ -236,8 +246,8 @@ Item {
                         Rectangle {
                             id: playKey; anchors.fill: parent; radius: width / 2; antialiasing: true
                             gradient: Gradient {
-                                GradientStop { position: 0.0; color: Commons.Appearance.flatMode ? Commons.Appearance.colors.accent : Qt.lighter(Commons.Appearance.colors.accent, 1.12) }
-                                GradientStop { position: 1.0; color: Commons.Appearance.flatMode ? Commons.Appearance.colors.accent : Qt.darker(Commons.Appearance.colors.accent, 1.10) }
+                                GradientStop { position: 0.0; color: Commons.Appearance.depthFlat ? Commons.Appearance.colors.accent : Qt.lighter(Commons.Appearance.colors.accent, 1.12) }
+                                GradientStop { position: 1.0; color: Commons.Appearance.depthFlat ? Commons.Appearance.colors.accent : Qt.darker(Commons.Appearance.colors.accent, 1.10) }
                             }
                         }
                         Text {

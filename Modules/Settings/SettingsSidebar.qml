@@ -201,6 +201,7 @@ Item {
                         visible: root.activeIndex === navItem.index
                         anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
                         width: 3; height: 20; radius: 2
+                        // Active pane marker = accent (register metal); teal dropped (too modern).
                         color: Commons.Appearance.colors.accent
                         Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.fast } }
                     }
@@ -225,8 +226,8 @@ Item {
                             color: root.activeIndex === navItem.index
                                 ? Commons.Appearance.colors.text
                                 : Commons.Appearance.colors.subtext0
-                            font.pixelSize: Commons.Appearance.font.sizeBase
-                            font.family: Commons.Appearance.font.family
+                            font.pixelSize: Commons.Appearance.font.sizeMd
+                            font.family: Commons.Appearance.font.display   // page names in the display face
                             font.weight: root.activeIndex === navItem.index ? Font.Medium : Font.Normal
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignVCenter

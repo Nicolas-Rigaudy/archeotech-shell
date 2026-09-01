@@ -73,8 +73,9 @@ Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: root.compact ? 50 : 64
 
-                    RectangularShadow {
+                    RectangularShadow {              // soft glow — base packs only (reads modern on steel)
                         anchors.fill: famBg
+                        visible: !Commons.Appearance.frameChamfer
                         radius: famBg.radius
                         blur: 10; offset: Qt.vector2d(0, 3); spread: 0
                         color: Qt.rgba(0, 0, 0, 0.5)
@@ -82,16 +83,20 @@ Item {
                     Rectangle {
                         id: famBg
                         anchors.fill: parent
-                        radius: Commons.Appearance.radius.md
+                        // Steel pack: a square-cut machined plate (copper hairline, teal when
+                        // selected); base packs keep the rounded grey card.
+                        radius: Commons.Appearance.frameChamfer ? 1 : Commons.Appearance.radius.md
                         antialiasing: true
-                        // Selection = crisp accent BORDER (not an accent fill), so
-                        // the label + swatches stay readable. Matches the quick-
-                        // switcher's family tiles.
-                        border.width: famCard._on ? 3 : 1
-                        border.color: famCard._on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.glassBorder
+                        border.width: famCard._on ? (Commons.Appearance.frameChamfer ? 1.6 : 3) : 1
+                        border.color: famCard._on
+                            ? (Commons.Appearance.frameChamfer ? Qt.lighter(Commons.Appearance.colors.accent, 1.25) : Commons.Appearance.colors.accent)
+                            : (Commons.Appearance.frameChamfer
+                               ? Qt.rgba(Commons.Appearance.colors.peach.r, Commons.Appearance.colors.peach.g, Commons.Appearance.colors.peach.b, 0.32)
+                               : Commons.Appearance.colors.glassBorder)
                         gradient: Gradient {
-                            GradientStop { position: 0.0; color: Qt.lighter(Commons.Appearance.colors.surfaceCard, 1.12) }
-                            GradientStop { position: 1.0; color: Commons.Appearance.colors.surfaceCard }
+                            GradientStop { position: 0.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.hi : Qt.lighter(Commons.Appearance.colors.surfaceCard, 1.12) }
+                            GradientStop { position: 0.5; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.md : Qt.lighter(Commons.Appearance.colors.surfaceCard, 1.12) }
+                            GradientStop { position: 1.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.lo : Commons.Appearance.colors.surfaceCard }
                         }
                         Behavior on border.color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                         Behavior on border.width { NumberAnimation { duration: Commons.Appearance.anim.fast } }

@@ -30,7 +30,7 @@ Item {
            (holderRoot ? holderRoot.width : 0) - width - Commons.Appearance.bar.marginSide - 4)
     y: Commons.Appearance.bar.marginTop + Commons.Appearance.bar.height
     width:  _bw + _r * 2
-    height: _wifiContent.implicitHeight + 20
+    height: _wifiContent.implicitHeight + (Commons.Appearance.frameChamfer ? 30 : 20)
 
     transformOrigin: Item.Top
     scale:   (holderRoot && holderRoot._wifiPopupVisible) ? 1.0 : 0.85
@@ -51,12 +51,14 @@ Item {
 
         ShapePath {
             fillGradient: LinearGradient {
-                x1: 0; y1: -card._winY
-                x2: 0; y2: card._winH - card._winY
-                GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
-                GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+                x1: 0; y1: Commons.Appearance.frameChamfer ? 0 : -card._winY
+                x2: 0; y2: Commons.Appearance.frameChamfer ? card.height : (card._winH - card._winY)
+                GradientStop { position: 0.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.hi : Commons.Appearance.colors.glassSheenTop }
+                GradientStop { position: Commons.Appearance.frameChamfer ? 0.30 : 1.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.md : Commons.Appearance.colors.glassSheenBot }
+                GradientStop { position: 1.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.lo : Commons.Appearance.colors.glassSheenBot }
             }
-            strokeWidth: 0; strokeColor: "transparent"
+            strokeWidth: Commons.Appearance.frameChamfer ? 1.4 : 0
+            strokeColor: Commons.Appearance.frameChamfer ? Commons.Appearance.colors.copperLit : "transparent"
             startX: 0; startY: 0
             PathLine { x: card._bw + card._r * 2; y: 0 }
             PathArc  { x: card._bw + card._r;     y: card._r
@@ -74,6 +76,13 @@ Item {
         }
     }
 
+    ConsoleChrome {                              // bolted-collar connection to the bar (steel pack)
+        anchors.fill: parent
+        visible: Commons.Appearance.frameChamfer
+        attachSide: "top"; showTrim: false; showGussets: false
+        radius: card._rb
+    }
+
     MouseArea {
         anchors.fill: parent; hoverEnabled: true
         onEntered: if (card.holderRoot) card.holderRoot.keepPopupsAlive()
@@ -81,7 +90,7 @@ Item {
 
     Column {
         id: _wifiContent
-        x: card._r + 12; y: 10
+        x: card._r + 12; y: Commons.Appearance.frameChamfer ? 20 : 10
         width: card._bw - 24
         spacing: 0
 
@@ -106,7 +115,7 @@ Item {
                     text: !NetworkServices.Network.wifiEnabled ? "WiFi — Off"
                         : NetworkServices.Network.connected ? "WiFi · " + NetworkServices.Network.ssid : "WiFi — Not connected"
                     color: NetworkServices.Network.wifiEnabled ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0
-                    font.pixelSize: Commons.Appearance.font.sizeMd; font.family: Commons.Appearance.font.family
+                    font.pixelSize: Commons.Appearance.font.sizeMd; font.family: Commons.Appearance.font.display
                     font.weight: Font.Medium; Layout.fillWidth: true; elide: Text.ElideRight
                 }
                 Text {
@@ -183,8 +192,8 @@ Item {
                             scale: _wBtnMA.pressed ? 0.94 : (_wBtnMA.containsMouse ? 1.06 : 1.0)
                             Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
                             gradient: Gradient {
-                                GradientStop { position: 0.0; color: Commons.Appearance.flatMode ? _wBtn._base : Qt.lighter(_wBtn._base, 1.14) }
-                                GradientStop { position: 1.0; color: Commons.Appearance.flatMode ? _wBtn._base : Qt.darker(_wBtn._base, 1.08) }
+                                GradientStop { position: 0.0; color: Commons.Appearance.depthFlat ? _wBtn._base : Qt.lighter(_wBtn._base, 1.14) }
+                                GradientStop { position: 1.0; color: Commons.Appearance.depthFlat ? _wBtn._base : Qt.darker(_wBtn._base, 1.08) }
                             }
                             Text {
                                 id: _wBtnTxt; anchors.centerIn: parent

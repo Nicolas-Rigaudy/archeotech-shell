@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
 import "../../../Commons" as Commons
+import "../../../Commons/Primitives" as Prim
 
 // Shared dashboard card shell (2026-07-20 rework). Elevated `surfaceCard` with a
 // soft drop shadow (like the launcher tiles), an optional section title +
@@ -26,7 +27,7 @@ Item {
         color:  Qt.rgba(0, 0, 0, 0.45 * Commons.Appearance.shadowStrength)
     }
 
-    Rectangle {
+    Prim.MetalSurface {
         id: bg
         anchors.fill: parent
         radius: Commons.Appearance.radius.md
@@ -45,8 +46,10 @@ Item {
                 visible: card.title.length > 0
                 text: card.title
                 color: Commons.Appearance.colors.accent
-                font.family: Commons.Appearance.font.family
-                font.pixelSize: Commons.Appearance.font.sizeBase
+                // Display face for section headers (Cinzel under a 40K pack; falls
+                // back to the body family when the pack ships none).
+                font.family: Commons.Appearance.font.display
+                font.pixelSize: Commons.Appearance.font.sizeMd
                 font.letterSpacing: 1.5
                 opacity: 0.85
             }

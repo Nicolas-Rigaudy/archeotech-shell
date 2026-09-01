@@ -27,7 +27,7 @@ Item {
                     (holderRoot ? holderRoot.width : 0) - (_bw + _r * 2) - Commons.Appearance.bar.marginSide - 4))
     y: Commons.Appearance.bar.marginTop + Commons.Appearance.bar.height
     width:  _bw + _r * 2
-    height: _calCol.implicitHeight + 20
+    height: _calCol.implicitHeight + (Commons.Appearance.frameChamfer ? 30 : 20)
 
     transformOrigin: Item.Top
     scale:   (holderRoot && holderRoot._calendarVisible) ? 1.0 : 0.85
@@ -61,13 +61,14 @@ Item {
 
         ShapePath {
             fillGradient: LinearGradient {
-                x1: 0; y1: -card._winY
-                x2: 0; y2: card._winH - card._winY
-                GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
-                GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+                x1: 0; y1: Commons.Appearance.frameChamfer ? 0 : -card._winY
+                x2: 0; y2: Commons.Appearance.frameChamfer ? card.height : (card._winH - card._winY)
+                GradientStop { position: 0.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.hi : Commons.Appearance.colors.glassSheenTop }
+                GradientStop { position: Commons.Appearance.frameChamfer ? 0.30 : 1.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.md : Commons.Appearance.colors.glassSheenBot }
+                GradientStop { position: 1.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.lo : Commons.Appearance.colors.glassSheenBot }
             }
-            strokeWidth: 0
-            strokeColor: "transparent"
+            strokeWidth: Commons.Appearance.frameChamfer ? 1.4 : 0
+            strokeColor: Commons.Appearance.frameChamfer ? Commons.Appearance.colors.copperLit : "transparent"
 
             startX: 0; startY: 0
             PathLine { x: card._bw + card._r * 2; y: 0 }
@@ -90,6 +91,18 @@ Item {
         }
     }
 
+    // Bolted-collar connection to the bar (steel pack) — the mini popup keeps its
+    // own ear-shaped copper outline (showTrim/showGussets off); this adds just the
+    // bolted seam at the top where it fastens to the bar.
+    ConsoleChrome {
+        anchors.fill: parent
+        visible: Commons.Appearance.frameChamfer
+        attachSide: "top"
+        showTrim: false
+        showGussets: false
+        radius: card._rb
+    }
+
     MouseArea {
         anchors.fill: parent; hoverEnabled: true
         onEntered: if (card.holderRoot) card.holderRoot.keepPopupsAlive()
@@ -98,7 +111,7 @@ Item {
 
     Column {
         id: _calCol
-        x: card._r + 12; y: 10
+        x: card._r + 12; y: Commons.Appearance.frameChamfer ? 20 : 10
         width: card._bw - 24
         spacing: 4
 
@@ -129,7 +142,7 @@ Item {
                     : ""
                 color: Commons.Appearance.colors.text
                 font.pixelSize: Commons.Appearance.font.sizeMd
-                font.family: Commons.Appearance.font.family
+                font.family: Commons.Appearance.font.display
                 font.weight: Font.Medium
                 width: parent.width - 40
                 horizontalAlignment: Text.AlignHCenter

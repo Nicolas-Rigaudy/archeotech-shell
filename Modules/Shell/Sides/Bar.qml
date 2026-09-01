@@ -207,6 +207,27 @@ Item {
         function onDataChanged() { bar._syncAllZones() }
     }
 
+    // Console instrument segments (pack console, item_083): pill-local {x,w} for
+    // each functional group (left cluster / centre gauge / right status bank) so
+    // each can get a bordered housing. Empty unless the pack sets bar.dividers.
+    // The main RowLayout fills the pill inset by innerPadding, so the left group
+    // starts at innerPadding and the right group ends at pill.width-innerPadding.
+    // Console (item_083): the whole top bar is ONE recessed instrument panel
+    // (Astartes register — not three floating boxes), with vertical seam dividers
+    // at the boundaries between the functional zones (left cluster | centre gauge
+    // | right bank). Empty unless the pack sets bar.dividers.
+    readonly property bool _consoleOn: Commons.Appearance.bar.dividers && bar.horizontal
+    readonly property var _dividers: {
+        if (!_consoleOn) return []
+        var ip = Commons.Appearance.bar.innerPadding, ds = []
+        var haveL = typeof _leftGroup  !== "undefined" && _leftGroup.width  > 4
+        var haveR = typeof _rightGroup !== "undefined" && _rightGroup.width > 4
+        var haveC = typeof _centerRow  !== "undefined" && _centerRow.width  > 0
+        if (haveL && haveC) ds.push(Math.round((ip + _leftGroup.width + _centerRow.x) / 2))
+        if (haveR && haveC) ds.push(Math.round((_centerRow.x + _centerRow.width + (pill.width - ip - _rightGroup.width)) / 2))
+        return ds
+    }
+
     // ── Pill — anchored to the bar's outer edge ────────────────────────────────
     Rectangle {
         id: pill
@@ -235,12 +256,15 @@ Item {
         RowLayout {
             visible: bar.horizontal
             anchors.fill: parent
-            anchors.leftMargin:  Commons.Appearance.bar.innerPadding
-            anchors.rightMargin: Commons.Appearance.bar.innerPadding
+            // Extra inset when the console plate is on, so the zone content clears
+            // the plate's corner-bolt fittings (they were overlapping workspaces).
+            anchors.leftMargin:  Commons.Appearance.bar.innerPadding + (bar._consoleOn ? 12 : 0)
+            anchors.rightMargin: Commons.Appearance.bar.innerPadding + (bar._consoleOn ? 12 : 0)
             spacing: 0
 
             // LEFT zone
             RowLayout {
+                id: _leftGroup
                 Layout.alignment: Qt.AlignVCenter
                 spacing: 0
                 Repeater {
@@ -271,6 +295,7 @@ Item {
 
             // RIGHT zone
             RowLayout {
+                id: _rightGroup
                 Layout.alignment: Qt.AlignVCenter
                 spacing: 0
                 Repeater {
@@ -308,6 +333,41 @@ Item {
                     config:   (model && model.configJson) ? JSON.parse(model.configJson) : ({})
                     isFirst:  index === 0
                     isLast:   index === _centerZone.count - 1
+                }
+            }
+        }
+
+        // ── Console instrument panel (pack console, item_083) ───────────────────
+        // The WHOLE top bar is one recessed steel instrument panel (Astartes
+        // register): a single console face spanning the bar, copper corner-bolt
+        // fittings, and vertical seam dividers (bevel groove + bolt-pair) at the
+        // boundaries between the functional zones — NOT three floating boxes.
+        // z:-1 keeps it behind the widgets, which sit in it as readouts. Base
+        // look: dividers=false → _consoleOn false → nothing drawn.
+        Item {
+            id: _console
+            visible: bar._consoleOn
+            z: -1
+            anchors.fill: parent
+            readonly property string _pack:  Commons.Appearance.activePackDir
+            readonly property string _rivet: _pack === "" ? "" : "file://" + _pack + "panels/rivet.png"
+
+            // The bar FACE is drawn by FrameFx as the top band of the one brushed
+            // chassis (full width, behind these widgets) — so the bar itself only
+            // adds the zone dividers here; no separate plate (that inset gap/seam
+            // is why the bar looked cut off from the screen edge).
+            Repeater {                                  // zone dividers — recessed groove between two
+                model: bar._dividers                     // plates, with rivets FLANKING the seam (one per
+                delegate: Item {                         // plate) rather than sitting on the join.
+                    x: modelData; y: 4; height: parent.height - 8
+                    Rectangle { x: 0; width: 1; height: parent.height; color: Qt.rgba(0, 0, 0, 0.55) }
+                    Rectangle { x: 1; width: 1; height: parent.height; color: Qt.rgba(1, 1, 1, 0.06) }
+                    // left-plate rivets
+                    Image { source: _console._rivet; width: 7; height: 7; sourceSize: Qt.size(14, 14); smooth: true; x: -9; y: 0 }
+                    Image { source: _console._rivet; width: 7; height: 7; sourceSize: Qt.size(14, 14); smooth: true; x: -9; y: parent.height - 7 }
+                    // right-plate rivets
+                    Image { source: _console._rivet; width: 7; height: 7; sourceSize: Qt.size(14, 14); smooth: true; x: 3; y: 0 }
+                    Image { source: _console._rivet; width: 7; height: 7; sourceSize: Qt.size(14, 14); smooth: true; x: 3; y: parent.height - 7 }
                 }
             }
         }

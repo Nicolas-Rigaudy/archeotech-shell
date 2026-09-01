@@ -27,6 +27,7 @@ Item {
         Repeater {
             model: CompositorServices.MangoWC.tagsFor(root.holderRoot && root.holderRoot.screen ? root.holderRoot.screen.name : "")
             delegate: Rectangle {
+                id: pillDot
                 required property var modelData
                 property bool sel: modelData.selected
                 property bool occ: modelData.occupied
@@ -35,10 +36,23 @@ Item {
                 width:  root._horizontal ? _long : 8
                 height: root._horizontal ? 8 : _long
                 radius: Commons.Appearance.radius.pill
-                color: (urg && !sel) ? Commons.Appearance.colors.red
+                antialiasing: true
+                readonly property color _base: (urg && !sel) ? Commons.Appearance.colors.red
                      : sel ? Commons.Appearance.colors.accent
                      : occ ? Commons.Appearance.colors.surface1
                      :       Commons.Appearance.colors.surface0
+                // NMM shading is PACK-SCOPED: only a pack shipping metal plating
+                // (Appearance.panelPlate) opts in — the base/glass shell keeps its
+                // original flat pill. When off, every stop is the base colour, so
+                // the gradient renders identical to the old flat fill.
+                readonly property bool _metal: Commons.Appearance.panelPlate !== "" && !Commons.Appearance.depthFlat
+                color: _base
+                gradient: Gradient {
+                    GradientStop { position: 0.0;  color: pillDot._metal ? Qt.lighter(pillDot._base, 1.35) : pillDot._base }
+                    GradientStop { position: 0.24; color: pillDot._metal ? Qt.lighter(pillDot._base, 1.95) : pillDot._base }
+                    GradientStop { position: 0.55; color: pillDot._base }
+                    GradientStop { position: 1.0;  color: pillDot._metal ? Qt.darker(pillDot._base, 2.05) : pillDot._base }
+                }
                 Behavior on width  { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
                 Behavior on height { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
                 Behavior on color  { ColorAnimation { duration: Commons.Appearance.anim.fast } }

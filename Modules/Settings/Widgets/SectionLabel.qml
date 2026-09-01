@@ -7,8 +7,11 @@ import "../../../Commons" as Commons
 Text {
     Layout.fillWidth: true
     color: Commons.Appearance.colors.overlay0
-    font.pixelSize: 10
-    font.family: Commons.Appearance.font.family
+    // Display face for section captions (Cinzel under a 40K pack; body family otherwise).
+    // Slightly larger than the mono caption so the inscriptional caps stay legible.
+    readonly property bool _disp: Commons.Appearance.font.display !== Commons.Appearance.font.family
+    font.pixelSize: _disp ? 12 : 10
+    font.family: Commons.Appearance.font.display
     font.weight: Font.Medium
-    font.letterSpacing: 1.5
+    font.letterSpacing: _disp ? 1.0 : 1.5
 }

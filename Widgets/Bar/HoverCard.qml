@@ -27,7 +27,7 @@ Item {
        )
     y: Commons.Appearance.bar.marginTop + Commons.Appearance.bar.height
     width:  _bw + _r * 2
-    height: _popupCol.implicitHeight + Commons.Appearance.spacing.md * 2
+    height: _popupCol.implicitHeight + (Commons.Appearance.frameChamfer ? Commons.Appearance.spacing.md * 2 + 10 : Commons.Appearance.spacing.md * 2)
 
     transformOrigin: Item.Top
     scale:   (holderRoot && holderRoot._popupVisible) ? 1.0 : 0.85
@@ -48,13 +48,14 @@ Item {
 
         ShapePath {
             fillGradient: LinearGradient {
-                x1: 0; y1: -card._winY
-                x2: 0; y2: card._winH - card._winY
-                GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
-                GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+                x1: 0; y1: Commons.Appearance.frameChamfer ? 0 : -card._winY
+                x2: 0; y2: Commons.Appearance.frameChamfer ? card.height : (card._winH - card._winY)
+                GradientStop { position: 0.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.hi : Commons.Appearance.colors.glassSheenTop }
+                GradientStop { position: Commons.Appearance.frameChamfer ? 0.30 : 1.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.md : Commons.Appearance.colors.glassSheenBot }
+                GradientStop { position: 1.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.lo : Commons.Appearance.colors.glassSheenBot }
             }
-            strokeWidth: 0
-            strokeColor: "transparent"
+            strokeWidth: Commons.Appearance.frameChamfer ? 1.4 : 0
+            strokeColor: Commons.Appearance.frameChamfer ? Commons.Appearance.colors.copperLit : "transparent"
 
             startX: 0; startY: 0
             PathLine { x: card._bw + card._r * 2; y: 0 }
@@ -77,6 +78,13 @@ Item {
         }
     }
 
+    ConsoleChrome {                              // bolted-collar connection to the bar (steel pack)
+        anchors.fill: parent
+        visible: Commons.Appearance.frameChamfer
+        attachSide: "top"; showTrim: false; showGussets: false
+        radius: card._rb
+    }
+
     // Keep popup alive when cursor drifts onto it.
     MouseArea {
         anchors.fill: parent
@@ -88,15 +96,15 @@ Item {
 
     Column {
         id: _popupCol
-        x: card._r + 14; y: Commons.Appearance.spacing.md
+        x: card._r + 14; y: Commons.Appearance.frameChamfer ? Commons.Appearance.spacing.md + 10 : Commons.Appearance.spacing.md
         spacing: 3
 
         Text {
             visible: !!(card.holderRoot && card.holderRoot._popupLabel.length > 0)
             text: card.holderRoot ? card.holderRoot._popupLabel : ""
             color: Commons.Appearance.colors.accent
-            font.pixelSize: Commons.Appearance.font.sizeSm - 1
-            font.family: Commons.Appearance.font.family
+            font.pixelSize: Commons.Appearance.font.sizeSm
+            font.family: Commons.Appearance.font.display
             font.letterSpacing: 1.2
             font.weight: Font.DemiBold
         }

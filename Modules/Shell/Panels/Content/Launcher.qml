@@ -305,7 +305,7 @@ Item {
                     id: recentsLbl
                     text:  "RECENTS"
                     color: Commons.Appearance.colors.subtext0
-                    font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeSm; letterSpacing: 1.5 }
+                    font { family: Commons.Appearance.font.display; pixelSize: Commons.Appearance.font.sizeSm; letterSpacing: 1.5 }
                     opacity: 0.7
                     anchors { top: parent.top; left: parent.left }
                 }

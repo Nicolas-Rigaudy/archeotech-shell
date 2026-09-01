@@ -75,7 +75,7 @@ Item {
                 Text {
                     text: root._greeting()
                     color: Commons.Appearance.colors.text
-                    font.family: Commons.Appearance.font.family
+                    font.family: Commons.Appearance.font.display
                     font.pixelSize: 22
                     font.weight: Font.DemiBold
                 }

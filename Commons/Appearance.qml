@@ -16,7 +16,13 @@ QtObject {
     // shared primitives (GlassButton/SettingsCard/DashCard) — one-off surfaces
     // still shadow until the polish rollout routes them through this too.
     property bool flatMode: false
-    readonly property real shadowStrength: flatMode ? 0.0 : 1.0
+    // A pack may be OPAQUE (no glass) yet still DIMENSIONAL — "matte" plating with
+    // shadows + gradients. `depthFlat` = truly flat (opaque AND no depth) and gates
+    // the SHADING branches; `flatMode` still gates OPACITY. So matte = opaque fills
+    // + full depth; flat = opaque + no depth (as before). With no matte pack,
+    // packMaterialMatte is false → depthFlat == flatMode (unchanged behaviour).
+    readonly property bool depthFlat: flatMode && !root.packMaterialMatte
+    readonly property real shadowStrength: depthFlat ? 0.0 : 1.0
 
     // ── Theme hot-reload ───────────────────────────────────────────────────────
     property var _data: ({})
@@ -112,12 +118,34 @@ QtObject {
     // Active pack tokens with pack-settings overrides applied. Everything
     // pack-aware (_c, _accentName, _tok, fx, packWindow) reads THIS, not the raw
     // _packData, so overrides reach colours, tokens, fx and window decor alike.
-    readonly property var _mergedPack: root._mergePackSettings(root._packData, root.packSettings)
-
-    function _mergePackSettings(base, ov) {
-        var m = base ? JSON.parse(JSON.stringify(base)) : ({})
-        if (ov) for (var k in ov) root._setPath(m, k, ov[k])
+    // Active pack tokens = pack base → active REGISTER overlay → pack-settings.
+    // Registers (adr_027) re-livery the pack per faction (Space Marine / Inquisition
+    // / Mechanicus): each deep-merges its colours + panels.steel over the base.
+    readonly property var _mergedPack: {
+        var m = root._packData ? JSON.parse(JSON.stringify(root._packData)) : ({})
+        var reg = (root.packSettings && root.packSettings.register)
+                  ? root.packSettings.register
+                  : (m.defaultRegister || "")
+        if (reg && m.registers && m.registers[reg]) root._deepMerge(m, m.registers[reg])
+        if (root.packSettings) for (var k in root.packSettings) root._setPath(m, k, root.packSettings[k])
         return m
+    }
+
+    // Registers the active pack ships, and which one is live (for the pack's
+    // palette selector — replaces the inert base colour selectors under a pack).
+    readonly property var registers: (root._packData && root._packData.registers) ? root._packData.registers : ({})
+    readonly property string activeRegister:
+        (root.packSettings && root.packSettings.register) ? root.packSettings.register
+        : ((root._packData && root._packData.defaultRegister) || "")
+
+    function _deepMerge(target, src) {
+        for (var k in src) {
+            if (src[k] && typeof src[k] === "object" && !Array.isArray(src[k])) {
+                if (typeof target[k] !== "object" || target[k] === null) target[k] = ({})
+                root._deepMerge(target[k], src[k])
+            } else target[k] = src[k]
+        }
+        return target
     }
     function _setPath(obj, path, val) {
         var parts = String(path).split(".")
@@ -148,6 +176,12 @@ QtObject {
         return root._tok("frame", "cornerRadius", -1)
     }
 
+    // Corner style for the frame + popups: "chamfer" cuts the corner at 45° instead
+    // of an arc. Consumed by FrameBackground (shape geometry) and popup cards so the
+    // whole shell shares one corner language. Reads _mergedPack.frame.corners.
+    readonly property bool frameChamfer: !!(root._mergedPack && root._mergedPack.frame
+                                            && root._mergedPack.frame.corners === "chamfer")
+
     // Decorator/FX block from the active pack (adr_027 Wave 2). Consumed by the
     // FrameFx overlay: { glow{}, brackets{}, texture{} }, each optional. Empty
     // object when no pack (or no fx) — the base look stays untouched. Re-evaluates
@@ -159,11 +193,43 @@ QtObject {
     // shell.qml (Commons can't import a Service). Empty ⇒ base window decoration.
     readonly property var packWindow: (root._mergedPack && root._mergedPack.window) ? root._mergedPack.window : ({})
 
+    // Pack chrome surface (metal plating): a pack may ship a 9-slice plate asset
+    // that the shared MetalSurface primitive renders behind cards/panels/pills so
+    // the material propagates shell-wide. "" (no pack asset) → components use their
+    // plain themed fill. Absolute file:// URL; `panels.surface` is pack-relative.
+    readonly property string panelPlate:
+        (root.activePackDir && root._mergedPack && root._mergedPack.panels && root._mergedPack.panels.surface)
+            ? ("file://" + root.activePackDir + root._mergedPack.panels.surface) : ""
+
+    // Flat welded-steel family (Shadow Spears). The frame (FrameFx) defines the
+    // look; this single-sources its tones so the popups/cards/buttons match the
+    // bezel instead of re-hardcoding. Pack `panels.steel` overrides; defaults
+    // mirror the frame. Only consumed under a chamfer/matte pack — base look
+    // never reads these. hi=top-lit, md=body, lo=lower, edge=recess/cut shadow,
+    // lip=lit machined lip.
+    function _steelTok(key, fb) {
+        var p = root._mergedPack
+        if (p && p.panels && p.panels.steel && p.panels.steel[key] !== undefined && p.panels.steel[key] !== null)
+            return p.panels.steel[key]
+        return fb
+    }
+    readonly property QtObject steel: QtObject {
+        readonly property color hi:   root._steelTok("hi",   "#333f4d")
+        readonly property color md:   root._steelTok("md",   "#28313d")
+        readonly property color lo:   root._steelTok("lo",   "#1c232d")
+        readonly property color edge: root._steelTok("edge", "#05080d")
+        readonly property color lip:  root._steelTok("lip",  "#9fb0c2")
+    }
+
     // Pack material (adr_027 / item_083): a pack may drop the base frosted-glass
     // look for a flat/matte "slab" (dataslate). Drives flatMode from shell.qml so
     // all the existing glass/flat branches follow — no per-component work.
     readonly property bool packMaterialFlat:
         !!(root._mergedPack && (root._mergedPack.material === "flat" || root._mergedPack.material === "matte"))
+    // "matte" = opaque like flat (flatMode gates opacity), but KEEPS depth
+    // (shadows + gradients) via depthFlat staying false. Dimensional plating.
+    readonly property bool packMaterialMatte:
+        !!(root._mergedPack && root._mergedPack.material === "matte")
 
     // ── Component style delegates (adr_027 Layer C) ──────────────────────────────
     // Current shell version, checked against a pack's minShellVersion before its
@@ -215,6 +281,10 @@ QtObject {
         readonly property color green:    root._c("green",    "#a6da95")
         readonly property color yellow:   root._c("yellow",   "#eed49f")
         readonly property color peach:    root._c("peach",    "#f5a97f")
+        // Lit copper — peach lightened (saturation kept) to the frame trim's PEACHY
+        // read (its bright highlight lifts the same base). Panels use this for their
+        // flat copper so they match the frame instead of showing the raw orange base.
+        readonly property color copperLit: Qt.lighter(peach, 1.2)
         readonly property color maroon:   root._c("maroon",   "#ee99a0")
         readonly property color red:      root._c("red",      "#ed8796")
         readonly property color pink:     root._c("pink",     "#f5bde6")
@@ -251,17 +321,18 @@ QtObject {
         // change); only lightness varies: lifted toward surface1 at the top,
         // sunk toward crust at the bottom.
         readonly property color glassSheenTop: {
-            // Flat mode: both stops collapse to the panel fill → no sheen gradient.
-            if (root.flatMode) return glassBg
+            // Truly flat: both stops collapse to the panel fill → no sheen gradient.
+            // Matte keeps the top-lit gradient but OPAQUE (alpha 1) — grimdark plate.
+            if (root.depthFlat) return glassBg
             var c = root._blend(root._c("mantle", "#1e2030"),
                                 root._c("surface2", "#5b6078"), 0.38)
-            return Qt.rgba(c.r, c.g, c.b, 0.93)
+            return Qt.rgba(c.r, c.g, c.b, root.flatMode ? 1.0 : 0.93)
         }
         readonly property color glassSheenBot: {
-            if (root.flatMode) return glassBg
+            if (root.depthFlat) return glassBg
             // crust is barely darker than mantle, so sink toward black instead.
             var c = root._blend(root._c("mantle", "#1e2030"), "#000000", 0.22)
-            return Qt.rgba(c.r, c.g, c.b, 0.93)
+            return Qt.rgba(c.r, c.g, c.b, root.flatMode ? 1.0 : 0.93)
         }
 
         // ── Warmth (§18.2) — accent-tinted surfaces, not flat grey. ──
@@ -348,6 +419,10 @@ QtObject {
         readonly property int marginTop:    root._tok("bar", "marginTop",     0)
         readonly property int marginSide:   root._tok("bar", "marginSide",    0)
         readonly property int innerPadding: root._tok("bar", "innerPadding",  4)
+        // Console structure (adr_027 / item_083): a pack can segment the bar with
+        // vertical seam dividers flanking the centre gauge, so it reads as bolted
+        // instrument-panel sections. Off for the base look.
+        readonly property bool dividers: root._tok("bar", "dividers", false)
     }
 
     // ── Animation ─────────────────────────────────────────────────────────────

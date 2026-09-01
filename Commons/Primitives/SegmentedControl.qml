@@ -23,21 +23,45 @@ Item {
 
     implicitHeight: 30
 
+    // Steel pack (Shadow Spears): the selected pill is a raised machined-steel key
+    // edged with the teal live-line (the "cyan pinpoint = this is live"), not a
+    // copper wash. Base packs keep the accent pill.
+    readonly property bool _steel: Commons.Appearance.frameChamfer
+    readonly property color _teal: Commons.Appearance.colors.teal
+
+    readonly property color _cu: Commons.Appearance.colors.peach
+
     Rectangle {
         id: track
         anchors.fill: parent
-        radius: Commons.Appearance.radius.base
-        color: Qt.rgba(0, 0, 0, 0.22)
+        // Steel: a recessed machined slot — dark seat, square-ish corners, copper
+        // hairline frame. Base packs keep the soft sunk rounded track.
+        radius: root._steel ? 1 : Commons.Appearance.radius.base
+        color: root._steel ? Qt.rgba(0, 0, 0, 0.5) : Qt.rgba(0, 0, 0, 0.22)
+        border.width: root._steel ? 1 : 0
+        border.color: root._steel ? Qt.rgba(root._cu.r, root._cu.g, root._cu.b, 0.35) : "transparent"
         readonly property real _segW: root.model.length > 0 ? width / root.model.length : width
 
-        RectangularShadow {
+        // top inner shadow line → reads as recessed into the plate (not a flat box)
+        Rectangle {
+            visible: root._steel
+            anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 2; rightMargin: 2; topMargin: 1 }
+            height: 1; color: Qt.rgba(0, 0, 0, 0.55)
+        }
+
+        RectangularShadow {                 // soft drop shadow — base packs only (reads "modern" on steel)
             anchors.fill: pill
-            visible: root.model.length > 0
+            visible: root.model.length > 0 && !root._steel
             radius: pill.radius
             blur:   14
             offset: Qt.vector2d(0, 3)
             spread: 0
             color:  Qt.rgba(0, 0, 0, 0.45 * Commons.Appearance.shadowStrength)
+        }
+        Rectangle {                         // hard dark seat under the key — machined depth, not a soft glow
+            visible: root._steel && root.model.length > 0
+            x: pill.x; y: pill.y + 1.5; width: pill.width; height: pill.height
+            radius: pill.radius; color: Commons.Appearance.steel.edge
         }
         Rectangle {
             id: pill
@@ -46,10 +70,17 @@ Item {
             height: track.height - 8
             y: 4
             x: root.currentIndex * track._segW + 4
-            radius: track.radius - 3
+            // Square-cut machined key on steel; rounded pill on base packs.
+            radius: root._steel ? 1 : track.radius - 3
+            border.width: root._steel ? 1.2 : 0
+            // Selected key = lit copper edge (the register metal). Teal dropped — read too modern.
+            border.color: root._steel ? Qt.lighter(Commons.Appearance.colors.accent, 1.25) : "transparent"
             gradient: Gradient {
-                GradientStop { position: 0.0; color: Qt.lighter(Commons.Appearance.colors.accent, 1.18) }
-                GradientStop { position: 1.0; color: Qt.darker(Commons.Appearance.colors.accent, 1.12) }
+                GradientStop { position: 0.0; color: root._steel ? Qt.lighter(Commons.Appearance.steel.hi, 1.18)
+                                                                  : Qt.lighter(Commons.Appearance.colors.accent, 1.18) }
+                GradientStop { position: 0.5; color: root._steel ? Commons.Appearance.steel.md : Qt.lighter(Commons.Appearance.colors.accent, 1.18) }
+                GradientStop { position: 1.0; color: root._steel ? Commons.Appearance.steel.lo
+                                                                  : Qt.darker(Commons.Appearance.colors.accent, 1.12) }
             }
             Behavior on x { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
         }
@@ -79,7 +110,8 @@ Item {
                     Text {
                         visible: !!seg.modelData.glyph
                         text: seg.modelData.glyph || ""
-                        color: seg._on ? Commons.Appearance.colors.base : Commons.Appearance.colors.subtext0
+                        color: seg._on ? (root._steel ? Commons.Appearance.colors.text : Commons.Appearance.colors.base)
+                                       : Commons.Appearance.colors.subtext0
                         font.pixelSize: 14; font.family: Commons.Appearance.font.family
                         anchors.verticalCenter: parent.verticalCenter
                         Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
@@ -87,7 +119,8 @@ Item {
                     Text {
                         visible: !root.iconOnly && !!seg.modelData.label
                         text: seg.modelData.label || ""
-                        color: seg._on ? Commons.Appearance.colors.base : Commons.Appearance.colors.subtext0
+                        color: seg._on ? (root._steel ? Commons.Appearance.colors.text : Commons.Appearance.colors.base)
+                                       : Commons.Appearance.colors.subtext0
                         font.pixelSize: Commons.Appearance.font.sizeBase
                         font.family: Commons.Appearance.font.family
                         font.weight: seg._on ? Font.Medium : Font.Normal

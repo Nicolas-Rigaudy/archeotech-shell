@@ -134,17 +134,19 @@ Item {
             ]
         }
 
+        // Steel pack: local top-lit steel plate (matches the strip popups + frame);
+        // glass packs keep the screen-mapped liquid sheen.
+        readonly property bool _steel: Commons.Appearance.frameChamfer
         ShapePath {
-            // Liquid-glass sheen — top-lit vertical gradient within the card
-            // (same tokens/look as the frame + panels).
             fillGradient: LinearGradient {
-                x1: 0; y1: -root._winY
-                x2: 0; y2: root._winH - root._winY
-                GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
-                GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+                x1: 0; y1: card._steel ? 0 : -root._winY
+                x2: 0; y2: card._steel ? card.height : (root._winH - root._winY)
+                GradientStop { position: 0.0; color: card._steel ? Commons.Appearance.steel.hi : Commons.Appearance.colors.glassSheenTop }
+                GradientStop { position: card._steel ? 0.30 : 1.0; color: card._steel ? Commons.Appearance.steel.md : Commons.Appearance.colors.glassSheenBot }
+                GradientStop { position: 1.0; color: card._steel ? Commons.Appearance.steel.lo : Commons.Appearance.colors.glassSheenBot }
             }
-            strokeWidth: 0
-            strokeColor: "transparent"
+            strokeWidth: card._steel ? 1 : 0
+            strokeColor: card._steel ? Commons.Appearance.steel.edge : "transparent"
             startX: card._p[0].x
             startY: card._p[0].y
             PathLine { x: card._p[1].x; y: card._p[1].y }
@@ -169,5 +171,13 @@ Item {
         screenAxis: root._screenAxis
         axisFloor:  160
         panelRoot:  root
+    }
+
+    // Bolted-console hardware — trim + gussets + a bolted collar on the bar edge.
+    ConsoleChrome {
+        anchors.fill: parent
+        visible: Commons.Appearance.frameChamfer
+        attachSide: root._side ? root._side : "top"
+        radius: root._r
     }
 }

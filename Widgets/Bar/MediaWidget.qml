@@ -36,7 +36,11 @@ Item {
     Behavior on implicitWidth { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
     Behavior on opacity       { NumberAnimation { duration: Commons.Appearance.anim.fast } }
 
-    width: 200
+    // Follow implicitWidth (200 active / 0 idle) so an idle player reserves NO
+    // layout width — a hard `width: 200` here silently held 200px while invisible
+    // (opacity 0), inflating any content that measures the left cluster (e.g. the
+    // pack console housing). The clock is a centered overlay, so nothing shifts.
+    width: implicitWidth
     height: Commons.Appearance.bar.height
     clip: true
 

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
 import "../../../Commons" as Commons
+import "../../../Commons/Primitives" as Prim
 
 // Shared settings group card — same elevated language as the dashboard DashCard:
 // translucent surfaceCard + soft drop shadow. Rows (ToggleRow/SliderRow/…) and
@@ -22,7 +23,7 @@ Item {
         color:  Qt.rgba(0, 0, 0, 0.45 * Commons.Appearance.shadowStrength)
     }
 
-    Rectangle {
+    Prim.MetalSurface {
         id: bg
         anchors.fill: parent
         radius: Commons.Appearance.radius.md

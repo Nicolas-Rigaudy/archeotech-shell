@@ -55,11 +55,17 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 6
-                    Text {
-                        text: "󰂚  Notifications"
+                    Text {                          // icon on the icon font
+                        text: "󰂚"
                         color: Commons.Appearance.colors.text
                         font.pixelSize: Commons.Appearance.font.sizeLg
                         font.family: Commons.Appearance.font.family
+                    }
+                    Text {                          // label = display face (Cinzel under the pack)
+                        text: "Notifications"
+                        color: Commons.Appearance.colors.text
+                        font.pixelSize: Commons.Appearance.font.sizeLg
+                        font.family: Commons.Appearance.font.display
                         font.weight: Font.Medium
                         elide: Text.ElideRight
                         Layout.fillWidth: true

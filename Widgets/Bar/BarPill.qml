@@ -61,7 +61,9 @@ Item {
         height: pill.activeBgSize
         // Fade the key in on hover/active; scale for tactility (swatch-dot recipe).
         opacity: (pill.active || pill.hovered) ? 1 : 0
-        scale:   pill.pressed ? 0.92 : (pill.interactive && pill.hovered ? 1.08 : 1.0)
+        // Keep the tactile hover-grow; the strip cell's clearance (Strip._iconMargin)
+        // is sized so the scaled key still clears the popup's console trim.
+        scale:   pill.pressed ? 0.94 : (pill.interactive && pill.hovered ? 1.08 : 1.0)
         Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.fast } }
         Behavior on scale   { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
 
@@ -77,6 +79,9 @@ Item {
 
         RectangularShadow {
             anchors.fill: keyBg
+            // No soft glow on strip cells under the steel pack — it bleeds past the
+            // popup's console trim (reads as clipping) and is a "modern" tell.
+            visible: !(pill.showActiveBg && Commons.Appearance.frameChamfer)
             radius: keyBg.radius
             blur:   10
             offset: Qt.vector2d(0, 3)
@@ -90,10 +95,10 @@ Item {
             antialiasing: true
             gradient: Gradient {
                 GradientStop { position: 0.0
-                    color: Commons.Appearance.flatMode ? activeCell._keyBase
+                    color: Commons.Appearance.depthFlat ? activeCell._keyBase
                                                        : Qt.lighter(activeCell._keyBase, 1.16) }
                 GradientStop { position: 1.0
-                    color: Commons.Appearance.flatMode ? activeCell._keyBase
+                    color: Commons.Appearance.depthFlat ? activeCell._keyBase
                                                        : Qt.darker(activeCell._keyBase, 1.10) }
             }
         }

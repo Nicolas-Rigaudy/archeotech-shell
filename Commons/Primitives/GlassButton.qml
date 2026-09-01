@@ -78,7 +78,16 @@ Item {
                 "surface": Commons.Appearance.colors.surfaceCard,
                 "border":  Commons.Appearance.colors.glassBorder,
                 "text":    Commons.Appearance.colors.subtext1,
-                "base":    Commons.Appearance.colors.base
+                "base":    Commons.Appearance.colors.base,
+                "teal":    Commons.Appearance.colors.teal,
+                // Flat welded-steel family (matches the frame); pack delegates
+                // render machined-steel chrome from these instead of importing Commons.
+                "steelHi":   Commons.Appearance.steel.hi,
+                "steelMd":   Commons.Appearance.steel.md,
+                "steelLo":   Commons.Appearance.steel.lo,
+                "steelEdge": Commons.Appearance.steel.edge,
+                "steelLip":  Commons.Appearance.steel.lip,
+                "chamfer":   Commons.Appearance.frameChamfer
             }
         })
     }
@@ -94,7 +103,11 @@ Item {
         visible: btn.text !== ""
         anchors.centerIn: parent
         text: btn.text
-        color: btn.active ? Commons.Appearance.colors.base : Commons.Appearance.colors.subtext1
+        // Active text: dark `base` reads on the base accent fill, but the steel
+        // pack's active chrome is dark steel + a teal edge → use light text there.
+        color: btn.active ? (Commons.Appearance.frameChamfer ? Commons.Appearance.colors.text
+                                                             : Commons.Appearance.colors.base)
+                          : Commons.Appearance.colors.subtext1
         font.pixelSize: Commons.Appearance.font.sizeSm
         font.family: Commons.Appearance.font.family
         Behavior on color { Commons.ColorAnim {} }

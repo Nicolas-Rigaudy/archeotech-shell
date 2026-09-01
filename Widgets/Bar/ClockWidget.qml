@@ -40,7 +40,9 @@ Item {
                 + Qt.formatDateTime(new Date(), root._timeFmt())
                 + "</span>"
                 + "<span style='color:" + Commons.Appearance.colors.surface1 + "'> &nbsp;·&nbsp; </span>"
-                + "<span style='color:" + Commons.Appearance.colors.subtext0 + "'>"
+                + "<span style='color:" + Commons.Appearance.colors.subtext0
+                + ";font-family:\"" + Commons.Appearance.font.display + "\""
+                + ";font-size:" + (Commons.Appearance.font.sizeMd + 2) + "px'>"
                 + Qt.formatDateTime(new Date(), "ddd d MMM")
                 + "</span>"
         }

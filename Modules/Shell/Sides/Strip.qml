@@ -132,7 +132,12 @@ Item {
 
     readonly property int _r:  Commons.Appearance.radius.md  // neck arc radius (smaller = popup less tall)
     readonly property int _rb: Commons.Appearance.radius.md
-    readonly property int _popupExtra: _bodyDepth + _r
+    // Perpendicular clearance around the icon cell — a fixed minimum so it does NOT
+    // collapse with a pack's tiny corner radius (the Shadow Spears radius.md=2 made
+    // the hover popup ~8px thinner than base and clipped the icon highlight). Used
+    // for BOTH the popup depth and the iconArea edge margin so they stay in sync.
+    readonly property int _iconMargin: Math.max(9, _r / 2)
+    readonly property int _popupExtra: _bodyDepth + 2 * _iconMargin
 
     // Auto-sized panels only know their axis extent once their content has
     // loaded + measured `implicitAxis`; until then hold the card at popup size so
@@ -295,6 +300,19 @@ Item {
         }
         readonly property real _winH: strip.screen ? strip.screen.height : strip.height
 
+        // Flat welded-steel popup (Shadow Spears / chamfer pack): the panel reads
+        // as a machined instrument plate — a LOCAL top-lit steel gradient (each
+        // popup its own plate, not screen-mapped) + a teal live-edge tracing the
+        // whole outline (the open popup is THE live element, so teal is licensed
+        // here per the chapter bible). Base/glass packs keep the screen-mapped
+        // liquid-glass sheen untouched.
+        readonly property bool  _steel:    Commons.Appearance.frameChamfer
+        readonly property color _fillTop:  _steel ? Commons.Appearance.steel.hi : Commons.Appearance.colors.glassSheenTop
+        readonly property color _fillMid:  _steel ? Commons.Appearance.steel.md : Commons.Appearance.colors.glassSheenTop
+        readonly property color _fillBot:  _steel ? Commons.Appearance.steel.lo : Commons.Appearance.colors.glassSheenBot
+        readonly property color _liveEdge: Qt.rgba(Commons.Appearance.colors.teal.r, Commons.Appearance.colors.teal.g,
+                                                   Commons.Appearance.colors.teal.b, 0.42)
+
         readonly property var _p: {
             const W = width, H = height, r = _r, rb = _rb
             if (strip.side === "right")  return [
@@ -330,13 +348,18 @@ Item {
             // within the card (which caused a colour seam where a popup meets the
             // strip). strip fills the surface, so strip.height == screen height.
             fillGradient: LinearGradient {
-                x1: 0; y1: -card._winY
-                x2: 0; y2: card._winH - card._winY
-                GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
-                GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+                // Steel: local top-lit (0→H) so each popup is its own plate.
+                // Glass: screen-space mapped (continues the frame's light source).
+                x1: 0; y1: card._steel ? 0 : -card._winY
+                x2: 0; y2: card._steel ? card.height : (card._winH - card._winY)
+                GradientStop { position: 0.0; color: card._fillTop }
+                GradientStop { position: card._steel ? 0.30 : 1.0; color: card._steel ? card._fillMid : card._fillBot }
+                GradientStop { position: 1.0; color: card._fillBot }
             }
-            strokeWidth: 0
-            strokeColor: "transparent"
+            // Dark seat under the copper trim (teal pulled back to a content
+            // pinpoint — the console hardware is drawn by ConsoleChrome below).
+            strokeWidth: card._steel ? 1 : 0
+            strokeColor: card._steel ? Commons.Appearance.steel.edge : "transparent"
 
             startX: card._p[0].x
             startY: card._p[0].y
@@ -400,10 +423,14 @@ Item {
             anchors.top:    strip.side === "bottom" ? undefined : parent.top
             anchors.bottom: strip.side === "top"    ? undefined : parent.bottom
 
-            anchors.leftMargin:   strip.side === "left"   ? strip._r / 2 : strip._r
-            anchors.rightMargin:  strip.side === "right"  ? strip._r / 2 : strip._r
-            anchors.topMargin:    strip.side === "top"    ? strip._r / 2 : strip._r
-            anchors.bottomMargin: strip.side === "bottom" ? strip._r / 2 : strip._r
+            // Perpendicular clearance from the strip-attached edge: a fixed minimum
+            // so it doesn't collapse with the pack's tiny corner radius (which pushed
+            // the icons hard against the edge → highlight clipped the console trim,
+            // and shifted them vs the base pack). Keeps icons put across packs.
+            anchors.leftMargin:   strip.side === "left"   ? strip._iconMargin : strip._r
+            anchors.rightMargin:  strip.side === "right"  ? strip._iconMargin : strip._r
+            anchors.topMargin:    strip.side === "top"    ? strip._iconMargin : strip._r
+            anchors.bottomMargin: strip.side === "bottom" ? strip._iconMargin : strip._r
 
             width:  strip._horizontal ? undefined        : strip._bodyDepth
             height: strip._horizontal ? strip._bodyDepth : undefined
@@ -443,6 +470,19 @@ Item {
                     }
                 }
             }
+        }
+
+        // ── Bolted-console hardware (Shadow Spears) — copper trim + gussets +
+        // a bolted collar on the strip-attached edge. Decorative only (no
+        // MouseArea → never eats icon/content hover). Steel packs only.
+        // Bolted-console hardware — copper trim + far-corner gussets + a bolted
+        // collar (shoulder cleats at the ends of the strip-attached edge, clear of
+        // the centred icon rail). Decorative (no MouseArea → never eats hover).
+        ConsoleChrome {
+            anchors.fill: parent
+            visible: card._steel
+            attachSide: strip.side
+            radius: strip._r
         }
     }
 }
