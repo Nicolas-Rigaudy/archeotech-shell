@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Shapes
 import "../../Commons" as Commons
 
 // Decorator/FX overlay for the shell frame (adr_027 Wave 2, Layer B).
@@ -108,6 +109,119 @@ Item {
         }
     }
 
+    // ── Frame chassis (NMM steel) ────────────────────────────────────────────────
+    // Per-band tight, HIGH-CONTRAST NMM steel cross-sections (deep shadow → bright
+    // ridge packed across the band) so each rail reads as painted metal. The
+    // different gradient DIRECTIONS where bands meet are covered by a bevelled
+    // corner bracket-plate (below), turning the junction into a deliberate fitting.
+    // FLAT welded panel face (top-lit), NOT a tube cross-section: the four bands share
+    // one tonal family with a gentle top→bottom fall, so the frame reads as a single
+    // machined bezel rather than four pipes. (Old NMM ridge caused the tube look.)
+    readonly property bool  _rlOn:   !!(_fx.rails && _fx.rails.enabled) && _hasHole
+    readonly property color _stHi:   Qt.lighter(Commons.Appearance.colors.surface2, 1.45)  // (kept for compat)
+    readonly property color _stMid:  "#2b3542"
+    readonly property color _stLo:   Qt.darker(Commons.Appearance.colors.mantle, 1.12)
+    readonly property color _faHi:   "#333f4d"   // top-lit face
+    readonly property color _faMd:   "#28313d"   // body face
+    readonly property color _faLo:   "#1c232d"   // lower face
+    Rectangle {   // top band (bar) — top-lit flat panel
+        visible: fx._rlOn && fx.contentRect.y > 1
+        x: 0; y: 0; width: fx.width; height: fx.contentRect.y
+        gradient: Gradient {
+            GradientStop { position: 0.00; color: fx._faHi }
+            GradientStop { position: 0.22; color: fx._faMd }
+            GradientStop { position: 1.00; color: fx._faLo }
+        }
+    }
+    Rectangle {   // bottom band — flat panel
+        visible: fx._rlOn && (fx.height - fx.contentRect.y - fx.contentRect.height) > 1
+        x: 0; y: fx.contentRect.y + fx.contentRect.height
+        width: fx.width; height: fx.height - fx.contentRect.y - fx.contentRect.height
+        gradient: Gradient {
+            GradientStop { position: 0.00; color: fx._faMd }
+            GradientStop { position: 1.00; color: fx._faLo }
+        }
+    }
+    Rectangle {   // left band (rail) — flat
+        visible: fx._rlOn && fx.contentRect.x > 1
+        x: 0; y: fx.contentRect.y; width: fx.contentRect.x; height: fx.contentRect.height
+        color: fx._faMd
+    }
+    Rectangle {   // right band (rail) — flat
+        visible: fx._rlOn && (fx.width - fx.contentRect.x - fx.contentRect.width) > 1
+        x: fx.contentRect.x + fx.contentRect.width; y: fx.contentRect.y
+        width: fx.width - fx.contentRect.x - fx.contentRect.width; height: fx.contentRect.height
+        color: fx._faMd
+    }
+
+    // ── Adaptive corner brackets (procedural, per-junction) ──────────────────────
+    // Replaces the fixed corner PNG. One machined steel plate per corner, built from
+    // the content-hole insets + chamfer size: each arm's WIDTH = its member's
+    // thickness (bar ~30 / strip ~16), the inner edge follows the 45° chamfer, the
+    // outer screen corner is solid. Lit by ONE per-corner diagonal gradient (bright
+    // at the outer screen corner → dark toward content) so the two arms read as a
+    // single piece — no inter-band seam. A full-perimeter bevel (bright rim on the
+    // light-facing edges, dark cliff on the inner/arm-end edges) makes it a RAISED
+    // plate; copper rivets bolt it down (corner stud + one per arm). Adjacent side
+    // none/holder ⇒ that inset is 0 ⇒ the member terminates as an end-cap instead of
+    // a junction bracket. Chamfered frames only; drawn under the copper bezel.
+    // Fixed chapter-ceramite steel for the plate face (the Shadow Spears armour is
+    // always this cool steel; only the copper trim follows the accent). Tuned tones,
+    // brighter than the derived chassis so the plate reads as a RAISED piece.
+    readonly property bool  _coOn:     _rlOn && Commons.Appearance.frameChamfer
+    readonly property color _faceHi:   "#3a4757"   // facet hotspot at the outer corner
+    readonly property color _faceMd:   "#2c3644"
+    readonly property color _faceLo:   "#1a212b"   // toward the content
+    readonly property color _coLit:    "#cdd9e8"   // lit outer bevel
+    readonly property color _coShadow: "#05080d"   // cut / inlay shadow
+
+    // Chamfer corner treatment kept SMALL and at the content edge — a tiny wedge that
+    // fills the chamfer gap the flat rect-bands leave (so no glass shows through),
+    // matching the band, with a faint lit line along the 45° cut. It lives entirely in
+    // the frame border at the content corner, so it never reaches into the bar's widget
+    // zone (the old full-depth facet clipped the workspace/power icons). Chamfered frames
+    // only; a zero-inset side is skipped.
+    readonly property var _corners: {
+        if (!_coOn || !_hasHole || cornerRadius < 1) return []
+        var cr = contentRect, cham = cornerRadius
+        var rgt = width - cr.x - cr.width, bot = height - cr.y - cr.height
+        var C = [
+            [cr.x,          cr.y,           1,  1, cr.y, cr.x],
+            [cr.x+cr.width, cr.y,          -1,  1, cr.y, rgt],
+            [cr.x,          cr.y+cr.height, 1, -1, bot,  cr.x],
+            [cr.x+cr.width, cr.y+cr.height,-1, -1, bot,  rgt]
+        ]
+        var out = []
+        for (var i = 0; i < C.length; i++) {
+            var px = C[i][0], py = C[i][1], sx = C[i][2], sy = C[i][3], thH = C[i][4], thW = C[i][5]
+            if (thH <= 1 || thW <= 1) continue
+            var hx = px + sx*cham, hy = py            // chamfer end on the horizontal edge
+            var vx = px,           vy = py + sy*cham  // chamfer end on the vertical edge
+            out.push({ fill: "M " + px + " " + py + " L " + hx + " " + hy + " L " + vx + " " + vy + " Z",
+                       cut:  "M " + hx + " " + hy + " L " + vx + " " + vy })
+        }
+        return out
+    }
+    Repeater {
+        model: fx._corners
+        delegate: Shape {
+            anchors.fill: parent
+            preferredRendererType: Shape.CurveRenderer
+            asynchronous: false
+            readonly property var cd: modelData
+            ShapePath {                                       // fill the chamfer gap, matching the band
+                fillColor: fx._faMd
+                strokeWidth: 0; strokeColor: "transparent"
+                PathSvg { path: cd.fill }
+            }
+            ShapePath {                                       // faint lit machined line along the cut
+                fillColor: "transparent"; strokeColor: Qt.rgba(0.8, 0.85, 0.9, 0.35)
+                strokeWidth: 1; capStyle: ShapePath.FlatCap
+                PathSvg { path: cd.cut }
+            }
+        }
+    }
+
     // ── Bevel (adr_027 / item_083: depth) ───────────────────────────────────────
     // A thin machined "lip" tracing the content-hole edge — reads as the metal
     // bezel of a recessed screen, restoring dimension a flat matte fill loses.
@@ -116,28 +230,74 @@ Item {
     readonly property bool  _bevOn:    !!_bev.enabled && _hasHole
     readonly property color _bevColor: Commons.Appearance.fxColor(_bev.color, Commons.Appearance.colors.overlay1)
     readonly property int   _bevW:     _bev.width !== undefined ? _bev.width : 2
-    Rectangle {
-        visible: fx._bevOn
-        x: fx.contentRect.x; y: fx.contentRect.y
-        width: fx.contentRect.width; height: fx.contentRect.height
-        radius: fx.cornerRadius
-        color: "transparent"
-        antialiasing: true
-        border.width: fx._bevW
-        border.color: fx._bevColor
+    // Copper molding trim — one lit bevel bead per content edge instead of a flat
+    // border line. A cross-section gradient (bright toward the top-left light
+    // source → dark) reads as rounded metal, so the copper stops looking painted.
+    // NON-METALLIC-METAL copper (miniature painting): a smooth, high-contrast
+    // painted gradient — bright hotspot, mid copper, deep shadow, faint bounce —
+    // NOT a brushed/flake texture. Reads as polished copper trim.
+    readonly property color _cuHi:     Qt.lighter(fx._bevColor, 1.95)   // hotspot
+    readonly property color _cuMid:    fx._bevColor                     // body copper
+    readonly property color _cuLo:     Qt.darker(fx._bevColor, 2.3)     // core shadow
+    readonly property color _cuBounce: Qt.darker(fx._bevColor, 1.4)     // reflected light
+    readonly property int   _cuW:      Math.max(4, fx._bevW + 1)
+    readonly property int   _cr:       Math.max(0, fx.cornerRadius)   // = chamfer size
+
+    // ONE continuous copper bezel, stroked along the (chamfered) content-hole
+    // outline. Replaces the per-edge beads + corner pieces + wedges — a single
+    // path has no junctions, so no seams/gaps can appear at any corner on any
+    // monitor. Three concentric strokes fake an NMM cross-section (dark edges →
+    // bright centre ridge). The path mirrors the FrameBackground shape: 45°
+    // chamfered corners when the pack requests it, else square.
+    // (No separate chamfer wedge — the FrameBackground shape already fills the
+    // chamfered corner with the one global steel gradient, so a wedge here would
+    // just be a mismatched flat patch.)
+    readonly property string _bezelPath: {
+        if (!_bevOn) return ""
+        // Snap to the pixel grid — a fractional edge x/y makes the CurveRenderer
+        // dither the stroke into a mottled/striped copper down that edge (bit the
+        // right/bottom edges where the content extent landed off-grid).
+        var x0 = Math.round(contentRect.x), y0 = Math.round(contentRect.y)
+        var x1 = Math.round(contentRect.x + contentRect.width), y1 = Math.round(contentRect.y + contentRect.height)
+        var c = Commons.Appearance.frameChamfer ? _cr : 0
+        return "M " + (x0 + c) + " " + y0
+             + " L " + (x1 - c) + " " + y0 + " L " + x1 + " " + (y0 + c)
+             + " L " + x1 + " " + (y1 - c) + " L " + (x1 - c) + " " + y1
+             + " L " + (x0 + c) + " " + y1 + " L " + x0 + " " + (y1 - c)
+             + " L " + x0 + " " + (y0 + c) + " Z"
     }
-    // Soft inner shadow just inside the lip → the screen reads as recessed.
-    Rectangle {
-        visible: fx._bevOn
-        x: fx.contentRect.x + fx._bevW; y: fx.contentRect.y + fx._bevW
-        width:  fx.contentRect.width  - 2 * fx._bevW
-        height: fx.contentRect.height - 2 * fx._bevW
-        radius: Math.max(0, fx.cornerRadius - fx._bevW)
-        color: "transparent"
-        antialiasing: true
-        border.width: 1
-        border.color: Qt.rgba(0, 0, 0, 0.5)
+    // Bar content edge only — carries the brass trim (the copper stays a thin line,
+    // per the chapter bible; the rails get the teal live-edge instead).
+    readonly property string _barEdgePath: {
+        if (!_bevOn) return ""
+        var c = Commons.Appearance.frameChamfer ? _cr : 0
+        return "M " + (contentRect.x + c) + " " + contentRect.y
+             + " L " + (contentRect.x + contentRect.width - c) + " " + contentRect.y
     }
+    Shape {
+        visible: fx._bevOn
+        anchors.fill: parent
+        // GeometryRenderer, NOT CurveRenderer: the bezel is all straight lines, and
+        // CurveRenderer dithered these thin axis-aligned copper strokes into a
+        // mottled/dashed line (worst on the portrait output).
+        preferredRendererType: Shape.GeometryRenderer
+        asynchronous: false
+        // Copper trim tracing the WHOLE content edge (teal live-edge dropped).
+        // Body + lit highlight = the same brass the bar edge had, now all around.
+        ShapePath {   // brass body
+            fillColor: "transparent"; strokeColor: fx._cuMid
+            strokeWidth: 2.4; joinStyle: ShapePath.MiterJoin; capStyle: ShapePath.FlatCap
+            PathSvg { path: fx._bezelPath }
+        }
+        ShapePath {   // brass highlight
+            fillColor: "transparent"; strokeColor: fx._cuHi
+            strokeWidth: 1; joinStyle: ShapePath.MiterJoin; capStyle: ShapePath.FlatCap
+            PathSvg { path: fx._bezelPath }
+        }
+    }
+    // (Corner rivets are drawn as part of the corner bracket-plates above.)
+    // (Removed: the "soft inner shadow" black border — it read as a black line all
+    //  around the content window; the copper trim now carries the edge.)
 
     // ── Rivets (adr_027 / item_083: machined-panel studs) ───────────────────────
     // Bolt-heads run along the frame bands just outside the content edge — the
@@ -189,6 +349,46 @@ Item {
             }
         }
     }
+
+    // ── Plate seams (Astartes register — segmented bolted armour rails) ─────────
+    // Perpendicular seam ticks across the SIDE + BOTTOM bands at intervals, each
+    // capped by a copper bolt-pair: the rails read as bolted ceramite plates, not
+    // empty bands with a line. The TOP band is skipped (the bar owns its own
+    // console). Off by default. fx.seams = { enabled, color, bolt, spacing }.
+    // Shared domed-rivet image (baked highlight/shadow) for the frame fittings.
+    readonly property string _rivetSrc: packDir === "" ? "" : ("file://" + packDir + "panels/rivet.png")
+    readonly property var   _sm:        _fx.seams || ({})
+    readonly property bool  _smOn:      !!_sm.enabled && _hasHole
+    readonly property color _smColor:   Commons.Appearance.fxColor(_sm.color, Commons.Appearance.colors.overlay0)
+    readonly property color _smBolt:    Commons.Appearance.fxColor(_sm.bolt,  Commons.Appearance.colors.accent)
+    readonly property int   _smSpacing: _sm.spacing !== undefined ? _sm.spacing : 150
+    readonly property var _seamMarks: {
+        var out = []
+        if (!_smOn) return out
+        var cx0 = contentRect.x, cy0 = contentRect.y
+        var cx1 = contentRect.x + contentRect.width, cy1 = contentRect.y + contentRect.height
+        var sp = Math.max(60, _smSpacing)
+        // horizontal seams spanning the left + right band widths
+        for (var y = cy0 + sp; y < cy1 - sp * 0.4; y += sp) {
+            if (cx0 > 3)         out.push({ lx: 0,   ly: y, lw: cx0,         lh: 1, bcx: cx0 / 2,             bcy: y })
+            if (width - cx1 > 3) out.push({ lx: cx1, ly: y, lw: width - cx1, lh: 1, bcx: (cx1 + width) / 2,   bcy: y })
+        }
+        // vertical seams spanning the bottom band height
+        for (var x = cx0 + sp; x < cx1 - sp * 0.4; x += sp) {
+            if (height - cy1 > 3) out.push({ lx: x, ly: cy1, lw: 1, lh: height - cy1, bcx: x, bcy: (cy1 + height) / 2 })
+        }
+        return out
+    }
+    Repeater {                            // periodic rivet fittings along the strips
+        model: fx._seamMarks              // (no seam grooves — barely visible on thin rails)
+        delegate: Image {
+            source: fx._rivetSrc; width: 8; height: 8; sourceSize: Qt.size(16, 16); smooth: true
+            x: modelData.bcx - 4; y: modelData.bcy - 4
+        }
+    }
+
+    // (Corner gussets removed — the chamfered corners + copper chamfer beads above
+    // now form the structural corner join.)
 
     // ── Ornament overlay (adr_027 / item_083) ───────────────────────────────────
     // Pack-supplied SVG/PNG art (gothic filigree, sigils — non-IP / open assets)

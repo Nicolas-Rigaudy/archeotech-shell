@@ -87,6 +87,10 @@ Shape {
         // Concave fillet wedge at an inner corner: corner → one side's inner edge
         // → arc bulging back toward the corner → close.
         function fillet(cx, cy, e1x, e1y, e2x, e2y, sweep) {
+            // Chamfer mode (pack shape): a straight 45° cut instead of the arc, so
+            // the content-hole corner reads as a machined chamfer, not a round.
+            if (Commons.Appearance.frameChamfer)
+                return "M " + cx + " " + cy + " L " + e1x + " " + e1y + " L " + e2x + " " + e2y + " Z "
             return "M " + cx + " " + cy + " L " + e1x + " " + e1y
                  + " A " + R + " " + R + " 0 0 " + sweep + " " + e2x + " " + e2y + " Z "
         }
