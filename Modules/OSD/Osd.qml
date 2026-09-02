@@ -10,7 +10,7 @@ import "../../Services/Compositor" as CompositorServices
 PanelWindow {
     id: osdWindow
 
-    visible: shown && (CompositorServices.MangoWC.focusedOutput === "" || screen.name === CompositorServices.MangoWC.focusedOutput)
+    visible: shown && (CompositorServices.CompositorService.focusedOutput === "" || screen.name === CompositorServices.CompositorService.focusedOutput)
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell:osd"

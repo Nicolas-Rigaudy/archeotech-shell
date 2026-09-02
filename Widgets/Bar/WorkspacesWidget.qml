@@ -35,7 +35,7 @@ Item {
         spacing: 4
 
         Repeater {
-            model: CompositorServices.MangoWC.tagsFor(root.holderRoot && root.holderRoot.screen ? root.holderRoot.screen.name : "")
+            model: CompositorServices.CompositorService.tagsFor(root.holderRoot && root.holderRoot.screen ? root.holderRoot.screen.name : "")
             delegate: Rectangle {
                 id: pillDot
                 required property var modelData
@@ -68,7 +68,7 @@ Item {
                 Behavior on color  { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: CompositorServices.MangoWC.switchTag(
+                    onClicked: CompositorServices.CompositorService.switchTag(
                         root.holderRoot.screen ? root.holderRoot.screen.name : "", modelData.num)
                 }
             }

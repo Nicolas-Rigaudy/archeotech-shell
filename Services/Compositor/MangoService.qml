@@ -1,20 +1,26 @@
 pragma Singleton
 import QtQuick
+import Quickshell
 import Quickshell.Io
 
-// MangoWC IPC service — mangowm 0.15+ `mmsg` JSON IPC (get/watch/dispatch).
-// The pre-0.15 flag interface (`mmsg -w -O -t -l -c -f -m -k`, space-delimited
-// lines) was removed upstream; this consumes the JSON streams instead.
+// MangoWC backend for CompositorService — mangowm 0.15+ `mmsg` JSON IPC
+// (get/watch/dispatch). The pre-0.15 flag interface was removed upstream; this
+// consumes the JSON streams instead. This is the ONLY file that shells out to
+// `mmsg`; every widget reaches it through the CompositorService facade so the
+// same call sites also work under HyprlandService (item_070).
 //
 // Two watch streams feed the per-output registry:
 //   mmsg watch all-monitors    → {monitors:[{name,active,layout_symbol,
 //                                  tags:[{index,is_active,is_urgent,client_count}]}]}
 //   mmsg watch focusing-client → {id,title,appid,monitor,is_floating,is_fullscreen,…}
-//
-// Public API is unchanged from the pre-0.15 service, so call sites need no edits.
 
 QtObject {
     id: root
+
+    // Only the compositor actually running should do work. Under Hyprland this
+    // backend stays inert (no mmsg spawned) — CompositorService routes to
+    // HyprlandService instead. Detected via Hyprland's instance-signature env.
+    readonly property bool _active: (Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") || "") === ""
 
     // ── Output registry ────────────────────────────────────────────────────────
     property var _outputs: ({})
@@ -78,7 +84,8 @@ QtObject {
     function isFullscreen(name) { var o = _outputs[name]; return o ? o.fullscreen : false }
 
     // ── Watch streams ────────────────────────────────────────────────────────────
-    Component.onCompleted: { _watchMonitors.running = true; _watchClient.running = true; _watchClients.running = true }
+    // Only start the mmsg watchers when MangoWC is the active compositor.
+    Component.onCompleted: if (_active) { _watchMonitors.running = true; _watchClient.running = true; _watchClients.running = true }
 
     property var _watchMonitors: Process {
         command: ["mmsg", "watch", "all-monitors"]

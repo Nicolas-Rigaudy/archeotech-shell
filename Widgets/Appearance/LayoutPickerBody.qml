@@ -18,7 +18,7 @@ Item {
     // vertical: the quick panel passes !panelRoot._horizontal for left/right holders.
     property bool vertical: false
 
-    readonly property var _mango: CompositorServices.MangoWC
+    readonly property var _mango: CompositorServices.CompositorService
 
     // Highlight reflects what we last set (authoritative). On open we seed from
     // the compositor's `layout_symbol` (the JSON has no layout *name*) via the

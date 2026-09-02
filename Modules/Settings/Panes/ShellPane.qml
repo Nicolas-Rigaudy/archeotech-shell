@@ -45,7 +45,7 @@ Item {
     Timer {
         id: _propTimer; interval: 60
         onTriggered: if (root._pendingProp >= 0) {
-            CompositorServices.MangoWC.setProportion(root._pendingProp)
+            CompositorServices.CompositorService.setProportion(root._pendingProp)
             root._pendingProp = -1
         }
     }
@@ -226,7 +226,7 @@ Item {
                             StateLayer {
                                 anchors.fill: parent
                                 onClicked: {
-                                    CompositorServices.MangoWC.setDefaultProportion(propSlider.value)
+                                    CompositorServices.CompositorService.setDefaultProportion(propSlider.value)
                                     root._savedProp = true
                                 }
                             }

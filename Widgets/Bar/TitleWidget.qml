@@ -14,7 +14,7 @@ Item {
     required property var holderRoot
     property string widgetId
 
-    property string raw: CompositorServices.MangoWC.titleFor(holderRoot && holderRoot.screen ? holderRoot.screen.name : "")
+    property string raw: CompositorServices.CompositorService.titleFor(holderRoot && holderRoot.screen ? holderRoot.screen.name : "")
 
     property string display: {
         if (raw.includes("Visual Studio Code")) return "󰨞  " + raw.replace(/ - Visual Studio Code$/, "").replace(/^.*\//, "").trim()

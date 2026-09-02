@@ -33,7 +33,7 @@ Item {
     readonly property var _marks: {
         var out = []
         if (!_on || !screenName) return out
-        var cs = Compositor.MangoWC.clientsFor(screenName)
+        var cs = Compositor.CompositorService.clientsFor(screenName)
         for (var i = 0; i < cs.length; i++) {
             var c = cs[i]
             var L = c.x + _inset,          T = c.y + _inset
