@@ -43,6 +43,16 @@ link() {  # link <target> <linkname>
 
 echo -e "${BLUE}Archeotech shell — install${NC}"
 
+# ── Prereq check (warn-only; deps are compositor-specific) ────────────────────
+# The shell needs quickshell to run. Missing optional tools just disable widgets,
+# so we warn rather than abort — see docs/INSTALL.md for the full dependency list.
+if command -v qs &>/dev/null || command -v quickshell &>/dev/null; then
+    ok "quickshell found"
+else
+    warn "quickshell not found on PATH — install it before launching (docs/INSTALL.md)."
+    warn "Continuing with symlink deployment anyway."
+fi
+
 # ── Shell config ──────────────────────────────────────────────────────────────
 if [[ -L "$QS_DIR" ]]; then
     err "$QS_DIR is a symlink; expected a directory. Resolve manually and re-run."

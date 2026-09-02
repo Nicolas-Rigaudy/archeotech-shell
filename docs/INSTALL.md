@@ -2,10 +2,39 @@
 
 ## Requirements
 
+**Required** (the shell won't run without these):
+
 - **[Quickshell](https://quickshell.org)** 0.3.0+
 - A **wlroots-based Wayland compositor** — **MangoWC** is the primary target; Hyprland works.
-- **Fonts:** a Nerd Font (for glyphs) and a sans family; the theme system also drives kitty colors if kitty is installed.
-- **Common tools** used by shell features (install what you use): `wl-clipboard`, `brightnessctl`, `wpctl`/`pipewire`, `NetworkManager`, `bluez` + `bluez-utils`, `wlr-randr`, `awww`/`swww` (wallpaper), `hyprlock` (lock), `wlogout` (power menu), `rsvg-convert` + `imagemagick` (wallpaper/logo compositing).
+- A **Nerd Font** (for glyphs) and a sans family, plus an icon theme (Papirus recommended).
+
+**Optional** (individual widgets/features light up when present; the shell
+degrades gracefully otherwise): `wl-clipboard`, `brightnessctl`,
+`wpctl`/`pipewire` (volume OSD), `NetworkManager` (network widget),
+`bluez` + `bluez-utils` (bluetooth widget), `wlr-randr`, `swww`/`awww`
+(wallpaper), `hyprlock` (lock), `wlogout` (power menu),
+`rsvg-convert` + `imagemagick` (wallpaper/logo compositing), `kitty`
+(themed terminal colors).
+
+### Install dependencies (Arch)
+
+Package names below are for Arch + an AUR helper (`paru`); on other distros find
+the equivalents.
+
+```sh
+# Required
+paru -S quickshell-git mangowc-git \
+        ttf-firacode-nerd noto-fonts papirus-icon-theme
+
+# Optional (recommended for the full experience)
+paru -S wl-clipboard brightnessctl pipewire wireplumber \
+        networkmanager bluez bluez-utils wlr-randr swww \
+        hyprlock wlogout imagemagick librsvg kitty
+```
+
+> Using the companion [`archeotech-dotfiles`](https://github.com/Nicolas-Rigaudy/archeotech-dotfiles)?
+> Its `scripts/install-packages.sh` installs all of the above (and the rest of the
+> desktop) with a required/optional split — see that repo's `docs/INSTALLATION.md`.
 
 ## 1. Install the shell
 
