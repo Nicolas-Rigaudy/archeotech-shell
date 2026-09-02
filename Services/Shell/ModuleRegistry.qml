@@ -20,8 +20,13 @@ import "../Persistence" as Persistence
 // with its absolute directory so `entryUrl()` can resolve the QML file.
 //
 // module.json schema — see docs/MODULE_API.md:
-//   { id, name, author, version, canLiveIn[], entry, icon, defaultSize{}, panel{}, configSchema{} }
+//   { id, name, author, version, canLiveIn[], entry, icon, defaultSize{}, panel{},
+//     configSchema{}, official, verified, minShellVersion, dependencies[] }
 //   canLiveIn ∈ { "bar-zone", "strip-icon", "panel-content", "desktop-widget" }
+//   official/verified — trust badges shown in the Plugins pane.
+//   minShellVersion   — dotted-numeric; module is gated off if the shell is older.
+//   dependencies      — other plugin ids and/or system binaries, declared for the
+//                       user (declare-only, not auto-resolved — see item_065).
 QtObject {
     id: root
 
@@ -33,6 +38,12 @@ QtObject {
     // extra `dir` (absolute, trailing slash) injected by the scan.
     property var modules: []
     property bool ready: false
+
+    // Bound from shell.qml to Commons.Appearance.shellVersion so compatibility
+    // checks can gate modules whose minShellVersion the shell doesn't satisfy
+    // (mirrors PackRegistry's versioned-contract pattern). Empty until bound →
+    // treated as "unknown", which never blocks.
+    property string shellVersion: ""
 
     function _bare(id) {
         return (typeof id === "string" && id.indexOf("plugin:") === 0) ? id.slice(7) : id
@@ -57,6 +68,32 @@ QtObject {
         return !!m && (m.canLiveIn || []).indexOf(target) !== -1
     }
 
+    // ── Compatibility (minShellVersion) ─────────────────────────────────────────
+    // Dotted-numeric semver compare: is `a` >= `b`? ("0.3.0" >= "0.3" → true).
+    // Kept local (matches PackRegistry._verGte) so this registry stays standalone.
+    function _verGte(a, b) {
+        var pa = String(a).split("."), pb = String(b).split(".")
+        var n = Math.max(pa.length, pb.length)
+        for (var i = 0; i < n; i++) {
+            var x = parseInt(pa[i] || "0", 10), y = parseInt(pb[i] || "0", 10)
+            if (x > y) return true
+            if (x < y) return false
+        }
+        return true
+    }
+
+    function minVersionFor(id)   { var m = moduleFor(id); return (m && m.minShellVersion) || "" }
+    function dependenciesFor(id) { var m = moduleFor(id); return (m && m.dependencies)    || [] }
+
+    // A module is compatible when it declares no minShellVersion, or the (bound)
+    // shell version satisfies it. Unknown shellVersion → compatible (never block
+    // on missing information).
+    function isCompatible(id) {
+        var mv = minVersionFor(id)
+        if (!mv || !shellVersion) return true
+        return _verGte(shellVersion, mv)
+    }
+
     // Modules accepting any of the given placement targets (for the palette).
     // Disabled modules are excluded so the builder can't place new instances of
     // them (Sprint 26 — enable/disable from the Plugins pane).
@@ -64,6 +101,14 @@ QtObject {
         var out = []
         for (var i = 0; i < modules.length; i++) {
             if (!isEnabled(modules[i].id)) continue
+            // Version-incompatible modules are not offered for placement — a
+            // clear block instead of loading a module that would break (AC2).
+            if (!isCompatible(modules[i].id)) {
+                console.warn("[ModuleRegistry] module", modules[i].id, "needs shell >=",
+                    minVersionFor(modules[i].id), "but shell is", shellVersion || "?",
+                    "— not offered for placement")
+                continue
+            }
             var cl = modules[i].canLiveIn || []
             for (var j = 0; j < targets.length; j++) {
                 if (cl.indexOf(targets[j]) !== -1) { out.push(modules[i]); break }
@@ -83,6 +128,13 @@ QtObject {
         return dis.indexOf(_bare(id)) === -1
     }
     function setEnabled(id, on) {
+        // Refuse to enable a module the shell is too old for — the Plugins pane
+        // disables the toggle too, but guard here so no path silently loads it.
+        if (on && !isCompatible(id)) {
+            console.warn("[ModuleRegistry] refusing to enable", _bare(id),
+                "— needs shell >=", minVersionFor(id), "but shell is", shellVersion || "?")
+            return
+        }
         var dis = Persistence.Config.get("plugins.disabled", []).slice()
         var b = _bare(id)
         var i = dis.indexOf(b)
@@ -100,7 +152,7 @@ QtObject {
         command: ["bash", "-c",
             "scan(){ [ -d \"$1\" ] || return; for d in \"$1\"/*/; do m=\"${d}module.json\"; " +
             "[ -f \"$m\" ] || continue; " +
-            "jq -c --arg dir \"$d\" '{dir:$dir, id, name, author, version, canLiveIn, entry, icon, defaultSize, panel, configSchema, verified, description}' \"$m\" 2>/dev/null; " +
+            "jq -c --arg dir \"$d\" '{dir:$dir, id, name, author, version, canLiveIn, entry, icon, defaultSize, panel, configSchema, official, verified, minShellVersion, dependencies, description}' \"$m\" 2>/dev/null; " +
             "done; }; " +
             "scan \"" + root._bundledDir + "\"; " +
             "scan \"$HOME/.local/share/archeotech/modules\""

@@ -49,7 +49,10 @@ folder appears in the palette immediately.
 | `defaultSize` | opt. | `{ width, height }` hint. `width` is the panel fallback `size` if `panel` is absent. |
 | `panel` | opt. | `{ size, axisSize }` for `panel-content` modules — see Panel sizing. |
 | `configSchema` | opt. | Per-instance config fields → auto-generated settings form. See [Per-instance config](#per-instance-config-configschema). |
-| `verified` | opt. | `true` shows a "Verified" badge in the Plugins pane. Honored, not cryptographically checked (signing is a later sprint). |
+| `official` | opt. | `true` shows an "Official" badge (first-party) in the Plugins pane — the highest trust tier. |
+| `verified` | opt. | `true` shows a "Verified" badge (community-verified) in the Plugins pane. Honored, not cryptographically checked (signing is a later sprint). |
+| `minShellVersion` | opt. | Dotted-numeric (e.g. `"0.3.0"`). If the running shell is older, the module is **blocked** — disabled toggle + a warning in the Plugins pane, and it is not offered for placement — instead of loading and breaking. |
+| `dependencies` | opt. | Array of other plugin ids (`"plugin:foo"`) and/or system binaries (`"kitty"`) the module needs. Shown to the user in the Plugins pane. Declare-only — not auto-installed. |
 | `description` | opt. | One-line blurb (shown in the Plugins pane). |
 
 ### `canLiveIn` targets

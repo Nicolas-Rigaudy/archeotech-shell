@@ -3,9 +3,15 @@
   "name": "Quick Notes",
   "author": "archeotech",
   "version": "1.0.0",
-  "canLiveIn": ["panel-content"],
+  "canLiveIn": [
+    "panel-content"
+  ],
   "entry": "Notes.qml",
   "icon": "󰎞",
-  "panel": { "size": 360, "axisSize": 420 },
-  "configSchema": {}
+  "panel": {
+    "size": 360,
+    "axisSize": 420
+  },
+  "configSchema": {},
+  "official": true
 }

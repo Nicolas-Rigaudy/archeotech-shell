@@ -84,6 +84,13 @@ ShellRoot {
                    Persistence.Config.get("appearance.activePack", ""),
                    Commons.Appearance.shellVersion)
     }
+    // Feed the running shell version to ModuleRegistry so it can gate plugins
+    // whose minShellVersion the shell doesn't satisfy (Plugins pane + placement).
+    Binding {
+        target: ShellServices.ModuleRegistry
+        property: "shellVersion"
+        value: Commons.Appearance.shellVersion
+    }
     // Pack-scoped settings (adr_027 Layer D): the active pack's Config object
     // { "<dotted token path>": value }, overriding matching pack token paths.
     Binding {

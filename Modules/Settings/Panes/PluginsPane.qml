@@ -95,6 +95,8 @@ Item {
                         id: modCard
                         required property var modelData
                         readonly property bool _enabled: root._mods.isEnabled(modelData.id)
+                        // Re-evaluates when the bound shellVersion changes.
+                        readonly property bool _compatible: root._mods.shellVersion, root._mods.isCompatible(modelData.id)
                         property bool _confirming: false
                         opacity: _enabled ? 1.0 : 0.6
 
@@ -121,14 +123,30 @@ Item {
                                             font.pixelSize: Commons.Appearance.font.sizeBase
                                             font.bold: true
                                         }
-                                        // Verified badge (honored, not cryptographically checked — S27).
+                                        // Official badge — first-party plugin (accent fill, the
+                                        // highest trust tier). Shown for `official: true` (AC1).
+                                        Rectangle {
+                                            visible: modCard.modelData.official === true
+                                            height: 16; width: _ot.implicitWidth + 12
+                                            radius: Commons.Appearance.radius.sm
+                                            color: Commons.Appearance.colors.accent
+                                            Text {
+                                                id: _ot
+                                                anchors.centerIn: parent
+                                                text: "★ Official"
+                                                color: Commons.Appearance.colors.base
+                                                font.family: Commons.Appearance.font.family
+                                                font.pixelSize: Commons.Appearance.font.sizeSm
+                                            }
+                                        }
+                                        // Verified badge — community-verified (honored, not
+                                        // cryptographically checked — S27). Muted fill so it reads
+                                        // a tier below Official (AC1).
                                         Rectangle {
                                             visible: modCard.modelData.verified === true
                                             height: 16; width: _vt.implicitWidth + 12
                                             radius: Commons.Appearance.radius.sm
-                                            // Accent fill + base glyph (matches the ✓ theme-card
-                                            // badges), not accent-on-accentAlpha.
-                                            color: Commons.Appearance.colors.accent
+                                            color: Commons.Appearance.colors.overlay0
                                             Text {
                                                 id: _vt
                                                 anchors.centerIn: parent
@@ -149,12 +167,40 @@ Item {
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
                                     }
+                                    // Declared dependencies — other plugin ids / system binaries,
+                                    // surfaced so the user knows what a plugin needs (AC3).
+                                    Text {
+                                        visible: (modCard.modelData.dependencies || []).length > 0
+                                        text: "󰇜  Requires: " + (modCard.modelData.dependencies || []).join(", ")
+                                        color: Commons.Appearance.colors.subtext0
+                                        font.family: Commons.Appearance.font.family
+                                        font.pixelSize: Commons.Appearance.font.sizeSm
+                                        elide: Text.ElideRight
+                                        Layout.fillWidth: true
+                                    }
                                 }
 
                                 ToggleSwitch {
-                                    checked: modCard._enabled
+                                    // Blocked (not silently loaded) when the shell is too old (AC2).
+                                    enabled: modCard._compatible
+                                    opacity: modCard._compatible ? 1.0 : 0.4
+                                    checked: modCard._enabled && modCard._compatible
                                     onToggled: state => root._mods.setEnabled(modCard.modelData.id, state)
                                 }
+                            }
+
+                            // Incompatibility warning — a clear block/notice instead of a
+                            // silent failure when the shell is older than minShellVersion (AC2).
+                            Text {
+                                visible: !modCard._compatible
+                                Layout.fillWidth: true
+                                text: "⚠  Requires shell ≥ " + root._mods.minVersionFor(modCard.modelData.id)
+                                      + " — you have " + (root._mods.shellVersion || "?")
+                                      + ". Disabled until you update."
+                                color: Commons.Appearance.colors.red
+                                font.family: Commons.Appearance.font.family
+                                font.pixelSize: Commons.Appearance.font.sizeSm
+                                wrapMode: Text.WordWrap
                             }
 
                             RowLayout {
