@@ -36,10 +36,10 @@ Item {
         onTriggered: if (root._pendingGap >= 0) { ShellServices.ShellConfig.setOuterGap(root._pendingGap); root._pendingGap = -1 }
     }
 
-    // Scroller proportion: live set_proportion is a cheap IPC dispatch, so a short
-    // debounce keeps the focused window resizing smoothly under the drag without
-    // firing an mmsg call on every sub-step. _savedProp tracks whether the current
-    // value has been persisted as the new default.
+    // Scroller proportion: live setProportion is a cheap compositor dispatch, so a
+    // short debounce keeps the focused window resizing smoothly under the drag
+    // without firing a call on every sub-step. _savedProp tracks whether the
+    // current value has been persisted as the new default.
     property real _pendingProp: -1
     property bool _savedProp:   false
     Timer {

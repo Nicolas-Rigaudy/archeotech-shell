@@ -8,8 +8,9 @@ import "../../Services/Compositor" as CompositorServices
 // A grid of cards, each a cheap static mini-diagram (Rectangles arranged the way
 // that layout tiles windows) + name + keybind chip (doubles as a quicksheet) +
 // a one-line description on hover. Clicking a card sets the layout on the focused
-// output via `mmsg dispatch setlayout,<name>` (MangoWC.dispatch). Shows the full
-// mango layout set — the extensive stack is the whole point of the feature.
+// output via CompositorService.dispatch("setlayout <name>"). Shows the full mango
+// layout set — the extensive stack is the whole point of the feature. (Layouts are
+// a MangoWC concept; under Hyprland the dispatch is a no-op.)
 Item {
     id: root
 
