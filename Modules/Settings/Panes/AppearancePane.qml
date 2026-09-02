@@ -54,34 +54,10 @@ Item {
                 width: root.width - 48
                 spacing: 12
 
-                // ── Colour scheme (family → flavor + light/dark + schedule) ───
-                // Shared ColorSchemeBody (also powers the bottom Appearance
-                // switcher in compact mode). Provides its own section labels.
-                Appearance.ColorSchemeBody {
-                    Layout.fillWidth: true
-                }
-
-                Item { implicitHeight: 10; Layout.fillWidth: true }
-
-                // ── Style ─────────────────────────────────────────────────────
-                // Flat mode is the BASE look's material control — hidden when a
-                // pack is active, since the pack owns material (adr_027).
-                SectionLabel { text: "STYLE"; visible: root._activePack === "" }
-                SettingsCard {
-                    visible: root._activePack === ""
-                    ToggleRow {
-                        label: "Flat mode"
-                        description: "Drop the liquid-glass sheen + card shadows for a flatter look (some popups / edit-mode stay glassy until the polish rollout finishes)"
-                        checked: Persistence.Config.get("appearance.flatMode", false)
-                        onToggled: v => Persistence.Config.set("appearance.flatMode", v)
-                    }
-                }
-
-                Item { implicitHeight: 10; Layout.fillWidth: true; visible: root._activePack === "" }
-
                 // ── Theme pack (adr_027 Layer A) ──────────────────────────────
-                // Same SegmentedControl language as the Mode/Theme pickers — no
-                // native dropdown popup (which mispositions in a layer-shell window).
+                // At the top — it drives the whole look. Same SegmentedControl
+                // language as the Mode/Theme pickers — no native dropdown popup
+                // (which mispositions in a layer-shell window).
                 SectionLabel { text: "THEME PACK" }
                 SegmentedControl {
                     Layout.fillWidth: true
@@ -99,9 +75,10 @@ Item {
                 Item { implicitHeight: 10; Layout.fillWidth: true }
 
                 // ── Pack settings (adr_027 Layer D) ───────────────────────────
-                // Rendered from the active pack's configSchema via the shared
-                // ConfigForm; values persist under packs.<id> and override the
-                // matching pack token paths live (real settings, not fake toggles).
+                // Directly under the pack selector — the active pack's own knobs.
+                // Rendered from its configSchema via the shared ConfigForm; values
+                // persist under packs.<id> and override the matching pack token
+                // paths live (real settings, not fake toggles).
                 SectionLabel { text: "PACK SETTINGS"; visible: root._hasPackSettings }
                 SettingsCard {
                     visible: root._hasPackSettings
@@ -115,18 +92,33 @@ Item {
 
                 Item { implicitHeight: 10; Layout.fillWidth: true; visible: root._hasPackSettings }
 
-                // ── Behavior ──────────────────────────────────────────────────
-                SectionLabel { text: "BEHAVIOR" }
+                // ── Colour scheme (family → flavor + light/dark + schedule) ───
+                // Shared ColorSchemeBody (also powers the bottom Appearance
+                // switcher in compact mode). Provides its own section labels.
+                // Hidden when the active pack owns its palette (e.g. Grimdark) —
+                // the Catppuccin pickers don't apply; the pack's register does.
+                Appearance.ColorSchemeBody {
+                    Layout.fillWidth: true
+                    visible: !Commons.Appearance.packOwnsPalette
+                }
+
+                Item { implicitHeight: 10; Layout.fillWidth: true; visible: !Commons.Appearance.packOwnsPalette }
+
+                // ── Style ─────────────────────────────────────────────────────
+                // Flat mode is the BASE look's material control — hidden when a
+                // pack is active, since the pack owns material (adr_027).
+                SectionLabel { text: "STYLE"; visible: root._activePack === "" }
                 SettingsCard {
+                    visible: root._activePack === ""
                     ToggleRow {
-                        label: "Restart Zen on theme change"
-                        description: "Zen only recolors on restart; auto-restart it (debounced) so it follows the theme"
-                        checked: Persistence.Config.get("colorScheme.restartZen", true)
-                        onToggled: v => Persistence.Config.set("colorScheme.restartZen", v)
+                        label: "Flat mode"
+                        description: "Drop the liquid-glass sheen + card shadows for a flatter look (some popups / edit-mode stay glassy until the polish rollout finishes)"
+                        checked: Persistence.Config.get("appearance.flatMode", false)
+                        onToggled: v => Persistence.Config.set("appearance.flatMode", v)
                     }
                 }
 
-                Item { implicitHeight: 10; Layout.fillWidth: true }
+                Item { implicitHeight: 10; Layout.fillWidth: true; visible: root._activePack === "" }
 
                 // ── Wallpaper ─────────────────────────────────────────────────
                 // Shares the exact WallpaperPickerBody the quick-switcher tab
@@ -188,6 +180,19 @@ Item {
                         value: Persistence.Config.get("appearance.paddingScale", 1.0)
                         valueDisplay: value.toFixed(1) + "×"
                         onMoved: Persistence.Config.set("appearance.paddingScale", value)
+                    }
+                }
+
+                Item { implicitHeight: 10; Layout.fillWidth: true }
+
+                // ── Behavior ──────────────────────────────────────────────────
+                SectionLabel { text: "BEHAVIOR" }
+                SettingsCard {
+                    ToggleRow {
+                        label: "Restart Zen on theme change"
+                        description: "Zen only recolors on restart; auto-restart it (debounced) so it follows the theme"
+                        checked: Persistence.Config.get("colorScheme.restartZen", true)
+                        onToggled: v => Persistence.Config.set("colorScheme.restartZen", v)
                     }
                 }
             }

@@ -59,6 +59,11 @@ QtObject {
         (root._mergedPack && root._mergedPack.accent)
         || (root._data && root._data.accent) || "mauve"
 
+    // A pack that ships its own palette (colors{}) owns the theme — the Catppuccin
+    // family/flavor/accent pickers don't apply (Settings hides them; the pack's own
+    // controls, e.g. a faction register, drive its colours instead).
+    readonly property bool packOwnsPalette: !!(root._mergedPack && root._mergedPack.colors)
+
     function _rgba(key, fallback, alpha) {
         var c = Qt.color(root._c(key, fallback))
         return Qt.rgba(c.r, c.g, c.b, alpha)
@@ -119,8 +124,8 @@ QtObject {
     // pack-aware (_c, _accentName, _tok, fx, packWindow) reads THIS, not the raw
     // _packData, so overrides reach colours, tokens, fx and window decor alike.
     // Active pack tokens = pack base → active REGISTER overlay → pack-settings.
-    // Registers (adr_027) re-livery the pack per faction (Space Marine / Inquisition
-    // / Mechanicus): each deep-merges its colours + panels.steel over the base.
+    // Registers (adr_027) re-livery the pack per faction (Legion / Ordos / Forge):
+    // each deep-merges its colours + panels.steel over the base.
     readonly property var _mergedPack: {
         var m = root._packData ? JSON.parse(JSON.stringify(root._packData)) : ({})
         var reg = (root.packSettings && root.packSettings.register)
@@ -201,7 +206,7 @@ QtObject {
         (root.activePackDir && root._mergedPack && root._mergedPack.panels && root._mergedPack.panels.surface)
             ? ("file://" + root.activePackDir + root._mergedPack.panels.surface) : ""
 
-    // Flat welded-steel family (Shadow Spears). The frame (FrameFx) defines the
+    // Flat welded-steel family (Grimdark). The frame (FrameFx) defines the
     // look; this single-sources its tones so the popups/cards/buttons match the
     // bezel instead of re-hardcoding. Pack `panels.steel` overrides; defaults
     // mirror the frame. Only consumed under a chamfer/matte pack — base look
@@ -370,7 +375,7 @@ QtObject {
 
     // ── Typography ─────────────────────────────────────────────────────────────
     // Font hook (adr_027 / item_083): a pack MAY ship its own display face for
-    // headers (gothic/blackletter for a 40K pack) while body text stays the mono
+    // headers (gothic/blackletter for a grimdark pack) while body text stays the mono
     // base for legibility. `font.displayFile` (pack-relative .ttf/.otf) is loaded
     // here via FontLoader; `font.displayFamily` names an already-installed family.
     // `font.display` resolves loaded-file → declared-family → body family.

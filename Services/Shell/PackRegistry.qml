@@ -125,5 +125,8 @@ QtObject {
         }
     }
 
+    // NB: pack.json is scanned once here (singleton). Editing a pack's manifest
+    // (e.g. its configSchema) only takes effect on a full QML reload / shell
+    // restart — a bare `touch` of a data file won't re-trigger this.
     Component.onCompleted: rescan()
 }
