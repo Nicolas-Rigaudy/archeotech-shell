@@ -5,7 +5,7 @@ import ".." as Commons
 // Pack-aware chrome surface — the shared background for cards/panels/pills so the
 // material propagates from one place. Three looks, picked by the active pack:
 //
-//   • Flat welded steel (Shadow Spears / any chamfer+matte pack) — a machined
+//   • Flat welded steel (Grimdark / any chamfer+matte pack) — a machined
 //     plate: top-lit steel gradient, 45° chamfered corners matching the frame, a
 //     dark seat outline (reads as recessed into the panel) + a brass hairline
 //     trim inset from the edge. Single-sources its tones from Appearance.steel,
@@ -20,6 +20,13 @@ Item {
     // Chamfer size for the steel look — clamped to half the smaller side so small
     // cards don't over-cut. Tracks the frame's cornerRadius feel, a touch smaller.
     property int   chamfer: 7
+    // Recessed-seat weight (0..1) — the dark outline that makes a card read as
+    // sunk into the panel. Full for big cards; dial down for a light bar readout
+    // that should sit flush with the frame face, not pop off it.
+    property real  seatOpacity: 1.0
+    // Top-lit highlight — a raised specular band at the top of the plate. Right
+    // for cards; off for a small housing that must blend with the bar face.
+    property bool  topLit: true
 
     readonly property string _plate: Commons.Appearance.panelPlate
     readonly property bool   _steel: Commons.Appearance.frameChamfer
@@ -69,11 +76,13 @@ Item {
         ShapePath {                         // steel face — top-lit, dark seat outline
             fillGradient: LinearGradient {
                 x1: 0; y1: 0; x2: 0; y2: plate.h
-                GradientStop { position: 0.00; color: Commons.Appearance.steel.hi }
+                GradientStop { position: 0.00; color: surf.topLit ? Commons.Appearance.steel.hi : Commons.Appearance.steel.md }
                 GradientStop { position: 0.28; color: Commons.Appearance.steel.md }
                 GradientStop { position: 1.00; color: Commons.Appearance.steel.lo }
             }
-            strokeColor: Commons.Appearance.steel.edge   // dark seat — reads recessed
+            // dark seat — reads recessed; seatOpacity dials its weight
+            strokeColor: Qt.rgba(Commons.Appearance.steel.edge.r, Commons.Appearance.steel.edge.g,
+                                 Commons.Appearance.steel.edge.b, surf.seatOpacity)
             strokeWidth: 1
             joinStyle: ShapePath.MiterJoin
             PathSvg { path: plate._path }

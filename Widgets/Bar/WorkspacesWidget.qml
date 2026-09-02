@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../../Commons" as Commons
+import "../../Commons/Primitives" as Prim
 import "../../Services/Compositor" as CompositorServices
 
 // Tag dots for the focused screen. Click to switch tag. Row on a horizontal
@@ -13,9 +14,18 @@ Item {
 
     readonly property bool _horizontal: holderRoot && holderRoot.horizontal
     visible: holderRoot
-    implicitWidth:  grid.implicitWidth
-    implicitHeight: grid.implicitHeight
+    // Bolted console segment (steel pack, horizontal bar) — pad the dot grid so it
+    // sits balanced inside the housing, clear of the end rivets.
+    readonly property bool _seg: _horizontal && holderRoot._consoleOn === true
+        && Commons.Appearance.frameChamfer
+    readonly property int _pad: _seg ? 16 : 0
+    implicitWidth:  grid.implicitWidth + 2 * _pad
+    // Fill the bar height on a horizontal bar so the housing is a real box around
+    // the dots (was grid height ≈ 8px → a sliver clipped behind the pills).
+    implicitHeight: _horizontal ? Commons.Appearance.bar.height : grid.implicitHeight
     Layout.alignment: _horizontal ? Qt.AlignVCenter : Qt.AlignHCenter
+
+    Prim.BarSegment { z: -1; visible: root._seg; anchors.fill: parent }
 
     Grid {
         id: grid

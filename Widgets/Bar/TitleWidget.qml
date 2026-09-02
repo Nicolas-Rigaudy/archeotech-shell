@@ -1,5 +1,6 @@
 import QtQuick
 import "../../Commons" as Commons
+import "../../Commons/Primitives" as Prim
 import "../../Services/Compositor" as CompositorServices
 
 // Focused window title with app icon prefix. Hides when nothing focused.
@@ -25,17 +26,27 @@ Item {
 
     visible: raw.length > 0 && holderRoot && holderRoot.horizontal
 
-    implicitHeight: label.implicitHeight
+    readonly property bool _seg: holderRoot && holderRoot.horizontal
+        && holderRoot._consoleOn === true && Commons.Appearance.frameChamfer
+    readonly property int _pad: _seg ? 14 : 0
+
+    // Boxed on the steel pack → fill the bar height; else size to the text.
+    implicitHeight: _seg ? Commons.Appearance.bar.height : label.implicitHeight
     // min(natural width, allowed width) — shrinks (and the Text elides) only
-    // when the title would otherwise reach the clock.
+    // when the title would otherwise reach the clock. label.implicitWidth already
+    // includes its padding (the box inset when boxed).
     implicitWidth: Math.min(label.implicitWidth,
                             holderRoot ? holderRoot._titleMaxWidth : 100000)
+
+    Prim.BarSegment { z: -1; visible: root._seg; anchors.fill: parent }
 
     Text {
         id: label
         anchors.fill: parent
-        // Gap between the workspace pills and the title (intrinsic, title-only).
-        leftPadding: 14
+        // Boxed: balanced padding inside the housing. Unboxed: a small lead-in gap
+        // from the workspace pills (title-only).
+        leftPadding:  root._seg ? root._pad : 14
+        rightPadding: root._seg ? root._pad : 0
         verticalAlignment: Text.AlignVCenter
         text: root.display
         color: Commons.Appearance.colors.subtext0

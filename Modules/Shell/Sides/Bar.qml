@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../../../Commons" as Commons
+import "../../../Commons/Primitives" as Prim
 import "../../../Services/Shell" as ShellServices
 import "../../../Widgets/Bar" as BarWidgets
 
@@ -38,12 +39,22 @@ Item {
     property real _wsWidth:    0
     property real _mediaWidth: 0
 
-    // Max width the title may take before the left cluster (workspaces + title
-    // + media) would reach the centered clock. The title caps its own implicit
-    // width to this and elides — no Layout clamps (those stretched the zone).
-    readonly property real _titleMaxWidth: Math.max(60,
-        pill.width / 2 - _centerRow.width / 2
-        - Commons.Appearance.bar.innerPadding - _wsWidth - _mediaWidth - 16)
+    // Fixed console-seam geometry: the bar splits into three sections at seams
+    // anchored to the bar CENTRE ± a fixed fraction — content-independent, so the
+    // seams never move as widgets resize. Middle section a touch smaller than the
+    // sides (the clock is narrow). See _dividers.
+    readonly property real _seamHalf:   pill.width * 0.14   // ½ the middle section (≈28% of the bar)
+    readonly property real _leftSeamX:  pill.width / 2 - _seamHalf
+    readonly property real _rightSeamX: pill.width / 2 + _seamHalf
+
+    // Max width the title may take: the left cluster (workspaces + title + media)
+    // must stay left of the left seam (console) / short of the centred clock
+    // (base). The title caps its own implicit width to this and elides — no Layout
+    // clamps (those stretched the zone).
+    readonly property real _titleMaxWidth: bar._segmentsActive
+        ? Math.max(60, _leftSeamX - _consoleInset - _wsWidth - _mediaWidth - 14)
+        : Math.max(60, pill.width / 2 - _centerRow.width / 2
+            - Commons.Appearance.bar.innerPadding - _wsWidth - _mediaWidth - 16)
 
     // ── Popup state (read/written by widgets via holderRoot) ──────────────────────
     property real    _popupAnchorX:   0
@@ -213,20 +224,20 @@ Item {
     // The main RowLayout fills the pill inset by innerPadding, so the left group
     // starts at innerPadding and the right group ends at pill.width-innerPadding.
     // Console (item_083): the whole top bar is ONE recessed instrument panel
-    // (Astartes register — not three floating boxes), with vertical seam dividers
+    // (Legion register — not three floating boxes), with vertical seam dividers
     // at the boundaries between the functional zones (left cluster | centre gauge
     // | right bank). Empty unless the pack sets bar.dividers.
     readonly property bool _consoleOn: Commons.Appearance.bar.dividers && bar.horizontal
-    readonly property var _dividers: {
-        if (!_consoleOn) return []
-        var ip = Commons.Appearance.bar.innerPadding, ds = []
-        var haveL = typeof _leftGroup  !== "undefined" && _leftGroup.width  > 4
-        var haveR = typeof _rightGroup !== "undefined" && _rightGroup.width > 4
-        var haveC = typeof _centerRow  !== "undefined" && _centerRow.width  > 0
-        if (haveL && haveC) ds.push(Math.round((ip + _leftGroup.width + _centerRow.x) / 2))
-        if (haveR && haveC) ds.push(Math.round((_centerRow.x + _centerRow.width + (pill.width - ip - _rightGroup.width)) / 2))
-        return ds
-    }
+    // Steel pack: the console is expressed as per-cluster bolted BarSegments
+    // (workspaces / media / clock, + the right status bank below), so the old
+    // standalone seam dividers are suppressed — the panels do the dividing.
+    readonly property bool _segmentsActive: _consoleOn && Commons.Appearance.frameChamfer
+    readonly property real _consoleInset: Commons.Appearance.bar.innerPadding + 12
+    // Two fixed full-height seams splitting the bar into three sections. Anchored
+    // to the bar centre (± _seamHalf), so they never move as content resizes.
+    readonly property var _dividers: _consoleOn
+        ? [Math.round(_leftSeamX), Math.round(_rightSeamX)]
+        : []
 
     // ── Pill — anchored to the bar's outer edge ────────────────────────────────
     Rectangle {
@@ -338,7 +349,7 @@ Item {
         }
 
         // ── Console instrument panel (pack console, item_083) ───────────────────
-        // The WHOLE top bar is one recessed steel instrument panel (Astartes
+        // The WHOLE top bar is one recessed steel instrument panel (Legion
         // register): a single console face spanning the bar, copper corner-bolt
         // fittings, and vertical seam dividers (bevel groove + bolt-pair) at the
         // boundaries between the functional zones — NOT three floating boxes.
@@ -357,18 +368,32 @@ Item {
             // adds the zone dividers here; no separate plate (that inset gap/seam
             // is why the bar looked cut off from the screen edge).
             Repeater {                                  // zone dividers — recessed groove between two
-                model: bar._dividers                     // plates, with rivets FLANKING the seam (one per
-                delegate: Item {                         // plate) rather than sitting on the join.
-                    x: modelData; y: 4; height: parent.height - 8
+                model: bar._dividers                     // seams anchor the boxes (kept even with segments on)
+                delegate: Item {                         // full-height connector — same seam as before, now
+                    x: modelData; y: 0; height: parent.height   // spanning top→bottom to connect the bar edges.
                     Rectangle { x: 0; width: 1; height: parent.height; color: Qt.rgba(0, 0, 0, 0.55) }
                     Rectangle { x: 1; width: 1; height: parent.height; color: Qt.rgba(1, 1, 1, 0.06) }
+                    // rivets inset from the bar edges so they clear the frame bezel
+                    // (the groove still runs edge-to-edge). 4px top/bottom.
                     // left-plate rivets
-                    Image { source: _console._rivet; width: 7; height: 7; sourceSize: Qt.size(14, 14); smooth: true; x: -9; y: 0 }
-                    Image { source: _console._rivet; width: 7; height: 7; sourceSize: Qt.size(14, 14); smooth: true; x: -9; y: parent.height - 7 }
+                    Image { source: _console._rivet; width: 7; height: 7; sourceSize: Qt.size(14, 14); smooth: true; x: -9; y: 4 }
+                    Image { source: _console._rivet; width: 7; height: 7; sourceSize: Qt.size(14, 14); smooth: true; x: -9; y: parent.height - 11 }
                     // right-plate rivets
-                    Image { source: _console._rivet; width: 7; height: 7; sourceSize: Qt.size(14, 14); smooth: true; x: 3; y: 0 }
-                    Image { source: _console._rivet; width: 7; height: 7; sourceSize: Qt.size(14, 14); smooth: true; x: 3; y: parent.height - 7 }
+                    Image { source: _console._rivet; width: 7; height: 7; sourceSize: Qt.size(14, 14); smooth: true; x: 3; y: 4 }
+                    Image { source: _console._rivet; width: 7; height: 7; sourceSize: Qt.size(14, 14); smooth: true; x: 3; y: parent.height - 11 }
                 }
+            }
+
+            // Right status bank — the whole cluster of system indicators housed as
+            // ONE bolted segment (a "status panel"), not one box per icon. Sized to
+            // the live _rightGroup; it ends at pill.width - the console inset, so its
+            // left edge = that minus its width. 10px pad each side clears the icons.
+            Prim.BarSegment {
+                visible: bar._segmentsActive && _rightGroup.width > 4
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                x: pill.width - bar._consoleInset - _rightGroup.width - 10
+                width: _rightGroup.width + 20
             }
         }
 

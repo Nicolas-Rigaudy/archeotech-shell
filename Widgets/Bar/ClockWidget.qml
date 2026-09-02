@@ -1,5 +1,6 @@
 import QtQuick
 import "../../Commons" as Commons
+import "../../Commons/Primitives" as Prim
 
 // Time + date. Horizontal: single rich-text line, hover opens the calendar.
 // Vertical (thin side bar): HH over MM stacked (DMS pattern — never rotate
@@ -22,8 +23,15 @@ Item {
     function _hourFmt() { return (config && config.format === "12h") ? "h" : "HH" }
 
     visible: holderRoot
-    implicitWidth:  _horizontal ? centerClock.implicitWidth : (holderRoot ? holderRoot.thickness : 30)
+    // Bolted console segment (steel pack, horizontal bar) — the centre gauge in its
+    // own panel; pad the readout balanced inside, clear of the end rivets.
+    readonly property bool _seg: _horizontal && holderRoot._consoleOn === true
+        && Commons.Appearance.frameChamfer
+    readonly property int _pad: _seg ? 26 : 0
+    implicitWidth:  _horizontal ? centerClock.implicitWidth + 2 * _pad : (holderRoot ? holderRoot.thickness : 30)
     implicitHeight: _horizontal ? Commons.Appearance.bar.height : vClock.implicitHeight
+
+    Prim.BarSegment { z: -1; visible: root._seg; anchors.fill: parent }
 
     // ── Horizontal — rich single line + calendar hover ──────────────────────────
     Text {

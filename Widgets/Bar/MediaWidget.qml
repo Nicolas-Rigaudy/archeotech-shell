@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../../Commons" as Commons
+import "../../Commons/Primitives" as Prim
 import "../../Services/Media" as MediaServices
 import "../../Services/Persistence" as Persistence
 import "../../Services/Shell" as ShellServices
@@ -44,10 +45,26 @@ Item {
     height: Commons.Appearance.bar.height
     clip: true
 
+    // Pack console housing — on the steel pack (Grimdark) the now-playing
+    // readout sits in its own bolted console segment (soft chamfered steel + a
+    // rivet per side) so it reads as a distinct panel on the bar rather than
+    // floating text. Off (and zero-cost) on base/glass packs, and only while
+    // something is actually playing.
+    Prim.BarSegment {
+        id: mediaHousing
+        z: -1
+        visible: root.active && Commons.Appearance.frameChamfer
+        anchors.fill: parent
+    }
+
     Text {
         id: mprisSep
+        // Redundant once the housing frames the readout — drop it on the steel pack.
+        visible: !Commons.Appearance.frameChamfer
         anchors.left: parent.left
-        anchors.leftMargin: 10
+        // Housed: small lead-in so the icon sits just inboard of the left rivet
+        // (balanced against the tail — see the marquee's rightMargin).
+        anchors.leftMargin: Commons.Appearance.frameChamfer ? 4 : 10
         anchors.verticalCenter: parent.verticalCenter
         text: "·"
         color: Commons.Appearance.colors.surface1
@@ -76,7 +93,9 @@ Item {
         anchors.left: mprisIcon.right
         anchors.leftMargin: 6
         anchors.right: parent.right
-        anchors.rightMargin: 4
+        // Housed: tail matched to the lead-in so the readout sits balanced between
+        // the two end rivets.
+        anchors.rightMargin: Commons.Appearance.frameChamfer ? 16 : 4
         anchors.verticalCenter: parent.verticalCenter
         height: Commons.Appearance.font.sizeSm + 4
         clip: true
