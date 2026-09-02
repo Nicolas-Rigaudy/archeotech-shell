@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Shapes
 
-// Shadow Spears — machined-steel button chrome (adr_027 Layer C style delegate).
+// Grimdark — machined-steel button chrome (adr_027 Layer C style delegate).
 // Chrome ONLY: the base GlassButton keeps behaviour/interaction/content/label. No
 // Commons import (this lives outside the shell tree) — all state + tones via `api`
 // (see the api.colors steel* family, single-sourced from the frame's palette).
@@ -9,7 +9,7 @@ import QtQuick.Shapes
 // A stamped steel key that matches the frame bezel: flat top-lit steel face, 45°
 // chamfered corners, a dark seat outline (reads recessed into the panel) + a brass
 // hairline. Active = the key is LIVE: it lifts (brighter steel) and lights a teal
-// edge — the chapter's "cyan is the one live note", instead of the old copper wash.
+// edge — the pack's "cyan is the one live note", instead of the old copper wash.
 Item {
     id: root
     property var api: ({})

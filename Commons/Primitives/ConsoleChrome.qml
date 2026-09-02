@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Shapes
 import ".." as Commons
 
-// Bolted-instrument-console ornament for popup chrome (Shadow Spears flagship).
+// Bolted-instrument-console ornament for popup chrome (Grimdark flagship).
 // Drop into a popup card with `anchors.fill: parent`, ON TOP of the steel fill the
 // holder already draws. Renders the copper hardware that makes a popup read as a
 // machined console bolted onto the bar/strip:

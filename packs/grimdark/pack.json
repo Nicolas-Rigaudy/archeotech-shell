@@ -1,0 +1,13 @@
+{
+  "id": "grimdark",
+  "name": "Grimdark",
+  "tier": "official",
+  "minShellVersion": "0.3.0",
+  "inherits": "base",
+  "styles": [ "GlassButton" ],
+  "configSchema": {
+    "register": { "type": "enum", "label": "Faction register",
+                  "options": [ { "value": "legion", "label": "Legion" }, { "value": "ordos", "label": "Ordos" }, { "value": "forge", "label": "Forge" } ],
+                  "default": "legion" }
+  }
+}

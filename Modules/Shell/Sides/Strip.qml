@@ -133,7 +133,7 @@ Item {
     readonly property int _r:  Commons.Appearance.radius.md  // neck arc radius (smaller = popup less tall)
     readonly property int _rb: Commons.Appearance.radius.md
     // Perpendicular clearance around the icon cell — a fixed minimum so it does NOT
-    // collapse with a pack's tiny corner radius (the Shadow Spears radius.md=2 made
+    // collapse with a pack's tiny corner radius (the Grimdark radius.md=2 made
     // the hover popup ~8px thinner than base and clipped the icon highlight). Used
     // for BOTH the popup depth and the iconArea edge margin so they stay in sync.
     readonly property int _iconMargin: Math.max(9, _r / 2)
@@ -300,11 +300,11 @@ Item {
         }
         readonly property real _winH: strip.screen ? strip.screen.height : strip.height
 
-        // Flat welded-steel popup (Shadow Spears / chamfer pack): the panel reads
+        // Flat welded-steel popup (Grimdark / chamfer pack): the panel reads
         // as a machined instrument plate — a LOCAL top-lit steel gradient (each
         // popup its own plate, not screen-mapped) + a teal live-edge tracing the
         // whole outline (the open popup is THE live element, so teal is licensed
-        // here per the chapter bible). Base/glass packs keep the screen-mapped
+        // here per the pack rules). Base/glass packs keep the screen-mapped
         // liquid-glass sheen untouched.
         readonly property bool  _steel:    Commons.Appearance.frameChamfer
         readonly property color _fillTop:  _steel ? Commons.Appearance.steel.hi : Commons.Appearance.colors.glassSheenTop
@@ -472,7 +472,7 @@ Item {
             }
         }
 
-        // ── Bolted-console hardware (Shadow Spears) — copper trim + gussets +
+        // ── Bolted-console hardware (Grimdark) — copper trim + gussets +
         // a bolted collar on the strip-attached edge. Decorative only (no
         // MouseArea → never eats icon/content hover). Steel packs only.
         // Bolted-console hardware — copper trim + far-corner gussets + a bolted

@@ -46,7 +46,7 @@ Item {
                 visible: card.title.length > 0
                 text: card.title
                 color: Commons.Appearance.colors.accent
-                // Display face for section headers (Cinzel under a 40K pack; falls
+                // Display face for section headers (Cinzel under a grimdark pack; falls
                 // back to the body family when the pack ships none).
                 font.family: Commons.Appearance.font.display
                 font.pixelSize: Commons.Appearance.font.sizeMd

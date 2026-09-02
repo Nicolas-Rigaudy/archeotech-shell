@@ -165,7 +165,7 @@ Item {
     // plate; copper rivets bolt it down (corner stud + one per arm). Adjacent side
     // none/holder ⇒ that inset is 0 ⇒ the member terminates as an end-cap instead of
     // a junction bracket. Chamfered frames only; drawn under the copper bezel.
-    // Fixed chapter-ceramite steel for the plate face (the Shadow Spears armour is
+    // Fixed steel for the plate face (the Grimdark armour is
     // always this cool steel; only the copper trim follows the accent). Tuned tones,
     // brighter than the derived chassis so the plate reads as a RAISED piece.
     readonly property bool  _coOn:     _rlOn && Commons.Appearance.frameChamfer
@@ -267,7 +267,7 @@ Item {
              + " L " + x0 + " " + (y0 + c) + " Z"
     }
     // Bar content edge only — carries the brass trim (the copper stays a thin line,
-    // per the chapter bible; the rails get the teal live-edge instead).
+    // per the pack rules; the rails get the teal live-edge instead).
     readonly property string _barEdgePath: {
         if (!_bevOn) return ""
         var c = Commons.Appearance.frameChamfer ? _cr : 0
@@ -350,9 +350,9 @@ Item {
         }
     }
 
-    // ── Plate seams (Astartes register — segmented bolted armour rails) ─────────
+    // ── Plate seams (Legion register — segmented bolted armour rails) ─────────
     // Perpendicular seam ticks across the SIDE + BOTTOM bands at intervals, each
-    // capped by a copper bolt-pair: the rails read as bolted ceramite plates, not
+    // capped by a copper bolt-pair: the rails read as bolted steel plates, not
     // empty bands with a line. The TOP band is skipped (the bar owns its own
     // console). Off by default. fx.seams = { enabled, color, bolt, spacing }.
     // Shared domed-rivet image (baked highlight/shadow) for the frame fittings.
