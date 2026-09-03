@@ -10,7 +10,7 @@ import "../../../Dashboard/panels"
 //
 // "Base of operations" layout (2026-07-20 rework): a welcoming hero (greeting +
 // name + big clock + date) over a 2×2 bento of cards. Sized to fit — no scroll.
-// Auto-dismiss timer (4s) fires when `Commons.State.dashboardAutoOpen` is true.
+// Auto-shown on login (openAuto) but stays until dismissed — no auto-dismiss.
 Item {
     id: root
     anchors.fill: parent
@@ -36,34 +36,6 @@ Item {
         interval: 1000; repeat: true
         running: root.panelRoot ? root.panelRoot.panelOpen : false
         onTriggered: root._now = new Date()
-    }
-
-    Timer {
-        id: autoDismiss
-        interval: 4000; repeat: false; running: false
-        onTriggered: {
-            if (root.panelRoot) root.panelRoot.close()
-            Commons.State.dashboardAutoOpen = false
-        }
-    }
-    Connections {
-        target: root.panelRoot
-        enabled: root.panelRoot !== null
-        function onPanelOpenChanged() {
-            if (root.panelRoot.panelOpen && Commons.State.dashboardAutoOpen)
-                autoDismiss.restart()
-            else
-                autoDismiss.stop()
-        }
-    }
-    // A manual open/toggle clears dashboardAutoOpen (see shell.qml). Stop the
-    // timer immediately when that happens — even if the panel was already open
-    // (no panelOpenChanged fires), the auto-dismiss must not survive the flag.
-    Connections {
-        target: Commons.State
-        function onDashboardAutoOpenChanged() {
-            if (!Commons.State.dashboardAutoOpen) autoDismiss.stop()
-        }
     }
 
     // Content container — fills Panel's Loader bounds. Panel.qml owns chrome.

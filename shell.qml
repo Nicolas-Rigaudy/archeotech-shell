@@ -166,15 +166,12 @@ ShellRoot {
 
     IpcHandler {
         target: "dashboard"
-        // Any manual open/toggle cancels the boot-time auto-open intent so the
-        // 4s auto-dismiss can't snap a deliberately-opened dashboard shut.
-        function toggle()   { Commons.State.dashboardAutoOpen = false; ShellServices.ShellState.toggleGlobal("dashboard") }
-        function open()     { Commons.State.dashboardAutoOpen = false; ShellServices.ShellState.openGlobal("dashboard")  }
+        function toggle()   { ShellServices.ShellState.toggleGlobal("dashboard") }
+        function open()     { ShellServices.ShellState.openGlobal("dashboard")  }
         function close()    { ShellServices.ShellState.closeAllAcross()         }
-        function openAuto() {
-            Commons.State.dashboardAutoOpen = true
-            ShellServices.ShellState.openGlobal("dashboard")
-        }
+        // Auto-show on login. Opens like open() and stays until dismissed
+        // (Esc / click-out) — no auto-dismiss timer.
+        function openAuto() { ShellServices.ShellState.openGlobal("dashboard")  }
     }
 
     IpcHandler {
