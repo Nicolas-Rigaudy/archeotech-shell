@@ -56,6 +56,15 @@ Item {
                 autoDismiss.stop()
         }
     }
+    // A manual open/toggle clears dashboardAutoOpen (see shell.qml). Stop the
+    // timer immediately when that happens — even if the panel was already open
+    // (no panelOpenChanged fires), the auto-dismiss must not survive the flag.
+    Connections {
+        target: Commons.State
+        function onDashboardAutoOpenChanged() {
+            if (!Commons.State.dashboardAutoOpen) autoDismiss.stop()
+        }
+    }
 
     // Content container — fills Panel's Loader bounds. Panel.qml owns chrome.
     ColumnLayout {
