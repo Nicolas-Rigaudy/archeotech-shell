@@ -24,6 +24,16 @@ QtObject {
     readonly property bool depthFlat: flatMode && !root.packMaterialMatte
     readonly property real shadowStrength: depthFlat ? 0.0 : 1.0
 
+    // Sheen helpers — the gradient-side twin of shadowStrength. A top-lit fill
+    // (lighter top → darker bottom) reads as a raised, glossy surface; in
+    // depthFlat mode that sheen must collapse so the fill reads as a flat slab,
+    // just as shadowStrength zeroes the drop shadow. Pass the base fill + the
+    // lighten/darken amount a surface already uses; depthFlat returns the bare
+    // base, flattening the sheen while keeping the exact same colour. Called from
+    // GradientStop bindings, so toggling flatMode re-evaluates them live.
+    function sheenHi(base, amt) { return root.depthFlat ? base : Qt.lighter(base, amt) }
+    function sheenLo(base, amt) { return root.depthFlat ? base : Qt.darker(base, amt) }
+
     // ── Theme hot-reload ───────────────────────────────────────────────────────
     property var _data: ({})
 
