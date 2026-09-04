@@ -153,6 +153,21 @@ Item {
         onClicked: pill.clicked()
         onEntered: pill.entered()
         onExited:  pill.exited()
-        onWheel: w => pill.wheel(w.angleDelta.y > 0 ? 1 : -1)
+        // Accumulate wheel delta and emit one discrete step per notch (120
+        // units, Qt's standard). Fixes two bugs with the old `dy > 0 ? 1 : -1`:
+        // (1) high-res/trackpad gestures end with angleDelta.y == 0 events, which
+        //     mapped to -1 → phantom downward steps (brightness/volume drifted
+        //     down at the end of every up-scroll); (2) each tiny sub-notch delta
+        //     became a full step, making adjustment hyper-sensitive/jumpy.
+        property real _wheelAccum: 0
+        onWheel: w => {
+            var dy = w.angleDelta.y
+            if (dy === 0) return                       // settle/terminator event — no direction
+            if (_wheelAccum !== 0 && (dy > 0) !== (_wheelAccum > 0))
+                _wheelAccum = 0                         // direction reversed — drop stale remainder
+            _wheelAccum += dy
+            while (_wheelAccum >= 120)  { _wheelAccum -= 120; pill.wheel(1) }
+            while (_wheelAccum <= -120) { _wheelAccum += 120; pill.wheel(-1) }
+        }
     }
 }
