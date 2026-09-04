@@ -34,20 +34,35 @@ QtObject {
         }
     }
 
-    // ── D-Bus signal monitor (best-effort; polling fallback below) ─────────────
+    // ── D-Bus signal monitor (event-driven) ───────────────────────────────────
+    // `busctl monitor` needs BecomeMonitor/eavesdrop privilege → "Access denied"
+    // as a normal user, so it died instantly and left only the 3s poll running.
+    // `gdbus monitor` is an ordinary signal subscription (no privilege) and picks
+    // up org.bluez's PropertiesChanged / InterfacesAdded / InterfacesRemoved, so
+    // connect/disconnect/power/battery changes refresh instantly.
     property var monitor: Process {
-        command: ["busctl", "monitor", "--json=short", "org.bluez"]
+        command: ["stdbuf", "-oL", "gdbus", "monitor", "--system", "--dest", "org.bluez"]
         running: true
-        stdout: SplitParser { onRead: _line => root._refresh() }
-        onExited: (code, status) => {
-            if (code === 0) {
-                running = true  // clean exit (connection dropped) — restart
+        stdout: SplitParser {
+            onRead: _line => {
+                // Ignore the chatty MediaPlayer1/MediaTransport1 signals (audio
+                // position/volume ticks) — only refresh on device/adapter/battery
+                // topology + state changes. Debounced so bursts coalesce.
+                if (_line.indexOf("InterfacesAdded")   !== -1
+                 || _line.indexOf("InterfacesRemoved") !== -1
+                 || _line.indexOf("org.bluez.Device1")  !== -1
+                 || _line.indexOf("org.bluez.Adapter1") !== -1
+                 || _line.indexOf("org.bluez.Battery1") !== -1)
+                    root._refreshDebounce.restart()
             }
-            // code !== 0 (e.g., Access denied): stop; polling timer takes over
         }
+        onExited: (code, status) => root._monRestart.start()
     }
+    property var _refreshDebounce: Timer { interval: 300; repeat: false; onTriggered: root._refresh() }
+    property var _monRestart:      Timer { interval: 1000; repeat: false; onTriggered: root.monitor.running = true }
 
-    // Polling fallback — fires every 3s when monitor is not available
+    // Polling fallback — only fires if the monitor is somehow down (kept as a
+    // safety net; with gdbus working it stays running and this never triggers).
     property var _pollTimer: Timer {
         interval: 3000; running: true; repeat: true
         onTriggered: if (!root.monitor.running) root._refresh()
