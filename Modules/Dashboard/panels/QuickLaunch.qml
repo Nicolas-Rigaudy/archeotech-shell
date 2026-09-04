@@ -52,12 +52,7 @@ DashCard {
                 Layout.preferredWidth: 1
                 Layout.preferredHeight: 34
                 radius: Commons.Appearance.radius.base
-                // Glass: translucent surface0 reads as a raised tile over the frosted
-                // card. Flat: surfaceCard (the panel behind) is opaque surface0, so a
-                // translucent surface0 tile would vanish into it — step up to a raised
-                // tint above the panel to keep the tile legible without any glass.
-                color: Commons.Appearance.flatMode ? Qt.lighter(Commons.Appearance.colors.surfaceCard, 1.12)
-                                                   : Commons.Appearance.colors.surface0Alpha
+                color: Commons.Appearance.colors.surfaceRaised   // raised tile, legible in flat + glass
                 border.color: launchLayer.hovered ? Commons.Appearance.colors.accentBorder : "transparent"
                 border.width: 1
                 Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }

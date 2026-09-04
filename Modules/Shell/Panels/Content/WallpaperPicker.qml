@@ -74,7 +74,7 @@ Item {
                 Layout.preferredHeight: 26
                 radius: Commons.Appearance.radius.base
                 property bool _hovered: false
-                color: _hovered ? Commons.Appearance.colors.surface0Alpha : "transparent"
+                color: _hovered ? Commons.Appearance.colors.surfaceRaised : "transparent"
                 Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
 
                 Row {

@@ -117,7 +117,7 @@ Item {
                     width: 28; height: 28
                     radius: 14
                     property bool _hovered: false
-                    color: _hovered ? Commons.Appearance.colors.surface0Alpha : "transparent"
+                    color: _hovered ? Commons.Appearance.colors.surfaceRaised : "transparent"
                     Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                     anchors.verticalCenter: parent.verticalCenter
 

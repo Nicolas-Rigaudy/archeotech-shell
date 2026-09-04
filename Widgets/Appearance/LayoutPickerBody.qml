@@ -260,7 +260,7 @@ Item {
                                 implicitWidth: keyText.implicitWidth + 10
                                 height: 16
                                 radius: Commons.Appearance.radius.sm
-                                color: Commons.Appearance.colors.surface0Alpha
+                                color: Commons.Appearance.colors.surfaceRaised
                                 Text {
                                     id: keyText
                                     anchors.centerIn: parent
