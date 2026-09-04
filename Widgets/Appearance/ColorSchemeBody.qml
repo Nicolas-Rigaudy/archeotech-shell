@@ -78,7 +78,7 @@ Item {
                         visible: !Commons.Appearance.frameChamfer
                         radius: famBg.radius
                         blur: 10; offset: Qt.vector2d(0, 3); spread: 0
-                        color: Qt.rgba(0, 0, 0, 0.5)
+                        color: Qt.rgba(0, 0, 0, 0.5 * Commons.Appearance.shadowStrength)
                     }
                     Rectangle {
                         id: famBg
@@ -94,8 +94,8 @@ Item {
                                ? Qt.rgba(Commons.Appearance.colors.peach.r, Commons.Appearance.colors.peach.g, Commons.Appearance.colors.peach.b, 0.32)
                                : Commons.Appearance.colors.glassBorder)
                         gradient: Gradient {
-                            GradientStop { position: 0.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.hi : Qt.lighter(Commons.Appearance.colors.surfaceCard, 1.12) }
-                            GradientStop { position: 0.5; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.md : Qt.lighter(Commons.Appearance.colors.surfaceCard, 1.12) }
+                            GradientStop { position: 0.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.hi : Commons.Appearance.sheenHi(Commons.Appearance.colors.surfaceCard, 1.12) }
+                            GradientStop { position: 0.5; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.md : Commons.Appearance.sheenHi(Commons.Appearance.colors.surfaceCard, 1.12) }
                             GradientStop { position: 1.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.lo : Commons.Appearance.colors.surfaceCard }
                         }
                         Behavior on border.color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
@@ -194,7 +194,7 @@ Item {
                         anchors.fill: dot
                         radius: dot.radius
                         blur: 7; offset: Qt.vector2d(0, 1.5); spread: 0
-                        color: Qt.rgba(0, 0, 0, 0.5)
+                        color: Qt.rgba(0, 0, 0, 0.5 * Commons.Appearance.shadowStrength)
                     }
                     Rectangle {
                         id: dot
@@ -203,8 +203,8 @@ Item {
                         antialiasing: true
                         // Top-lit sphere shading.
                         gradient: Gradient {
-                            GradientStop { position: 0.0; color: Qt.lighter(swatch._swatch, 1.18) }
-                            GradientStop { position: 1.0; color: Qt.darker(swatch._swatch, 1.12) }
+                            GradientStop { position: 0.0; color: Commons.Appearance.sheenHi(swatch._swatch, 1.18) }
+                            GradientStop { position: 1.0; color: Commons.Appearance.sheenLo(swatch._swatch, 1.12) }
                         }
                         border.width: swatch._on ? 3 : (_ama.containsMouse ? 2 : 0)
                         border.color: Commons.Appearance.colors.text

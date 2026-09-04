@@ -73,8 +73,8 @@ Item {
                     height: parent.height
                     radius: parent.radius
                     gradient: Gradient {
-                        GradientStop { position: 0.0; color: Qt.lighter(Commons.Appearance.colors.accent, 1.18) }
-                        GradientStop { position: 1.0; color: Qt.darker(Commons.Appearance.colors.accent, 1.12) }
+                        GradientStop { position: 0.0; color: Commons.Appearance.sheenHi(Commons.Appearance.colors.accent, 1.18) }
+                        GradientStop { position: 1.0; color: Commons.Appearance.sheenLo(Commons.Appearance.colors.accent, 1.12) }
                     }
                 }
             }

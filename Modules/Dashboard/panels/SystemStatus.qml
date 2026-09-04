@@ -99,8 +99,8 @@ DashCard {
                 radius: parent.radius
                 // Top-lit sheen on the fill (same light language as the glass).
                 gradient: Gradient {
-                    GradientStop { position: 0.0; color: Qt.lighter(barColor, 1.18) }
-                    GradientStop { position: 1.0; color: Qt.darker(barColor, 1.12) }
+                    GradientStop { position: 0.0; color: Commons.Appearance.sheenHi(barColor, 1.18) }
+                    GradientStop { position: 1.0; color: Commons.Appearance.sheenLo(barColor, 1.12) }
                 }
                 Behavior on width { Commons.Anim {} }
             }
