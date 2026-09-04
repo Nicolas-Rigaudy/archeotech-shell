@@ -157,6 +157,10 @@ Variants {
             z: 0
             anchors.fill: parent
             screenName: _surface._screenName
+            // Auto-hide / force-hide (item_015): the frame glass IS the visible
+            // bar/strip fill, so it must vanish too — hiding Bar/Strip alone
+            // leaves this perimeter glass on screen. Restores on exit.
+            visible: !ShellServices.ShellState.sidesHidden(_surface._screenName)
         }
 
         // Pack-gated decorator/FX overlay (adr_027 Wave 2). Additive chrome over
@@ -168,6 +172,8 @@ Variants {
             contentRect:  _frameBg.contentRect
             cornerRadius: _frameBg.cornerR
             packDir:      Commons.Appearance.activePackDir
+            // Additive chrome over the glass — hide with it (item_015).
+            visible: _frameBg.visible
         }
 
         // Per-window HUD brackets (adr_027 — chrome on the real windows). On the
