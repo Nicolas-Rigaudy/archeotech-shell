@@ -1,51 +1,29 @@
 pragma Singleton
 import QtQuick
-import Quickshell.Io
+import Quickshell.Services.UPower
 
+// Battery state, event-driven off UPower's D-Bus signals — updates INSTANTLY on
+// plug/unplug and charge changes, no polling. (Was a 30s sysfs poll, which made
+// the bar lag up to 30s behind reality when you plugged in the charger.)
 QtObject {
     id: root
 
-    property int  percent:  0
-    property bool charging: false
-    property bool present:  true
+    readonly property var _dev: UPower.displayDevice
 
-    Component.onCompleted: { readLevel.running = true; readStatus.running = true }
+    readonly property bool present:  _dev ? _dev.isPresent : false
 
-    property var readLevel: Process {
-        command: ["bash", "-c", "cat /sys/class/power_supply/BAT0/capacity 2>/dev/null || echo 0"]
-        running: false
-        stdout: SplitParser {
-            onRead: data => {
-                var v = parseInt(data.trim())
-                root.percent  = isNaN(v) ? 0 : v
-                root.present  = !isNaN(v)
-            }
-        }
-        onExited: (code, status) => {
-            if (code !== 0) console.warn("Battery: readLevel exited with code " + code)
-        }
+    // Quickshell reports percentage as a 0.0–1.0 ratio; defensively accept a
+    // 0–100 value too in case that ever changes.
+    readonly property int percent: {
+        if (!_dev) return 0
+        var p = _dev.percentage
+        return Math.round(p <= 1.0 ? p * 100 : p)
     }
 
-    property var readStatus: Process {
-        command: ["bash", "-c", "cat /sys/class/power_supply/BAT0/status 2>/dev/null || echo Unknown"]
-        running: false
-        stdout: SplitParser {
-            onRead: data => {
-                var s = data.trim()
-                root.charging = (s === "Charging" || s === "Full")
-            }
-        }
-        onExited: (code, status) => {
-            if (code !== 0) console.warn("Battery: readStatus exited with code " + code)
-        }
-    }
-
-    property var _timer: Timer {
-        interval: 30000
-        running: true
-        repeat: true
-        onTriggered: { readLevel.running = true; readStatus.running = true }
-    }
+    readonly property bool charging: _dev
+        ? (_dev.state === UPowerDeviceState.Charging
+           || _dev.state === UPowerDeviceState.FullyCharged)
+        : false
 
     // Icon helper — call from QML as Battery.icon()
     function icon() {
