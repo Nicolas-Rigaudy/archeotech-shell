@@ -320,6 +320,15 @@ QtObject {
         readonly property color baseAlpha:     root._rgba("base",     "#24273a", 0.85)
         readonly property color mantleAlpha:   root._rgba("mantle",   "#1e2030", 0.90)
         readonly property color surface0Alpha: root._rgba("surface0", "#363a4f", 0.60)
+        // Raised tile — a container that sits ON a card/panel and must read as
+        // elevated above it. Glass: translucent surface0, lifted by the frost
+        // behind it. Flat: surfaceCard collapses to OPAQUE surface0, so a
+        // translucent surface0 tile would vanish into it — step up to the palette's
+        // next surface tone so the tile stays legible with no glass. (flatMode, not
+        // depthFlat: matte packs are opaque too and want the opaque step.)
+        readonly property color surfaceRaised: root.flatMode
+            ? root._c("surface1", "#494d64")
+            : root._rgba("surface0", "#363a4f", 0.60)
         readonly property color accentAlpha:   root._rgba(root._accentName, "#c6a0f6", 0.15)
         readonly property color accentBorder:  root._rgba(root._accentName, "#c6a0f6", 0.40)
 
