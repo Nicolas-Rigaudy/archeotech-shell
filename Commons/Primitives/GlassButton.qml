@@ -53,8 +53,8 @@ Item {
         border.width: 1
         border.color: btn.active ? Commons.Appearance.colors.accent : Commons.Appearance.colors.glassBorder
         gradient: Gradient {
-            GradientStop { position: 0.0; color: btn.active ? Qt.lighter(Commons.Appearance.colors.accent, 1.08) : Qt.lighter(Commons.Appearance.colors.surfaceCard, 1.12) }
-            GradientStop { position: 1.0; color: btn.active ? Qt.darker(Commons.Appearance.colors.accent, 1.06)  : Commons.Appearance.colors.surfaceCard }
+            GradientStop { position: 0.0; color: btn.active ? Commons.Appearance.sheenHi(Commons.Appearance.colors.accent, 1.08) : Commons.Appearance.sheenHi(Commons.Appearance.colors.surfaceCard, 1.12) }
+            GradientStop { position: 1.0; color: btn.active ? Commons.Appearance.sheenLo(Commons.Appearance.colors.accent, 1.06)  : Commons.Appearance.colors.surfaceCard }
         }
         Behavior on border.color { Commons.ColorAnim {} }
     }

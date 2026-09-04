@@ -77,10 +77,10 @@ Item {
             border.color: root._steel ? Qt.lighter(Commons.Appearance.colors.accent, 1.25) : "transparent"
             gradient: Gradient {
                 GradientStop { position: 0.0; color: root._steel ? Qt.lighter(Commons.Appearance.steel.hi, 1.18)
-                                                                  : Qt.lighter(Commons.Appearance.colors.accent, 1.18) }
-                GradientStop { position: 0.5; color: root._steel ? Commons.Appearance.steel.md : Qt.lighter(Commons.Appearance.colors.accent, 1.18) }
+                                                                  : Commons.Appearance.sheenHi(Commons.Appearance.colors.accent, 1.18) }
+                GradientStop { position: 0.5; color: root._steel ? Commons.Appearance.steel.md : Commons.Appearance.sheenHi(Commons.Appearance.colors.accent, 1.18) }
                 GradientStop { position: 1.0; color: root._steel ? Commons.Appearance.steel.lo
-                                                                  : Qt.darker(Commons.Appearance.colors.accent, 1.12) }
+                                                                  : Commons.Appearance.sheenLo(Commons.Appearance.colors.accent, 1.12) }
             }
             Behavior on x { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
         }

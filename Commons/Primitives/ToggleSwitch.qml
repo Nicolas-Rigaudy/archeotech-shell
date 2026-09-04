@@ -26,8 +26,8 @@ Item {
 
         Gradient {
             id: onGrad
-            GradientStop { position: 0.0; color: Qt.lighter(Commons.Appearance.colors.accent, 1.12) }
-            GradientStop { position: 1.0; color: Qt.darker(Commons.Appearance.colors.accent, 1.08) }
+            GradientStop { position: 0.0; color: Commons.Appearance.sheenHi(Commons.Appearance.colors.accent, 1.12) }
+            GradientStop { position: 1.0; color: Commons.Appearance.sheenLo(Commons.Appearance.colors.accent, 1.08) }
         }
         Gradient {
             id: offGrad
@@ -43,7 +43,7 @@ Item {
             blur:   7
             offset: Qt.vector2d(0, 1.5)
             spread: 0
-            color:  Qt.rgba(0, 0, 0, 0.55)
+            color:  Qt.rgba(0, 0, 0, 0.55 * Commons.Appearance.shadowStrength)
         }
 
         Rectangle {
@@ -56,8 +56,8 @@ Item {
             // Raised sphere — top-lit gradient reads as a 3d knob.
             readonly property color _knob: root.checked ? Commons.Appearance.colors.base : Commons.Appearance.colors.overlay1
             gradient: Gradient {
-                GradientStop { position: 0.0; color: Qt.lighter(thumb._knob, 1.22) }
-                GradientStop { position: 1.0; color: Qt.darker(thumb._knob, 1.15) }
+                GradientStop { position: 0.0; color: Commons.Appearance.sheenHi(thumb._knob, 1.22) }
+                GradientStop { position: 1.0; color: Commons.Appearance.sheenLo(thumb._knob, 1.15) }
             }
 
             // Press-pulse — depress then spring back (M3 spatial curve).
