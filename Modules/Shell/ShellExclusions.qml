@@ -29,6 +29,9 @@ Variants {
             return t !== "none" && t !== "holder"
         }
         function _zone(side) {
+            // Auto-hide / force-hide: reserve nothing so tiled windows (and a
+            // fullscreen client) reclaim the whole edge. Restores on exit.
+            if (ShellServices.ShellState.sidesHidden(_name)) return 0
             return (_active(side) ? _size(side) : 0) + _pad()
         }
         function _size(side) {

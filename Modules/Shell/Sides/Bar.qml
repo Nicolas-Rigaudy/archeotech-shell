@@ -30,8 +30,13 @@ Item {
     readonly property int    thickness:  Commons.Appearance.bar.height
     readonly property string _screenName: screen ? screen.name : ""
 
-    implicitWidth:  horizontal ? 0 : thickness
-    implicitHeight: horizontal ? thickness : 0
+    // Auto-hide / force-hide (item_015): the bar vanishes and reserves no space
+    // in fullscreen / force-hide, reappearing on exit. (A bar has no hover-peek
+    // like a strip's holder — it simply hides; no new collapsed chrome.)
+    readonly property bool _hidden: ShellServices.ShellState.sidesHidden(_screenName)
+    visible: !_hidden
+    implicitWidth:  _hidden ? 0 : (horizontal ? 0 : thickness)
+    implicitHeight: _hidden ? 0 : (horizontal ? thickness : 0)
 
     // Live widths of the non-title left-zone widgets, reported by their loaders
     // (see the left Repeater delegate). Used to size the title so the left

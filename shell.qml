@@ -174,6 +174,15 @@ ShellRoot {
         function openAuto() { ShellServices.ShellState.openGlobal("dashboard")  }
     }
 
+    // Manual force-hide of the sides (bar/strips) — on top of the automatic
+    // hide-in-fullscreen. Toggle via Super+Shift+H (item_015).
+    IpcHandler {
+        target: "sides"
+        function toggleHidden() { ShellServices.ShellState.toggleSidesHidden()      }
+        function hide()         { ShellServices.ShellState.sidesForceHidden = true   }
+        function show()         { ShellServices.ShellState.sidesForceHidden = false  }
+    }
+
     IpcHandler {
         target: "wallpaper"
         function toggle() { ShellServices.ShellState.toggleGlobal("wallpaper") }

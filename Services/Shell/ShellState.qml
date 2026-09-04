@@ -1,11 +1,26 @@
 pragma Singleton
 import QtQuick
 import Quickshell
+import "../Compositor" as CompositorServices
 
 QtObject {
     id: root
 
     property var stateMap: ({})
+
+    // ── Sides auto-hide (item_015) ───────────────────────────────────────────────
+    // Manual global force-hide gate (keybind / `sides` IPC). Auto-hide reacts to
+    // the compositor's per-output fullscreen state. `sidesHidden(screenName)` is
+    // the single signal the sides (Bar/Strip) and ShellExclusions respect; it
+    // re-evaluates reactively (QObject property reads through the call are
+    // tracked), so the chrome collapses on fullscreen/force-hide and returns on
+    // exit. Reuses holder-mode's hidden-body + hover-reveal — no new chrome.
+    property bool sidesForceHidden: false
+    function toggleSidesHidden() { root.sidesForceHidden = !root.sidesForceHidden }
+    function sidesHidden(screenName) {
+        return sidesForceHidden
+            || CompositorServices.CompositorService.isFullscreen(screenName)
+    }
 
     // Sprint 26 follow-up B — `side` disambiguates which holder shows the panel
     // when the same opener sits on 2+ sides (e.g. settings on both strips).

@@ -41,6 +41,11 @@ Item {
     // a no-op (a strip has no floating control popups). anchor is ignored — a
     // strip card is centred, not anchored under the opener.
     readonly property string type:       holderMode ? "holder" : "strip"
+    // Auto-hide / force-hide (item_015): a visible strip collapses to holder
+    // behaviour — hidden resting body, no reserved space, hover/shortcut reveal.
+    // Reverts automatically when the screen leaves fullscreen / force-hide clears.
+    readonly property bool   _effectiveHolder: holderMode
+        || ShellServices.ShellState.sidesHidden(_screenName)
     readonly property bool   horizontal: _horizontal
     readonly property string screenName: _screenName
     readonly property int    thickness:  _bodyDepth
@@ -177,10 +182,10 @@ Item {
     // Perpendicular offset of the card from the screen edge. A strip insets
     // the card by its (visible) collapsed body; a holder has no resting body,
     // so the card sits flush against the screen edge (no gap).
-    readonly property real _edgeInset:  holderMode ? 0 : collapsedSize
+    readonly property real _edgeInset:  _effectiveHolder ? 0 : collapsedSize
     // At rest a holder still needs a thin hover-catch even though _perp is 0.
-    readonly property real _perpExtent: holderMode ? Math.max(collapsedSize, _perp)
-                                                   : (collapsedSize + _perp)
+    readonly property real _perpExtent: _effectiveHolder ? Math.max(collapsedSize, _perp)
+                                                         : (collapsedSize + _perp)
 
     // Item grows perpendicular to the strip so the popup/panel falls inside
     // ShellSurface's input mask.
@@ -229,7 +234,7 @@ Item {
         // resting strip glass + shared rounded corners (S22). Kept (non-holder)
         // only so the hover MouseArea / geometry stays as before; the popup card
         // below still draws its own glass.
-        visible: !strip.holderMode
+        visible: !strip._effectiveHolder
         color: "transparent"
 
         anchors.left:   (strip._horizontal || strip.side === "left")    ? parent.left   : undefined

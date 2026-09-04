@@ -28,10 +28,13 @@ QtObject {
 
     // ── Delegated queries (per monitor name) ─────────────────────────────────────
     // Workspaces/tags as [{num, selected, occupied, urgent}] for the bar.
-    function tagsFor(name)    { return backend.tagsFor(name) }
-    function titleFor(name)   { return backend.titleFor(name) }
-    function layoutFor(name)  { return backend.layoutFor(name) }
-    function clientsFor(name) { return backend.clientsFor(name) }
+    function tagsFor(name)      { return backend.tagsFor(name) }
+    function titleFor(name)     { return backend.titleFor(name) }
+    function layoutFor(name)    { return backend.layoutFor(name) }
+    function clientsFor(name)   { return backend.clientsFor(name) }
+    // True when the focused window on `name` is fullscreen — drives auto-hiding
+    // the sides in fullscreen (item_015).
+    function isFullscreen(name) { return backend.isFullscreen(name) }
 
     // ── Delegated actions ─────────────────────────────────────────────────────────
     function switchTag(outputName, tagNum)  { backend.switchTag(outputName, tagNum) }

@@ -50,6 +50,9 @@ QtObject {
     // MangoWC-only overlay for now — both degrade to empty (base visuals stand).
     function layoutFor(monitorName)  { return "" }
     function clientsFor(monitorName) { return [] }
+    // Per-output fullscreen not yet tracked for Hyprland (2nd-compositor,
+    // later milestone) — returns false so auto-hide-in-fullscreen is inert here.
+    function isFullscreen(monitorName) { return false }
 
     // ── Actions ────────────────────────────────────────────────────────────────
     // Hyprland.dispatch runs `hyprctl dispatch <req>`.
