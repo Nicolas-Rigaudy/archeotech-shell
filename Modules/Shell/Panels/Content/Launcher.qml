@@ -508,7 +508,7 @@ Item {
                     width: 24; height: 24
                     radius: Commons.Appearance.radius.sm
                     visible: searchInput.text.length > 0
-                    color:  _clearArea.containsMouse ? Commons.Appearance.colors.surfaceRaised : "transparent"
+                    color:  _clearArea.containsMouse ? Commons.Appearance.colors.surface0Alpha : "transparent"
                     Behavior on color { Commons.ColorAnim {} }
                     Text {
                         anchors.centerIn: parent
@@ -642,7 +642,7 @@ Item {
                         width: 24; height: 24
                         radius: Commons.Appearance.radius.sm
                         visible: _pinned || root.selectedIdx === index
-                        color:   _pinArea.containsMouse ? Commons.Appearance.colors.surfaceRaised : "transparent"
+                        color:   _pinArea.containsMouse ? Commons.Appearance.colors.surface0Alpha : "transparent"
                         Behavior on color { Commons.ColorAnim {} }
 
                         Text {

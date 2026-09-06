@@ -52,7 +52,7 @@ DashCard {
                 Layout.preferredWidth: 1
                 Layout.preferredHeight: 34
                 radius: Commons.Appearance.radius.base
-                color: Commons.Appearance.colors.surfaceRaised   // raised tile, legible in flat + glass
+                color: Commons.Appearance.colors.surface0Alpha
                 border.color: launchLayer.hovered ? Commons.Appearance.colors.accentBorder : "transparent"
                 border.width: 1
                 Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
