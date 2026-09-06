@@ -112,7 +112,7 @@ Item {
                     visible: root._activePack === ""
                     ToggleRow {
                         label: "Flat mode"
-                        description: "Drop the liquid-glass sheen + card shadows for a flatter look (some popups / edit-mode stay glassy until the polish rollout finishes)"
+                        description: "Drop the liquid-glass sheen + card shadows for a flatter look — the shell stays translucent, just without the 3D depth"
                         checked: Persistence.Config.get("appearance.flatMode", false)
                         onToggled: v => Persistence.Config.set("appearance.flatMode", v)
                     }
