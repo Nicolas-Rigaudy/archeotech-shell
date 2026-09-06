@@ -7,20 +7,19 @@ QtObject {
     id: root
 
     // ── Aesthetic mode ───────────────────────────────────────────────────────
-    // flatMode flips the shell from the default "liquid glass" look to a flatter
-    // one: no sheen gradient, no drop shadows, flatter cards. Set from shell.qml
-    // (bound to Persistence.Config "appearance.flatMode"); Commons can't import a
-    // Service without inverting layers, so it's a plain settable prop driven from
-    // above. Tokens below branch on it; shared primitives multiply shadowStrength
-    // into their shadow alpha (1 = glass, 0 = flat). ponytail: spike wires the
-    // shared primitives (GlassButton/SettingsCard/DashCard) — one-off surfaces
-    // still shadow until the polish rollout routes them through this too.
+    // flatMode drops the DEPTH cues — no sheen gradient, no drop shadows — for a
+    // flatter look. It does NOT touch opacity: the shell stays translucent glass in
+    // both modes (transparency + blur are always on); flat is just glass minus the
+    // skeuomorphic 3D. Opacity is a separate, PACK-driven decision (packMaterialFlat
+    // → opaque slab) — see the glassBg/surfaceCard tokens. Set from shell.qml (bound
+    // to Persistence.Config "appearance.flatMode"); Commons can't import a Service,
+    // so it's a plain settable prop driven from above. depthFlat/shadowStrength gate
+    // the shading branches; shared primitives multiply shadowStrength into shadow
+    // alpha (1 = 3D, 0 = flat).
     property bool flatMode: false
-    // A pack may be OPAQUE (no glass) yet still DIMENSIONAL — "matte" plating with
-    // shadows + gradients. `depthFlat` = truly flat (opaque AND no depth) and gates
-    // the SHADING branches; `flatMode` still gates OPACITY. So matte = opaque fills
-    // + full depth; flat = opaque + no depth (as before). With no matte pack,
-    // packMaterialMatte is false → depthFlat == flatMode (unchanged behaviour).
+    // depthFlat = "no depth cues" (sheen + shadows off). A "matte" pack is OPAQUE
+    // but still DIMENSIONAL, so it keeps depth (depthFlat false) while packMaterialFlat
+    // makes it opaque. With no matte pack, depthFlat == flatMode.
     readonly property bool depthFlat: flatMode && !root.packMaterialMatte
     readonly property real shadowStrength: depthFlat ? 0.0 : 1.0
 
@@ -320,24 +319,16 @@ QtObject {
         readonly property color baseAlpha:     root._rgba("base",     "#24273a", 0.85)
         readonly property color mantleAlpha:   root._rgba("mantle",   "#1e2030", 0.90)
         readonly property color surface0Alpha: root._rgba("surface0", "#363a4f", 0.60)
-        // Raised tile — a container that sits ON a card/panel and must read as
-        // elevated above it. Glass: translucent surface0, lifted by the frost
-        // behind it. Flat: surfaceCard collapses to OPAQUE surface0, so a
-        // translucent surface0 tile would vanish into it — step up to the palette's
-        // next surface tone so the tile stays legible with no glass. (flatMode, not
-        // depthFlat: matte packs are opaque too and want the opaque step.)
-        readonly property color surfaceRaised: root.flatMode
-            ? root._c("surface1", "#494d64")
-            : root._rgba("surface0", "#363a4f", 0.60)
         readonly property color accentAlpha:   root._rgba(root._accentName, "#c6a0f6", 0.15)
         readonly property color accentBorder:  root._rgba(root._accentName, "#c6a0f6", 0.40)
 
         // Glass panel backgrounds
-        // Flat/matte material (pack `material:"flat"` → flatMode) makes the panel
-        // fills fully OPAQUE — a solid slab, no wallpaper bleed. Glass mode keeps
-        // the translucent frost.
-        readonly property color glassBg:      root.flatMode ? root._c("mantle", "#1e2030") : root._rgba("mantle", "#1e2030", 0.96)
-        readonly property color glassBgLight: root.flatMode ? root._c("mantle", "#1e2030") : root._rgba("mantle", "#1e2030", 0.93)
+        // Opacity is a PACK MATERIAL decision, not the user's flat toggle: only a
+        // pack `material:"flat"|"matte"` (→ packMaterialFlat) makes the fills fully
+        // OPAQUE (a solid slab, no wallpaper bleed). The base look — glass OR the
+        // user's flat toggle — stays translucent; flat just drops the sheen/shadows.
+        readonly property color glassBg:      root.packMaterialFlat ? root._c("mantle", "#1e2030") : root._rgba("mantle", "#1e2030", 0.96)
+        readonly property color glassBgLight: root.packMaterialFlat ? root._c("mantle", "#1e2030") : root._rgba("mantle", "#1e2030", 0.93)
         readonly property color glassBorder:  root._rgba("surface0", "#363a4f", 0.90)
 
         // Liquid-glass sheen — endpoints for a subtle top-lit vertical gradient
@@ -350,13 +341,13 @@ QtObject {
             if (root.depthFlat) return glassBg
             var c = root._blend(root._c("mantle", "#1e2030"),
                                 root._c("surface2", "#5b6078"), 0.38)
-            return Qt.rgba(c.r, c.g, c.b, root.flatMode ? 1.0 : 0.93)
+            return Qt.rgba(c.r, c.g, c.b, root.packMaterialFlat ? 1.0 : 0.93)
         }
         readonly property color glassSheenBot: {
             if (root.depthFlat) return glassBg
             // crust is barely darker than mantle, so sink toward black instead.
             var c = root._blend(root._c("mantle", "#1e2030"), "#000000", 0.22)
-            return Qt.rgba(c.r, c.g, c.b, root.flatMode ? 1.0 : 0.93)
+            return Qt.rgba(c.r, c.g, c.b, root.packMaterialFlat ? 1.0 : 0.93)
         }
 
         // ── Warmth (§18.2) — accent-tinted surfaces, not flat grey. ──
@@ -380,11 +371,12 @@ QtObject {
         // glassy — not opaque/plasticky. Only a whisper of accent warmth (0.06);
         // surfaceWarm's 0.15 was too much for a wall of cards.
         readonly property color surfaceCard: {
-            // Flat mode: opaque, un-tinted surface0 — no glassy translucency or
-            // accent warmth, so cards read as plain panels (shadow also off).
+            // Opaque ONLY when a pack material demands it (flat/matte slab): un-tinted
+            // surface0, no bleed. The base look — glass OR the user's flat toggle —
+            // keeps the translucent card below; flat just drops sheen/shadow (depth).
             // NB: _c() returns a hex STRING; go through _rgba (which Qt.color-wraps
             // it) — Qt.rgba(str.r,…) would be Qt.rgba(undefined,…) = solid black.
-            if (root.flatMode)
+            if (root.packMaterialFlat)
                 return root._rgba("surface0", "#363a4f", 1.0)   // opaque slab, no bleed
             var c = root._blend(root._c("surface0", "#363a4f"),
                                 root._c(root._accentName, "#c6a0f6"), 0.06)
