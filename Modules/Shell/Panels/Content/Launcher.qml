@@ -6,6 +6,8 @@ import Quickshell.Io
 import "../../../../Commons" as Commons
 import "../../../../Commons/Primitives"
 import "../../../../Services/Persistence" as Persistence
+import "../../../../Services/Shell" as ShellServices
+import "../../../Settings" as Stg
 
 // Launcher UI. Panel.qml provides chrome + slide anim + click-outside-to-close;
 // this file is the inner content only. `panelRoot` is injected by Panel.qml's
@@ -207,11 +209,89 @@ Item {
         return s
     }
 
+    // ── Master-search providers (pluggable: apps + actions) ──────────────────────
+    // Beyond apps, the launcher searches ACTION providers. Each provider is a
+    // function query(q) → array of result objects. An action result is a plain JS
+    // object carrying the same display fields the row delegate reads (name /
+    // comment / icon) PLUS `__`-prefixed metadata: `__kind` (lets the delegate
+    // skip the app-only pin button), `__glyph` (nerd-font icon — actions have no
+    // .desktop icon), `__score` (ranked against app fuzzy scores on the same 0–1
+    // scale), and `__run` (activation closure). Apps stay raw DesktopEntry objects;
+    // providers only ADD non-app results. Register a provider by listing it here.
+    readonly property var _providers: [_provSettings, _provPower, _provCalc]
+
+    function _gather(q) {
+        var out = []
+        for (var i = 0; i < _providers.length; i++) {
+            var rs = _providers[i](q)
+            for (var j = 0; j < rs.length; j++) out.push(rs[j])
+        }
+        return out
+    }
+
+    // Settings deep-links — search PaneRegistry.searchIndex (label + keywords);
+    // activating jumps the Settings panel to the owning pane. Covers the
+    // wallpaper/theme entries too (they live under the appearance pane).
+    function _provSettings(q) {
+        var out = [], idx = Stg.PaneRegistry.searchIndex
+        for (var i = 0; i < idx.length; i++) {
+            var it = idx[i]
+            var sc = Math.max(root._fuzzyScore(it.label, q) * 0.70,
+                              root._fuzzyScore(it.keywords || "", q) * 0.55)
+            if (sc <= 0) continue
+            var meta = Stg.PaneRegistry._paneMeta(it.pane)
+            out.push({ name: it.label, comment: "Settings › " + meta.label, icon: "",
+                       __kind: "settings", __glyph: meta.icon || "󰒓", __score: sc,
+                       __run: (function(pane) { return function() {
+                           Commons.State.settingsOpenPane = pane
+                           ShellServices.ShellState.openGlobal("settings")
+                       } })(it.pane) })
+        }
+        return out
+    }
+
+    // Session/power actions — universal loginctl/systemd + the wlogout menu.
+    readonly property var _powerActions: [
+        { name: "Lock",       kw: "lock screen session",    glyph: "󰍁", cmd: ["loginctl", "lock-session"] },
+        { name: "Suspend",    kw: "sleep suspend",          glyph: "󰤄", cmd: ["systemctl", "suspend"] },
+        { name: "Reboot",     kw: "restart reboot",         glyph: "󰜉", cmd: ["systemctl", "reboot"] },
+        { name: "Shut down",  kw: "poweroff shutdown halt", glyph: "󰐥", cmd: ["systemctl", "poweroff"] },
+        { name: "Power menu", kw: "power logout exit menu", glyph: "󱐋", cmd: ["bash", "-c", "wlogout-launch.sh &"] }
+    ]
+    function _provPower(q) {
+        var out = []
+        for (var i = 0; i < _powerActions.length; i++) {
+            var a = _powerActions[i]
+            var sc = Math.max(root._fuzzyScore(a.name, q) * 0.70, root._fuzzyScore(a.kw, q) * 0.55)
+            if (sc <= 0) continue
+            out.push({ name: a.name, comment: "Power", icon: "", __kind: "power",
+                       __glyph: a.glyph, __score: sc,
+                       __run: (function(cmd) { return function() { Quickshell.execDetached(cmd) } })(a.cmd) })
+        }
+        return out
+    }
+
+    // Calculator — evaluate a safe arithmetic expression; Enter copies the result.
+    // The char whitelist gates what reaches Function(); an operator is required so
+    // a bare number / app name never triggers it.
+    function _provCalc(q) {
+        var s = (q || "").trim()
+        if (!/^[-+*/%.()0-9eπ\s]+$/.test(s) || !/[-+*/%]/.test(s)) return []
+        var val
+        try { val = Function('"use strict"; return (' + s.replace(/π/g, "Math.PI") + ')')() }
+        catch (e) { return [] }
+        if (typeof val !== "number" || !isFinite(val)) return []
+        var out = "" + (Math.round(val * 1e10) / 1e10)
+        return [{ name: out, comment: s + " = " + out + "  · Enter to copy", icon: "",
+                  __kind: "calc", __glyph: "󰃬", __score: 1.5,
+                  __run: (function(v) { return function() { Quickshell.execDetached(["wl-copy", v]) } })(out) }]
+    }
+
     // ── Filter + sort ──────────────────────────────────────────────────────────
     function _filter() {
-        var apps = allApps.slice()
         var result
         if (query.length === 0) {
+            var apps = allApps.slice()
             apps.sort(function(a, b) {
                 var ca = root._usageCounts[a.name] || 0
                 var cb = root._usageCounts[b.name] || 0
@@ -222,12 +302,14 @@ Item {
         } else {
             var q = query
             var scored = []
-            for (var i = 0; i < apps.length; i++) {
-                var sc = root._appScore(apps[i], q)
-                if (sc > 0) scored.push({ entry: apps[i], score: sc })
+            for (var i = 0; i < allApps.length; i++) {
+                var sc = root._appScore(allApps[i], q)
+                if (sc > 0) scored.push({ item: allApps[i], score: sc })
             }
+            var acts = root._gather(q)
+            for (var k = 0; k < acts.length; k++) scored.push({ item: acts[k], score: acts[k].__score })
             scored.sort(function(a, b) { return b.score - a.score })
-            result = scored.map(function(x) { return x.entry })
+            result = scored.map(function(x) { return x.item })
         }
         filtered    = result
         selectedIdx = 0
@@ -255,6 +337,16 @@ Item {
         if (entry.runInTerminal) cmd = ["kitty", "-e"].concat(cmd)
         Quickshell.execDetached(cmd)
         if (root.panelRoot) root.panelRoot.close()
+    }
+
+    // Activate any result: a provider action (has `__run`) runs its closure; a
+    // plain DesktopEntry launches. Settings deep-links swap the active global
+    // panel themselves, so don't also close (that would close the panel we opened).
+    function _activate(item) {
+        if (!item) return
+        if (!item.__run) { root._launch(item); return }
+        item.__run()
+        if (item.__kind !== "settings" && root.panelRoot) root.panelRoot.close()
     }
 
     // ── Reset on open — clear the query + focus the search box when the panel
@@ -489,14 +581,14 @@ Item {
                         if (root.selectedIdx < root.filtered.length - 1) root.selectedIdx++
                         resultList.positionViewAtIndex(root.selectedIdx, ListView.Contain)
                     }
-                    Keys.onReturnPressed: root._launch(root.filtered[root.selectedIdx])
+                    Keys.onReturnPressed: root._activate(root.filtered[root.selectedIdx])
                     Keys.onEscapePressed: if (root.panelRoot) root.panelRoot.close()
 
                     // Placeholder — shown only when the field is empty.
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         visible: searchInput.text.length === 0
-                        text:  "Search applications…"
+                        text:  "Search apps, settings, actions…"
                         color: Commons.Appearance.colors.overlay0
                         font:  searchInput.font
                     }
@@ -597,7 +689,7 @@ Item {
                         Text {
                             anchors.centerIn: parent
                             visible: appIcon.status !== Image.Ready || iconWrapper._cands.length === 0
-                            text:  ""
+                            text:  modelData.__glyph || ""   // action glyph, else app fallback
                             font { family: Commons.Appearance.font.family; pixelSize: 20 }
                             color: Commons.Appearance.colors.overlay1
                         }
@@ -637,11 +729,11 @@ Item {
                     // the app is already pinned (so pinned items stay tagged).
                     Rectangle {
                         id: pinBtn
-                        readonly property bool _pinned: root.isPinned(modelData)
+                        readonly property bool _pinned: !modelData.__kind && root.isPinned(modelData)
                         anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
                         width: 24; height: 24
                         radius: Commons.Appearance.radius.sm
-                        visible: _pinned || root.selectedIdx === index
+                        visible: !modelData.__kind && (_pinned || root.selectedIdx === index)
                         color:   _pinArea.containsMouse ? Commons.Appearance.colors.surface0Alpha : "transparent"
                         Behavior on color { Commons.ColorAnim {} }
 
@@ -666,7 +758,7 @@ Item {
                     }
 
                     HoverHandler { onHoveredChanged: if (hovered) root.selectedIdx = index }
-                    TapHandler   { onTapped: root._launch(modelData) }
+                    TapHandler   { onTapped: root._activate(modelData) }
                 }
             }
 
