@@ -6,6 +6,7 @@ import "Panels" as Panels
 import "Builder" as Builder
 import "../../Commons" as Commons
 import "../../Services/Shell" as ShellServices
+import "../../Services/Compositor" as CompositorServices
 
 // Sprint 17 Stage 4 — one full-screen overlay PanelWindow per monitor.
 // Hosts the 4 sides (Bar/Strip/none via SideLoader) + a single FrameBackground
@@ -32,8 +33,16 @@ Variants {
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "archeotech-shell"
         // Exclusive focus when a panel is open OR edit mode is active (so the
-        // EditOverlay receives Escape and the palette is interactive).
-        WlrLayershell.keyboardFocus: (ShellServices.ShellState.anyOpen(_screenName) || Commons.State.editMode)
+        // EditOverlay receives Escape and the palette is interactive). A panel
+        // opens on EVERY screen (openGlobal has no per-screen routing yet), so
+        // gate panel focus to the FOCUSED output — otherwise all surfaces grab
+        // the keyboard and the compositor routes typing to an arbitrary one
+        // (that's why launcher keystrokes landed on the wrong monitor).
+        WlrLayershell.keyboardFocus:
+            ((ShellServices.ShellState.anyOpen(_screenName)
+                && (CompositorServices.CompositorService.focusedOutput === ""
+                    || _screenName === CompositorServices.CompositorService.focusedOutput))
+             || Commons.State.editMode)
             ? WlrKeyboardFocus.Exclusive
             : WlrKeyboardFocus.None
         anchors { top: true; bottom: true; left: true; right: true }
