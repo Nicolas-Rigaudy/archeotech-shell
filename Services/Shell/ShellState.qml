@@ -108,13 +108,24 @@ QtObject {
         return false
     }
 
-    // Open the same panel on all screens (IPC entry point — no per-screen
-    // routing yet). `side` is the holder that should show it ("" = wildcard).
+    // Open a panel on the FOCUSED output only, clearing it on the others — so it
+    // appears where the user is, not mirrored on every screen. `side` is the
+    // holder that should show it ("" = wildcard). Falls back to all screens when
+    // the focused output is unknown (fresh startup, before any focus event) or
+    // doesn't match a known screen, preserving the old behaviour in that edge.
     function openGlobal(panel, side) {
         var screens = Quickshell.screens
         var s = side || ""
+        var focused = CompositorServices.CompositorService.focusedOutput
+        var known = false
+        for (var i = 0; i < screens.length; i++) if (screens[i].name === focused) { known = true; break }
+        var all = (focused === "" || !known)
         var m = {}
-        for (var i = 0; i < screens.length; i++) m[screens[i].name] = { open: panel, side: s }
+        for (var j = 0; j < screens.length; j++) {
+            var nm = screens[j].name
+            var on = all || nm === focused
+            m[nm] = { open: on ? panel : "", side: on ? s : "" }
+        }
         _commit(m)
     }
 
