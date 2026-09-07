@@ -66,7 +66,7 @@ Item {
                 radius: 4
                 // Sunk/recessed track + top-lit sheen fill — same language as the
                 // dashboard stat bars for a consistent 3d feel.
-                color: Qt.rgba(0, 0, 0, 0.22)
+                color: Commons.Appearance.colors.recessedTrack
 
                 Rectangle {
                     width: slider.visualPosition * parent.width

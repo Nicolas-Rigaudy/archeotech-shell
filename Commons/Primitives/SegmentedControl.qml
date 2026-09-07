@@ -37,7 +37,7 @@ Item {
         // Steel: a recessed machined slot — dark seat, square-ish corners, copper
         // hairline frame. Base packs keep the soft sunk rounded track.
         radius: root._steel ? 1 : Commons.Appearance.radius.base
-        color: root._steel ? Qt.rgba(0, 0, 0, 0.5) : Qt.rgba(0, 0, 0, 0.22)
+        color: root._steel ? Qt.rgba(0, 0, 0, 0.5) : Commons.Appearance.colors.recessedTrack
         border.width: root._steel ? 1 : 0
         border.color: root._steel ? Qt.rgba(root._cu.r, root._cu.g, root._cu.b, 0.35) : "transparent"
         readonly property real _segW: root.model.length > 0 ? width / root.model.length : width

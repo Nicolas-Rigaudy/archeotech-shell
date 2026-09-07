@@ -91,7 +91,7 @@ DashCard {
             height: 8
             radius: 4
             // Sunk/recessed track — darker than the card so the fill reads raised.
-            color: Qt.rgba(0, 0, 0, 0.22)
+            color: Commons.Appearance.colors.recessedTrack
 
             Rectangle {
                 width: parent.width * Math.min(value, 100) / 100

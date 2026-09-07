@@ -315,6 +315,12 @@ QtObject {
         readonly property color success: green
         readonly property color info:    blue
 
+        // Recessed track — the sunk groove behind sliders and dashboard stat
+        // bars (a fixed black overlay for the 3d "sunk" read, not a palette
+        // color). Pack-overridable via colors.recessedTrack. Replaces an inline
+        // Qt.rgba(0,0,0,0.22) that was copied into 3 components.
+        readonly property color recessedTrack: root._c("recessedTrack", Qt.rgba(0, 0, 0, 0.22))
+
         // Transparent variants
         readonly property color baseAlpha:     root._rgba("base",     "#24273a", 0.85)
         readonly property color mantleAlpha:   root._rgba("mantle",   "#1e2030", 0.90)
