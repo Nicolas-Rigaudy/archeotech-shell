@@ -40,7 +40,9 @@ QtObject {
         media: {
             content:  _mediaComp,
             side:     "bottom",
-            size:     220,
+            // Tall enough that the playback controls (raised play-circle + shadow)
+            // clear the strip's icon row instead of clipping into it (item_038).
+            size:     250,
             axisSize: "auto"
         },
         wallpaper: {
