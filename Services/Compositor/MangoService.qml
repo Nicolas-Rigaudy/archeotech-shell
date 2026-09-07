@@ -133,8 +133,10 @@ QtObject {
         var data
         try { data = JSON.parse(line) } catch (e) { return }
         if (!data || !data.monitors) return
+        var activeMon = ""
         for (var i = 0; i < data.monitors.length; i++) {
             var m = data.monitors[i]
+            if (m.active) activeMon = m.name
             var entry = _ensureOutput(m.name)
             entry.layout = m.layout_symbol || ""
             if (m.x !== undefined) entry.x = m.x
@@ -154,6 +156,13 @@ QtObject {
             }
             entry.tags = tags
         }
+        // focusedOutput follows the ACTIVE (focused) output reported by
+        // all-monitors — which flags the focused monitor even when it has NO
+        // client. focusing-client can't do this: focusing an empty output emits no
+        // client event, so focusedOutput would stay on the last output that had a
+        // focused window (that's why opening a panel while an empty portrait screen
+        // was focused landed on the previous monitor).
+        if (activeMon !== "") root.focusedOutput = activeMon
     }
 
     function _parseClient(line) {
