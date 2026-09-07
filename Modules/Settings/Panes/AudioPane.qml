@@ -178,6 +178,7 @@ Item {
                                                 color: Commons.Appearance.colors.base
                                                 border.color: aliasField.activeFocus ? Commons.Appearance.colors.accentBorder : Commons.Appearance.colors.surface1
                                                 border.width: 1
+                                                Behavior on border.color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                                                 TextField {
                                                     id: aliasField
                                                     anchors { fill: parent; leftMargin: 8; rightMargin: 8 }

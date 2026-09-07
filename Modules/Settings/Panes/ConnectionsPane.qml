@@ -582,11 +582,13 @@ Item {
                 font.pixelSize: Commons.Appearance.font.sizeSm
                 font.family: Commons.Appearance.font.family
                 color: Commons.Appearance.colors.text
+                placeholderTextColor: Commons.Appearance.colors.overlay0
                 background: Rectangle {
                     radius: Commons.Appearance.radius.sm
                     color: Commons.Appearance.colors.base
                     border.color: pwField.activeFocus ? Commons.Appearance.colors.accentBorder : Commons.Appearance.colors.surface1
                     border.width: 1
+                    Behavior on border.color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                 }
                 onAccepted: {
                     NetworkServices.Network.connectWithPassword(modelData.ssid, pwField.text)

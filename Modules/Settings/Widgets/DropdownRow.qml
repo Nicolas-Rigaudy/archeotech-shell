@@ -65,6 +65,46 @@ Item {
                 font.family: Commons.Appearance.font.family
                 verticalAlignment: Text.AlignVCenter
             }
+
+            // Themed dropdown list — the closed field was styled but the open
+            // popup fell back to default Qt Controls chrome (item_037).
+            delegate: ItemDelegate {
+                width: combo.width
+                highlighted: combo.highlightedIndex === index
+                contentItem: Text {
+                    text: modelData
+                    color: Commons.Appearance.colors.text
+                    font.pixelSize: Commons.Appearance.font.sizeBase
+                    font.family: Commons.Appearance.font.family
+                    verticalAlignment: Text.AlignVCenter
+                }
+                background: Rectangle {
+                    radius: Commons.Appearance.radius.sm
+                    color: highlighted ? Commons.Appearance.colors.surface0 : "transparent"
+                }
+            }
+
+            popup: Popup {
+                y: combo.height + 2
+                width: combo.width
+                implicitHeight: Math.min(contentItem.implicitHeight, 240)
+                padding: 4
+
+                contentItem: ListView {
+                    clip: true
+                    implicitHeight: contentHeight
+                    model: combo.popup.visible ? combo.delegateModel : null
+                    currentIndex: combo.highlightedIndex
+                    ScrollIndicator.vertical: ScrollIndicator {}
+                }
+
+                background: Rectangle {
+                    radius: Commons.Appearance.radius.base
+                    color: Commons.Appearance.colors.base
+                    border.color: Commons.Appearance.colors.surface1
+                    border.width: 1
+                }
+            }
         }
     }
 }
