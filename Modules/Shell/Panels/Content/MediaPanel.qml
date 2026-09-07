@@ -196,7 +196,14 @@ Item {
                         MouseArea {
                             anchors.fill: parent
                             anchors.margins: -4
-                            onClicked: mouse => MediaServices.MprisService.seekTo(MediaServices.MprisService.length * (mouse.x / width))
+                            // The -4 margin grows the hit target 4px past the track on
+                            // every side, so mouse.x/width are offset from the track by
+                            // 4px — map back onto the track (parent) and clamp, else the
+                            // seek lands off by ~4px at each end (S27 off-by-4 fix).
+                            onClicked: mouse => {
+                                const frac = Math.max(0, Math.min(1, (mouse.x - 4) / parent.width))
+                                MediaServices.MprisService.seekTo(MediaServices.MprisService.length * frac)
+                            }
                         }
                     }
 
