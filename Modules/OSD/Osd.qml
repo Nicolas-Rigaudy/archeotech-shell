@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import "../../Commons" as Commons
@@ -61,6 +62,16 @@ PanelWindow {
         anchors.bottomMargin: 20
         width: 220
         height: 46
+
+        // Drop shadow so the pill lifts off the wallpaper (depth-gated — flat
+        // mode drops it). Behind the pill; fades with it via the shared opacity.
+        RectangularShadow {
+            anchors.fill: pill
+            radius: pill.radius
+            blur: 14; offset: Qt.vector2d(0, 4); spread: 0
+            color: Qt.rgba(0, 0, 0, 0.5 * Commons.Appearance.shadowStrength)
+            opacity: pill.opacity
+        }
 
         Rectangle {
             id: pill
