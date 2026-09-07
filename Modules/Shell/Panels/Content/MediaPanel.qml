@@ -178,7 +178,11 @@ Item {
                     // height (falls back to implicitHeight 0), collapsing this and
                     // overlapping the time labels onto the controls (S26-C fix).
                     Layout.preferredHeight: 28
-                    visible: MediaServices.MprisService.length > 0
+                    // Show for any active player, not only when a length is known —
+                    // some players (browser/Zen MPRIS, live streams) report length 0,
+                    // which used to hide the whole bar. When length is unknown we still
+                    // show the track + elapsed time; only the fill/total/seek gate on it.
+                    visible: root._available
 
                     Rectangle {
                         anchors.left: parent.left; anchors.right: parent.right
@@ -196,6 +200,7 @@ Item {
                         MouseArea {
                             anchors.fill: parent
                             anchors.margins: -4
+                            enabled: MediaServices.MprisService.length > 0   // can't seek without a known length
                             // The -4 margin grows the hit target 4px past the track on
                             // every side, so mouse.x/width are offset from the track by
                             // 4px — map back onto the track (parent) and clamp, else the
@@ -215,7 +220,8 @@ Item {
                     }
                     Text {
                         anchors.right: parent.right; anchors.bottom: parent.bottom
-                        text: formatTime(MediaServices.MprisService.length)
+                        // Blank when length is unknown — avoids a misleading "0:00" total.
+                        text: MediaServices.MprisService.length > 0 ? formatTime(MediaServices.MprisService.length) : ""
                         color: Commons.Appearance.colors.overlay0
                         font.pixelSize: 9; font.family: Commons.Appearance.font.family
                     }
