@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
+import Qt5Compat.GraphicalEffects
 import Quickshell.Io
 import "../../../../Commons" as Commons
 import "../../../../Services/Media" as MediaServices
@@ -116,34 +117,64 @@ Item {
             rowSpacing: 14
 
             // Album art / app icon — smaller when stacked so the info column breathes.
-            Rectangle {
+            // Wrapped in a plain Item so a drop shadow can lift the art off the
+            // panel (same depth language as the play key), gated by shadowStrength.
+            Item {
                 readonly property int _art: root._narrow ? 72 : 92
                 Layout.preferredWidth: _art; Layout.preferredHeight: _art
                 Layout.alignment: root._narrow ? Qt.AlignHCenter : Qt.AlignVCenter
-                radius: Commons.Appearance.radius.base
-                color: Commons.Appearance.colors.base
 
-                Image {
-                    id: albumArt
+                RectangularShadow {
+                    anchors.fill: artRect; radius: artRect.radius
+                    blur: 12; offset: Qt.vector2d(0, 3); spread: 0
+                    color: Qt.rgba(0, 0, 0, 0.4 * Commons.Appearance.shadowStrength)
+                }
+
+                Rectangle {
+                    id: artRect
                     anchors.fill: parent
-                    source: MediaServices.MprisService.artUrl || ""
-                    fillMode: Image.PreserveAspectCrop
-                    visible: status === Image.Ready
+                    radius: Commons.Appearance.radius.base
+                    color: Commons.Appearance.colors.base
+
+                    // Raw art, hidden — shown via the rounded OpacityMask so the
+                    // cover's corners follow the card radius instead of poking out
+                    // square past the frame (matches the wallpaper-thumb pattern).
+                    Image {
+                        id: albumArt
+                        anchors.fill: parent
+                        source: MediaServices.MprisService.artUrl || ""
+                        fillMode: Image.PreserveAspectCrop
+                        visible: false
+                    }
+                    Rectangle {
+                        id: artMask
+                        anchors.fill: parent
+                        radius: Commons.Appearance.radius.base
+                        visible: false
+                    }
+                    OpacityMask {
+                        anchors.fill: albumArt
+                        source: albumArt
+                        maskSource: artMask
+                        visible: albumArt.status === Image.Ready
+                    }
+                    // Rounded accent hairline over the masked art.
                     Rectangle {
                         anchors.fill: parent
                         radius: Commons.Appearance.radius.base
                         color: "transparent"
                         border.color: Commons.Appearance.colors.accentBorder
                         border.width: 1
+                        visible: albumArt.status === Image.Ready
                     }
-                }
-                Text {
-                    anchors.centerIn: parent
-                    visible: albumArt.status !== Image.Ready
-                    text: MediaServices.MprisService.appIcon || "󰝚"
-                    color: Commons.Appearance.colors.accent
-                    font.pixelSize: 40
-                    font.family: Commons.Appearance.font.family
+                    Text {
+                        anchors.centerIn: parent
+                        visible: albumArt.status !== Image.Ready
+                        text: MediaServices.MprisService.appIcon || "󰝚"
+                        color: Commons.Appearance.colors.accent
+                        font.pixelSize: 40
+                        font.family: Commons.Appearance.font.family
+                    }
                 }
             }
 
