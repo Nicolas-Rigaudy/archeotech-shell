@@ -87,12 +87,14 @@ Item {
                 color: (slider.pressed || slider.hovered) ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext1
                 scale: slider.pressed ? 0.92 : slider.hovered ? 1.08 : 1.0
                 // Raised 3d read: a darker edge + a top-lit gloss overlay, the same
-                // top-to-bottom sheen language as the track fill above.
-                border.width: 1
+                // top-to-bottom sheen language as the track fill above. Depth cues
+                // drop in flat mode (depthFlat) — knob becomes a plain flat dot.
+                border.width: Commons.Appearance.depthFlat ? 0 : 1
                 border.color: Commons.Appearance.sheenLo(knob.color, 1.3)
                 Rectangle {
                     anchors.fill: parent
                     radius: parent.radius
+                    visible: !Commons.Appearance.depthFlat
                     gradient: Gradient {
                         GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.28) }
                         GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.0) }
