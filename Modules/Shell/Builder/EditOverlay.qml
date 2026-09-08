@@ -639,15 +639,15 @@ Item {
                 // accent fill (crust text, clearly readable), the rest quiet until
                 // hovered. Compact, no inter-segment gaps.
                 Rectangle {
-                    radius: Commons.Appearance.radius.sm
-                    color: Commons.Appearance.colors.surface0
+                    radius: Commons.Appearance.radius.md
+                    color: Commons.Appearance.colors.glassBg
                     border.width: 1
                     border.color: Commons.Appearance.colors.glassBorder
-                    implicitWidth: _seg.implicitWidth
-                    implicitHeight: _seg.implicitHeight
-                    clip: true
+                    implicitWidth: _seg.implicitWidth + 6
+                    implicitHeight: _seg.implicitHeight + 6
                     Grid {
                         id: _seg
+                        anchors.centerIn: parent
                         columns: sideCard._horizontal ? 4 : 1
                         Repeater {
                             model: [
@@ -660,10 +660,11 @@ Item {
                                 id: typeBtn
                                 required property var modelData
                                 readonly property bool active: editOverlay._cfg.sideType(sideCard.side) === modelData.t
-                                width:  sideCard._horizontal ? (_tl.implicitWidth + 18) : 64
+                                width:  sideCard._horizontal ? (_tl.implicitWidth + 18) : 62
                                 height: 24
+                                radius: Commons.Appearance.radius.sm
                                 color: active ? Commons.Appearance.colors.accent
-                                              : (_segMa.containsMouse ? Commons.Appearance.colors.surface2 : "transparent")
+                                              : (_segMa.containsMouse ? Commons.Appearance.colors.accentAlpha : "transparent")
                                 Text {
                                     id: _tl
                                     anchors.centerIn: parent
@@ -688,9 +689,9 @@ Item {
 
                 Rectangle {
                     visible: sideCard._on
-                    width: sideCard._horizontal ? (_addRow.implicitWidth + 16) : 64; height: 24
+                    width: sideCard._horizontal ? (_addRow.implicitWidth + 16) : 62; height: 24
                     radius: Commons.Appearance.radius.sm
-                    color: _addMa.containsMouse ? Commons.Appearance.colors.accentAlpha : Commons.Appearance.colors.surface0
+                    color: _addMa.containsMouse ? Commons.Appearance.colors.accentAlpha : Commons.Appearance.colors.glassBg
                     border.width: 1
                     border.color: _addMa.containsMouse ? Commons.Appearance.colors.accentBorder : Commons.Appearance.colors.glassBorder
                     Row {
