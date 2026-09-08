@@ -619,9 +619,12 @@ Item {
                 }
             }
 
-            // Floating toolbar (type switch + Add), just inside the mock.
-            Row {
+            // Floating toolbar (type switch + Add). Follows the side's axis — a
+            // horizontal row under a bar, a vertical stack beside a strip — so a
+            // vertical side never draws a long horizontal control across the screen.
+            Grid {
                 id: toolbar
+                columns: sideCard._horizontal ? 2 : 1
                 spacing: 6
                 anchors.horizontalCenter: sideCard._horizontal ? mock.horizontalCenter : undefined
                 anchors.verticalCenter:   sideCard._horizontal ? undefined : mock.verticalCenter
@@ -641,11 +644,11 @@ Item {
                     border.width: 1
                     border.color: Commons.Appearance.colors.glassBorder
                     implicitWidth: _seg.implicitWidth
-                    implicitHeight: 24
+                    implicitHeight: _seg.implicitHeight
                     clip: true
-                    Row {
+                    Grid {
                         id: _seg
-                        height: parent.height
+                        columns: sideCard._horizontal ? 4 : 1
                         Repeater {
                             model: [
                                 { t: "bar",    l: "Bar"    },
@@ -657,8 +660,8 @@ Item {
                                 id: typeBtn
                                 required property var modelData
                                 readonly property bool active: editOverlay._cfg.sideType(sideCard.side) === modelData.t
-                                width: _tl.implicitWidth + 18
-                                height: parent.height
+                                width:  sideCard._horizontal ? (_tl.implicitWidth + 18) : 64
+                                height: 24
                                 color: active ? Commons.Appearance.colors.accent
                                               : (_segMa.containsMouse ? Commons.Appearance.colors.surface2 : "transparent")
                                 Text {
@@ -685,7 +688,7 @@ Item {
 
                 Rectangle {
                     visible: sideCard._on
-                    width: _addRow.implicitWidth + 16; height: 24
+                    width: sideCard._horizontal ? (_addRow.implicitWidth + 16) : 64; height: 24
                     radius: Commons.Appearance.radius.sm
                     color: _addMa.containsMouse ? Commons.Appearance.colors.accentAlpha : Commons.Appearance.colors.surface0
                     border.width: 1
