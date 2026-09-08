@@ -127,16 +127,18 @@ Item {
 
     // ── Sizing ─────────────────────────────────────────────────────────────────
     readonly property int _iconSize:    36
-    readonly property int _iconSpacing: 8
-    readonly property int _padLong:     14
+    readonly property int _iconStride:  48    // along-axis slot per icon (== hit area)
+    readonly property int _padLong:     10    // real breathing space at each strip end
     readonly property int _padShort:    4
-    readonly property int _iconsLen:    _icons.length * _iconSize
-                                      + Math.max(0, _icons.length - 1) * _iconSpacing
-    // Along-axis body = the icon cluster, floored at one icon so an empty/single
-    // strip stays tappable. NOT floored at `_expanded`: that field is a stale
-    // per-side value (setSideType historically wrote 240) which, used as a floor,
-    // pinned every strip to the same length regardless of icon count.
-    readonly property int _bodyAxis:    Math.max(_iconSize + 2 * _padLong, _iconsLen + 2 * _padLong)
+    // Icons pack at a fixed stride with `_padLong` at each end (see the delegate's
+    // `_center`), so the end margin is genuine padding — not the half-slot that
+    // even-distribution left, which read tighter at the edges than between icons.
+    readonly property int _iconsLen:    _icons.length * _iconStride
+    // Along-axis body = the packed icon run + end padding, floored at one icon so
+    // an empty/single strip stays tappable. NOT floored at `_expanded`: that field
+    // is a stale per-side value (setSideType historically wrote 240) which, used as
+    // a floor, pinned every strip to the same length regardless of icon count.
+    readonly property int _bodyAxis:    Math.max(_iconStride + 2 * _padLong, _iconsLen + 2 * _padLong)
     readonly property int _bodyDepth:   _iconSize + 2 * _padShort
 
     readonly property int _r:  Commons.Appearance.radius.md  // neck arc radius (smaller = popup less tall)
@@ -456,9 +458,12 @@ Item {
                     readonly property int  _n:       strip._icons.length
                     readonly property real _axisLen: strip._horizontal ? iconArea.width : iconArea.height
                     readonly property real _cluster: (_axisLen - strip._bodyAxis) / 2
-                    readonly property real _center:  _cluster + strip._bodyAxis * (index + 0.5) / Math.max(1, _n)
+                    // Packed: end padding, then one fixed stride per icon (so edge
+                    // margin = _padLong, inter-icon gap = stride - iconSize).
+                    readonly property real _center:  _cluster + strip._padLong + strip._iconStride / 2
+                                                   + index * strip._iconStride
 
-                    readonly property int _hitLong:  48
+                    readonly property int _hitLong:  strip._iconStride
                     readonly property int _hitShort: strip._bodyDepth
                     width:  strip._horizontal ? _hitLong  : _hitShort
                     height: strip._horizontal ? _hitShort : _hitLong
