@@ -26,7 +26,10 @@ Item {
 
     // Re-scan installed modules each time the editor opens so freshly-dropped
     // folders appear in the palette without a shell restart.
-    onVisibleChanged: if (visible) ShellServices.ModuleRegistry.rescan()
+    onVisibleChanged: {
+        if (visible) ShellServices.ModuleRegistry.rescan()
+        else if (Commons.State.dragActive) endDrag()   // task_027 — cancel a mid-drag close
+    }
 
     readonly property var _cfg:  ShellServices.ShellConfig
     readonly property var _reg:  ShellServices.WidgetRegistry
@@ -100,6 +103,89 @@ Item {
         return (l[_cfgIndex] && l[_cfgIndex].config) || ({})
     }
 
+    // ── Drag-and-drop state (task_027 / adr_028) ────────────────────────────────
+    // Pointer DnD of chips across the four side-cards, all inside this one surface
+    // (intra-surface, so Qt Drag/DropArea are reliable). The dragged chip stays put
+    // in its Flow; a floating ghost image follows the cursor and an invisible
+    // `dragProxy` carries Drag.active so the per-zone DropAreas track it. On drop we
+    // rewrite config via ShellConfig.moveEntry (one hot-reload). Arrows + palette
+    // stay as the keyboard-accessible path — this is additive.
+    property string _dropSide:  ""      // zone currently under the cursor …
+    property string _dropZone:  ""
+    property int    _dropIndex: -1      // … and the insertion slot within it
+    property bool   _dropValid: false   // does the move convert to a valid entry?
+
+    function _entryConfigAt(side, zone, index) {
+        var l = _list(side, zone)
+        return (l[index] && l[index].config) || ({})
+    }
+    function _srcParts() {
+        var s = Commons.State.draggedSource.split(":")
+        return { side: s[0], zone: (s[1] === undefined ? "" : s[1]), index: parseInt(s[2]) }
+    }
+    // Would dropping the in-flight chip into (destZone-flavour) be accepted? Used
+    // by DropAreas to light a valid/invalid affordance before the drop lands.
+    function _dropConverts(destZone) {
+        if (!Commons.State.dragActive) return false
+        var src = _srcParts()
+        return _cfg.moveConversion(src.zone, destZone, Commons.State.draggedKey,
+                                   _entryConfigAt(src.side, src.zone, src.index)) !== null
+    }
+
+    function beginDrag(side, zone, index, id, chipItem) {
+        Commons.State.draggedSource = side + ":" + zone + ":" + index
+        Commons.State.draggedKey    = id
+        var p = chipItem.mapToItem(editOverlay, 0, 0)
+        dragProxy.width = chipItem.width; dragProxy.height = chipItem.height
+        dragProxy.x = p.x; dragProxy.y = p.y
+        ghost.width = chipItem.width; ghost.height = chipItem.height
+        ghost.x = p.x; ghost.y = p.y
+        chipItem.grabToImage(function(res) { ghost.source = res.url })
+        Commons.State.dragActive = true
+        dragProxy.Drag.active = true
+    }
+    function moveDrag(gx, gy) {
+        dragProxy.x = gx - dragProxy.width / 2
+        dragProxy.y = gy - dragProxy.height / 2
+        ghost.x = dragProxy.x; ghost.y = dragProxy.y
+    }
+    function endDrag() {
+        if (Commons.State.dragActive) dragProxy.Drag.drop()   // fires onDropped on the hovered zone
+        dragProxy.Drag.active = false
+        Commons.State.dragActive    = false
+        Commons.State.draggedKey    = ""
+        Commons.State.draggedSource = ""
+        ghost.source = ""
+        _dropSide = ""; _dropZone = ""; _dropIndex = -1; _dropValid = false
+    }
+    // Called from a zone's DropArea.onDropped. destIndex is the insertion slot as
+    // seen among the *rendered* chips (source chip included); translate it to the
+    // post-removal index moveEntry expects, then guard the no-op cases.
+    function performDrop(destSide, destZone, destIndex) {
+        var src = _srcParts()
+        var cfg = _entryConfigAt(src.side, src.zone, src.index)
+        if (_cfg.moveConversion(src.zone, destZone, Commons.State.draggedKey, cfg) === null) return
+        var mDest = destIndex
+        if (src.side === destSide && src.zone === destZone) {
+            if (destIndex > src.index) mDest = destIndex - 1
+            if (mDest === src.index) return          // dropped onto its own slot → no-op
+        }
+        _cfg.moveEntry(src.side, src.zone, src.index, destSide, destZone, mDest)
+    }
+    // Insertion index for a pointer at (px,py) in `flowItem` coords, walking the
+    // chip Repeater in reading order (handles the Flow's row wrapping): the first
+    // chip whose centre the pointer has passed, else the end.
+    function _insertionIndex(rep, flowItem, px, py) {
+        for (var i = 0; i < rep.count; i++) {
+            var it = rep.itemAt(i)
+            if (!it) continue
+            var c = it.mapToItem(flowItem, it.width / 2, it.height / 2)
+            if (py < c.y - it.height / 2) return i           // pointer is on an earlier row
+            if (py <= c.y + it.height / 2 && px < c.x) return i   // same row, left of centre
+        }
+        return rep.count
+    }
+
     // ── Palette state ───────────────────────────────────────────────────────────
     property string _palSide: ""
     property string _palZone: ""
@@ -156,7 +242,7 @@ Item {
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: "Esc to exit"
+                text: "Drag chips to move · Esc to exit"
                 color: Commons.Appearance.colors.subtext0
                 font.family: Commons.Appearance.font.family
                 font.pixelSize: Commons.Appearance.font.sizeSm
@@ -327,12 +413,21 @@ Item {
                             font.bold: true
                         }
 
+                        // Wrapper so the Flow, the drop caret and the zone DropArea
+                        // share one coordinate space (task_027).
+                        Item {
+                        id: zoneArea
+                        Layout.fillWidth: true
+                        implicitHeight: zoneFlow.implicitHeight
+
                         Flow {
-                            Layout.fillWidth: true
+                            id: zoneFlow
+                            anchors { left: parent.left; right: parent.right; top: parent.top }
                             spacing: 6
 
                             // Existing widgets as removable / reorderable chips.
                             Repeater {
+                                id: chipRep
                                 model: editOverlay._list(sideCard.side, zoneBlock.zoneName)
                                 delegate: Rectangle {
                                     id: chip
@@ -345,7 +440,42 @@ Item {
                                     radius: Commons.Appearance.radius.md
                                     color: Commons.Appearance.colors.surface1
                                     border.width: 1
-                                    border.color: Commons.Appearance.colors.glassBorder
+                                    border.color: chip._isSource ? Commons.Appearance.colors.accentBorder
+                                                                 : Commons.Appearance.colors.glassBorder
+
+                                    // Dim the origin chip while its copy is in flight.
+                                    readonly property bool _isSource:
+                                        Commons.State.dragActive &&
+                                        Commons.State.draggedSource === (sideCard.side + ":" + zoneBlock.zoneName + ":" + chip.index)
+                                    opacity: _isSource ? 0.35 : 1
+                                    Behavior on opacity { NumberAnimation { duration: 90 } }
+
+                                    // Drag handle over the chip body. Declared before
+                                    // chipRow so the gear / ‹ › / × MouseAreas stack
+                                    // above it and keep working; the bare icon/label
+                                    // area initiates the drag.
+                                    MouseArea {
+                                        id: dragMA
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                                        property real _px: 0
+                                        property real _py: 0
+                                        property bool _dragging: false
+                                        onPressed: (m) => { _px = m.x; _py = m.y; _dragging = false }
+                                        onPositionChanged: (m) => {
+                                            if (!pressed) return
+                                            var gp = dragMA.mapToItem(editOverlay, m.x, m.y)
+                                            if (!_dragging) {
+                                                if (Math.abs(m.x - _px) + Math.abs(m.y - _py) < 6) return
+                                                _dragging = true
+                                                editOverlay.beginDrag(sideCard.side, zoneBlock.zoneName, chip.index, chip._id, chip)
+                                            }
+                                            editOverlay.moveDrag(gp.x, gp.y)
+                                        }
+                                        onReleased: { if (_dragging) { editOverlay.endDrag(); _dragging = false } }
+                                        onCanceled: { if (_dragging) { editOverlay.endDrag(); _dragging = false } }
+                                    }
 
                                     Row {
                                         id: chipRow
@@ -446,10 +576,88 @@ Item {
                                 }
                             }
                         }
+
+                        // Insertion caret — animated marker of where a dropped chip
+                        // lands. Accent = valid drop, red = incompatible (bar-only
+                        // widget over a strip). Sibling of the Flow, same coords.
+                        Rectangle {
+                            id: caret
+                            width: 2
+                            height: 26
+                            radius: 1
+                            visible: editOverlay._dropSide === sideCard.side
+                                     && editOverlay._dropZone === zoneBlock.zoneName
+                                     && editOverlay._dropIndex >= 0
+                            color: editOverlay._dropValid ? Commons.Appearance.colors.accent
+                                                          : Commons.Appearance.colors.red
+                            Behavior on x { NumberAnimation { duration: 90; easing.type: Easing.OutQuad } }
+                            Behavior on y { NumberAnimation { duration: 90; easing.type: Easing.OutQuad } }
+                        }
+
+                        // Drop target covering this zone. DropAreas ignore pointer
+                        // clicks, so it never blocks the chips' own MouseAreas.
+                        DropArea {
+                            anchors.fill: parent
+                            property int _idx: 0
+                            function _reposition(px, py) {
+                                var idx = editOverlay._insertionIndex(chipRep, zoneArea, px, py)
+                                _idx = idx
+                                var x0 = 2, y0 = 0
+                                if (chipRep.count > 0) {
+                                    if (idx < chipRep.count) {
+                                        var it = chipRep.itemAt(idx)
+                                        if (it) { var p = it.mapToItem(zoneArea, 0, 0); x0 = p.x - 4; y0 = p.y + (it.height - caret.height) / 2 }
+                                    } else {
+                                        var lastIt = chipRep.itemAt(chipRep.count - 1)
+                                        if (lastIt) { var lp = lastIt.mapToItem(zoneArea, 0, 0); x0 = lp.x + lastIt.width + 2; y0 = lp.y + (lastIt.height - caret.height) / 2 }
+                                    }
+                                }
+                                caret.x = x0; caret.y = y0
+                                editOverlay._dropSide  = sideCard.side
+                                editOverlay._dropZone  = zoneBlock.zoneName
+                                editOverlay._dropIndex = idx
+                                editOverlay._dropValid = editOverlay._dropConverts(zoneBlock.zoneName)
+                            }
+                            onEntered: (drag) => _reposition(drag.x, drag.y)
+                            onPositionChanged: (drag) => _reposition(drag.x, drag.y)
+                            onExited: {
+                                if (editOverlay._dropSide === sideCard.side && editOverlay._dropZone === zoneBlock.zoneName) {
+                                    editOverlay._dropSide = ""; editOverlay._dropZone = ""; editOverlay._dropIndex = -1
+                                }
+                            }
+                            onDropped: (drop) => {
+                                if (editOverlay._dropConverts(zoneBlock.zoneName))
+                                    editOverlay.performDrop(sideCard.side, zoneBlock.zoneName, _idx)
+                            }
+                        }
+                        }
                     }
                 }
             }
         }
+    }
+
+    // ── Drag proxy + ghost (task_027 / adr_028) ─────────────────────────────────
+    // `dragProxy` is invisible and carries Drag.active/hotSpot so the per-zone
+    // DropAreas track the pointer; its mimeData holds only the "side:zone:index"
+    // locator (the widget key rides Commons.State). `ghost` is the grabbed-image
+    // preview trailing the cursor. Neither is wrapped in layer.enabled (hit-test
+    // rule); both sit above the side cards, below the config popup (z 200).
+    Item {
+        id: dragProxy
+        visible: false
+        z: 150
+        Drag.active: false
+        Drag.hotSpot.x: width / 2
+        Drag.hotSpot.y: height / 2
+        Drag.mimeData: ({ "text/plain": Commons.State.draggedSource })
+    }
+    Image {
+        id: ghost
+        visible: Commons.State.dragActive && source != ""
+        opacity: 0.85
+        z: 151
+        fillMode: Image.Pad
     }
 
     // ── Palette popup ────────────────────────────────────────────────────────────

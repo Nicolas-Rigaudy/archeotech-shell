@@ -320,6 +320,76 @@ QtObject {
         })
     }
 
+    // ── Drag-and-drop move (task_027 / adr_028) ─────────────────────────────────
+    // Would moving `id` (with its config) from a srcZone-flavour holder into a
+    // destZone-flavour holder be accepted, and as what? Same flavour → the entry
+    // rides across untouched. Cross-flavour (bar↔strip) reuses the type-switch
+    // compatibility maps: a panel-opener converts (e.g. nc↔notifications), a
+    // bar-only widget (clock, volume, …) has no strip form → null (reject). The
+    // returned align is left unset; the caller stamps the destination align.
+    // The DnD layer calls this to light a valid/invalid drop affordance before
+    // the drop; moveEntry calls it again so a rejected move never mutates config.
+    function moveConversion(srcZone, destZone, id, config) {
+        var sf = (srcZone === "") ? "strip" : "bar"
+        var df = (destZone === "") ? "strip" : "bar"
+        var m = { id: id, config: config || {} }
+        if (sf === df) return m
+        var conv = (df === "strip") ? root._contentToStrip(m) : root._contentToBar(m)
+        return conv ? { id: conv.id, config: conv.config || {} } : null
+    }
+
+    // Move one entry between holders in a single write (one _save → one hot-reload,
+    // so a cross-zone/cross-side drag doesn't flicker the live shell twice).
+    // Indices are positions *within* the source/destination align sublist (matches
+    // how the split view and setEntryConfig address entries). destIndex is the
+    // insertion slot after the source has been removed. Cross-flavour entries pass
+    // through moveConversion; an incompatible move is a no-op. Same holder + same
+    // resulting position is also a no-op (guarded caller-side, re-checked here).
+    function moveEntry(srcSide, srcZone, srcIndex, destSide, destZone, destIndex) {
+        var srcAlign  = srcZone  || ""
+        var destAlign = destZone || ""
+        _mutate(function(d) {
+            var srcS = d.sides[srcSide]
+            if (!srcS) return
+            var srcContent = root._sideContent(srcS)
+            // Absolute position of the srcIndex-th entry carrying srcAlign.
+            var seen = -1, at = -1
+            for (var i = 0; i < srcContent.length; i++) {
+                if (srcContent[i].align === srcAlign) { seen++; if (seen === srcIndex) { at = i; break } }
+            }
+            if (at === -1) return
+            var picked = srcContent[at]
+            var conv = root.moveConversion(srcAlign, destAlign, picked.id, picked.config)
+            if (conv === null) return                       // incompatible → reject
+            srcContent.splice(at, 1)
+            var moved = { id: conv.id, config: conv.config || {}, align: destAlign }
+
+            // Same side → keep mutating the one (already-spliced) array; else the
+            // destination side's own content.
+            var destContent = (destSide === srcSide)
+                ? srcContent
+                : root._sideContent(d.sides[destSide] || { type: "bar" })
+
+            // Insert so `moved` becomes the destIndex-th entry among destAlign;
+            // _regroup preserves within-align order, so relative position is enough.
+            var count = -1, insAt = destContent.length
+            for (var j = 0; j < destContent.length; j++) {
+                if (destContent[j].align === destAlign) { count++; if (count === destIndex) { insAt = j; break } }
+            }
+            destContent.splice(insAt, 0, moved)
+
+            srcS.content = root._regroup(srcContent)
+            delete srcS.zones; delete srcS.icons
+            d.sides[srcSide] = srcS
+            if (destSide !== srcSide) {
+                var destS = d.sides[destSide] || { type: "bar" }
+                destS.content = root._regroup(destContent)
+                delete destS.zones; delete destS.icons
+                d.sides[destSide] = destS
+            }
+        })
+    }
+
     // Write per-instance config onto one entry, addressed by (align, position).
     // zone === "" (or null) targets the strip/holder icon list; otherwise a bar
     // zone — index is the position *within* that align's sublist (matches how the
