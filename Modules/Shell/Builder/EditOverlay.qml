@@ -423,8 +423,13 @@ Item {
                                             Commons.State.dragActive &&
                                             Commons.State.draggedSource === (sideCard.side + ":" + section.zoneName + ":" + chip.index)
 
-                                        implicitWidth:  chip._iconOnly ? 30 : chipRow.implicitWidth + 14
+                                        // Compact by default (icon only); the title
+                                        // expands on hover so a full bar's worth of
+                                        // pills fits without crowding the centre.
+                                        implicitWidth:  chip._iconOnly ? 30
+                                                       : (dragMA.containsMouse ? chipRow.implicitWidth + 14 : 34)
                                         implicitHeight: chip._iconOnly ? 30 : (sideCard._isBar ? 30 : 28)
+                                        Behavior on implicitWidth { NumberAnimation { duration: 70; easing.type: Easing.OutQuad } }
                                         radius: Commons.Appearance.radius.md
                                         color: dragMA.containsMouse ? Commons.Appearance.colors.surface2
                                                                     : Commons.Appearance.colors.surface1
@@ -471,7 +476,7 @@ Item {
                                                 font.pixelSize: Commons.Appearance.font.sizeBase
                                             }
                                             Text {
-                                                visible: !chip._iconOnly
+                                                visible: !chip._iconOnly && dragMA.containsMouse
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 text: chip.meta.name || chip._id
                                                 color: Commons.Appearance.colors.text
