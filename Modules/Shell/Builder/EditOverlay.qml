@@ -297,342 +297,419 @@ Item {
         }
     }
 
-    // ── Side editor cards — one per edge, anchored to that edge ─────────────────
+    // ── Side mocks — each edge drawn as its true bar/strip silhouette, pinned in
+    // place (task_028 / item_097). Drop sections mirror the live Bar's layout:
+    // left | center | right on a horizontal bar (left-anchored / centered /
+    // right-anchored), the same three stacked on a vertical bar, and a single
+    // lane for a strip/holder. Reuses the task_027 drag machinery unchanged. ──
     Repeater {
         model: ["top", "bottom", "left", "right"]
-        delegate: Rectangle {
+        delegate: Item {
             id: sideCard
+            anchors.fill: parent
             required property string modelData
             readonly property string side: modelData
-            readonly property bool   _vertical: side === "left" || side === "right"
+            readonly property bool   _horizontal: side === "top" || side === "bottom"
+            readonly property string _type: editOverlay._cfg.sideType(side)
+            readonly property bool   _isBar: _type === "bar"
+            readonly property bool   _on:    _type !== "none"
+            readonly property var    _zones: editOverlay._zonesFor(side)   // [l,c,r] | [""] | []
+            readonly property int    _thick: !_on ? 22 : (_isBar ? 46 : 40)
 
-            anchors.top:    side === "top"    ? parent.top    : undefined
-            anchors.bottom: side === "bottom" ? parent.bottom : undefined
-            anchors.left:   side === "left"   ? parent.left   : undefined
-            anchors.right:  side === "right"  ? parent.right  : undefined
-            anchors.horizontalCenter: (side === "top" || side === "bottom") ? parent.horizontalCenter : undefined
-            anchors.verticalCenter:   _vertical ? parent.verticalCenter : undefined
-            anchors.topMargin:    side === "top" ? 72 : 24
-            anchors.bottomMargin: 24
-            anchors.leftMargin:   24
-            anchors.rightMargin:  24
+            // Silhouette pinned to the edge: horizontal sides stretch L↔R and pin
+            // top/bottom; vertical sides stretch T↔B and pin left/right. Ends are
+            // inset so the four mocks read as a frame without overlapping corners.
+            Rectangle {
+                id: mock
+                anchors.left:   sideCard._horizontal ? parent.left  : (sideCard.side === "left"  ? parent.left  : undefined)
+                anchors.right:  sideCard._horizontal ? parent.right : (sideCard.side === "right" ? parent.right : undefined)
+                anchors.top:    sideCard.side === "top"    ? parent.top    : (sideCard._horizontal ? undefined : parent.top)
+                anchors.bottom: sideCard.side === "bottom" ? parent.bottom : (sideCard._horizontal ? undefined : parent.bottom)
+                anchors.leftMargin:   sideCard._horizontal ? 72 : 16
+                anchors.rightMargin:  sideCard._horizontal ? 72 : 16
+                anchors.topMargin:    sideCard.side === "top" ? 64 : (sideCard._horizontal ? 0 : 66)
+                anchors.bottomMargin: sideCard.side === "bottom" ? 16 : (sideCard._horizontal ? 0 : 60)
+                width:  sideCard._horizontal ? undefined : sideCard._thick
+                height: sideCard._horizontal ? sideCard._thick : undefined
+                radius: Commons.Appearance.radius.lg
+                color:  Commons.Appearance.colors.glassBg
+                opacity: sideCard._on ? 1 : 0.5
+                border.width: 1
+                border.color: Commons.Appearance.colors.glassBorder
 
-            width:  _vertical ? 300 : Math.min(parent.width - 48, 840)
-            height: body.implicitHeight + 2 * editOverlay._pad
-            radius: Commons.Appearance.radius.lg
-            color:  Commons.Appearance.colors.glassBg
-            border.width: 1
-            border.color: Commons.Appearance.colors.glassBorder
-
-            ColumnLayout {
-                id: body
-                anchors {
-                    top: parent.top; left: parent.left; right: parent.right
-                    margins: editOverlay._pad
-                }
-                spacing: Commons.Appearance.spacing.md
-
-                // Header: side label + type switcher.
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 8
-                    Text {
-                        Layout.fillWidth: true
-                        text: editOverlay._label(sideCard.side)
-                        color: Commons.Appearance.colors.text
-                        font.family: Commons.Appearance.font.family
-                        font.pixelSize: Commons.Appearance.font.sizeMd
-                        font.bold: true
-                    }
-                    Row {
-                        spacing: 4
-                        Repeater {
-                            model: [
-                                { t: "bar",    l: "Bar"    },
-                                { t: "strip",  l: "Strip"  },
-                                { t: "holder", l: "Holder" },
-                                { t: "none",   l: "Off"    }
-                            ]
-                            delegate: Rectangle {
-                                id: typeBtn
-                                required property var modelData
-                                readonly property bool active: editOverlay._cfg.sideType(sideCard.side) === modelData.t
-                                width: _tl.implicitWidth + 16; height: 24
-                                radius: Commons.Appearance.radius.sm
-                                color: active ? Commons.Appearance.colors.accentAlpha
-                                              : Commons.Appearance.colors.surface0
-                                border.width: 1
-                                border.color: active ? Commons.Appearance.colors.accentBorder
-                                                     : Commons.Appearance.colors.glassBorder
-                                Text {
-                                    id: _tl
-                                    anchors.centerIn: parent
-                                    text: typeBtn.modelData.l
-                                    color: typeBtn.active ? Commons.Appearance.colors.accent
-                                                          : Commons.Appearance.colors.subtext0
-                                    font.family: Commons.Appearance.font.family
-                                    font.pixelSize: Commons.Appearance.font.sizeSm
-                                }
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: editOverlay._cfg.setSideType(sideCard.side, typeBtn.modelData.t)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // "Off" hint when the side carries nothing.
+                // "Off" hint on a disabled edge.
                 Text {
-                    visible: editOverlay._zonesFor(sideCard.side).length === 0
-                    Layout.fillWidth: true
-                    text: "This edge is off — pick Bar, Strip or Holder above."
+                    visible: !sideCard._on
+                    anchors.centerIn: parent
+                    text: editOverlay._label(sideCard.side) + " · Off"
                     color: Commons.Appearance.colors.overlay1
                     font.family: Commons.Appearance.font.family
                     font.pixelSize: Commons.Appearance.font.sizeSm
-                    wrapMode: Text.WordWrap
                 }
 
-                // Zone blocks (3 for a bar, 1 unlabeled for strip/holder).
-                Repeater {
-                    model: editOverlay._zonesFor(sideCard.side)
-                    delegate: ColumnLayout {
-                        id: zoneBlock
-                        required property string modelData
-                        readonly property string zoneName: modelData
-                        Layout.fillWidth: true
-                        spacing: 6
+                Item {
+                    id: content
+                    anchors.fill: parent
+                    anchors.margins: sideCard._horizontal ? 6 : 5
 
-                        Text {
-                            visible: zoneBlock.zoneName !== ""
-                            text: zoneBlock.zoneName.toUpperCase()
-                            color: Commons.Appearance.colors.subtext0
-                            font.family: Commons.Appearance.font.family
-                            font.pixelSize: Commons.Appearance.font.sizeSm
-                            font.bold: true
+                    // Faint seams between the three bar sections (echoes the console).
+                    Repeater {
+                        model: (sideCard._isBar && sideCard._zones.length === 3) ? 2 : 0
+                        delegate: Rectangle {
+                            required property int index
+                            color: Commons.Appearance.colors.glassBorder
+                            opacity: 0.5
+                            width:  sideCard._horizontal ? 1 : parent.width
+                            height: sideCard._horizontal ? parent.height : 1
+                            x: sideCard._horizontal ? Math.round(parent.width  * (index + 1) / 3) : 0
+                            y: sideCard._horizontal ? 0 : Math.round(parent.height * (index + 1) / 3)
                         }
+                    }
 
-                        // Wrapper so the Flow, the drop caret and the zone DropArea
-                        // share one coordinate space (task_027).
-                        Item {
-                        id: zoneArea
-                        Layout.fillWidth: true
-                        implicitHeight: zoneFlow.implicitHeight
+                    // One drop section per zone, each an equal band of the content.
+                    Repeater {
+                        model: sideCard._zones
+                        delegate: Item {
+                            id: section
+                            required property string modelData
+                            required property int index
+                            readonly property string zoneName: modelData
+                            readonly property int _n: sideCard._zones.length
+                            readonly property bool _isStart:  zoneName === "left" || zoneName === ""
+                            readonly property bool _isCenter: zoneName === "center"
+                            readonly property bool _isEnd:    zoneName === "right"
 
-                        Flow {
-                            id: zoneFlow
-                            anchors { left: parent.left; right: parent.right; top: parent.top }
-                            spacing: 6
+                            // Centre section paints above its siblings so a cramped
+                            // right cluster can't occlude the centred widget (the
+                            // right section is a later sibling; lane-local z alone
+                            // wouldn't lift it across sections).
+                            z: _isCenter ? 2 : 1
 
-                            // Existing widgets as removable / reorderable chips.
-                            Repeater {
-                                id: chipRep
-                                model: editOverlay._list(sideCard.side, zoneBlock.zoneName)
-                                delegate: Rectangle {
-                                    id: chip
-                                    required property var modelData
-                                    required property int index
-                                    readonly property string _id: chip.modelData.id
-                                    readonly property var meta: editOverlay._meta(zoneBlock.zoneName, chip._id)
-                                    height: 30
-                                    width: chipRow.implicitWidth + 16
-                                    radius: Commons.Appearance.radius.md
-                                    color: Commons.Appearance.colors.surface1
-                                    border.width: 1
-                                    border.color: chip._isSource ? Commons.Appearance.colors.accentBorder
-                                                                 : Commons.Appearance.colors.glassBorder
+                            width:  sideCard._horizontal ? content.width / _n : content.width
+                            height: sideCard._horizontal ? content.height : content.height / _n
+                            x: sideCard._horizontal ? index * (content.width / _n) : 0
+                            y: sideCard._horizontal ? 0 : index * (content.height / _n)
 
-                                    // Dim the origin chip while its copy is in flight.
-                                    readonly property bool _isSource:
-                                        Commons.State.dragActive &&
-                                        Commons.State.draggedSource === (sideCard.side + ":" + zoneBlock.zoneName + ":" + chip.index)
-                                    opacity: _isSource ? 0.35 : 1
-                                    Behavior on opacity { NumberAnimation { duration: 90 } }
+                            // Chip lane, aligned within the band exactly like the live bar.
+                            Flow {
+                                id: lane
+                                // Centre lane rides above the side lanes (mirrors the
+                                // live bar's z=2 centre overlay) so a cramped right
+                                // cluster can't hide the centred widget.
+                                z: section._isCenter ? 2 : 1
+                                flow: sideCard._horizontal ? Flow.LeftToRight : Flow.TopToBottom
+                                spacing: 6
+                                anchors.margins: 8
+                                anchors.left:            (sideCard._horizontal && section._isStart) ? parent.left  : undefined
+                                anchors.right:           (sideCard._horizontal && section._isEnd)   ? parent.right : undefined
+                                anchors.top:             (!sideCard._horizontal && section._isStart) ? parent.top    : undefined
+                                anchors.bottom:          (!sideCard._horizontal && section._isEnd)   ? parent.bottom : undefined
+                                anchors.horizontalCenter: sideCard._horizontal ? (section._isCenter ? parent.horizontalCenter : undefined)
+                                                                               : parent.horizontalCenter
+                                anchors.verticalCenter:   sideCard._horizontal ? parent.verticalCenter
+                                                                               : (section._isCenter ? parent.verticalCenter : undefined)
 
-                                    // Drag handle over the chip body. Declared before
-                                    // chipRow so the gear / ‹ › / × MouseAreas stack
-                                    // above it and keep working; the bare icon/label
-                                    // area initiates the drag.
-                                    MouseArea {
-                                        id: dragMA
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
-                                        property real _px: 0
-                                        property real _py: 0
-                                        property bool _dragging: false
-                                        onPressed: (m) => { _px = m.x; _py = m.y; _dragging = false }
-                                        onPositionChanged: (m) => {
-                                            if (!pressed) return
-                                            var gp = dragMA.mapToItem(editOverlay, m.x, m.y)
-                                            if (!_dragging) {
-                                                if (Math.abs(m.x - _px) + Math.abs(m.y - _py) < 6) return
-                                                _dragging = true
-                                                editOverlay.beginDrag(sideCard.side, zoneBlock.zoneName, chip.index, chip._id, chip)
+                                Repeater {
+                                    id: chipRep
+                                    model: editOverlay._list(sideCard.side, section.zoneName)
+                                    delegate: Rectangle {
+                                        id: chip
+                                        required property var modelData
+                                        required property int index
+                                        readonly property string _id: chip.modelData.id
+                                        readonly property var meta: editOverlay._meta(section.zoneName, chip._id)
+                                        readonly property bool _iconOnly: !sideCard._horizontal
+                                        readonly property bool _isSource:
+                                            Commons.State.dragActive &&
+                                            Commons.State.draggedSource === (sideCard.side + ":" + section.zoneName + ":" + chip.index)
+
+                                        implicitWidth:  chip._iconOnly ? 30 : chipRow.implicitWidth + 14
+                                        implicitHeight: chip._iconOnly ? 30 : (sideCard._isBar ? 30 : 28)
+                                        radius: Commons.Appearance.radius.md
+                                        color: dragMA.containsMouse ? Commons.Appearance.colors.surface2
+                                                                    : Commons.Appearance.colors.surface1
+                                        border.width: 1
+                                        border.color: chip._isSource ? Commons.Appearance.colors.accentBorder
+                                                                     : Commons.Appearance.colors.glassBorder
+                                        opacity: chip._isSource ? 0.35 : 1
+                                        Behavior on opacity { NumberAnimation { duration: 90 } }
+
+                                        // Drag handle over the chip body (declared before
+                                        // chipRow so the hover controls stack above it).
+                                        MouseArea {
+                                            id: dragMA
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                                            property real _px: 0
+                                            property real _py: 0
+                                            property bool _dragging: false
+                                            onPressed: (m) => { _px = m.x; _py = m.y; _dragging = false }
+                                            onPositionChanged: (m) => {
+                                                if (!pressed) return
+                                                var gp = dragMA.mapToItem(editOverlay, m.x, m.y)
+                                                if (!_dragging) {
+                                                    if (Math.abs(m.x - _px) + Math.abs(m.y - _py) < 6) return
+                                                    _dragging = true
+                                                    editOverlay.beginDrag(sideCard.side, section.zoneName, chip.index, chip._id, chip)
+                                                }
+                                                editOverlay.moveDrag(gp.x, gp.y)
                                             }
-                                            editOverlay.moveDrag(gp.x, gp.y)
+                                            onReleased: { if (_dragging) { editOverlay.endDrag(); _dragging = false } }
+                                            onCanceled: { if (_dragging) { editOverlay.endDrag(); _dragging = false } }
                                         }
-                                        onReleased: { if (_dragging) { editOverlay.endDrag(); _dragging = false } }
-                                        onCanceled: { if (_dragging) { editOverlay.endDrag(); _dragging = false } }
-                                    }
 
-                                    Row {
-                                        id: chipRow
-                                        anchors.centerIn: parent
-                                        spacing: 6
+                                        Row {
+                                            id: chipRow
+                                            anchors.centerIn: parent
+                                            spacing: 5
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: chip.meta.icon || ""
+                                                color: Commons.Appearance.colors.accent
+                                                font.family: Commons.Appearance.font.family
+                                                font.pixelSize: Commons.Appearance.font.sizeBase
+                                            }
+                                            Text {
+                                                visible: !chip._iconOnly
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: chip.meta.name || chip._id
+                                                color: Commons.Appearance.colors.text
+                                                font.family: Commons.Appearance.font.family
+                                                font.pixelSize: Commons.Appearance.font.sizeSm
+                                            }
+                                            // Config gear — reveals on hover (horizontal chips only).
+                                            Text {
+                                                visible: !chip._iconOnly && editOverlay._hasConfig(chip._id) && dragMA.containsMouse
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: "󰒓"
+                                                color: Commons.Appearance.colors.subtext0
+                                                font.family: Commons.Appearance.font.family
+                                                font.pixelSize: Commons.Appearance.font.sizeBase
+                                                MouseArea {
+                                                    anchors.fill: parent; anchors.margins: -3
+                                                    cursorShape: Qt.PointingHandCursor
+                                                    onClicked: editOverlay.openConfig(sideCard.side, section.zoneName, chip.index, chip._id)
+                                                }
+                                            }
+                                            // Remove × — reveals on hover (horizontal chips).
+                                            Text {
+                                                visible: !chip._iconOnly && dragMA.containsMouse
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: "×"
+                                                color: Commons.Appearance.colors.red
+                                                font.family: Commons.Appearance.font.family
+                                                font.pixelSize: Commons.Appearance.font.sizeMd
+                                                MouseArea {
+                                                    anchors.fill: parent; anchors.margins: -3
+                                                    cursorShape: Qt.PointingHandCursor
+                                                    onClicked: editOverlay.removeAt(sideCard.side, section.zoneName, chip.index)
+                                                }
+                                            }
+                                        }
 
-                                        Text {
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            text: chip.meta.icon || ""
-                                            color: Commons.Appearance.colors.accent
-                                            font.family: Commons.Appearance.font.family
-                                            font.pixelSize: Commons.Appearance.font.sizeBase
-                                        }
-                                        Text {
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            text: chip.meta.name || chip._id
-                                            color: Commons.Appearance.colors.text
-                                            font.family: Commons.Appearance.font.family
-                                            font.pixelSize: Commons.Appearance.font.sizeSm
-                                        }
-                                        // Config gear (only if the widget declares a configSchema)
-                                        Text {
-                                            visible: editOverlay._hasConfig(chip._id)
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            text: "󰒓"
-                                            color: Commons.Appearance.colors.subtext0
-                                            font.family: Commons.Appearance.font.family
-                                            font.pixelSize: Commons.Appearance.font.sizeBase
-                                            MouseArea {
-                                                anchors.fill: parent; anchors.margins: -3
-                                                cursorShape: Qt.PointingHandCursor
-                                                onClicked: editOverlay.openConfig(sideCard.side, zoneBlock.zoneName, chip.index, chip._id)
-                                            }
-                                        }
-                                        // Reorder ‹ ›  + remove ×
-                                        Text {
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            text: "‹"
-                                            color: Commons.Appearance.colors.subtext0
-                                            font.family: Commons.Appearance.font.family
-                                            font.pixelSize: Commons.Appearance.font.sizeMd
-                                            MouseArea {
-                                                anchors.fill: parent; anchors.margins: -3
-                                                cursorShape: Qt.PointingHandCursor
-                                                onClicked: editOverlay.moveBy(sideCard.side, zoneBlock.zoneName, chip.index, -1)
-                                            }
-                                        }
-                                        Text {
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            text: "›"
-                                            color: Commons.Appearance.colors.subtext0
-                                            font.family: Commons.Appearance.font.family
-                                            font.pixelSize: Commons.Appearance.font.sizeMd
-                                            MouseArea {
-                                                anchors.fill: parent; anchors.margins: -3
-                                                cursorShape: Qt.PointingHandCursor
-                                                onClicked: editOverlay.moveBy(sideCard.side, zoneBlock.zoneName, chip.index, 1)
-                                            }
-                                        }
-                                        Text {
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            text: "×"
+                                        // Icon-only (vertical) chips: hover reveals a small × badge.
+                                        Rectangle {
+                                            visible: chip._iconOnly && dragMA.containsMouse
+                                            anchors.top: parent.top; anchors.right: parent.right
+                                            anchors.margins: -4
+                                            width: 16; height: 16; radius: 8
                                             color: Commons.Appearance.colors.red
-                                            font.family: Commons.Appearance.font.family
-                                            font.pixelSize: Commons.Appearance.font.sizeMd
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: "×"
+                                                color: Commons.Appearance.colors.crust
+                                                font.family: Commons.Appearance.font.family
+                                                font.pixelSize: Commons.Appearance.font.sizeSm
+                                            }
                                             MouseArea {
-                                                anchors.fill: parent; anchors.margins: -3
+                                                anchors.fill: parent
                                                 cursorShape: Qt.PointingHandCursor
-                                                onClicked: editOverlay.removeAt(sideCard.side, zoneBlock.zoneName, chip.index)
+                                                onClicked: editOverlay.removeAt(sideCard.side, section.zoneName, chip.index)
                                             }
                                         }
                                     }
                                 }
                             }
 
-                            // Add slot.
+                            // Insertion caret — accent = valid drop, red = incompatible.
                             Rectangle {
-                                height: 30; width: 34
-                                radius: Commons.Appearance.radius.md
-                                color: _addMa.containsMouse ? Commons.Appearance.colors.accentAlpha
-                                                            : Commons.Appearance.colors.surface0
-                                border.width: 1
-                                border.color: _addMa.containsMouse ? Commons.Appearance.colors.accentBorder
-                                                                   : Commons.Appearance.colors.glassBorder
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "+"
-                                    color: Commons.Appearance.colors.accent
-                                    font.family: Commons.Appearance.font.family
-                                    font.pixelSize: Commons.Appearance.font.sizeLg
-                                }
-                                MouseArea {
-                                    id: _addMa
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: editOverlay.openPalette(sideCard.side, zoneBlock.zoneName)
-                                }
+                                id: caret
+                                width:  sideCard._horizontal ? 2 : 22
+                                height: sideCard._horizontal ? 22 : 2
+                                radius: 1
+                                visible: editOverlay._dropSide === sideCard.side
+                                         && editOverlay._dropZone === section.zoneName
+                                         && editOverlay._dropIndex >= 0
+                                color: editOverlay._dropValid ? Commons.Appearance.colors.accent
+                                                              : Commons.Appearance.colors.red
+                                Behavior on x { NumberAnimation { duration: 90; easing.type: Easing.OutQuad } }
+                                Behavior on y { NumberAnimation { duration: 90; easing.type: Easing.OutQuad } }
                             }
-                        }
 
-                        // Insertion caret — animated marker of where a dropped chip
-                        // lands. Accent = valid drop, red = incompatible (bar-only
-                        // widget over a strip). Sibling of the Flow, same coords.
-                        Rectangle {
-                            id: caret
-                            width: 2
-                            height: 26
-                            radius: 1
-                            visible: editOverlay._dropSide === sideCard.side
-                                     && editOverlay._dropZone === zoneBlock.zoneName
-                                     && editOverlay._dropIndex >= 0
-                            color: editOverlay._dropValid ? Commons.Appearance.colors.accent
-                                                          : Commons.Appearance.colors.red
-                            Behavior on x { NumberAnimation { duration: 90; easing.type: Easing.OutQuad } }
-                            Behavior on y { NumberAnimation { duration: 90; easing.type: Easing.OutQuad } }
-                        }
-
-                        // Drop target covering this zone. DropAreas ignore pointer
-                        // clicks, so it never blocks the chips' own MouseAreas.
-                        DropArea {
-                            anchors.fill: parent
-                            property int _idx: 0
-                            function _reposition(px, py) {
-                                var idx = editOverlay._insertionIndex(chipRep, zoneArea, px, py)
-                                _idx = idx
-                                var x0 = 2, y0 = 0
-                                if (chipRep.count > 0) {
-                                    if (idx < chipRep.count) {
+                            // Drop target covering this section (DropAreas ignore clicks).
+                            DropArea {
+                                anchors.fill: parent
+                                property int _idx: 0
+                                function _reposition(px, py) {
+                                    var idx = editOverlay._insertionIndex(chipRep, section, px, py)
+                                    _idx = idx
+                                    var x0 = 6, y0 = 6
+                                    if (chipRep.count > 0 && idx < chipRep.count) {
                                         var it = chipRep.itemAt(idx)
-                                        if (it) { var p = it.mapToItem(zoneArea, 0, 0); x0 = p.x - 4; y0 = p.y + (it.height - caret.height) / 2 }
+                                        if (it) {
+                                            var p = it.mapToItem(section, 0, 0)
+                                            if (sideCard._horizontal) { x0 = p.x - 3; y0 = p.y + (it.height - caret.height) / 2 }
+                                            else { x0 = p.x + (it.width - caret.width) / 2; y0 = p.y - 3 }
+                                        }
+                                    } else if (chipRep.count > 0) {
+                                        var last = chipRep.itemAt(chipRep.count - 1)
+                                        if (last) {
+                                            var lp = last.mapToItem(section, 0, 0)
+                                            if (sideCard._horizontal) { x0 = lp.x + last.width + 1; y0 = lp.y + (last.height - caret.height) / 2 }
+                                            else { x0 = lp.x + (last.width - caret.width) / 2; y0 = lp.y + last.height + 1 }
+                                        }
                                     } else {
-                                        var lastIt = chipRep.itemAt(chipRep.count - 1)
-                                        if (lastIt) { var lp = lastIt.mapToItem(zoneArea, 0, 0); x0 = lp.x + lastIt.width + 2; y0 = lp.y + (lastIt.height - caret.height) / 2 }
+                                        if (sideCard._horizontal) { x0 = 6; y0 = (section.height - caret.height) / 2 }
+                                        else { x0 = (section.width - caret.width) / 2; y0 = 6 }
+                                    }
+                                    caret.x = x0; caret.y = y0
+                                    editOverlay._dropSide  = sideCard.side
+                                    editOverlay._dropZone  = section.zoneName
+                                    editOverlay._dropIndex = idx
+                                    editOverlay._dropValid = editOverlay._dropConverts(section.zoneName)
+                                }
+                                onEntered: (drag) => _reposition(drag.x, drag.y)
+                                onPositionChanged: (drag) => _reposition(drag.x, drag.y)
+                                onExited: {
+                                    if (editOverlay._dropSide === sideCard.side && editOverlay._dropZone === section.zoneName) {
+                                        editOverlay._dropSide = ""; editOverlay._dropZone = ""; editOverlay._dropIndex = -1
                                     }
                                 }
-                                caret.x = x0; caret.y = y0
-                                editOverlay._dropSide  = sideCard.side
-                                editOverlay._dropZone  = zoneBlock.zoneName
-                                editOverlay._dropIndex = idx
-                                editOverlay._dropValid = editOverlay._dropConverts(zoneBlock.zoneName)
-                            }
-                            onEntered: (drag) => _reposition(drag.x, drag.y)
-                            onPositionChanged: (drag) => _reposition(drag.x, drag.y)
-                            onExited: {
-                                if (editOverlay._dropSide === sideCard.side && editOverlay._dropZone === zoneBlock.zoneName) {
-                                    editOverlay._dropSide = ""; editOverlay._dropZone = ""; editOverlay._dropIndex = -1
+                                onDropped: (drop) => {
+                                    if (editOverlay._dropConverts(section.zoneName))
+                                        editOverlay.performDrop(sideCard.side, section.zoneName, _idx)
                                 }
                             }
-                            onDropped: (drop) => {
-                                if (editOverlay._dropConverts(zoneBlock.zoneName))
-                                    editOverlay.performDrop(sideCard.side, zoneBlock.zoneName, _idx)
-                            }
-                        }
                         }
                     }
                 }
+            }
+
+            // Floating toolbar (type switch + Add), just inside the mock.
+            Row {
+                id: toolbar
+                spacing: 6
+                anchors.horizontalCenter: sideCard._horizontal ? mock.horizontalCenter : undefined
+                anchors.verticalCenter:   sideCard._horizontal ? undefined : mock.verticalCenter
+                anchors.top:    sideCard.side === "top"    ? mock.bottom : undefined
+                anchors.bottom: sideCard.side === "bottom" ? mock.top    : undefined
+                anchors.left:   sideCard.side === "left"   ? mock.right  : undefined
+                anchors.right:  sideCard.side === "right"  ? mock.left   : undefined
+                anchors.topMargin: 8; anchors.bottomMargin: 8
+                anchors.leftMargin: 8; anchors.rightMargin: 8
+
+                Row {
+                    spacing: 3
+                    Repeater {
+                        model: [
+                            { t: "bar",    l: "Bar"    },
+                            { t: "strip",  l: "Strip"  },
+                            { t: "holder", l: "Holder" },
+                            { t: "none",   l: "Off"    }
+                        ]
+                        delegate: Rectangle {
+                            id: typeBtn
+                            required property var modelData
+                            readonly property bool active: editOverlay._cfg.sideType(sideCard.side) === modelData.t
+                            width: _tl.implicitWidth + 16; height: 24
+                            radius: Commons.Appearance.radius.sm
+                            color: active ? Commons.Appearance.colors.accentAlpha : Commons.Appearance.colors.surface0
+                            border.width: 1
+                            border.color: active ? Commons.Appearance.colors.accentBorder : Commons.Appearance.colors.glassBorder
+                            Text {
+                                id: _tl
+                                anchors.centerIn: parent
+                                text: typeBtn.modelData.l
+                                color: typeBtn.active ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext0
+                                font.family: Commons.Appearance.font.family
+                                font.pixelSize: Commons.Appearance.font.sizeSm
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: editOverlay._cfg.setSideType(sideCard.side, typeBtn.modelData.t)
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    visible: sideCard._on
+                    width: _addRow.implicitWidth + 16; height: 24
+                    radius: Commons.Appearance.radius.sm
+                    color: _addMa.containsMouse ? Commons.Appearance.colors.accentAlpha : Commons.Appearance.colors.surface0
+                    border.width: 1
+                    border.color: _addMa.containsMouse ? Commons.Appearance.colors.accentBorder : Commons.Appearance.colors.glassBorder
+                    Row {
+                        id: _addRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text {
+                            text: "＋"
+                            color: Commons.Appearance.colors.accent
+                            font.family: Commons.Appearance.font.family
+                            font.pixelSize: Commons.Appearance.font.sizeSm
+                        }
+                        Text {
+                            text: "Add"
+                            color: Commons.Appearance.colors.accent
+                            font.family: Commons.Appearance.font.family
+                            font.pixelSize: Commons.Appearance.font.sizeSm
+                        }
+                    }
+                    MouseArea {
+                        id: _addMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: editOverlay.openPalette(sideCard.side,
+                                     editOverlay._cfg.sideType(sideCard.side) === "bar" ? "left" : "")
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Trash target — appears mid-drag; drop a chip here to remove it (task_028).
+    Item {
+        id: trash
+        visible: Commons.State.dragActive
+        z: 140
+        anchors.centerIn: parent
+        width: 68; height: 68
+        Rectangle {
+            anchors.fill: parent
+            radius: width / 2
+            color: trashDrop.containsDrag ? Commons.Appearance.colors.red : Commons.Appearance.colors.glassBg
+            border.width: 1
+            border.color: trashDrop.containsDrag ? Commons.Appearance.colors.red : Commons.Appearance.colors.glassBorder
+            scale: trashDrop.containsDrag ? 1.12 : 1
+            Behavior on scale { NumberAnimation { duration: 100 } }
+            Text {
+                anchors.centerIn: parent
+                text: "󰩹"
+                color: trashDrop.containsDrag ? Commons.Appearance.colors.crust : Commons.Appearance.colors.subtext0
+                font.family: Commons.Appearance.font.family
+                font.pixelSize: Commons.Appearance.font.sizeLg
+            }
+        }
+        DropArea {
+            id: trashDrop
+            anchors.fill: parent
+            onDropped: (drop) => {
+                var s = editOverlay._srcParts()
+                editOverlay.removeAt(s.side, s.zone, s.index)
             }
         }
     }
