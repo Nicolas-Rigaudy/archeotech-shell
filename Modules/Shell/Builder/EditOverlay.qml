@@ -732,14 +732,15 @@ Item {
     }
 
     // ── Widget Library — always-visible, squarish, centred picker of every
-    // addable widget, grouped into sections. Drag a tile onto a mock zone to add
-    // it; drag an existing chip back here to remove it (KDE-style — no separate
-    // trash). Turns into a red "remove" target when an existing chip hovers.
+    // addable widget, grouped into functional sections and laid out in an aligned
+    // two-column grid so ragged pill widths don't hurt readability. Drag a tile
+    // onto a mock zone to add it; drag an existing chip back here to remove it
+    // (KDE-style — no separate trash). Turns red as a remove target on hover.
     Rectangle {
         id: library
         z: 140
         anchors.centerIn: parent
-        width: 380
+        width: 470
         height: Math.min(parent.height - 120, libCol.implicitHeight + 28)
         radius: Commons.Appearance.radius.lg
         color: Commons.Appearance.colors.glassBg
@@ -755,7 +756,6 @@ Item {
             anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14 }
             spacing: 10
 
-            // Title + hint (hint flips to the remove prompt while an existing chip hovers).
             ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 2
@@ -778,8 +778,7 @@ Item {
                 }
             }
 
-            // Grouped sections. "Bar widgets" = native bar flavour; "Panel openers"
-            // = strip/holder icons. The split also signals where each belongs.
+            // Functional sections, each an aligned two-column grid.
             Repeater {
                 model: ["System", "Info", "Panels & launchers", "Plugins", "More"]
                 delegate: ColumnLayout {
@@ -798,9 +797,11 @@ Item {
                         font.bold: true
                     }
 
-                    Flow {
+                    GridLayout {
                         Layout.fillWidth: true
-                        spacing: 6
+                        columns: 3
+                        columnSpacing: 6
+                        rowSpacing: 6
                         Repeater {
                             model: section._items
                             delegate: Rectangle {
@@ -808,14 +809,40 @@ Item {
                                 required property var modelData
                                 readonly property string _id: libChip.modelData.id
                                 readonly property string _native: libChip.modelData.native
-                                implicitWidth: libRow.implicitWidth + 16
-                                height: 30
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 28
                                 radius: Commons.Appearance.radius.md
                                 color: libMa.containsMouse ? Commons.Appearance.colors.surface2
                                                            : Commons.Appearance.colors.surface1
                                 border.width: 1
                                 border.color: Commons.Appearance.colors.glassBorder
 
+                                // Content: icon column-aligned at the left, label
+                                // fills and elides so every tile stays the same size.
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 9
+                                    anchors.rightMargin: 9
+                                    spacing: 7
+                                    Text {
+                                        Layout.alignment: Qt.AlignVCenter
+                                        text: libChip.modelData.icon || ""
+                                        color: Commons.Appearance.colors.accent
+                                        font.family: Commons.Appearance.font.family
+                                        font.pixelSize: Commons.Appearance.font.sizeBase
+                                    }
+                                    Text {
+                                        Layout.fillWidth: true
+                                        Layout.alignment: Qt.AlignVCenter
+                                        elide: Text.ElideRight
+                                        text: libChip.modelData.name || libChip._id
+                                        color: Commons.Appearance.colors.text
+                                        font.family: Commons.Appearance.font.family
+                                        font.pixelSize: Commons.Appearance.font.sizeSm
+                                    }
+                                }
+
+                                // Drag handle (on top so the whole tile initiates a drag).
                                 MouseArea {
                                     id: libMa
                                     anchors.fill: parent
@@ -838,47 +865,40 @@ Item {
                                     onReleased: { if (_dragging) { editOverlay.endDrag(); _dragging = false } }
                                     onCanceled: { if (_dragging) { editOverlay.endDrag(); _dragging = false } }
                                 }
-
-                                Row {
-                                    id: libRow
-                                    anchors.centerIn: parent
-                                    spacing: 6
-                                    Text {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        text: libChip.modelData.icon || ""
-                                        color: Commons.Appearance.colors.accent
-                                        font.family: Commons.Appearance.font.family
-                                        font.pixelSize: Commons.Appearance.font.sizeBase
-                                    }
-                                    Text {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        text: libChip.modelData.name || libChip._id
-                                        color: Commons.Appearance.colors.text
-                                        font.family: Commons.Appearance.font.family
-                                        font.pixelSize: Commons.Appearance.font.sizeSm
-                                    }
-                                }
                             }
                         }
                     }
                 }
             }
 
-            // Future: a link into the community widget store (placeholder for now).
+            // Manage / get more widgets → opens the Plugins & modules settings pane
+            // (the manager; the community index/install lands there in 0.27).
             Rectangle {
                 Layout.fillWidth: true
                 Layout.topMargin: 2
-                height: 30
+                height: 32
                 radius: Commons.Appearance.radius.sm
-                color: "transparent"
+                color: _storeMa.containsMouse ? Commons.Appearance.colors.accentAlpha : "transparent"
                 border.width: 1
-                border.color: Commons.Appearance.colors.glassBorder
+                border.color: _storeMa.containsMouse ? Commons.Appearance.colors.accentBorder
+                                                     : Commons.Appearance.colors.glassBorder
                 Text {
                     anchors.centerIn: parent
-                    text: "󰏗  Community widgets — coming soon"
-                    color: Commons.Appearance.colors.overlay1
+                    text: "󰏗  Manage & get more widgets  →"
+                    color: _storeMa.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext0
                     font.family: Commons.Appearance.font.family
                     font.pixelSize: Commons.Appearance.font.sizeSm
+                }
+                MouseArea {
+                    id: _storeMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        Commons.State.settingsOpenPane = "plugins"
+                        ShellServices.ShellState.openGlobal("settings")
+                        Commons.State.editMode = false
+                    }
                 }
             }
         }
