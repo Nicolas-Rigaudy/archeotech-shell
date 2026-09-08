@@ -375,8 +375,11 @@ Item {
                             required property int index
                             readonly property string zoneName: modelData
                             readonly property int _n: sideCard._zones.length
-                            readonly property bool _isStart:  zoneName === "left" || zoneName === ""
-                            readonly property bool _isCenter: zoneName === "center"
+                            // A strip/holder lane ("") centres its icons along the
+                            // axis, matching the live Strip (icons cluster around the
+                            // strip centre); bar zones keep left / centre / right.
+                            readonly property bool _isStart:  zoneName === "left"
+                            readonly property bool _isCenter: zoneName === "center" || zoneName === ""
                             readonly property bool _isEnd:    zoneName === "right"
 
                             // Centre section paints above its siblings so a cramped
