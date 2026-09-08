@@ -132,7 +132,11 @@ Item {
     readonly property int _padShort:    4
     readonly property int _iconsLen:    _icons.length * _iconSize
                                       + Math.max(0, _icons.length - 1) * _iconSpacing
-    readonly property int _bodyAxis:    Math.max(_expanded, _iconsLen + 2 * _padLong)
+    // Along-axis body = the icon cluster, floored at one icon so an empty/single
+    // strip stays tappable. NOT floored at `_expanded`: that field is a stale
+    // per-side value (setSideType historically wrote 240) which, used as a floor,
+    // pinned every strip to the same length regardless of icon count.
+    readonly property int _bodyAxis:    Math.max(_iconSize + 2 * _padLong, _iconsLen + 2 * _padLong)
     readonly property int _bodyDepth:   _iconSize + 2 * _padShort
 
     readonly property int _r:  Commons.Appearance.radius.md  // neck arc radius (smaller = popup less tall)

@@ -253,7 +253,7 @@ QtObject {
                         content.filter(function(e) { return e.align === "" }).map(root._contentToBar)))
             } else if (type === "strip" || type === "holder") {
                 s.size = 10
-                if (s.expanded === undefined) s.expanded = 240
+                if (s.expanded === undefined) s.expanded = 44
                 var hasStrip = content.some(function(e) { return e.align === "" })
                 if (!hasStrip)
                     content = content.concat(root._compact(
