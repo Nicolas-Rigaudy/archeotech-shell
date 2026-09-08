@@ -233,6 +233,18 @@ Item {
         }
         return out
     }
+    // Coarse functional grouping for the library, keyed on real widget ids
+    // (WidgetRegistry). Anything unmatched falls to "More" so nothing hides.
+    function _category(id) {
+        if (id.indexOf("plugin:") === 0) return "Plugins"
+        var sys    = ["volume", "mic", "brightness", "network", "bluetooth", "battery", "notifications", "tray"]
+        var info   = ["clock", "media", "workspaces", "title"]
+        var panels = ["dashboard", "launcher", "settings", "wallpaper", "layout", "nc", "power"]
+        if (sys.indexOf(id) !== -1)    return "System"
+        if (info.indexOf(id) !== -1)   return "Info"
+        if (panels.indexOf(id) !== -1) return "Panels & launchers"
+        return "More"
+    }
 
     // ── Scrim — dims the live shell and swallows clicks so it isn't usable ──────
     Rectangle {
@@ -719,101 +731,154 @@ Item {
         }
     }
 
-    // ── Widget Library — always-visible tray of every addable widget. Drag a tile
-    // onto a mock zone to add it; drag an existing chip back here to remove it
-    // (KDE-style — no separate trash). Centred, above the mocks, below the config
-    // popup. Turns into a red "remove" target when an existing chip hovers it.
+    // ── Widget Library — always-visible, squarish, centred picker of every
+    // addable widget, grouped into sections. Drag a tile onto a mock zone to add
+    // it; drag an existing chip back here to remove it (KDE-style — no separate
+    // trash). Turns into a red "remove" target when an existing chip hovers.
     Rectangle {
         id: library
         z: 140
         anchors.centerIn: parent
-        width: Math.min(parent.width - 120, 560)
-        height: libCol.implicitHeight + 24
+        width: 380
+        height: Math.min(parent.height - 120, libCol.implicitHeight + 28)
         radius: Commons.Appearance.radius.lg
         color: Commons.Appearance.colors.glassBg
         border.width: 1
         readonly property bool _removing: libDrop.containsDrag && Commons.State.dragActive
                                           && Commons.State.draggedSource.indexOf("lib:") !== 0
+        readonly property var _all: editOverlay._libraryItems()
         border.color: _removing ? Commons.Appearance.colors.red : Commons.Appearance.colors.glassBorder
         Behavior on border.color { ColorAnimation { duration: 120 } }
 
         ColumnLayout {
             id: libCol
-            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
-            spacing: 8
+            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14 }
+            spacing: 10
 
-            Text {
-                Layout.alignment: Qt.AlignHCenter
-                text: library._removing ? "󰩹  Release to remove"
-                                        : "Widget Library — drag onto a bar or strip"
-                color: library._removing ? Commons.Appearance.colors.red : Commons.Appearance.colors.subtext0
-                font.family: Commons.Appearance.font.family
-                font.pixelSize: Commons.Appearance.font.sizeSm
-                font.bold: library._removing
+            // Title + hint (hint flips to the remove prompt while an existing chip hovers).
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 2
+                Text {
+                    text: "Widget Library"
+                    color: Commons.Appearance.colors.text
+                    font.family: Commons.Appearance.font.family
+                    font.pixelSize: Commons.Appearance.font.sizeMd
+                    font.bold: true
+                }
+                Text {
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    text: library._removing ? "󰩹  Release to remove"
+                                            : "Drag onto a bar or strip · drag a chip back here to remove"
+                    color: library._removing ? Commons.Appearance.colors.red : Commons.Appearance.colors.subtext0
+                    font.family: Commons.Appearance.font.family
+                    font.pixelSize: Commons.Appearance.font.sizeSm
+                    font.bold: library._removing
+                }
             }
 
-            Flow {
-                id: libFlow
-                Layout.fillWidth: true
-                spacing: 6
-                Repeater {
-                    model: editOverlay._libraryItems()
-                    delegate: Rectangle {
-                        id: libChip
-                        required property var modelData
-                        readonly property string _id: libChip.modelData.id
-                        readonly property string _native: libChip.modelData.native
-                        implicitWidth: libRow.implicitWidth + 14
-                        height: 28
-                        radius: Commons.Appearance.radius.md
-                        color: libMa.containsMouse ? Commons.Appearance.colors.surface2
-                                                   : Commons.Appearance.colors.surface1
-                        border.width: 1
-                        border.color: Commons.Appearance.colors.glassBorder
+            // Grouped sections. "Bar widgets" = native bar flavour; "Panel openers"
+            // = strip/holder icons. The split also signals where each belongs.
+            Repeater {
+                model: ["System", "Info", "Panels & launchers", "Plugins", "More"]
+                delegate: ColumnLayout {
+                    id: section
+                    required property string modelData
+                    readonly property var _items: library._all.filter(function(e) { return editOverlay._category(e.id) === section.modelData })
+                    Layout.fillWidth: true
+                    visible: _items.length > 0
+                    spacing: 6
 
-                        MouseArea {
-                            id: libMa
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
-                            property real _px: 0
-                            property real _py: 0
-                            property bool _dragging: false
-                            onPressed: (m) => { _px = m.x; _py = m.y; _dragging = false }
-                            onPositionChanged: (m) => {
-                                if (!pressed) return
-                                var gp = libMa.mapToItem(editOverlay, m.x, m.y)
-                                if (!_dragging) {
-                                    if (Math.abs(m.x - _px) + Math.abs(m.y - _py) < 6) return
-                                    _dragging = true
-                                    editOverlay.beginLibraryDrag(libChip._native === "bar" ? "left" : "", libChip._id, libChip)
+                    Text {
+                        text: section.modelData.toUpperCase()
+                        color: Commons.Appearance.colors.subtext0
+                        font.family: Commons.Appearance.font.family
+                        font.pixelSize: Commons.Appearance.font.sizeSm
+                        font.bold: true
+                    }
+
+                    Flow {
+                        Layout.fillWidth: true
+                        spacing: 6
+                        Repeater {
+                            model: section._items
+                            delegate: Rectangle {
+                                id: libChip
+                                required property var modelData
+                                readonly property string _id: libChip.modelData.id
+                                readonly property string _native: libChip.modelData.native
+                                implicitWidth: libRow.implicitWidth + 16
+                                height: 30
+                                radius: Commons.Appearance.radius.md
+                                color: libMa.containsMouse ? Commons.Appearance.colors.surface2
+                                                           : Commons.Appearance.colors.surface1
+                                border.width: 1
+                                border.color: Commons.Appearance.colors.glassBorder
+
+                                MouseArea {
+                                    id: libMa
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                                    property real _px: 0
+                                    property real _py: 0
+                                    property bool _dragging: false
+                                    onPressed: (m) => { _px = m.x; _py = m.y; _dragging = false }
+                                    onPositionChanged: (m) => {
+                                        if (!pressed) return
+                                        var gp = libMa.mapToItem(editOverlay, m.x, m.y)
+                                        if (!_dragging) {
+                                            if (Math.abs(m.x - _px) + Math.abs(m.y - _py) < 6) return
+                                            _dragging = true
+                                            editOverlay.beginLibraryDrag(libChip._native === "bar" ? "left" : "", libChip._id, libChip)
+                                        }
+                                        editOverlay.moveDrag(gp.x, gp.y)
+                                    }
+                                    onReleased: { if (_dragging) { editOverlay.endDrag(); _dragging = false } }
+                                    onCanceled: { if (_dragging) { editOverlay.endDrag(); _dragging = false } }
                                 }
-                                editOverlay.moveDrag(gp.x, gp.y)
-                            }
-                            onReleased: { if (_dragging) { editOverlay.endDrag(); _dragging = false } }
-                            onCanceled: { if (_dragging) { editOverlay.endDrag(); _dragging = false } }
-                        }
 
-                        Row {
-                            id: libRow
-                            anchors.centerIn: parent
-                            spacing: 5
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: libChip.modelData.icon || ""
-                                color: Commons.Appearance.colors.accent
-                                font.family: Commons.Appearance.font.family
-                                font.pixelSize: Commons.Appearance.font.sizeBase
-                            }
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: libChip.modelData.name || libChip._id
-                                color: Commons.Appearance.colors.text
-                                font.family: Commons.Appearance.font.family
-                                font.pixelSize: Commons.Appearance.font.sizeSm
+                                Row {
+                                    id: libRow
+                                    anchors.centerIn: parent
+                                    spacing: 6
+                                    Text {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: libChip.modelData.icon || ""
+                                        color: Commons.Appearance.colors.accent
+                                        font.family: Commons.Appearance.font.family
+                                        font.pixelSize: Commons.Appearance.font.sizeBase
+                                    }
+                                    Text {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: libChip.modelData.name || libChip._id
+                                        color: Commons.Appearance.colors.text
+                                        font.family: Commons.Appearance.font.family
+                                        font.pixelSize: Commons.Appearance.font.sizeSm
+                                    }
+                                }
                             }
                         }
                     }
+                }
+            }
+
+            // Future: a link into the community widget store (placeholder for now).
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.topMargin: 2
+                height: 30
+                radius: Commons.Appearance.radius.sm
+                color: "transparent"
+                border.width: 1
+                border.color: Commons.Appearance.colors.glassBorder
+                Text {
+                    anchors.centerIn: parent
+                    text: "󰏗  Community widgets — coming soon"
+                    color: Commons.Appearance.colors.overlay1
+                    font.family: Commons.Appearance.font.family
+                    font.pixelSize: Commons.Appearance.font.sizeSm
                 }
             }
         }
