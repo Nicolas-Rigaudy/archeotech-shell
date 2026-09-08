@@ -315,22 +315,35 @@ Item {
             readonly property bool   _on:    _type !== "none"
             readonly property var    _zones: editOverlay._zonesFor(side)   // [l,c,r] | [""] | []
             readonly property int    _thick: !_on ? 22 : (_isBar ? 46 : 40)
+            // A strip/holder is a pill sized to its icon count and centred on the
+            // edge (like the live shell); a bar stretches the whole edge instead.
+            readonly property int    _stripCount: (!_isBar && _on) ? editOverlay._list(side, "").length : 0
+            readonly property int    _stripLen: Math.max(48, _stripCount * 30 + Math.max(0, _stripCount - 1) * 6 + 20)
 
             // Silhouette pinned to the edge: horizontal sides stretch L↔R and pin
             // top/bottom; vertical sides stretch T↔B and pin left/right. Ends are
             // inset so the four mocks read as a frame without overlapping corners.
             Rectangle {
                 id: mock
-                anchors.left:   sideCard._horizontal ? parent.left  : (sideCard.side === "left"  ? parent.left  : undefined)
-                anchors.right:  sideCard._horizontal ? parent.right : (sideCard.side === "right" ? parent.right : undefined)
-                anchors.top:    sideCard.side === "top"    ? parent.top    : (sideCard._horizontal ? undefined : parent.top)
-                anchors.bottom: sideCard.side === "bottom" ? parent.bottom : (sideCard._horizontal ? undefined : parent.bottom)
+                // Edge pin (cross-axis) is unconditional; along-axis a bar stretches
+                // edge-to-edge, a strip/holder sizes to its icons (_stripLen) and
+                // centres.
+                anchors.top:    sideCard.side === "top"    ? parent.top
+                              : ((!sideCard._horizontal && sideCard._isBar) ? parent.top : undefined)
+                anchors.bottom: sideCard.side === "bottom" ? parent.bottom
+                              : ((!sideCard._horizontal && sideCard._isBar) ? parent.bottom : undefined)
+                anchors.left:   sideCard.side === "left"   ? parent.left
+                              : ((sideCard._horizontal && sideCard._isBar) ? parent.left : undefined)
+                anchors.right:  sideCard.side === "right"  ? parent.right
+                              : ((sideCard._horizontal && sideCard._isBar) ? parent.right : undefined)
+                anchors.horizontalCenter: (sideCard._horizontal && !sideCard._isBar) ? parent.horizontalCenter : undefined
+                anchors.verticalCenter:   (!sideCard._horizontal && !sideCard._isBar) ? parent.verticalCenter : undefined
                 anchors.leftMargin:   sideCard._horizontal ? 72 : 16
                 anchors.rightMargin:  sideCard._horizontal ? 72 : 16
-                anchors.topMargin:    sideCard.side === "top" ? 64 : (sideCard._horizontal ? 0 : 66)
-                anchors.bottomMargin: sideCard.side === "bottom" ? 16 : (sideCard._horizontal ? 0 : 60)
-                width:  sideCard._horizontal ? undefined : sideCard._thick
-                height: sideCard._horizontal ? sideCard._thick : undefined
+                anchors.topMargin:    sideCard.side === "top" ? 64 : 66
+                anchors.bottomMargin: sideCard.side === "bottom" ? 16 : 60
+                width:  sideCard._horizontal ? (sideCard._isBar ? undefined : sideCard._stripLen) : sideCard._thick
+                height: sideCard._horizontal ? sideCard._thick : (sideCard._isBar ? undefined : sideCard._stripLen)
                 radius: Commons.Appearance.radius.lg
                 color:  Commons.Appearance.colors.glassBg
                 opacity: sideCard._on ? 1 : 0.5
@@ -421,7 +434,9 @@ Item {
                                         required property int index
                                         readonly property string _id: chip.modelData.id
                                         readonly property var meta: editOverlay._meta(section.zoneName, chip._id)
-                                        readonly property bool _iconOnly: !sideCard._horizontal
+                                        // Strips/holders are icon lanes (no inline
+                                        // labels); only a horizontal bar shows titles.
+                                        readonly property bool _iconOnly: !sideCard._isBar || !sideCard._horizontal
                                         readonly property bool _isSource:
                                             Commons.State.dragActive &&
                                             Commons.State.draggedSource === (sideCard.side + ":" + section.zoneName + ":" + chip.index)
@@ -617,36 +632,52 @@ Item {
                 anchors.topMargin: 8; anchors.bottomMargin: 8
                 anchors.leftMargin: 8; anchors.rightMargin: 8
 
-                Row {
-                    spacing: 3
-                    Repeater {
-                        model: [
-                            { t: "bar",    l: "Bar"    },
-                            { t: "strip",  l: "Strip"  },
-                            { t: "holder", l: "Holder" },
-                            { t: "none",   l: "Off"    }
-                        ]
-                        delegate: Rectangle {
-                            id: typeBtn
-                            required property var modelData
-                            readonly property bool active: editOverlay._cfg.sideType(sideCard.side) === modelData.t
-                            width: _tl.implicitWidth + 16; height: 24
-                            radius: Commons.Appearance.radius.sm
-                            color: active ? Commons.Appearance.colors.accentAlpha : Commons.Appearance.colors.surface0
-                            border.width: 1
-                            border.color: active ? Commons.Appearance.colors.accentBorder : Commons.Appearance.colors.glassBorder
-                            Text {
-                                id: _tl
-                                anchors.centerIn: parent
-                                text: typeBtn.modelData.l
-                                color: typeBtn.active ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext0
-                                font.family: Commons.Appearance.font.family
-                                font.pixelSize: Commons.Appearance.font.sizeSm
-                            }
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: editOverlay._cfg.setSideType(sideCard.side, typeBtn.modelData.t)
+                // Type switch — one segmented track; the active mode is a solid
+                // accent fill (crust text, clearly readable), the rest quiet until
+                // hovered. Compact, no inter-segment gaps.
+                Rectangle {
+                    radius: Commons.Appearance.radius.sm
+                    color: Commons.Appearance.colors.surface0
+                    border.width: 1
+                    border.color: Commons.Appearance.colors.glassBorder
+                    implicitWidth: _seg.implicitWidth
+                    implicitHeight: 24
+                    clip: true
+                    Row {
+                        id: _seg
+                        height: parent.height
+                        Repeater {
+                            model: [
+                                { t: "bar",    l: "Bar"    },
+                                { t: "strip",  l: "Strip"  },
+                                { t: "holder", l: "Holder" },
+                                { t: "none",   l: "Off"    }
+                            ]
+                            delegate: Rectangle {
+                                id: typeBtn
+                                required property var modelData
+                                readonly property bool active: editOverlay._cfg.sideType(sideCard.side) === modelData.t
+                                width: _tl.implicitWidth + 18
+                                height: parent.height
+                                color: active ? Commons.Appearance.colors.accent
+                                              : (_segMa.containsMouse ? Commons.Appearance.colors.surface2 : "transparent")
+                                Text {
+                                    id: _tl
+                                    anchors.centerIn: parent
+                                    text: typeBtn.modelData.l
+                                    color: typeBtn.active ? Commons.Appearance.colors.crust
+                                                          : Commons.Appearance.colors.subtext0
+                                    font.family: Commons.Appearance.font.family
+                                    font.pixelSize: Commons.Appearance.font.sizeSm
+                                    font.bold: typeBtn.active
+                                }
+                                MouseArea {
+                                    id: _segMa
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: editOverlay._cfg.setSideType(sideCard.side, typeBtn.modelData.t)
+                                }
                             }
                         }
                     }
