@@ -63,6 +63,12 @@ Item {
     function addId(side, zone, id) {
         var l = _list(side, zone).slice(); l.push({ id: id, config: {} }); _write(side, zone, l)
     }
+    // Insert a new entry at a specific index (a library tile dropped on a zone).
+    function addAt(side, zone, index, id, config) {
+        var l = _list(side, zone).slice()
+        l.splice(Math.max(0, Math.min(index, l.length)), 0, { id: id, config: config || ({}) })
+        _write(side, zone, l)
+    }
     function removeAt(side, zone, idx) {
         var l = _list(side, zone).slice(); l.splice(idx, 1); _write(side, zone, l)
     }
@@ -120,21 +126,27 @@ Item {
         return (l[index] && l[index].config) || ({})
     }
     function _srcParts() {
-        var s = Commons.State.draggedSource.split(":")
-        return { side: s[0], zone: (s[1] === undefined ? "" : s[1]), index: parseInt(s[2]) }
+        var raw = Commons.State.draggedSource
+        // "lib:<align>" = a fresh widget dragged from the library; otherwise
+        // "side:zone:index" = an existing chip being moved (or dragged to remove).
+        if (raw.indexOf("lib:") === 0)
+            return { fromLibrary: true, side: "", zone: raw.slice(4), index: -1 }
+        var s = raw.split(":")
+        return { fromLibrary: false, side: s[0], zone: (s[1] === undefined ? "" : s[1]), index: parseInt(s[2]) }
     }
-    // Would dropping the in-flight chip into (destZone-flavour) be accepted? Used
-    // by DropAreas to light a valid/invalid affordance before the drop lands.
+    // Would dropping the in-flight item into (destZone-flavour) be accepted? Used
+    // by DropAreas to light a valid/invalid affordance before the drop lands. A
+    // library tile carries no existing config; an existing chip carries its own.
     function _dropConverts(destZone) {
         if (!Commons.State.dragActive) return false
         var src = _srcParts()
-        return _cfg.moveConversion(src.zone, destZone, Commons.State.draggedKey,
-                                   _entryConfigAt(src.side, src.zone, src.index)) !== null
+        var cfg = src.fromLibrary ? ({}) : _entryConfigAt(src.side, src.zone, src.index)
+        return _cfg.moveConversion(src.zone, destZone, Commons.State.draggedKey, cfg) !== null
     }
 
-    function beginDrag(side, zone, index, id, chipItem) {
-        Commons.State.draggedSource = side + ":" + zone + ":" + index
-        Commons.State.draggedKey    = id
+    function _startDrag(sourceStr, key, chipItem) {
+        Commons.State.draggedSource = sourceStr
+        Commons.State.draggedKey    = key
         var p = chipItem.mapToItem(editOverlay, 0, 0)
         dragProxy.width = chipItem.width; dragProxy.height = chipItem.height
         dragProxy.x = p.x; dragProxy.y = p.y
@@ -144,6 +156,9 @@ Item {
         Commons.State.dragActive = true
         dragProxy.Drag.active = true
     }
+    // Existing chip → "side:zone:index"; a library tile → "lib:<nativeAlign>".
+    function beginDrag(side, zone, index, id, chipItem) { _startDrag(side + ":" + zone + ":" + index, id, chipItem) }
+    function beginLibraryDrag(nativeZone, id, chipItem) { _startDrag("lib:" + nativeZone, id, chipItem) }
     function moveDrag(gx, gy) {
         dragProxy.x = gx - dragProxy.width / 2
         dragProxy.y = gy - dragProxy.height / 2
@@ -163,8 +178,13 @@ Item {
     // post-removal index moveEntry expects, then guard the no-op cases.
     function performDrop(destSide, destZone, destIndex) {
         var src = _srcParts()
-        var cfg = _entryConfigAt(src.side, src.zone, src.index)
-        if (_cfg.moveConversion(src.zone, destZone, Commons.State.draggedKey, cfg) === null) return
+        var cfg = src.fromLibrary ? ({}) : _entryConfigAt(src.side, src.zone, src.index)
+        var conv = _cfg.moveConversion(src.zone, destZone, Commons.State.draggedKey, cfg)
+        if (conv === null) return
+        if (src.fromLibrary) {                       // a fresh widget from the library
+            addAt(destSide, destZone, destIndex, conv.id, conv.config)
+            return
+        }
         var mDest = destIndex
         if (src.side === destSide && src.zone === destZone) {
             if (destIndex > src.index) mDest = destIndex - 1
@@ -186,10 +206,8 @@ Item {
         return rep.count
     }
 
-    // ── Palette state ───────────────────────────────────────────────────────────
-    property string _palSide: ""
-    property string _palZone: ""
-    // Discovered modules accepting any of `targets`, as palette tiles.
+    // ── Widget library ──────────────────────────────────────────────────────────
+    // Discovered plugin modules accepting any of `targets`, as tiles.
     function _pluginTiles(targets) {
         var mods = _mods.modulesFor(targets)
         var out = []
@@ -197,15 +215,23 @@ Item {
             out.push({ id: "plugin:" + mods[i].id, name: mods[i].name || mods[i].id, icon: mods[i].icon || "󰏗" })
         return out
     }
-    function openPalette(side, zone) {
-        _palSide = side
-        _palZone = zone
-        // Bar zones take bar-zone modules; strips take strip-icon + panel-content.
-        var base    = zone !== "" ? _reg.availableBarWidgets : _reg.availableStripIcons
-        var plugins = _pluginTiles(zone !== "" ? ["bar-zone"] : ["strip-icon", "panel-content"])
-        palette.items = base.concat(plugins)
-        palette.title = "Add to " + _label(side) + (zone !== "" ? " · " + zone : "")
-        palette.visible = true
+    // Every addable widget as a library tile carrying its native flavour
+    // ("bar" → align "left", "strip" → align ""). The drop path reuses
+    // ShellConfig.moveConversion, so a bar-only widget dropped on a strip lights
+    // the red caret and is rejected exactly as a cross-flavour move would be.
+    function _libraryItems() {
+        var out = [], seen = ({})
+        var bar = _reg.availableBarWidgets.concat(_pluginTiles(["bar-zone"]))
+        for (var i = 0; i < bar.length; i++) {
+            var b = bar[i]
+            if (!seen[b.id]) { seen[b.id] = 1; out.push({ id: b.id, name: b.name || b.id, icon: b.icon || "", native: "bar" }) }
+        }
+        var strip = _reg.availableStripIcons.concat(_pluginTiles(["strip-icon", "panel-content"]))
+        for (var j = 0; j < strip.length; j++) {
+            var s = strip[j]
+            if (!seen[s.id]) { seen[s.id] = 1; out.push({ id: s.id, name: s.name || s.id, icon: s.icon || "", native: "strip" }) }
+        }
+        return out
     }
 
     // ── Scrim — dims the live shell and swallows clicks so it isn't usable ──────
@@ -687,72 +713,119 @@ Item {
                     }
                 }
 
-                Rectangle {
-                    visible: sideCard._on
-                    width: sideCard._horizontal ? (_addRow.implicitWidth + 16) : 62; height: 24
-                    radius: Commons.Appearance.radius.sm
-                    color: _addMa.containsMouse ? Commons.Appearance.colors.accentAlpha : Commons.Appearance.colors.glassBg
-                    border.width: 1
-                    border.color: _addMa.containsMouse ? Commons.Appearance.colors.accentBorder : Commons.Appearance.colors.glassBorder
-                    Row {
-                        id: _addRow
-                        anchors.centerIn: parent
-                        spacing: 4
-                        Text {
-                            text: "＋"
-                            color: Commons.Appearance.colors.accent
-                            font.family: Commons.Appearance.font.family
-                            font.pixelSize: Commons.Appearance.font.sizeSm
-                        }
-                        Text {
-                            text: "Add"
-                            color: Commons.Appearance.colors.accent
-                            font.family: Commons.Appearance.font.family
-                            font.pixelSize: Commons.Appearance.font.sizeSm
-                        }
-                    }
-                    MouseArea {
-                        id: _addMa
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: editOverlay.openPalette(sideCard.side,
-                                     editOverlay._cfg.sideType(sideCard.side) === "bar" ? "left" : "")
-                    }
-                }
+                // Widget adding moved to the always-visible Widget Library (centre);
+                // the toolbar is now just the mode switch.
             }
         }
     }
 
-    // ── Trash target — appears mid-drag; drop a chip here to remove it (task_028).
-    Item {
-        id: trash
-        visible: Commons.State.dragActive
+    // ── Widget Library — always-visible tray of every addable widget. Drag a tile
+    // onto a mock zone to add it; drag an existing chip back here to remove it
+    // (KDE-style — no separate trash). Centred, above the mocks, below the config
+    // popup. Turns into a red "remove" target when an existing chip hovers it.
+    Rectangle {
+        id: library
         z: 140
         anchors.centerIn: parent
-        width: 68; height: 68
-        Rectangle {
-            anchors.fill: parent
-            radius: width / 2
-            color: trashDrop.containsDrag ? Commons.Appearance.colors.red : Commons.Appearance.colors.glassBg
-            border.width: 1
-            border.color: trashDrop.containsDrag ? Commons.Appearance.colors.red : Commons.Appearance.colors.glassBorder
-            scale: trashDrop.containsDrag ? 1.12 : 1
-            Behavior on scale { NumberAnimation { duration: 100 } }
+        width: Math.min(parent.width - 120, 560)
+        height: libCol.implicitHeight + 24
+        radius: Commons.Appearance.radius.lg
+        color: Commons.Appearance.colors.glassBg
+        border.width: 1
+        readonly property bool _removing: libDrop.containsDrag && Commons.State.dragActive
+                                          && Commons.State.draggedSource.indexOf("lib:") !== 0
+        border.color: _removing ? Commons.Appearance.colors.red : Commons.Appearance.colors.glassBorder
+        Behavior on border.color { ColorAnimation { duration: 120 } }
+
+        ColumnLayout {
+            id: libCol
+            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+            spacing: 8
+
             Text {
-                anchors.centerIn: parent
-                text: "󰩹"
-                color: trashDrop.containsDrag ? Commons.Appearance.colors.crust : Commons.Appearance.colors.subtext0
+                Layout.alignment: Qt.AlignHCenter
+                text: library._removing ? "󰩹  Release to remove"
+                                        : "Widget Library — drag onto a bar or strip"
+                color: library._removing ? Commons.Appearance.colors.red : Commons.Appearance.colors.subtext0
                 font.family: Commons.Appearance.font.family
-                font.pixelSize: Commons.Appearance.font.sizeLg
+                font.pixelSize: Commons.Appearance.font.sizeSm
+                font.bold: library._removing
+            }
+
+            Flow {
+                id: libFlow
+                Layout.fillWidth: true
+                spacing: 6
+                Repeater {
+                    model: editOverlay._libraryItems()
+                    delegate: Rectangle {
+                        id: libChip
+                        required property var modelData
+                        readonly property string _id: libChip.modelData.id
+                        readonly property string _native: libChip.modelData.native
+                        implicitWidth: libRow.implicitWidth + 14
+                        height: 28
+                        radius: Commons.Appearance.radius.md
+                        color: libMa.containsMouse ? Commons.Appearance.colors.surface2
+                                                   : Commons.Appearance.colors.surface1
+                        border.width: 1
+                        border.color: Commons.Appearance.colors.glassBorder
+
+                        MouseArea {
+                            id: libMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                            property real _px: 0
+                            property real _py: 0
+                            property bool _dragging: false
+                            onPressed: (m) => { _px = m.x; _py = m.y; _dragging = false }
+                            onPositionChanged: (m) => {
+                                if (!pressed) return
+                                var gp = libMa.mapToItem(editOverlay, m.x, m.y)
+                                if (!_dragging) {
+                                    if (Math.abs(m.x - _px) + Math.abs(m.y - _py) < 6) return
+                                    _dragging = true
+                                    editOverlay.beginLibraryDrag(libChip._native === "bar" ? "left" : "", libChip._id, libChip)
+                                }
+                                editOverlay.moveDrag(gp.x, gp.y)
+                            }
+                            onReleased: { if (_dragging) { editOverlay.endDrag(); _dragging = false } }
+                            onCanceled: { if (_dragging) { editOverlay.endDrag(); _dragging = false } }
+                        }
+
+                        Row {
+                            id: libRow
+                            anchors.centerIn: parent
+                            spacing: 5
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: libChip.modelData.icon || ""
+                                color: Commons.Appearance.colors.accent
+                                font.family: Commons.Appearance.font.family
+                                font.pixelSize: Commons.Appearance.font.sizeBase
+                            }
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: libChip.modelData.name || libChip._id
+                                color: Commons.Appearance.colors.text
+                                font.family: Commons.Appearance.font.family
+                                font.pixelSize: Commons.Appearance.font.sizeSm
+                            }
+                        }
+                    }
+                }
             }
         }
+
+        // An existing chip dropped here is removed; a library tile dropped back
+        // here is a no-op. DropArea ignores clicks, so the tiles stay draggable.
         DropArea {
-            id: trashDrop
+            id: libDrop
             anchors.fill: parent
             onDropped: (drop) => {
                 var s = editOverlay._srcParts()
-                editOverlay.removeAt(s.side, s.zone, s.index)
+                if (!s.fromLibrary) editOverlay.removeAt(s.side, s.zone, s.index)
             }
         }
     }
@@ -778,16 +851,6 @@ Item {
         opacity: 0.85
         z: 151
         fillMode: Image.Pad
-    }
-
-    // ── Palette popup ────────────────────────────────────────────────────────────
-    WidgetPalette {
-        id: palette
-        onPicked: (id) => {
-            editOverlay.addId(editOverlay._palSide, editOverlay._palZone, id)
-            palette.visible = false
-        }
-        onCancelled: palette.visible = false
     }
 
     // ── Per-instance config popup (Sprint 26) ───────────────────────────────────
