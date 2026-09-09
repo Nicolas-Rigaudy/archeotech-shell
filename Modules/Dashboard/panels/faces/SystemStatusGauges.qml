@@ -2,15 +2,14 @@ import QtQuick
 import QtQuick.Layouts
 import "../../../../Commons" as Commons
 
-// SystemStatus face: "gauges" — the same cpu/ram/disk/bat data as a 2×2 grid of
-// radial gauges. A structurally different render tree from "bars" (config can't
-// express this), justifying a face rather than a toggle. Binds to `card`.
-GridLayout {
+// SystemStatus face: "gauges" — the same cpu/ram/disk/bat data as a single ROW of
+// four radial gauges. A row (not a 2×2 grid) keeps the card height close to the
+// "bars" face so the dashboard panel doesn't overflow; each gauge fills its cell
+// so the rings read large. Binds to `card`.
+RowLayout {
     id: face
     property var card
-    columns: 2
-    rowSpacing: 14
-    columnSpacing: 14
+    spacing: 10
 
     readonly property int _bat: card ? card.bat : 0
 
@@ -19,25 +18,28 @@ GridLayout {
         required property int    value
         required property color  col
         Layout.fillWidth: true
-        implicitHeight: 112
+        implicitHeight: ring.height + lbl.height + 6
 
         Canvas {
-            id: cv
-            width: 96; height: 72
-            anchors.horizontalCenter: parent.horizontalCenter
+            id: ring
             anchors.top: parent.top
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: Math.min(parent.width, 84)
+            height: width
             property real v: Math.max(0, Math.min(value, 100))
             property color fill: col
             property color track: Commons.Appearance.colors.recessedTrack
             onVChanged: requestPaint()
             onFillChanged: requestPaint()
             onTrackChanged: requestPaint()
+            onWidthChanged: requestPaint()
             onPaint: {
                 var ctx = getContext("2d")
                 ctx.reset()
-                var cx = width / 2, cy = 40, r = 32
+                var cx = width / 2, cy = height / 2
+                var r = width / 2 - Math.max(6, width * 0.09)
                 var start = Math.PI * 0.75, end = Math.PI * 2.25
-                ctx.lineWidth = 8
+                ctx.lineWidth = Math.max(6, width * 0.10)
                 ctx.lineCap = "round"
                 ctx.strokeStyle = track
                 ctx.beginPath(); ctx.arc(cx, cy, r, start, end); ctx.stroke()
@@ -45,22 +47,27 @@ GridLayout {
                 ctx.beginPath(); ctx.arc(cx, cy, r, start, start + (end - start) * v / 100); ctx.stroke()
             }
             Behavior on v { NumberAnimation { duration: Commons.Appearance.anim.base } }
+
+            // % centered IN the ring.
+            Text {
+                anchors.centerIn: parent
+                text: value + "%"
+                color: Commons.Appearance.colors.text
+                font.family: Commons.Appearance.font.family
+                font.pixelSize: Commons.Appearance.font.sizeMd
+                font.bold: true
+            }
         }
 
         Text {
-            text: parent.value + "%"
-            color: Commons.Appearance.colors.text
-            font.family: Commons.Appearance.font.family
-            font.pixelSize: Commons.Appearance.font.sizeLg
-            font.bold: true
-            anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: 26 }
-        }
-        Text {
+            id: lbl
+            anchors.top: ring.bottom
+            anchors.topMargin: 6
+            anchors.horizontalCenter: parent.horizontalCenter
             text: parent.label
             color: Commons.Appearance.colors.subtext1
             font.family: Commons.Appearance.font.family
             font.pixelSize: Commons.Appearance.font.sizeSm
-            anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: 84 }
         }
     }
 
