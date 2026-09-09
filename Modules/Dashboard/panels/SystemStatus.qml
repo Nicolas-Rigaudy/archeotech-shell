@@ -73,6 +73,7 @@ DashCard {
     // Presentation is delegated to interchangeable faces over the same cpu/ram/
     // disk/bat data; the card keeps the data + poller above. `face` selects one
     // (default = first = "bars", the original look). Wave 3 persists this choice.
+    face: "gauges"
     faces: [
         { id: "bars",   label: "Bars",   file: Qt.resolvedUrl("faces/SystemStatusBars.qml") },
         { id: "gauges", label: "Gauges", file: Qt.resolvedUrl("faces/SystemStatusGauges.qml") }
