@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Layouts
 import Quickshell.Io
 import "../../../Commons" as Commons
 import "../../../Services/Shell" as ShellServices
@@ -70,61 +69,12 @@ DashCard {
         }
     }
 
-    component StatRow: Item {
-        required property string label
-        required property int    value
-        required property color  barColor
-        implicitHeight: 24
-
-        Text {
-            id: lbl
-            text: label
-            color: Commons.Appearance.colors.subtext1
-            font.family: Commons.Appearance.font.family
-            font.pixelSize: Commons.Appearance.font.sizeBase
-            width: 42
-            anchors.verticalCenter: parent.verticalCenter
-        }
-
-        Rectangle {
-            anchors { left: lbl.right; leftMargin: 8; right: valLbl.left; rightMargin: 8; verticalCenter: parent.verticalCenter }
-            height: 8
-            radius: 4
-            // Sunk/recessed track — darker than the card so the fill reads raised.
-            color: Commons.Appearance.colors.recessedTrack
-
-            Rectangle {
-                width: parent.width * Math.min(value, 100) / 100
-                height: parent.height
-                radius: parent.radius
-                // Top-lit sheen on the fill (same light language as the glass).
-                gradient: Gradient {
-                    GradientStop { position: 0.0; color: Commons.Appearance.sheenHi(barColor, 1.18) }
-                    GradientStop { position: 1.0; color: Commons.Appearance.sheenLo(barColor, 1.12) }
-                }
-                Behavior on width { Commons.Anim {} }
-            }
-        }
-
-        Text {
-            id: valLbl
-            text: value + "%"
-            color: Commons.Appearance.colors.text
-            font.family: Commons.Appearance.font.family
-            font.pixelSize: Commons.Appearance.font.sizeBase
-            width: 32
-            horizontalAlignment: Text.AlignRight
-            anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-        }
-    }
-
-    StatRow { Layout.fillWidth: true; label: "CPU";  value: root.cpu;  barColor: Commons.Appearance.colors.blue }
-    StatRow { Layout.fillWidth: true; label: "RAM";  value: root.ram;  barColor: Commons.Appearance.colors.mauve }
-    StatRow { Layout.fillWidth: true; label: "Disk"; value: root.disk; barColor: Commons.Appearance.colors.peach }
-    StatRow {
-        Layout.fillWidth: true
-        label: "Bat " + (root.batStatus === "Charging" ? "↑" : root.batStatus === "Discharging" ? "↓" : "─")
-        value: root.bat
-        barColor: root.bat > 20 ? Commons.Appearance.colors.green : Commons.Appearance.colors.red
-    }
+    // ── Faces (req_003 / task_030) ───────────────────────────────────────────
+    // Presentation is delegated to interchangeable faces over the same cpu/ram/
+    // disk/bat data; the card keeps the data + poller above. `face` selects one
+    // (default = first = "bars", the original look). Wave 3 persists this choice.
+    faces: [
+        { id: "bars",   label: "Bars",   file: Qt.resolvedUrl("faces/SystemStatusBars.qml") },
+        { id: "gauges", label: "Gauges", file: Qt.resolvedUrl("faces/SystemStatusGauges.qml") }
+    ]
 }

@@ -16,6 +16,29 @@ Item {
     default property alias _content: inner.data
     property string title: ""
 
+    // ── Face contract (req_003 / task_030) ───────────────────────────────────
+    // A card MAY declare visual FACES — interchangeable presentation layouts over
+    // the SAME data — instead of hardcoding one look. Each face is a self-contained
+    // component file, bound to the owning card for its data:
+    //
+    //   faces: [{ id, label, file: Qt.resolvedUrl("faces/FooBars.qml"), constraints? }]
+    //   face:  "<id>"      // selected face; empty/unknown → first declared (default)
+    //
+    // The selected face is mounted in the content slot via `faceLoader`, which
+    // injects `card` so the face binds to the card's data props (cpu/ram/…). When
+    // `faces` is empty the card uses its classic default `_content` children, so
+    // every existing card is unaffected. Swapping `face` re-sources ONLY the inner
+    // face (the card shell + data/poller stay mounted) — no flicker, no data reset.
+    property var faces: []
+    property string face: ""
+
+    readonly property int _faceIdx: {
+        if (!faces || faces.length === 0) return -1
+        for (var i = 0; i < faces.length; i++) if (faces[i].id === face) return i
+        return 0   // default = first declared face (clean fallback on empty/unknown)
+    }
+    readonly property url _faceSource: _faceIdx >= 0 ? faces[_faceIdx].file : ""
+
     implicitHeight: bg.implicitHeight
 
     RectangularShadow {
@@ -65,6 +88,18 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 spacing: 8
+
+                // Faces mount here when the card declares any; otherwise this
+                // Loader is inactive (zero footprint) and the card's classic
+                // `_content` children render as before.
+                Loader {
+                    id: faceLoader
+                    active: card._faceIdx >= 0
+                    visible: active
+                    Layout.fillWidth: true
+                    source: card._faceSource
+                    onLoaded: if (item && ('card' in item)) item.card = card
+                }
             }
         }
     }
