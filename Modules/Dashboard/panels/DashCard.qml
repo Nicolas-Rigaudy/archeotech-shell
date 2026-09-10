@@ -75,11 +75,8 @@ Item {
         function onReadyChanged() { if (Persistence.Config.ready) card._loadFace() }
     }
 
-    // Touchpad two-finger horizontal swipe → face change. Accumulate the wheel
-    // deltas and cool down after a step so one gesture moves one face, not a burst.
+    // Wheel/touchpad face switching accumulator (see WheelHandler in bg).
     property real _wheelAccum: 0
-    property bool _wheelCooling: false
-    Timer { id: _wheelCool; interval: 350; onTriggered: card._wheelCooling = false }
 
     implicitHeight: bg.implicitHeight
 
@@ -118,25 +115,26 @@ Item {
             }
         }
 
-        // Touchpad two-finger horizontal swipe (and horizontal wheel) → face change.
-        // No acceptedDevices filter — if the touchpad enumerates as a generic pointer
-        // the filter would silently drop its scroll events. Accept horizontal intent.
+        // Wheel / two-finger touchpad → face change. MangoWC does NOT deliver
+        // horizontal two-finger scroll to a layer-shell surface (angleDelta.x is
+        // always 0; a side-to-side swipe sends no event) — the VERTICAL axis is the
+        // only one we get, so scroll up/down over the card switches face. Touchpad
+        // sends high-res pixelDelta (many small events); a mouse sends 120-unit
+        // angleDelta notches. Accumulate to one step per threshold. Mirrors the
+        // proven Widgets/Appearance/Carousel.qml handler.
         WheelHandler {
             enabled: card.faces && card.faces.length > 1
-            onWheel: (ev) => {
-                if (card._wheelCooling) return
-                var h = ev.angleDelta.x
-                // Some setups deliver a horizontal swipe as y with a modifier; prefer
-                // x, but fall back to y only when x is absent and shift isn't held.
-                if (h === 0 && !(ev.modifiers & Qt.ShiftModifier)) return
-                if (Math.abs(h) < Math.abs(ev.angleDelta.y)) return   // vertical scroll → ignore
-                card._wheelAccum += h
-                if (Math.abs(card._wheelAccum) >= 90) {
-                    card._goFace(card._wheelAccum < 0 ? 1 : -1)
-                    card._wheelAccum = 0
-                    card._wheelCooling = true
-                    _wheelCool.restart()
-                }
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+            onWheel: (event) => {
+                var isTouch = event.pixelDelta.y !== 0
+                var dy = isTouch ? event.pixelDelta.y : event.angleDelta.y
+                if (dy === 0) return
+                if ((dy < 0) !== (card._wheelAccum < 0)) card._wheelAccum = 0   // reset on reverse
+                card._wheelAccum += dy
+                var step = 120
+                while (card._wheelAccum <= -step) { card._goFace(1);  card._wheelAccum += step }
+                while (card._wheelAccum >=  step) { card._goFace(-1); card._wheelAccum -= step }
+                event.accepted = true
             }
         }
 
