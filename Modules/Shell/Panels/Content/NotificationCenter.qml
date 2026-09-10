@@ -45,11 +45,10 @@ Item {
                 id: contentColumn
                 anchors {
                     top: parent.top; left: parent.left; right: parent.right
-                    margins: Commons.Appearance.spacing.xl
-                    topMargin: 14
+                    margins: Commons.Appearance.spacing.xl   // shared panel padding
                 }
                 width: flick.width - Commons.Appearance.spacing.xl * 2
-                spacing: Commons.Appearance.spacing.lg
+                spacing: Commons.Appearance.spacing.xl        // shared inter-item gap
 
                 // ── Header ────────────────────────────────────────────────────
                 RowLayout {

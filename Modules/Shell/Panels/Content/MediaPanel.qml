@@ -37,7 +37,7 @@ Item {
     // there's no layout-measurement loop. Compact → short; full → the tuned height.
     // 0 on a vertical strip → keep the fixed panelSize there.
     property real implicitPerp: (panelRoot && panelRoot._horizontal)
-        ? (mediaFaces && mediaFaces.face === "compact" ? 200 : 272)
+        ? (mediaFaces && mediaFaces.face === "compact" ? 224 : 296)
         : 0
     Behavior on implicitPerp { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
 
@@ -61,8 +61,8 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: Commons.Appearance.spacing.lg
-        spacing: Commons.Appearance.spacing.md
+        anchors.margins: Commons.Appearance.spacing.xl   // shared panel padding
+        spacing: Commons.Appearance.spacing.xl            // shared inter-item gap
 
         RowLayout {
             Layout.fillWidth: true

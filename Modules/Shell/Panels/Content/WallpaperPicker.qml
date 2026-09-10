@@ -40,11 +40,10 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: Commons.Appearance.spacing.lg
-        // Carousels are height-fitted now (their top card no longer peeks up into
-        // the header), so the header needs no occluding backing and the layout
-        // keeps its normal gap in both orientations.
-        spacing: Commons.Appearance.spacing.md
+        // Panel content padding + inter-item gap — the shared xl (16) standard so
+        // every panel feels equally roomy (see docs/WIDGET_API.md “Panel padding”).
+        anchors.margins: Commons.Appearance.spacing.xl
+        spacing: Commons.Appearance.spacing.xl
 
         // Header — tab bar + shortcut to full appearance settings. A RowLayout
         // (not absolute anchors) so the tabs and the More button can never
