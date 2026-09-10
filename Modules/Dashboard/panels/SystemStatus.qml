@@ -19,7 +19,7 @@ DashCard {
     property var ramHist:  []
     property var diskHist: []
     property var batHist:  []
-    readonly property int _histMax: 60
+    readonly property int _histMax: 40   // ~40 samples × ~1.3s ≈ 50s window; recent moves read clearly
     function _push(arr, v) {
         var a = arr.slice()
         a.push(v)

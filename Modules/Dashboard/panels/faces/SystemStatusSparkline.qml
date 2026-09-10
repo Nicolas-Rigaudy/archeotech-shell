@@ -15,7 +15,11 @@ ColumnLayout {
         required property var    hist
         required property int    value
         required property color  col
-        implicitHeight: 30
+        // Small implicit height (4×22 ≈ the gauges face's 112) so switching to
+        // sparkline never makes the card taller than its row-mate → the panel
+        // can't grow and overlap the bottom toolbar. Layout.fillHeight then lets
+        // the rows expand to fill whatever height the row actually gives.
+        implicitHeight: 22
 
         Text {
             id: lbl
@@ -50,7 +54,7 @@ ColumnLayout {
                 // series centers instead of pinning to an edge.
                 var lo = arr[0], hi = arr[0]
                 for (var k = 1; k < arr.length; k++) { lo = Math.min(lo, arr[k]); hi = Math.max(hi, arr[k]) }
-                var span = Math.max(hi - lo, 12)
+                var span = Math.max(hi - lo, 6)   // lower floor → small real moves still show
                 var mid = (lo + hi) / 2
                 var yLo = mid - span / 2, yHi = mid + span / 2
                 function xy(i, v) {
