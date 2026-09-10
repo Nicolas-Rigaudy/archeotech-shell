@@ -39,29 +39,51 @@ Item {
         return 0   // default = first declared face (clean fallback on empty/unknown)
     }
     readonly property url _faceSource: _faceIdx >= 0 ? faces[_faceIdx].file : ""
-    readonly property string _faceLabel: (_faceIdx >= 0 && faces[_faceIdx].label) ? faces[_faceIdx].label : ""
 
-    // ── Face persistence + picker (req_003 / task_030 Wave 3+4) ───────────────
+    // ── Face persistence + swipe switching (req_003 / task_030 Wave 3+4) ───────
     // The chosen face is stored per-card under "dashboard.faces.<faceKey>" and
-    // restored on load, so it survives reloads. The header pill cycles faces.
+    // restored on load, so it survives reloads. Users switch faces by SWIPING the
+    // card left/right (DragHandler in bg) or tapping a page-dot; each change slides
+    // the new face in (faceEnter) — no header chrome, keeping the card uncluttered.
     property string faceKey: title
+    property int _swipeDir: 1        // +1 next (slide from right), -1 prev
     function _loadFace() {
         if (!faces || faces.length < 1) return
         var saved = Persistence.Config.get("dashboard.faces." + faceKey, "")
         if (saved) card.face = saved
     }
     function _selectFace(id) {
+        if (!id || id === card.face) return        // no-op guard (avoids stray writes)
         card.face = id
         Persistence.Config.set("dashboard.faces." + faceKey, id)
     }
-    function _cycleFace() {
+    function _goFace(delta) {                       // relative step (swipe): wraps
         if (!faces || faces.length < 2) return
-        _selectFace(faces[(_faceIdx + 1) % faces.length].id)
+        var n = faces.length
+        card._swipeDir = delta >= 0 ? 1 : -1
+        _selectFace(faces[((_faceIdx + delta) % n + n) % n].id)
     }
+    function _selectIndex(i) {                      // absolute (page-dot tap)
+        if (!faces || i < 0 || i >= faces.length || i === _faceIdx) return
+        card._swipeDir = i >= _faceIdx ? 1 : -1
+        _selectFace(faces[i].id)
+    }
+    onFaceChanged: if (faceLoader.active) faceEnter.restart()
     Component.onCompleted: if (Persistence.Config.ready) _loadFace()
     Connections {
         target: Persistence.Config
         function onReadyChanged() { if (Persistence.Config.ready) card._loadFace() }
+    }
+
+    // Slide + fade the incoming face in, in the swipe direction.
+    SequentialAnimation {
+        id: faceEnter
+        PropertyAction { target: faceShift;  property: "x";       value: card._swipeDir * 26 }
+        PropertyAction { target: faceLoader; property: "opacity"; value: 0.0 }
+        ParallelAnimation {
+            NumberAnimation { target: faceShift;  property: "x";       to: 0;   duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic }
+            NumberAnimation { target: faceLoader; property: "opacity"; to: 1.0; duration: Commons.Appearance.anim.base }
+        }
     }
 
     implicitHeight: bg.implicitHeight
@@ -82,6 +104,25 @@ Item {
         color:  Commons.Appearance.colors.surfaceCard
         implicitHeight: outer.implicitHeight + 32
 
+        // Swipe the card body left/right to change face (only with >1 face).
+        // target:null → tracks without moving anything; taps still reach page-dots.
+        DragHandler {
+            target: null
+            enabled: card.faces && card.faces.length > 1
+            xAxis.enabled: true
+            yAxis.enabled: false
+            onActiveChanged: {
+                if (active) return
+                var dx = centroid.position.x - centroid.pressPosition.x
+                var dy = centroid.position.y - centroid.pressPosition.y
+                // Genuine horizontal swipe only: ≥40px, within the card, and more
+                // horizontal than vertical — guards against stray/warp events.
+                if (Math.abs(dx) < 40 || Math.abs(dx) >= card.width) return
+                if (Math.abs(dx) < Math.abs(dy)) return
+                card._goFace(dx < 0 ? 1 : -1)
+            }
+        }
+
         ColumnLayout {
             id: outer
             // bottom-anchored so `inner` can fillHeight — lets a card whose
@@ -90,60 +131,16 @@ Item {
             anchors { left: parent.left; right: parent.right; top: parent.top; bottom: parent.bottom; margins: 16 }
             spacing: 8
 
-            RowLayout {
-                Layout.fillWidth: true
+            Text {
                 visible: card.title.length > 0
-                spacing: 8
-
-                Text {
-                    text: card.title
-                    color: Commons.Appearance.colors.accent
-                    // Display face for section headers (Cinzel under a grimdark pack;
-                    // falls back to the body family when the pack ships none).
-                    font.family: Commons.Appearance.font.display
-                    font.pixelSize: Commons.Appearance.font.sizeMd
-                    font.letterSpacing: 1.5
-                    opacity: 0.85
-                }
-
-                Item { Layout.fillWidth: true }
-
-                // Face-cycle pill — appears only when the card declares >1 face.
-                // Click cycles to the next face and persists the choice.
-                Rectangle {
-                    id: facePill
-                    visible: card.faces && card.faces.length > 1
-                    implicitHeight: 20
-                    implicitWidth: pillRow.implicitWidth + 14
-                    radius: Commons.Appearance.radius.sm
-                    color:        faceHov.hovered ? Commons.Appearance.colors.accentAlpha : "transparent"
-                    border.color: faceHov.hovered ? Commons.Appearance.colors.accentBorder : Commons.Appearance.colors.surface1
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-
-                    Row {
-                        id: pillRow
-                        anchors.centerIn: parent
-                        spacing: 5
-                        Text {
-                            text: "󰕰"
-                            color: Commons.Appearance.colors.subtext1
-                            font.family: Commons.Appearance.font.family
-                            font.pixelSize: Commons.Appearance.font.sizeSm
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                        Text {
-                            text: card._faceLabel
-                            color: faceHov.hovered ? Commons.Appearance.colors.text : Commons.Appearance.colors.subtext1
-                            font.family: Commons.Appearance.font.family
-                            font.pixelSize: Commons.Appearance.font.sizeSm
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-
-                    HoverHandler { id: faceHov; cursorShape: Qt.PointingHandCursor }
-                    TapHandler { onTapped: card._cycleFace() }
-                }
+                text: card.title
+                color: Commons.Appearance.colors.accent
+                // Display face for section headers (Cinzel under a grimdark pack; falls
+                // back to the body family when the pack ships none).
+                font.family: Commons.Appearance.font.display
+                font.pixelSize: Commons.Appearance.font.sizeMd
+                font.letterSpacing: 1.5
+                opacity: 0.85
             }
             Rectangle {
                 visible: card.title.length > 0
@@ -166,8 +163,34 @@ Item {
                     active: card._faceIdx >= 0
                     visible: active
                     Layout.fillWidth: true
+                    // Fill the card's (row-stretched) height so a face can use the
+                    // whole card — e.g. tall sparkline charts — WITHOUT growing the
+                    // card. Faces that don't fill just sit in the extra room.
+                    Layout.fillHeight: true
                     source: card._faceSource
                     onLoaded: if (item && ('card' in item)) item.card = card
+                    transform: Translate { id: faceShift }
+                }
+
+                // Page-dots — the only face affordance. Active dot elongates; tap to jump.
+                RowLayout {
+                    Layout.alignment: Qt.AlignHCenter
+                    visible: card.faces && card.faces.length > 1
+                    spacing: 6
+                    Repeater {
+                        model: card.faces
+                        delegate: Rectangle {
+                            required property int index
+                            implicitWidth: index === card._faceIdx ? 16 : 6
+                            implicitHeight: 6
+                            radius: 3
+                            color: index === card._faceIdx ? Commons.Appearance.colors.accent
+                                                           : Commons.Appearance.colors.surface1
+                            Behavior on implicitWidth { NumberAnimation { duration: Commons.Appearance.anim.fast; easing.type: Easing.OutCubic } }
+                            Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                            TapHandler { onTapped: card._selectIndex(index) }
+                        }
+                    }
                 }
             }
         }

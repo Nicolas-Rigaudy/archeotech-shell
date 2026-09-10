@@ -29,14 +29,16 @@ ColumnLayout {
 
         Canvas {
             id: spark
+            // Fill the row height (rows fillHeight in the card) so charts read as
+            // proper trends rather than thin stranded lines.
             anchors { left: lbl.right; leftMargin: 8; right: valLbl.left; rightMargin: 8
-                      verticalCenter: parent.verticalCenter }
-            height: 22
+                      top: parent.top; bottom: parent.bottom; topMargin: 5; bottomMargin: 5 }
             property var series: hist
             property color line: col
             onSeriesChanged: requestPaint()
             onLineChanged: requestPaint()
             onWidthChanged: requestPaint()
+            onHeightChanged: requestPaint()
             onPaint: {
                 var ctx = getContext("2d")
                 ctx.reset()
@@ -57,18 +59,21 @@ ColumnLayout {
                     var y = h - pad - Math.max(0, Math.min(norm, 1)) * (h - 2 * pad)
                     return [x, y]
                 }
-                // area fill under the line
-                ctx.beginPath()
-                ctx.moveTo(0, h)
-                for (var i = 0; i < arr.length; i++) { var p = xy(i, arr[i]); ctx.lineTo(p[0], p[1]) }
-                ctx.lineTo(arr.length > 1 ? w : w / 2, h)
-                ctx.closePath()
-                ctx.fillStyle = Qt.rgba(line.r, line.g, line.b, 0.16)
-                ctx.fill()
-                // the trend line
+                // Soft area fill under the line (only worth it with real shape).
+                if (arr.length > 2) {
+                    ctx.beginPath()
+                    ctx.moveTo(0, h)
+                    for (var i = 0; i < arr.length; i++) { var p = xy(i, arr[i]); ctx.lineTo(p[0], p[1]) }
+                    ctx.lineTo(w, h)
+                    ctx.closePath()
+                    ctx.fillStyle = Qt.rgba(line.r, line.g, line.b, 0.10)
+                    ctx.fill()
+                }
+                // The trend line.
                 ctx.strokeStyle = line
-                ctx.lineWidth = 2
+                ctx.lineWidth = 1.75
                 ctx.lineJoin = "round"
+                ctx.lineCap = "round"
                 ctx.beginPath()
                 for (var j = 0; j < arr.length; j++) {
                     var q = xy(j, arr[j])
@@ -76,6 +81,10 @@ ColumnLayout {
                 }
                 if (arr.length === 1) ctx.lineTo(w, xy(0, arr[0])[1])  // flat line for a single sample
                 ctx.stroke()
+                // Dot at the latest value — anchors the eye to "now".
+                var last = xy(arr.length - 1, arr[arr.length - 1])
+                ctx.fillStyle = line
+                ctx.beginPath(); ctx.arc(last[0], last[1], 2.5, 0, Math.PI * 2); ctx.fill()
             }
         }
 
@@ -91,11 +100,11 @@ ColumnLayout {
         }
     }
 
-    StatSpark { Layout.fillWidth: true; label: "CPU";  hist: face.card ? face.card.cpuHist  : []; value: face.card ? face.card.cpu  : 0; col: Commons.Appearance.colors.blue }
-    StatSpark { Layout.fillWidth: true; label: "RAM";  hist: face.card ? face.card.ramHist  : []; value: face.card ? face.card.ram  : 0; col: Commons.Appearance.colors.mauve }
-    StatSpark { Layout.fillWidth: true; label: "Disk"; hist: face.card ? face.card.diskHist : []; value: face.card ? face.card.disk : 0; col: Commons.Appearance.colors.peach }
+    StatSpark { Layout.fillWidth: true; Layout.fillHeight: true; label: "CPU";  hist: face.card ? face.card.cpuHist  : []; value: face.card ? face.card.cpu  : 0; col: Commons.Appearance.colors.blue }
+    StatSpark { Layout.fillWidth: true; Layout.fillHeight: true; label: "RAM";  hist: face.card ? face.card.ramHist  : []; value: face.card ? face.card.ram  : 0; col: Commons.Appearance.colors.mauve }
+    StatSpark { Layout.fillWidth: true; Layout.fillHeight: true; label: "Disk"; hist: face.card ? face.card.diskHist : []; value: face.card ? face.card.disk : 0; col: Commons.Appearance.colors.peach }
     StatSpark {
-        Layout.fillWidth: true
+        Layout.fillWidth: true; Layout.fillHeight: true
         label: "Bat"
         hist: face.card ? face.card.batHist : []
         value: face.card ? face.card.bat : 0

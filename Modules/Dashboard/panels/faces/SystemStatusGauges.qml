@@ -36,8 +36,9 @@ RowLayout {
             onPaint: {
                 var ctx = getContext("2d")
                 ctx.reset()
+                if (width <= 0 || height <= 0) return
                 var cx = width / 2, cy = height / 2
-                var r = width / 2 - Math.max(6, width * 0.09)
+                var r = Math.max(1, width / 2 - Math.max(6, width * 0.09))
                 var start = Math.PI * 0.75, end = Math.PI * 2.25
                 ctx.lineWidth = Math.max(6, width * 0.10)
                 ctx.lineCap = "round"
