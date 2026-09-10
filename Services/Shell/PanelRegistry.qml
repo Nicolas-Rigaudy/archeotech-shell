@@ -31,7 +31,7 @@ QtObject {
             // Launcher renders as a centered floating panel: axisSize = its WIDTH,
             // size = its max HEIGHT. Wide + short (Spotlight/Raycast feel) rather
             // than tall + narrow; the result-row cap (Launcher.qml) keeps it short.
-            size:     380,
+            size:     450,
             axisSize: 680
         },
         dashboard: {

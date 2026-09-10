@@ -379,11 +379,13 @@ Item {
         Column {
             id: col
             anchors {
-                top:   parent.top;   topMargin:   Commons.Appearance.spacing.lg
-                left:  parent.left;  leftMargin:  Commons.Appearance.spacing.lg
-                right: parent.right; rightMargin: Commons.Appearance.spacing.lg
+                top:   parent.top;   topMargin:   Commons.Appearance.spacing.xl
+                left:  parent.left;  leftMargin:  Commons.Appearance.spacing.xl
+                right: parent.right; rightMargin: Commons.Appearance.spacing.xl
             }
-            spacing: Commons.Appearance.spacing.sm
+            // Roomier section gaps — matches the dashboard's 16px feel instead of
+            // the old cramped sm(6).
+            spacing: Commons.Appearance.spacing.xl
 
             // ── Recents row (most-used, frecency-sorted) ───────────────────────
             // Hidden when typing; tap launches without losing the search field.
@@ -622,7 +624,7 @@ Item {
             ListView {
                 id:             resultList
                 width:          parent.width
-                spacing:        4
+                spacing:        8
                 // Two-line rows (§ ref launchers: Caelestia 57 / Dank 52) — a
                 // 40px single-line row read like a menu, not a launcher.
                 readonly property int rowH: 52
