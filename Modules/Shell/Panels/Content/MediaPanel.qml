@@ -1,15 +1,18 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Effects
-import Qt5Compat.GraphicalEffects
 import Quickshell.Io
 import "../../../../Commons" as Commons
 import "../../../../Services/Media" as MediaServices
+import "../.." as ShellUI
 
 // Standalone media player panel (Sprint 24) — extracted from the old Control
-// Center MEDIA section. Lives on the bottom strip next to Dashboard +
-// Wallpaper (Caelestia-style). Bound to MprisService; the bar media-marquee
-// click opens it. Reports implicitAxis so the strip sizes to content.
+// Center MEDIA section. Lives on the bottom strip next to Dashboard + Wallpaper.
+// Bound to MprisService; the bar media-marquee click opens it.
+//
+// Player presentation is delegated to swappable FACES (req_003 / task_030) via
+// the shared FaceHost: `full` (art + info + seek + transport) and `compact`
+// (small art + title + inline transport). Switch by two-finger vertical scroll,
+// drag-swipe, or tapping a page-dot; the choice persists under "media.face".
 Item {
     id: root
     anchors.fill: parent
@@ -18,13 +21,11 @@ Item {
 
     readonly property bool _available: MediaServices.MprisService.available
 
-    // axisSize:"auto" — along-strip extent. Wide (520) on a horizontal strip so
-    // art + info sit side-by-side; short (300) on a vertical strip where the
-    // player stacks, so it doesn't leave a tall empty gap. (S26-C)
+    // axisSize:"auto" — along-strip extent. Wide (520) horizontal so a face can
+    // put art beside info; short (300) vertical so the player stacks.
     readonly property real implicitAxis: (panelRoot && !panelRoot._horizontal) ? 300 : 520
 
-    // Responsive: art beside info when wide (bottom strip), stacked above when
-    // narrow (vertical side strip). Keys on measured width. (S26-C)
+    // Responsive: faces key on this to stack when narrow (vertical side strip).
     readonly property bool _narrow: width < 360
 
     Process {
@@ -50,13 +51,13 @@ Item {
         RowLayout {
             Layout.fillWidth: true
             spacing: 8
-            Text {                                  // icon stays on the icon font
+            Text {
                 text: "󰝚"
                 color: Commons.Appearance.colors.text
                 font.pixelSize: Commons.Appearance.font.sizeLg
                 font.family: Commons.Appearance.font.family
             }
-            Text {                                  // label = display face (Cinzel under the pack)
+            Text {
                 text: "Media"
                 color: Commons.Appearance.colors.text
                 font.pixelSize: Commons.Appearance.font.sizeLg
@@ -68,8 +69,7 @@ Item {
 
         Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0; opacity: 0.5 }
 
-        // Nothing playing — launch shortcut. Wraps to a column when narrow so
-        // the label and button don't collide on a vertical strip.
+        // Nothing playing — launch shortcut (wraps to a column when narrow).
         GridLayout {
             Layout.fillWidth: true
             visible: !root._available
@@ -104,222 +104,18 @@ Item {
             }
         }
 
-        // Player card — art + info side-by-side, or stacked when narrow.
-        // Fill height only when wide; when stacked, pack under the header so a
-        // tall panel doesn't scatter the controls with empty space. (S26-C)
-        GridLayout {
-            Layout.fillWidth: true
-            Layout.fillHeight: !root._narrow
-            Layout.alignment: root._narrow ? Qt.AlignTop : Qt.AlignVCenter
+        // Player faces — full / compact, switchable + persisted.
+        ShellUI.FaceHost {
             visible: root._available
-            columns: root._narrow ? 1 : 2
-            columnSpacing: 14
-            rowSpacing: 14
-
-            // Album art / app icon — smaller when stacked so the info column breathes.
-            // Wrapped in a plain Item so a drop shadow can lift the art off the
-            // panel (same depth language as the play key), gated by shadowStrength.
-            Item {
-                readonly property int _art: root._narrow ? 72 : 92
-                Layout.preferredWidth: _art; Layout.preferredHeight: _art
-                Layout.alignment: root._narrow ? Qt.AlignHCenter : Qt.AlignVCenter
-
-                RectangularShadow {
-                    anchors.fill: artRect; radius: artRect.radius
-                    blur: 12; offset: Qt.vector2d(0, 3); spread: 0
-                    color: Qt.rgba(0, 0, 0, 0.4 * Commons.Appearance.shadowStrength)
-                }
-
-                Rectangle {
-                    id: artRect
-                    anchors.fill: parent
-                    radius: Commons.Appearance.radius.base
-                    color: Commons.Appearance.colors.base
-
-                    // Raw art, hidden — shown via the rounded OpacityMask so the
-                    // cover's corners follow the card radius instead of poking out
-                    // square past the frame (matches the wallpaper-thumb pattern).
-                    Image {
-                        id: albumArt
-                        anchors.fill: parent
-                        source: MediaServices.MprisService.artUrl || ""
-                        fillMode: Image.PreserveAspectCrop
-                        visible: false
-                    }
-                    Rectangle {
-                        id: artMask
-                        anchors.fill: parent
-                        radius: Commons.Appearance.radius.base
-                        visible: false
-                    }
-                    OpacityMask {
-                        anchors.fill: albumArt
-                        source: albumArt
-                        maskSource: artMask
-                        visible: albumArt.status === Image.Ready
-                    }
-                    // Rounded accent hairline over the masked art.
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: Commons.Appearance.radius.base
-                        color: "transparent"
-                        border.color: Commons.Appearance.colors.accentBorder
-                        border.width: 1
-                        visible: albumArt.status === Image.Ready
-                    }
-                    Text {
-                        anchors.centerIn: parent
-                        visible: albumArt.status !== Image.Ready
-                        text: MediaServices.MprisService.appIcon || "󰝚"
-                        color: Commons.Appearance.colors.accent
-                        font.pixelSize: 40
-                        font.family: Commons.Appearance.font.family
-                    }
-                }
-            }
-
-            // Track info + controls
-            ColumnLayout {
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignVCenter
-                spacing: 4
-
-                Text {
-                    Layout.fillWidth: true
-                    text: MediaServices.MprisService.title || "Unknown track"
-                    color: Commons.Appearance.colors.text
-                    font.pixelSize: Commons.Appearance.font.sizeMd
-                    font.family: Commons.Appearance.font.family
-                    font.weight: Font.Medium
-                    elide: Text.ElideRight
-                }
-                Text {
-                    Layout.fillWidth: true
-                    text: MediaServices.MprisService.artist || MediaServices.MprisService.identity || ""
-                    color: Commons.Appearance.colors.subtext0
-                    font.pixelSize: Commons.Appearance.font.sizeSm
-                    font.family: Commons.Appearance.font.family
-                    elide: Text.ElideRight
-                }
-
-                // Progress bar (seekable)
-                Item {
-                    Layout.fillWidth: true
-                    // preferredHeight, not height — a ColumnLayout ignores plain
-                    // height (falls back to implicitHeight 0), collapsing this and
-                    // overlapping the time labels onto the controls (S26-C fix).
-                    Layout.preferredHeight: 28
-                    // Show for any active player, not only when a length is known —
-                    // some players (browser/Zen MPRIS, live streams) report length 0,
-                    // which used to hide the whole bar. When length is unknown we still
-                    // show the track + elapsed time; only the fill/total/seek gate on it.
-                    visible: root._available
-
-                    Rectangle {
-                        anchors.left: parent.left; anchors.right: parent.right
-                        anchors.top: parent.top; anchors.topMargin: 6
-                        height: 4; radius: 2
-                        color: Commons.Appearance.colors.surface0
-
-                        Rectangle {
-                            width: MediaServices.MprisService.length > 0 ? parent.width * Math.min(MediaServices.MprisService.position / MediaServices.MprisService.length, 1) : 0
-                            height: parent.height; radius: 2
-                            color: Commons.Appearance.colors.accent
-                            Behavior on width { NumberAnimation { duration: 950 } }
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            anchors.margins: -4
-                            enabled: MediaServices.MprisService.length > 0   // can't seek without a known length
-                            // The -4 margin grows the hit target 4px past the track on
-                            // every side, so mouse.x/width are offset from the track by
-                            // 4px — map back onto the track (parent) and clamp, else the
-                            // seek lands off by ~4px at each end (S27 off-by-4 fix).
-                            onClicked: mouse => {
-                                const frac = Math.max(0, Math.min(1, (mouse.x - 4) / parent.width))
-                                MediaServices.MprisService.seekTo(MediaServices.MprisService.length * frac)
-                            }
-                        }
-                    }
-
-                    Text {
-                        anchors.left: parent.left; anchors.bottom: parent.bottom
-                        text: formatTime(MediaServices.MprisService.position)
-                        color: Commons.Appearance.colors.overlay0
-                        font.pixelSize: 9; font.family: Commons.Appearance.font.family
-                    }
-                    Text {
-                        anchors.right: parent.right; anchors.bottom: parent.bottom
-                        // Blank when length is unknown — avoids a misleading "0:00" total.
-                        text: MediaServices.MprisService.length > 0 ? formatTime(MediaServices.MprisService.length) : ""
-                        color: Commons.Appearance.colors.overlay0
-                        font.pixelSize: 9; font.family: Commons.Appearance.font.family
-                    }
-                }
-
-                // Playback controls
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 0
-
-                    Item { Layout.fillWidth: true }
-
-                    Text {
-                        text: "󰒮"
-                        color: prevArea.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext1
-                        font.pixelSize: 20; font.family: Commons.Appearance.font.family
-                        Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-                        MouseArea { id: prevArea; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; onClicked: MediaServices.MprisService.previous() }
-                    }
-
-                    Item { Layout.preferredWidth: 24 }
-
-                    // Focal control — a raised accent circle key (swatch-dot language):
-                    // top-lit accent gradient + shadow + dark glyph + hover/press scale.
-                    Item {
-                        Layout.preferredWidth: 42; Layout.preferredHeight: 42
-                        Layout.alignment: Qt.AlignVCenter
-                        scale: playArea.pressed ? 0.92 : (playArea.containsMouse ? 1.06 : 1.0)
-                        Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
-                        RectangularShadow {
-                            anchors.fill: playKey; radius: playKey.radius
-                            blur: 10; offset: Qt.vector2d(0, 3); spread: 0
-                            color: Qt.rgba(0, 0, 0, 0.45 * Commons.Appearance.shadowStrength)
-                        }
-                        Rectangle {
-                            id: playKey; anchors.fill: parent; radius: width / 2; antialiasing: true
-                            gradient: Gradient {
-                                GradientStop { position: 0.0; color: Commons.Appearance.depthFlat ? Commons.Appearance.colors.accent : Qt.lighter(Commons.Appearance.colors.accent, 1.12) }
-                                GradientStop { position: 1.0; color: Commons.Appearance.depthFlat ? Commons.Appearance.colors.accent : Qt.darker(Commons.Appearance.colors.accent, 1.10) }
-                            }
-                        }
-                        Text {
-                            anchors.centerIn: parent
-                            text: MediaServices.MprisService.playing ? "󰏤" : "󰐊"
-                            color: Commons.Appearance.colors.base
-                            font.pixelSize: 20; font.family: Commons.Appearance.font.family
-                        }
-                        MouseArea { id: playArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: MediaServices.MprisService.togglePlay() }
-                    }
-
-                    Item { Layout.preferredWidth: 24 }
-
-                    Text {
-                        text: "󰒭"
-                        color: nextArea.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext1
-                        font.pixelSize: 20; font.family: Commons.Appearance.font.family
-                        Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-                        MouseArea { id: nextArea; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; onClicked: MediaServices.MprisService.next() }
-                    }
-
-                    Item { Layout.fillWidth: true }
-                }
-            }
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            faces: [
+                { id: "full",    label: "Full",    file: Qt.resolvedUrl("faces/MediaFull.qml") },
+                { id: "compact", label: "Compact", file: Qt.resolvedUrl("faces/MediaCompact.qml") }
+            ]
+            face: "full"
+            configPath: "media.face"
+            context: root
         }
-
-        // Absorbs slack so the stacked (narrow) player packs under the header
-        // instead of floating; collapses to 0 when the player fills height.
-        Item { Layout.fillWidth: true; Layout.fillHeight: true }
     }
 }
