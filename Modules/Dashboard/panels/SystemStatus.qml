@@ -13,6 +13,20 @@ DashCard {
     property int    bat:       0
     property string batStatus: "Unknown"
 
+    // Rolling history (last _histMax samples) for the "sparkline" face. Grows one
+    // sample per refresh while the dashboard is open; faces read these arrays.
+    property var cpuHist:  []
+    property var ramHist:  []
+    property var diskHist: []
+    property var batHist:  []
+    readonly property int _histMax: 60
+    function _push(arr, v) {
+        var a = arr.slice()
+        a.push(v)
+        while (a.length > _histMax) a.shift()
+        return a
+    }
+
     Component.onCompleted: _refresh()
 
     property bool _dashOpen: false
@@ -25,8 +39,11 @@ DashCard {
         }
     }
 
+    // 1s cadence, but ONLY while the dashboard is open (running: _dashOpen) — zero
+    // cost when closed. Fast enough that the sparkline buffer fills in ~30s. Peers
+    // gate the same way (refcount/visibility) rather than persisting to disk.
     Timer {
-        interval: 5000
+        interval: 1000
         repeat: true
         running: root._dashOpen
         onTriggered: root._refresh()
@@ -57,13 +74,14 @@ DashCard {
                 if (sep < 0) return
                 var key = line.slice(0, sep)
                 var val = line.slice(sep + 1)
-                if (key === "cpu")  root.cpu  = parseInt(val) || 0
-                if (key === "ram")  root.ram  = parseInt(val) || 0
-                if (key === "disk") root.disk = parseInt(val) || 0
+                if (key === "cpu")  { root.cpu  = parseInt(val) || 0; root.cpuHist  = root._push(root.cpuHist,  root.cpu)  }
+                if (key === "ram")  { root.ram  = parseInt(val) || 0; root.ramHist  = root._push(root.ramHist,  root.ram)  }
+                if (key === "disk") { root.disk = parseInt(val) || 0; root.diskHist = root._push(root.diskHist, root.disk) }
                 if (key === "bat") {
                     var p = val.split(":")
                     root.bat       = parseInt(p[0]) || 0
                     root.batStatus = p[1] || "Unknown"
+                    root.batHist   = root._push(root.batHist, root.bat)
                 }
             }
         }
@@ -71,11 +89,17 @@ DashCard {
 
     // ── Faces (req_003 / task_030) ───────────────────────────────────────────
     // Presentation is delegated to interchangeable faces over the same cpu/ram/
-    // disk/bat data; the card keeps the data + poller above. `face` selects one
-    // (default = first = "bars", the original look). Wave 3 persists this choice.
+    // disk/bat data; the card keeps the data + poller (+ history) above. `face`
+    // selects one (default = gauges). Wave 3 persists this choice.
+    //   gauges    — radial rings (current value)
+    //   bars      — labelled bars (current value)
+    //   sparkline — detailed trend charts (uses rolling history)
+    //   compact   — dense numbers only (smallest footprint)
     face: "gauges"
     faces: [
-        { id: "bars",   label: "Bars",   file: Qt.resolvedUrl("faces/SystemStatusBars.qml") },
-        { id: "gauges", label: "Gauges", file: Qt.resolvedUrl("faces/SystemStatusGauges.qml") }
+        { id: "gauges",    label: "Gauges",    file: Qt.resolvedUrl("faces/SystemStatusGauges.qml") },
+        { id: "bars",      label: "Bars",      file: Qt.resolvedUrl("faces/SystemStatusBars.qml") },
+        { id: "sparkline", label: "Sparkline", file: Qt.resolvedUrl("faces/SystemStatusSparkline.qml") },
+        { id: "compact",   label: "Compact",   file: Qt.resolvedUrl("faces/SystemStatusCompact.qml") }
     ]
 }
