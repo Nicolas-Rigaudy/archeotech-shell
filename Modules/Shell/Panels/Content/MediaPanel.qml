@@ -21,9 +21,16 @@ Item {
 
     readonly property bool _available: MediaServices.MprisService.available
 
-    // axisSize:"auto" — along-strip extent. Wide (520) horizontal so a face can
-    // put art beside info; short (300) vertical so the player stacks.
-    readonly property real implicitAxis: (panelRoot && !panelRoot._horizontal) ? 300 : 520
+    // axisSize:"auto" — along-strip extent. The COMPACT face wants a smaller panel,
+    // so shrink the extent when it's active → switching face is a real footprint
+    // change, not just an internal layout swap. (Animated so the strip resizes
+    // smoothly.) Falls back to the full size until the FaceHost exists.
+    property real implicitAxis: {
+        var compact = mediaFaces && mediaFaces.face === "compact"
+        if (panelRoot && !panelRoot._horizontal) return compact ? 210 : 300   // vertical strip
+        return compact ? 360 : 520                                            // horizontal strip
+    }
+    Behavior on implicitAxis { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
 
     // Responsive: faces key on this to stack when narrow (vertical side strip).
     readonly property bool _narrow: width < 360
@@ -106,6 +113,7 @@ Item {
 
         // Player faces — full / compact, switchable + persisted.
         ShellUI.FaceHost {
+            id: mediaFaces
             visible: root._available
             Layout.fillWidth: true
             Layout.fillHeight: true
