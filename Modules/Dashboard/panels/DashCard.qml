@@ -68,23 +68,18 @@ Item {
         card._swipeDir = i >= _faceIdx ? 1 : -1
         _selectFace(faces[i].id)
     }
-    onFaceChanged: if (faceLoader.active) faceEnter.restart()
+    onFaceChanged: faceStack.transition(card._swipeDir)
     Component.onCompleted: if (Persistence.Config.ready) _loadFace()
     Connections {
         target: Persistence.Config
         function onReadyChanged() { if (Persistence.Config.ready) card._loadFace() }
     }
 
-    // Slide + fade the incoming face in, in the swipe direction.
-    SequentialAnimation {
-        id: faceEnter
-        PropertyAction { target: faceShift;  property: "x";       value: card._swipeDir * 26 }
-        PropertyAction { target: faceLoader; property: "opacity"; value: 0.0 }
-        ParallelAnimation {
-            NumberAnimation { target: faceShift;  property: "x";       to: 0;   duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic }
-            NumberAnimation { target: faceLoader; property: "opacity"; to: 1.0; duration: Commons.Appearance.anim.base }
-        }
-    }
+    // Touchpad two-finger horizontal swipe → face change. Accumulate the wheel
+    // deltas and cool down after a step so one gesture moves one face, not a burst.
+    property real _wheelAccum: 0
+    property bool _wheelCooling: false
+    Timer { id: _wheelCool; interval: 350; onTriggered: card._wheelCooling = false }
 
     implicitHeight: bg.implicitHeight
 
@@ -123,6 +118,24 @@ Item {
             }
         }
 
+        // Touchpad horizontal swipe (and horizontal mouse-wheel) → face change.
+        WheelHandler {
+            enabled: card.faces && card.faces.length > 1
+            acceptedDevices: PointerDevice.TouchPad | PointerDevice.Mouse
+            onWheel: (ev) => {
+                if (card._wheelCooling) return
+                var h = ev.angleDelta.x
+                if (Math.abs(h) <= Math.abs(ev.angleDelta.y)) return   // vertical scroll → ignore
+                card._wheelAccum += h
+                if (Math.abs(card._wheelAccum) >= 120) {
+                    card._goFace(card._wheelAccum < 0 ? 1 : -1)
+                    card._wheelAccum = 0
+                    card._wheelCooling = true
+                    _wheelCool.restart()
+                }
+            }
+        }
+
         ColumnLayout {
             id: outer
             // bottom-anchored so `inner` can fillHeight — lets a card whose
@@ -155,21 +168,79 @@ Item {
                 Layout.fillHeight: true
                 spacing: 8
 
-                // Faces mount here when the card declares any; otherwise this
-                // Loader is inactive (zero footprint) and the card's classic
-                // `_content` children render as before.
-                Loader {
-                    id: faceLoader
-                    active: card._faceIdx >= 0
-                    visible: active
+                // Two-loader CAROUSEL: on a face change the outgoing face slides
+                // out one way while the incoming slides in the other (a real
+                // carousel, not a crossfade). Both loaders inject `card` for data.
+                // When `faces` is empty this whole item is hidden (excluded from the
+                // layout) and the card's classic `_content` children render instead.
+                Item {
+                    id: faceStack
+                    visible: card._faceIdx >= 0
                     Layout.fillWidth: true
-                    // Fill the card's (row-stretched) height so a face can use the
-                    // whole card — e.g. tall sparkline charts — WITHOUT growing the
-                    // card. Faces that don't fill just sit in the extra room.
+                    // Fill the card's (row-stretched) height; preferredHeight tracks
+                    // the active face so the card sizes correctly without growing.
                     Layout.fillHeight: true
-                    source: card._faceSource
-                    onLoaded: if (item && ('card' in item)) item.card = card
-                    transform: Translate { id: faceShift }
+                    Layout.preferredHeight: _activeItem && _activeItem.implicitHeight ? _activeItem.implicitHeight : 0
+                    clip: true
+
+                    property int cur: 0             // which loader shows the current face
+                    property bool _snap: false      // true = set offset without animating
+                    property real xA: 0
+                    property real xB: 0
+                    readonly property Item _activeItem: cur === 0 ? faceA.item : faceB.item
+
+                    Loader {
+                        id: faceA
+                        anchors.fill: parent
+                        onLoaded: if (item && ('card' in item)) item.card = card
+                        transform: Translate { x: faceStack.xA }
+                    }
+                    Loader {
+                        id: faceB
+                        anchors.fill: parent
+                        active: false
+                        onLoaded: if (item && ('card' in item)) item.card = card
+                        transform: Translate { x: faceStack.xB }
+                    }
+
+                    Behavior on xA { enabled: !faceStack._snap; NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+                    Behavior on xB { enabled: !faceStack._snap; NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+
+                    Component.onCompleted: faceA.source = card._faceSource
+
+                    // Slide the incoming face in from `dir` while the current one
+                    // slides out the opposite way. dir: +1 = new comes from the right.
+                    function transition(dir) {
+                        if (width <= 0) {                       // pre-layout: just mount
+                            var c = (cur === 0) ? faceA : faceB
+                            c.active = true; c.source = card._faceSource
+                            return
+                        }
+                        if (cur === 0) {
+                            faceB.active = true; faceB.source = card._faceSource
+                            _snap = true; xB = dir * width; _snap = false
+                            xA = -dir * width; xB = 0
+                            cur = 1
+                        } else {
+                            faceA.active = true; faceA.source = card._faceSource
+                            _snap = true; xA = dir * width; _snap = false
+                            xB = -dir * width; xA = 0
+                            cur = 0
+                        }
+                        _cleanup.restart()
+                    }
+
+                    // After the slide, park + free the now-hidden loader.
+                    Timer {
+                        id: _cleanup
+                        interval: Commons.Appearance.anim.base + 80
+                        onTriggered: {
+                            faceStack._snap = true
+                            if (faceStack.cur === 0) { faceB.active = false; faceStack.xB = 0 }
+                            else                     { faceA.active = false; faceStack.xA = 0 }
+                            faceStack._snap = false
+                        }
+                    }
                 }
 
                 // Page-dots — the only face affordance. Active dot elongates; tap to jump.
