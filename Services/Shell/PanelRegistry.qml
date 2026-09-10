@@ -41,8 +41,9 @@ QtObject {
             content:  _mediaComp,
             side:     "bottom",
             // Tall enough that the playback controls (raised play-circle + shadow)
-            // clear the strip's icon row instead of clipping into it (item_038).
-            size:     250,
+            // clear the strip's icon row (item_038) AND the face page-dots row below
+            // the player (task_030) instead of clipping into either.
+            size:     272,
             axisSize: "auto"
         },
         wallpaper: {
