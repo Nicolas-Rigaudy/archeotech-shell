@@ -118,16 +118,20 @@ Item {
             }
         }
 
-        // Touchpad horizontal swipe (and horizontal mouse-wheel) → face change.
+        // Touchpad two-finger horizontal swipe (and horizontal wheel) → face change.
+        // No acceptedDevices filter — if the touchpad enumerates as a generic pointer
+        // the filter would silently drop its scroll events. Accept horizontal intent.
         WheelHandler {
             enabled: card.faces && card.faces.length > 1
-            acceptedDevices: PointerDevice.TouchPad | PointerDevice.Mouse
             onWheel: (ev) => {
                 if (card._wheelCooling) return
                 var h = ev.angleDelta.x
-                if (Math.abs(h) <= Math.abs(ev.angleDelta.y)) return   // vertical scroll → ignore
+                // Some setups deliver a horizontal swipe as y with a modifier; prefer
+                // x, but fall back to y only when x is absent and shift isn't held.
+                if (h === 0 && !(ev.modifiers & Qt.ShiftModifier)) return
+                if (Math.abs(h) < Math.abs(ev.angleDelta.y)) return   // vertical scroll → ignore
                 card._wheelAccum += h
-                if (Math.abs(card._wheelAccum) >= 120) {
+                if (Math.abs(card._wheelAccum) >= 90) {
                     card._goFace(card._wheelAccum < 0 ? 1 : -1)
                     card._wheelAccum = 0
                     card._wheelCooling = true
@@ -178,67 +182,60 @@ Item {
                     visible: card._faceIdx >= 0
                     Layout.fillWidth: true
                     // Fill the card's (row-stretched) height; preferredHeight tracks
-                    // the active face so the card sizes correctly without growing.
+                    // the current face so the card sizes correctly without growing.
                     Layout.fillHeight: true
-                    Layout.preferredHeight: _activeItem && _activeItem.implicitHeight ? _activeItem.implicitHeight : 0
+                    Layout.preferredHeight: faceMain.item && faceMain.item.implicitHeight ? faceMain.item.implicitHeight : 0
                     clip: true
 
-                    property int cur: 0             // which loader shows the current face
-                    property bool _snap: false      // true = set offset without animating
-                    property real xA: 0
-                    property real xB: 0
-                    readonly property Item _activeItem: cur === 0 ? faceA.item : faceB.item
+                    property bool _snap: false      // set offset without animating
+                    property real xMain: 0
+                    property real xPrev: 0
+                    // Source last shown, so a transition knows what to slide OUT
+                    // (faceMain already binds to the NEW source by the time we run).
+                    property url _shownSource: card._faceSource
 
+                    // The current face — content BOUND to card.face, so it is ALWAYS
+                    // correct (matches the page-dots) no matter how fast you swipe.
                     Loader {
-                        id: faceA
+                        id: faceMain
                         anchors.fill: parent
+                        source: card._faceSource
                         onLoaded: if (item && ('card' in item)) item.card = card
-                        transform: Translate { x: faceStack.xA }
+                        transform: Translate { x: faceStack.xMain }
                     }
+                    // Transient: holds the OUTGOING face only during a slide.
                     Loader {
-                        id: faceB
+                        id: facePrev
                         anchors.fill: parent
                         active: false
                         onLoaded: if (item && ('card' in item)) item.card = card
-                        transform: Translate { x: faceStack.xB }
+                        transform: Translate { x: faceStack.xPrev }
                     }
 
-                    Behavior on xA { enabled: !faceStack._snap; NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
-                    Behavior on xB { enabled: !faceStack._snap; NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+                    Behavior on xMain { enabled: !faceStack._snap; NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+                    Behavior on xPrev { enabled: !faceStack._snap; NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
 
-                    Component.onCompleted: faceA.source = card._faceSource
-
-                    // Slide the incoming face in from `dir` while the current one
-                    // slides out the opposite way. dir: +1 = new comes from the right.
+                    // Slide the (already-bound) new face in from `dir` while a snapshot
+                    // of the old face slides out the other way. Content is never
+                    // managed imperatively → no ordering races on rapid swipes.
                     function transition(dir) {
-                        if (width <= 0) {                       // pre-layout: just mount
-                            var c = (cur === 0) ? faceA : faceB
-                            c.active = true; c.source = card._faceSource
-                            return
-                        }
-                        if (cur === 0) {
-                            faceB.active = true; faceB.source = card._faceSource
-                            _snap = true; xB = dir * width; _snap = false
-                            xA = -dir * width; xB = 0
-                            cur = 1
-                        } else {
-                            faceA.active = true; faceA.source = card._faceSource
-                            _snap = true; xA = dir * width; _snap = false
-                            xB = -dir * width; xA = 0
-                            cur = 0
-                        }
+                        var oldSrc = _shownSource
+                        _shownSource = card._faceSource
+                        if (width <= 0 || !oldSrc || oldSrc === card._faceSource) return
+                        facePrev.source = oldSrc
+                        facePrev.active = true
+                        _snap = true; xPrev = 0; xMain = dir * width; _snap = false
+                        xPrev = -dir * width
+                        xMain = 0
                         _cleanup.restart()
                     }
 
-                    // After the slide, park + free the now-hidden loader.
                     Timer {
                         id: _cleanup
                         interval: Commons.Appearance.anim.base + 80
                         onTriggered: {
-                            faceStack._snap = true
-                            if (faceStack.cur === 0) { faceB.active = false; faceStack.xB = 0 }
-                            else                     { faceA.active = false; faceStack.xA = 0 }
-                            faceStack._snap = false
+                            facePrev.active = false
+                            faceStack._snap = true; faceStack.xPrev = 0; faceStack._snap = false
                         }
                     }
                 }

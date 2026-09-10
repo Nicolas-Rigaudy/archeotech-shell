@@ -29,15 +29,12 @@ DashCard {
 
     Component.onCompleted: _refresh()
 
-    property bool _dashOpen: false
-
-    Connections {
-        target: ShellServices.ShellState
-        function onStateMapChanged() {
-            root._dashOpen = ShellServices.ShellState.isOpenAnywhere("dashboard")
-            if (root._dashOpen) root._refresh()
-        }
-    }
+    // Reactive binding (NOT an event handler): true whenever the dashboard is open.
+    // The content Loader is gated on `shown`, so this card mounts AFTER the panel is
+    // already open — an onStateMapChanged handler would miss that first event and the
+    // poll would never start (flat sparkline). A binding is always current.
+    readonly property bool dashOpen: ShellServices.ShellState.isOpenAnywhere("dashboard")
+    onDashOpenChanged: if (dashOpen) _refresh()
 
     // 1s cadence, but ONLY while the dashboard is open (running: _dashOpen) — zero
     // cost when closed. Fast enough that the sparkline buffer fills in ~30s. Peers
@@ -45,7 +42,7 @@ DashCard {
     Timer {
         interval: 1000
         repeat: true
-        running: root._dashOpen
+        running: root.dashOpen
         onTriggered: root._refresh()
     }
 
