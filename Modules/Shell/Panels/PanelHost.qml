@@ -54,6 +54,11 @@ Item {
     readonly property var  _item: builtinLoader.item || pluginLoader.item
     readonly property real contentImplicitAxis: (_item && _item.implicitAxis !== undefined)
                                                 ? _item.implicitAxis : 0
+    // Optional content-driven CROSS axis (perpendicular depth). A panel whose depth
+    // varies with content (e.g. MediaPanel's compact vs full face) exposes a numeric
+    // `implicitPerp`; panels that don't keep the fixed `panelSize`.
+    readonly property real contentImplicitPerp: (_item && _item.implicitPerp !== undefined && _item.implicitPerp > 0)
+                                                ? _item.implicitPerp : 0
 
     // Auto-sized panels only know their axis extent once content has measured
     // implicitAxis; hold until then so the holder expands in one motion (mirrors

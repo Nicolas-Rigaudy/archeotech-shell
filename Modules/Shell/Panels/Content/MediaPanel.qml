@@ -32,6 +32,15 @@ Item {
     }
     Behavior on implicitAxis { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
 
+    // CROSS-axis DEPTH per face (only on a horizontal strip, where the cross axis is
+    // the panel HEIGHT) — declared per face (like implicitAxis), NOT measured, so
+    // there's no layout-measurement loop. Compact → short; full → the tuned height.
+    // 0 on a vertical strip → keep the fixed panelSize there.
+    property real implicitPerp: (panelRoot && panelRoot._horizontal)
+        ? (mediaFaces && mediaFaces.face === "compact" ? 200 : 272)
+        : 0
+    Behavior on implicitPerp { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
+
     // Responsive: faces key on this to stack when narrow (vertical side strip).
     readonly property bool _narrow: width < 360
 

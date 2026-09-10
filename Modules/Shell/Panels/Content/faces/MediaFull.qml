@@ -8,18 +8,23 @@ import "../../../../../Services/Media" as MediaServices
 // MediaPanel face: "full" — album art + track info + seekable progress + full
 // transport (prev / play / next). Extracted verbatim from the pre-face panel.
 // `host` (the MediaPanel) provides formatTime() and _narrow.
-GridLayout {
+// Root fills the carousel; the player grid is vertically CENTERED inside it so the
+// art stays aligned with the text/controls regardless of the panel's height.
+Item {
     id: face
     property var host
 
     readonly property bool _narrow: host ? host._narrow : false
+    implicitHeight: grid.implicitHeight
 
-    Layout.fillWidth: true
-    Layout.fillHeight: !_narrow
-    Layout.alignment: _narrow ? Qt.AlignTop : Qt.AlignVCenter
-    columns: _narrow ? 1 : 2
-    columnSpacing: 14
-    rowSpacing: 14
+    GridLayout {
+        id: grid
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        columns: face._narrow ? 1 : 2
+        columnSpacing: 14
+        rowSpacing: 14
 
     Item {
         readonly property int _art: face._narrow ? 72 : 92
@@ -180,5 +185,6 @@ GridLayout {
             }
             Item { Layout.fillWidth: true }
         }
+    }
     }
 }

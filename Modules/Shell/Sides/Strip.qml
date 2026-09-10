@@ -110,6 +110,8 @@ Item {
     readonly property var    _axisSizeRaw: host.axisSizeRaw
     // Panel content may expose `implicitAxis` (numeric) to drive axisSize:"auto".
     readonly property real   _contentImplicitAxis: host.contentImplicitAxis
+    // …and optionally `implicitPerp` to drive the cross-axis DEPTH from content.
+    readonly property real   _contentImplicitPerp: host.contentImplicitPerp
 
     property bool _hov: false
     // Defensive: child MouseAreas can shadow the strip-level MA's hover in Qt 6.
@@ -156,7 +158,9 @@ Item {
     readonly property bool _ready: host.ready
 
     // Perpendicular expansion target (drives strip Item size + card perpendicular dim).
-    readonly property real _perpTarget: (_panelOpen && _ready) ? _panelSize
+    // A panel may drive the open depth from content via `implicitPerp` (numeric > 0);
+    // EVERY other panel keeps the exact original `_panelSize` (no behaviour change).
+    readonly property real _perpTarget: (_panelOpen && _ready) ? (_contentImplicitPerp > 0 ? _contentImplicitPerp : _panelSize)
                                        : (_hov || _panelOpen)  ? _popupExtra
                                        :                          0
 
