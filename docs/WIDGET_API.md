@@ -203,3 +203,52 @@ Old files using the split `zones: { left, center, right }` / `icons: [...]` form
 ## Plugins
 
 `plugin:<id>` ids are **not** resolved by the filename convention — `WidgetLoader` routes them to `Services/Shell/ModuleRegistry.qml`, which discovers self-describing module folders (`module.json` + entry QML) under `~/.config/quickshell/modules/` and `~/.local/share/archeotech/modules/`. Plugin widgets share this same contract (`holderRoot`, `config`, and — for external modules — the injected `appearance`). Authoring, `module.json`, `configSchema`, placement targets, and the external-import story live in [MODULE_API.md](MODULE_API.md). The resolution pattern is a Noctalia-style filesystem convention plus `plugin:<id>` namespacing.
+
+## Swappable faces (`FaceHost`)
+
+A card or panel can offer interchangeable **faces** — different presentation
+layouts over the SAME data (e.g. SystemStatus `gauges`/`bars`/`sparkline`;
+MediaPanel `full`/`compact`). A face earns its keep only where the alternatives
+are structurally different render trees that per-instance config can't express —
+a boolean/enum toggle is config, not a face.
+
+### Declaring faces
+
+Embed the shared `Modules/Shell/FaceHost.qml` and feed it a face list:
+
+    ShellUI.FaceHost {
+        faces: [
+            { id: "gauges", label: "Gauges", file: Qt.resolvedUrl("faces/Gauges.qml") },
+            { id: "bars",   label: "Bars",   file: Qt.resolvedUrl("faces/Bars.qml") }
+        ]
+        face: "gauges"                              // default; empty/unknown → first
+        configPath: "dashboard.faces.SYSTEM STATUS" // Persistence.Config key
+        context: theDataProvider                    // injected into each face as `host`/`card`
+        gestures: true
+    }
+
+Each face is a self-contained `.qml` reading its data off the injected `host`
+(aliased `card` for dashboard cards). Keep the data/poller on the owning
+component; faces are pure presentation bound to it. `DashCard` wires FaceHost
+automatically — a dashboard card just sets `faces` / `face` / `faceKey`.
+
+### Switching + persistence (FaceHost provides all of it)
+
+- **Switch**: two-finger VERTICAL scroll, click-drag, or tapping a page-dot.
+  MangoWC does **not** deliver horizontal two-finger scroll to a layer-shell
+  surface (`angleDelta.x` is always 0; a side-swipe sends no event) — only the
+  vertical axis arrives, and touchpads report `pixelDelta` (not `angleDelta`).
+  Mirror `Widgets/Appearance/Carousel.qml`, don't reinvent it.
+- **Transition**: a two-loader carousel slide (outgoing slides out, incoming in).
+  The current face's `Loader.source` is BOUND to `face`, so the shown content is
+  always correct no matter how fast you switch (no imperative juggling → no races).
+- **Persistence**: the choice is stored at `configPath` in `Persistence.Config`
+  and restored on load (dashboard cards → `dashboard.faces.<title>`; MediaPanel →
+  `media.face`). `_select` no-ops when the id is unchanged (guards stray writes).
+
+### Faces that change the panel size
+
+A face may want a different footprint. Panel WIDTH follows `implicitAxis`; panel
+DEPTH (the height on a bottom strip) follows `implicitPerp` — declare it per face,
+not measured (see PANEL_API.md). MediaPanel returns `296` for `full` / `224` for
+`compact` so compact is genuinely smaller, not just emptier.

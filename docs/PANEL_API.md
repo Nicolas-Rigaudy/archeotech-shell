@@ -124,6 +124,49 @@ The floor (`220` above) keeps the panel from collapsing to header-only when cont
 
 ---
 
+## `implicitPerp` — content-driven panel DEPTH
+
+`implicitAxis` sizes the along-strip extent; `implicitPerp` sizes the **cross axis**
+(the panel's depth away from the edge — its *height* on a bottom strip). Expose a
+numeric `implicitPerp` and the Strip uses it as the open-depth target instead of the
+fixed `size`. Panels that don't expose it keep `size` unchanged (no behaviour change).
+
+Use it when the depth should vary with content — e.g. a panel with swappable faces
+that should shrink for a compact face:
+
+```qml
+// MediaPanel: shorter for the compact face, taller for full.
+property real implicitPerp: (panelRoot && panelRoot._horizontal)
+    ? (faceHost.face === "compact" ? 224 : 296)
+    : 0        // 0 → keep the fixed `size` (e.g. on a vertical strip)
+```
+
+**Declare it per state, don't measure it.** Deriving `implicitPerp` from a child
+layout's `implicitHeight` invites a measurement/binding loop that collapses the
+panel to its popup size. Hardcode the depth per face/state like `implicitAxis` does,
+and animate it with `Behavior on implicitPerp { NumberAnimation { duration: anim.panel } }`.
+
+---
+
+## Panel padding (cohesion)
+
+Every panel's content should feel equally roomy. Use the **shared `spacing.xl` (16)**
+for both the outer content margin and the inter-item gap:
+
+```qml
+ColumnLayout {
+    anchors.fill: parent
+    anchors.margins: Commons.Appearance.spacing.xl   // outer padding
+    spacing:         Commons.Appearance.spacing.xl    // inter-item gap
+}
+```
+
+Don't hand-pick tighter values (`lg`/`md`/`sm`) for a one-off panel — that's what made
+early panels read cramped next to the dashboard. Sub-groups inside a section may use a
+smaller gap, but the panel's top-level rhythm is `xl`.
+
+---
+
 ## Animation tokens
 
 Use the shared `Commons.Appearance.anim` tokens for any panel-internal transitions so everything matches the strip's perp/axis growth:
