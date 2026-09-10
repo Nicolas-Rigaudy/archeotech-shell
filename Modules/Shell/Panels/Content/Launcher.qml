@@ -628,8 +628,8 @@ Item {
                 readonly property int rowH: 52
                 // Cap the visible rows so the panel fits; recents row steals
                 // vertical budget, so show fewer while it's up.
-                height:         recentsRow.visible ? Math.min(contentHeight, 5 * (rowH + spacing))
-                                                   : Math.min(contentHeight, 7 * (rowH + spacing))
+                height:         recentsRow.visible ? Math.min(contentHeight, 3 * (rowH + spacing))
+                                                   : Math.min(contentHeight, 5 * (rowH + spacing))
                 implicitHeight: height
                 clip:           true
                 model:          root.filtered

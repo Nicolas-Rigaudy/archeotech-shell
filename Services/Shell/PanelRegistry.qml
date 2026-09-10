@@ -28,8 +28,11 @@ QtObject {
         launcher: {
             content:  _launcherComp,
             side:     "left",
-            size:     600,
-            axisSize: 440
+            // Launcher renders as a centered floating panel: axisSize = its WIDTH,
+            // size = its max HEIGHT. Wide + short (Spotlight/Raycast feel) rather
+            // than tall + narrow; the result-row cap (Launcher.qml) keeps it short.
+            size:     380,
+            axisSize: 680
         },
         dashboard: {
             content:  _dashboardComp,
