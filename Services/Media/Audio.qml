@@ -1,5 +1,6 @@
 pragma Singleton
 import QtQuick
+import Quickshell.Io
 import Quickshell.Services.Pipewire
 import "../Persistence" as Persistence
 
@@ -61,6 +62,22 @@ QtObject {
 
     readonly property string defaultSink:   _sink   ? _sink.name   : ""
     readonly property string defaultSource: _source ? _source.name : ""
+
+    // ── Mute LED sync ────────────────────────────────────────────────────────────
+    // The laptop's mute-key LED is GPIO-wired to the internal codec's ALSA Master
+    // mute (card 0), NOT the active PipeWire sink. When the default sink is e.g. a
+    // bluetooth headset, muting it never touches Master, so the LED would never
+    // light. Mirror the default-sink mute onto Master so the LED always means
+    // "muted", whatever the output device — and it works for both mute paths (the
+    // XF86AudioMute keybind and the bar widget) because both land on `muted`.
+    // One-shot amixer: exits immediately, so unlike the old `pactl subscribe` it
+    // can't orphan or leak a client slot.
+    onMutedChanged: _syncMuteLed(muted)
+    property var _muteLed: Process { running: false }
+    function _syncMuteLed(m) {
+        _muteLed.command = ["amixer", "-c", "0", "sset", "Master", m ? "mute" : "unmute"]
+        _muteLed.running = true
+    }
 
     // ── Device lists (outputs / real inputs) ─────────────────────────────────────
     // Built from the live node model; recompute whenever nodes appear/disappear.
