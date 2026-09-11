@@ -120,8 +120,8 @@ Item {
                         radius: 12
                         antialiasing: true
                         gradient: Gradient {
-                            GradientStop { position: 0.0; color: Commons.Appearance.sheenHi(swatch._swatch, 1.18) }
-                            GradientStop { position: 1.0; color: Commons.Appearance.sheenLo(swatch._swatch, 1.12) }
+                            GradientStop { position: 0.0; color: Commons.Appearance.sheenHi(swatch._swatch, Commons.Appearance.sheen.control.hi) }
+                            GradientStop { position: 1.0; color: Commons.Appearance.sheenLo(swatch._swatch, Commons.Appearance.sheen.control.lo) }
                         }
                         border.width: swatch._on ? 3 : (_ama.containsMouse ? 2 : 0)
                         border.color: Commons.Appearance.colors.text

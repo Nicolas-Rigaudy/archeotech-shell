@@ -36,8 +36,18 @@ Item {
         anchors.fill: parent
         visible: surf._plate === "" && !surf._steel
         radius: surf.radius
-        color: surf.color
         antialiasing: true
+        // item_050: top-lit sheen on the card's OWN fill (same colour, lighter top →
+        // darker bottom) so nested cards read as lit glass like the panels behind
+        // them; collapses to a flat slab in depthFlat via sheenHi/Lo.
+        gradient: Gradient {
+            // Surface-tier sheen on the card's OWN fill (shared sheen scale). Honour
+            // topLit like the steel path: a flush housing (topLit:false, e.g.
+            // BarSegment) collapses both stops to the base so it sits flush with the
+            // bar face rather than popping off it.
+            GradientStop { position: 0.0; color: surf.topLit ? Commons.Appearance.sheenHi(surf.color, Commons.Appearance.sheen.surface.hi) : surf.color }
+            GradientStop { position: 1.0; color: surf.topLit ? Commons.Appearance.sheenLo(surf.color, Commons.Appearance.sheen.surface.lo) : surf.color }
+        }
     }
     BorderImage {                       // legacy 9-slice plate (plate pack, no chamfer)
         anchors.fill: parent

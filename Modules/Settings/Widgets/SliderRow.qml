@@ -73,8 +73,8 @@ Item {
                     height: parent.height
                     radius: parent.radius
                     gradient: Gradient {
-                        GradientStop { position: 0.0; color: Commons.Appearance.sheenHi(Commons.Appearance.colors.accent, 1.18) }
-                        GradientStop { position: 1.0; color: Commons.Appearance.sheenLo(Commons.Appearance.colors.accent, 1.12) }
+                        GradientStop { position: 0.0; color: Commons.Appearance.sheenHi(Commons.Appearance.colors.accent, Commons.Appearance.sheen.control.hi) }
+                        GradientStop { position: 1.0; color: Commons.Appearance.sheenLo(Commons.Appearance.colors.accent, Commons.Appearance.sheen.control.lo) }
                     }
                 }
             }
@@ -90,7 +90,7 @@ Item {
                 // top-to-bottom sheen language as the track fill above. Depth cues
                 // drop in flat mode (depthFlat) — knob becomes a plain flat dot.
                 border.width: Commons.Appearance.depthFlat ? 0 : 1
-                border.color: Commons.Appearance.sheenLo(knob.color, 1.3)
+                border.color: Commons.Appearance.sheenLo(knob.color, Commons.Appearance.sheen.knob.lo)
                 Rectangle {
                     anchors.fill: parent
                     radius: parent.radius

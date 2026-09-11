@@ -94,9 +94,9 @@ Item {
                                ? Qt.rgba(Commons.Appearance.colors.peach.r, Commons.Appearance.colors.peach.g, Commons.Appearance.colors.peach.b, 0.32)
                                : Commons.Appearance.colors.glassBorder)
                         gradient: Gradient {
-                            GradientStop { position: 0.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.hi : Commons.Appearance.sheenHi(Commons.Appearance.colors.surfaceCard, 1.12) }
-                            GradientStop { position: 0.5; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.md : Commons.Appearance.sheenHi(Commons.Appearance.colors.surfaceCard, 1.12) }
-                            GradientStop { position: 1.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.lo : Commons.Appearance.colors.surfaceCard }
+                            GradientStop { position: 0.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.hi : Commons.Appearance.sheenHi(Commons.Appearance.colors.surfaceCard, Commons.Appearance.sheen.surface.hi) }
+                            GradientStop { position: 0.5; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.md : Commons.Appearance.sheenHi(Commons.Appearance.colors.surfaceCard, Commons.Appearance.sheen.surface.hi) }
+                            GradientStop { position: 1.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.lo : Commons.Appearance.sheenLo(Commons.Appearance.colors.surfaceCard, Commons.Appearance.sheen.surface.lo) }
                         }
                         Behavior on border.color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                         Behavior on border.width { NumberAnimation { duration: Commons.Appearance.anim.fast } }
@@ -203,8 +203,8 @@ Item {
                         antialiasing: true
                         // Top-lit sphere shading.
                         gradient: Gradient {
-                            GradientStop { position: 0.0; color: Commons.Appearance.sheenHi(swatch._swatch, 1.18) }
-                            GradientStop { position: 1.0; color: Commons.Appearance.sheenLo(swatch._swatch, 1.12) }
+                            GradientStop { position: 0.0; color: Commons.Appearance.sheenHi(swatch._swatch, Commons.Appearance.sheen.control.hi) }
+                            GradientStop { position: 1.0; color: Commons.Appearance.sheenLo(swatch._swatch, Commons.Appearance.sheen.control.lo) }
                         }
                         border.width: swatch._on ? 3 : (_ama.containsMouse ? 2 : 0)
                         border.color: Commons.Appearance.colors.text

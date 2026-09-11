@@ -43,8 +43,8 @@ ColumnLayout {
                 height: parent.height
                 radius: parent.radius
                 gradient: Gradient {
-                    GradientStop { position: 0.0; color: Commons.Appearance.sheenHi(barColor, 1.18) }
-                    GradientStop { position: 1.0; color: Commons.Appearance.sheenLo(barColor, 1.12) }
+                    GradientStop { position: 0.0; color: Commons.Appearance.sheenHi(barColor, Commons.Appearance.sheen.control.hi) }
+                    GradientStop { position: 1.0; color: Commons.Appearance.sheenLo(barColor, Commons.Appearance.sheen.control.lo) }
                 }
                 Behavior on width { Commons.Anim {} }
             }

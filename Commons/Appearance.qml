@@ -33,6 +33,26 @@ QtObject {
     function sheenHi(base, amt) { return root.depthFlat ? base : Qt.lighter(base, amt) }
     function sheenLo(base, amt) { return root.depthFlat ? base : Qt.darker(base, amt) }
 
+    // Sheen intensity scale — the single source for HOW MUCH a top-lit fill lifts
+    // (hi) and settles (lo), so every sheened surface speaks one language instead
+    // of each call site hardcoding its own multipliers. Three tiers by surface
+    // role: bigger surfaces need less lift than tiny knobs to read the same. Feed
+    // the tier into sheenHi/sheenLo, e.g. sheenHi(surfaceCard, sheen.surface.hi).
+    readonly property QtObject sheen: QtObject {
+        readonly property QtObject surface: QtObject {   // cards, resting buttons, housings
+            readonly property real hi: 1.13
+            readonly property real lo: 1.16
+        }
+        readonly property QtObject control: QtObject {   // toggles, sliders, segmented, swatches
+            readonly property real hi: 1.18
+            readonly property real lo: 1.13
+        }
+        readonly property QtObject knob: QtObject {       // tiny thumbs/knobs
+            readonly property real hi: 1.22
+            readonly property real lo: 1.15
+        }
+    }
+
     // ── Theme hot-reload ───────────────────────────────────────────────────────
     property var _data: ({})
 
