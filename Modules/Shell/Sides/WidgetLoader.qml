@@ -108,6 +108,19 @@ Loader {
     onWidgetIdChanged:     _resolve()
     Component.onCompleted: _resolve()
 
+    // A plugin id can mount before ModuleRegistry has finished its async scan (cold
+    // start): moduleFor() is then null and _resolve() leaves the loader empty.
+    // Retry once the registry reports ready, and on any later rescan. The first
+    // scan sets `modules` and `ready` in the same tick; Qt.callLater collapses the
+    // two signals into one retry.
+    function _retryPlugin() { if (loader.status !== Loader.Ready) loader._resolve() }
+    Connections {
+        target: ShellServices.ModuleRegistry
+        enabled: ShellServices.WidgetRegistry.isPlugin(loader.widgetId)
+        function onReadyChanged()   { Qt.callLater(loader._retryPlugin) }
+        function onModulesChanged() { Qt.callLater(loader._retryPlugin) }
+    }
+
     onStatusChanged: {
         if (status === Loader.Error)
             console.warn("[WidgetLoader] failed to load", widgetId)

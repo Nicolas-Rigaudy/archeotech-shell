@@ -53,6 +53,12 @@ Item {
         ShellServices.ShellState.toggleGlobal(id, sideArg !== undefined ? sideArg : side)
     }
     function dismissPopups() {}
+    // Bar hover-card API (holderRoot contract, docs/WIDGET_API.md): a strip has no
+    // floating hover cards, so these are no-ops rather than missing functions.
+    function showPopup(item, label, primary, secondary, hint) {}
+    function hidePopup(caller) {}
+    function hideCalendar(caller) {}
+    function keepPopupsAlive() {}
     // Is `id` the active panel shown on THIS strip? (_showsPanel only checks the
     // side/primary-host routing, so AND the id match — else every opener on an
     // active side reports active.)

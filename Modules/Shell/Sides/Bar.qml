@@ -285,7 +285,7 @@ Item {
                 spacing: 0
                 Repeater {
                     id: _leftZone
-                    model: _leftModel
+                    model: bar.horizontal ? _leftModel : null
                     delegate: WidgetLoader {
                         // Qt 6.11.1 stopped auto-binding ListModel roles to
                         // a delegate's *inherited* required properties; we
@@ -316,7 +316,7 @@ Item {
                 spacing: 0
                 Repeater {
                     id: _rightZone
-                    model: _rightModel
+                    model: bar.horizontal ? _rightModel : null
                     delegate: WidgetLoader {
                         required property var model
                         required property int index
@@ -340,7 +340,7 @@ Item {
             spacing: 0
             Repeater {
                 id: _centerZone
-                model: _centerModel
+                model: bar.horizontal ? _centerModel : null
                 delegate: WidgetLoader {
                     required property var model
                     required property int index
@@ -407,6 +407,9 @@ Item {
         //    middle overlay). Widgets render their icon-only form via BarPill
         //    (S26-C), so a vertical bar is now fully configurable like the top
         //    bar — no more hardcoded icon column.
+        //    Each orientation's Repeaters only get a model while that orientation
+        //    is active: hiding the inactive one with `visible` alone still
+        //    instantiated every widget twice.
         ColumnLayout {
             visible: !bar.horizontal
             anchors.fill: parent
@@ -419,7 +422,7 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 spacing: 8
                 Repeater {
-                    model: _leftModel
+                    model: bar.horizontal ? null : _leftModel
                     delegate: WidgetLoader {
                         required property var model
                         required property int index
@@ -437,7 +440,7 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 spacing: 8
                 Repeater {
-                    model: _rightModel
+                    model: bar.horizontal ? null : _rightModel
                     delegate: WidgetLoader {
                         required property var model
                         required property int index
@@ -457,7 +460,7 @@ Item {
             z: 2
             spacing: 8
             Repeater {
-                model: _centerModel
+                model: bar.horizontal ? null : _centerModel
                 delegate: WidgetLoader {
                     required property var model
                     required property int index
