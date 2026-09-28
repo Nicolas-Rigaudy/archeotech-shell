@@ -248,11 +248,12 @@ fi
 
 # Optional in-session command (--exec): written to a file so its quoting never
 # meets the startup string below; it runs with the nested WAYLAND_DISPLAY, so
-# mmsg / notify-send inside it reach only the headless session.
+# mmsg / notify-send inside it reach only the headless session. $QSPID is the
+# nested shell's pid, so it can drive state: qs ipc --pid "$QSPID" call ...
 EXEC_CMD=":"
 if [ -n "$EXEC" ]; then
   printf '%s\n' "$EXEC" > "$RUN/exec.sh"
-  EXEC_CMD="bash \"$RUN/exec.sh\" >> \"$LOG/exec.log\" 2>&1"
+  EXEC_CMD="QSPID=\$QSPID bash \"$RUN/exec.sh\" >> \"$LOG/exec.log\" 2>&1"
 fi
 
 # Capture step: single grim (atomic tmp→final) or a burst series out-NNN.png.

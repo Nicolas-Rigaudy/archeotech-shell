@@ -628,10 +628,14 @@ Item {
                 // Two-line rows (§ ref launchers: Caelestia 57 / Dank 52) — a
                 // 40px single-line row read like a menu, not a launcher.
                 readonly property int rowH: 52
-                // Cap the visible rows so the panel fits; recents row steals
-                // vertical budget, so show fewer while it's up.
-                height:         recentsRow.visible ? Math.min(contentHeight, 3 * (rowH + spacing))
-                                                   : Math.min(contentHeight, 5 * (rowH + spacing))
+                // Cap the visible rows so the panel fits above the footer; the
+                // recents row steals vertical budget, so show fewer while it's up.
+                // (5 rows no longer fit once the footer took its 26px.) The last
+                // term is a hard floor: whatever grows above the list, it never
+                // extends under the footer (clip hides the overflow instead).
+                readonly property real _room: footer.y - Commons.Appearance.spacing.sm - col.y - y
+                height:         Math.max(0, Math.min(contentHeight, _room,
+                                                     (recentsRow.visible ? 3 : 4) * (rowH + spacing)))
                 implicitHeight: height
                 clip:           true
                 model:          root.filtered
@@ -791,6 +795,72 @@ Item {
                         text:  "Try a different search"
                         color: Commons.Appearance.colors.overlay0
                         font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeSm }
+                    }
+                }
+            }
+        }
+
+        // ── Footer — result count + key hints, pinned to the bottom ───────────
+        // The panel keeps a fixed height (a content-driven one would move the
+        // search field while typing), so a short result list used to leave a
+        // blank slab below it; the footer anchors that space as layout.
+        Row {
+            id: footer
+            anchors {
+                left:   parent.left;   leftMargin:   Commons.Appearance.spacing.xl
+                right:  parent.right;  rightMargin:  Commons.Appearance.spacing.xl
+                bottom: parent.bottom; bottomMargin: Commons.Appearance.spacing.sm
+            }
+            height: 20
+            spacing: Commons.Appearance.spacing.lg
+
+            Text {
+                id: countLbl
+                anchors.verticalCenter: parent.verticalCenter
+                width: parent.width - hints.width - parent.spacing
+                elide: Text.ElideRight
+                // Blank while the app list loads (the body says "Loading…").
+                text: root.allApps.length === 0 ? ""
+                    : root.query.length === 0
+                    ? root.allApps.length + " apps"
+                    : root.filtered.length + (root.filtered.length === 1 ? " result" : " results")
+                color: Commons.Appearance.colors.subtext0
+                font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeSm }
+            }
+
+            Row {
+                id: hints
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: Commons.Appearance.spacing.lg
+                Repeater {
+                    model: [{ k: "↑↓", l: "select" }, { k: "↵", l: "open" }, { k: "Esc", l: "close" }]
+                    delegate: Row {
+                        id: hint
+                        required property var modelData
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: Commons.Appearance.spacing.xs
+                        Rectangle {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: Math.max(20, keyTxt.implicitWidth + 10)
+                            height: 18
+                            radius: Commons.Appearance.radius.sm
+                            color: Commons.Appearance.colors.surfaceCard
+                            border.width: 1
+                            border.color: Commons.Appearance.colors.glassBorder
+                            Text {
+                                id: keyTxt
+                                anchors.centerIn: parent
+                                text: hint.modelData.k
+                                color: Commons.Appearance.colors.subtext0
+                                font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeSm }
+                            }
+                        }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: hint.modelData.l
+                            color: Commons.Appearance.colors.subtext0
+                            font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeSm }
+                        }
                     }
                 }
             }
