@@ -22,8 +22,8 @@ A pack is a directory under `$XDG_DATA_HOME` (freedesktop data convention):
 
 ```json
 {
-  "id": "shadow-spears",
-  "name": "WH40K Shadow Spears",
+  "id": "grimdark",
+  "name": "Grimdark",
   "tier": "official",          // official | verified | community
   "minShellVersion": "0.3.0",  // versioned style-contract gate
   "inherits": "base"           // optional — parent pack id (not resolved yet)
