@@ -13,7 +13,10 @@ live bar is someone's working desktop.
 `shot.sh` runs a nested headless mango in a private temp dir: a fake HOME seeded
 with copies of your archeotech config and state, a private `XDG_RUNTIME_DIR`, its
 own D-Bus session and a generated minimal mango config, so your autostart never
-runs and nothing reaches the live session. It launches the shell with
+runs and nothing reaches the live session. Its `~/.local/bin` is an allowlist:
+scripts that act on the live session by process name (theme-switch signals every
+kitty; the reload scripts pkill the shell) are replaced by stubs that log their
+arguments to `log/stubs.log` in the run dir (`--keep` to inspect). It launches the shell with
 `qs -p <root>/shell.qml`, so it renders any checkout, including git worktrees. No
 `HOME=` prefix is needed. Output is 1280x720 with the pixman renderer (no blur, no
 audio).

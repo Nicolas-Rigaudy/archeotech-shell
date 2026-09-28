@@ -144,7 +144,21 @@ if [ "$FRESH" = 0 ]; then
   [ -d "$REAL_HOME/.local/share/archeotech" ] && cp -a "$REAL_HOME/.local/share/archeotech/." "$FH/.local/share/archeotech/"
   [ -d "$REAL_HOME/.cache/archeotech" ] && cp -a "$REAL_HOME/.cache/archeotech" "$FH/.cache/"
 fi
-for d in .local/bin .local/share/fonts .local/share/icons .config/fontconfig Projects; do
+# ~/.local/bin is an ALLOWLIST, not a symlink to the real dir: some user scripts
+# act on the live session by process name (theme-switch sends SIGUSR1 to every
+# kitty; mango-reload/shell-reload pkill quickshell). Only scripts that are safe
+# inside the nested session are linked; the rest become stubs that log their
+# arguments to log/stubs.log (tests can count calls there).
+mkdir -p "$FH/.local/bin"
+for s in wallpaper-set.sh wallpaper-picker.sh list-desktop-apps.sh wifi-scan.sh; do
+  [ -e "$REAL_HOME/.local/bin/$s" ] && ln -s "$(readlink -f "$REAL_HOME/.local/bin/$s")" "$FH/.local/bin/$s"
+done
+for s in theme-switch.sh theme-switch.py hyprlock-launch.sh wlogout-launch.sh swaylock-launch.sh \
+         mango-reload.sh shell-reload.sh gaming-mode.sh monitor-apply.sh zen-opacity-toggle.sh; do
+  printf '#!/bin/sh\necho "$(date +%%T) %s $*" >> "%s/stubs.log"\n' "$s" "$LOG" > "$FH/.local/bin/$s"
+  chmod +x "$FH/.local/bin/$s"
+done
+for d in .local/share/fonts .local/share/icons .config/fontconfig Projects; do
   [ -e "$REAL_HOME/$d" ] && { mkdir -p "$(dirname "$FH/$d")"; ln -s "$REAL_HOME/$d" "$FH/$d"; }
 done
 
@@ -262,9 +276,12 @@ else
   [ "$NOTIFY" = 1 ] && echo "warn: no dbus-run-session; --notify may reach the live session bus" >&2
 fi
 
+# PATH without the user's own bin dirs, so nothing bypasses the stubs above.
+SAFE_PATH="$FH/.local/bin:$(printf '%s' "$PATH" | tr ':' '\n' | grep -vE "^$REAL_HOME/|^$HOME/|^\$" | paste -sd:)"
+
 # Clean environment: only what the nested session needs, pointed at the fake HOME.
 ENVV=(env -i
-  PATH="$PATH" HOME="$FH" USER="$USER_NAME" LOGNAME="$USER_NAME" SHELL=/bin/bash
+  PATH="$SAFE_PATH" HOME="$FH" USER="$USER_NAME" LOGNAME="$USER_NAME" SHELL=/bin/bash
   LANG="${LANG:-C.UTF-8}" TERM="${TERM:-xterm-256color}"
   XDG_RUNTIME_DIR="$RT" XDG_CONFIG_HOME="$FH/.config" XDG_DATA_HOME="$FH/.local/share"
   XDG_CACHE_HOME="$FH/.cache" XDG_STATE_HOME="$FH/.local/state"
