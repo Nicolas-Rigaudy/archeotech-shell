@@ -72,7 +72,19 @@ QtObject {
                 }
             }
         }
-        onExited: (code, status) => { if (code !== 0 || status !== 0) running = true }
+        // Same backoff as Network.monitor (1s → cap 30s; reset after 10s up):
+        // without NetworkManager nmcli exits at once, and an immediate restart spun.
+        property double _startedAt: 0
+        onStarted: _startedAt = Date.now()
+        onExited: (code, status) => {
+            var t = root._monitorRestart
+            t.interval = (Date.now() - _startedAt >= 10000) ? 1000 : Math.min(t.interval * 2, 30000)
+            t.start()
+        }
+    }
+    property var _monitorRestart: Timer {
+        interval: 500; repeat: false
+        onTriggered: root._monitor.running = true
     }
 
     // Queued: a second up/down while nmcli is still busy is no longer dropped.

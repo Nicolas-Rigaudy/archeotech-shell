@@ -19,6 +19,10 @@
 #   shot.sh --fresh out.png                  # first boot: no user config or state at all
 #   shot.sh --notify --burst 6 -i 1 out.png  # fire a toast, capture 6 frames 1s
 #                                            #   apart → out-000.png … out-005.png
+#   shot.sh --outputs 2 out.png              # two headless outputs side by side
+#   shot.sh --exec 'notify-send a; mmsg -d focusmon,right' out.png
+#                                            # run a command in the nested session
+#                                            #   before capture (after --notify*)
 #
 # STATE-DRIVING (--state <name>): before capture, calls the shell's own IPC
 # handler to open a panel — launcher | settings[:pane] | dashboard | wallpaper |
@@ -72,6 +76,8 @@ SETS=()             # config.json overrides, key.path=json-value (repeatable --s
 NOTIFY_COUNT=0      # >0 → fire N notifications with no expiry (the shell's own timeout applies)
 KEEP=0              # 1 → keep the run dir (logs, fake HOME) even on success
 FRESH=0             # 1 → copy none of the user's config/state/cache (a stranger's first boot)
+OUTPUTS=1           # headless outputs (multi-monitor cases); grim captures them all
+EXEC=""             # shell command run inside the nested session before capture
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -91,6 +97,8 @@ while [ $# -gt 0 ]; do
     --notify-count) NOTIFY_COUNT="$2"; shift 2 ;;
     --keep)     KEEP=1; shift ;;
     --fresh)    FRESH=1; shift ;;
+    --outputs)  OUTPUTS="$2"; shift 2 ;;
+    --exec)     EXEC="$2"; shift 2 ;;
     -*)         echo "unknown flag: $1" >&2; exit 2 ;;
     *)          OUT="$1"; shift ;;
   esac
@@ -238,6 +246,15 @@ if [ "$NOTIFY_COUNT" -gt 0 ]; then
   NOTIFY_CMD="for n in \$(seq 1 $NOTIFY_COUNT); do notify-send \"archeotech shot \$n\" \"probe \$n of $NOTIFY_COUNT\"; sleep 0.2; done"
 fi
 
+# Optional in-session command (--exec): written to a file so its quoting never
+# meets the startup string below; it runs with the nested WAYLAND_DISPLAY, so
+# mmsg / notify-send inside it reach only the headless session.
+EXEC_CMD=":"
+if [ -n "$EXEC" ]; then
+  printf '%s\n' "$EXEC" > "$RUN/exec.sh"
+  EXEC_CMD="bash \"$RUN/exec.sh\" >> \"$LOG/exec.log\" 2>&1"
+fi
+
 # Capture step: single grim (atomic tmp→final) or a burst series out-NNN.png.
 if [ "$BURST" -gt 1 ]; then
   CAPTURE="
@@ -260,6 +277,7 @@ STARTUP="bash -c '
   $DRIVE
   sleep 1
   $NOTIFY_CMD
+  $EXEC_CMD
   $CAPTURE
   touch \"$DONE\"
 '"
@@ -286,7 +304,7 @@ ENVV=(env -i
   XDG_RUNTIME_DIR="$RT" XDG_CONFIG_HOME="$FH/.config" XDG_DATA_HOME="$FH/.local/share"
   XDG_CACHE_HOME="$FH/.cache" XDG_STATE_HOME="$FH/.local/state"
   XDG_DATA_DIRS="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
-  WLR_BACKENDS=headless WLR_HEADLESS_OUTPUTS=1 WLR_RENDERER=pixman WLR_LIBINPUT_NO_DEVICES=1
+  WLR_BACKENDS=headless WLR_HEADLESS_OUTPUTS="$OUTPUTS" WLR_RENDERER=pixman WLR_LIBINPUT_NO_DEVICES=1
   QT_WAYLAND_DECORATION=none)
 
 # Launch the nested headless compositor in its own session/process group.

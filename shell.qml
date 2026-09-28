@@ -224,7 +224,14 @@ ShellRoot {
     // Connections were removed.
 
     // ── Toast queue ────────────────────────────────────────────────────────────
-    property var _toastQueue: []
+    // One toast window per screen (toastVariants below), each with its own
+    // ListModel. A new toast joins the window on the focused output and stays
+    // there; toasts already showing never move to another screen. ListModel, not
+    // a reassigned JS array: a Repeater over a replaced array re-creates every
+    // delegate on each arrival or dismiss, which restarted every other toast's
+    // timeout (in a burst, toasts never expired). Rows carry a stable uid so a
+    // toast removes itself by identity, not by a delegate index that has shifted.
+    property int _toastUid: 0
 
     Connections {
         target: SystemServices.Notifications
@@ -239,18 +246,23 @@ ShellRoot {
                     && !Persistence.Config.get("notifications.showOnFullscreen", false)
                     && comp.isFullscreen(comp.focusedOutput))
                 return
-            var q = shell._toastQueue.concat([{
+            var wins = toastVariants.instances
+            if (wins.length === 0) return
+            var win = wins[0]  // focused output unknown: the first screen
+            for (var i = 0; i < wins.length; i++)
+                if (wins[i].screen && wins[i].screen.name === comp.focusedOutput) win = wins[i]
+            win.toasts.append({
+                uid:           ++shell._toastUid,
                 appIcon:       notification.appIcon       || "",
                 appName:       notification.appName       || "",
                 summary:       notification.summary       || "",
                 body:          notification.body          || "",
                 urgency:       urgency,
                 expireTimeout: notification.expireTimeout || -1
-            }])
-            // "Max Visible Toasts": drop the oldest beyond the limit.
+            })
+            // "Max Visible Toasts" (per screen): drop the oldest beyond the limit.
             var max = Math.max(1, Math.round(Persistence.Config.get("notifications.maxToasts", 5)))
-            if (q.length > max) q = q.slice(q.length - max)
-            shell._toastQueue = q
+            while (win.toasts.count > max) win.toasts.remove(0)
         }
     }
 
@@ -285,55 +297,62 @@ ShellRoot {
     // exclusiveZone = sideSize + outerGap.
     Shell.ShellExclusions {}
 
-    // ── Toast layer ───────────────────────────────────────────────────────────
-    PanelWindow {
-        id: toastWindow
-        visible: shell._toastQueue.length > 0
-        exclusionMode: ExclusionMode.Ignore
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.namespace: "quickshell:toasts"
-        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+    // ── Toast layer — one window per screen ───────────────────────────────────
+    Variants {
+        id: toastVariants
+        model: Quickshell.screens
+        delegate: PanelWindow {
+            id: toastWindow
+            required property var modelData
+            screen: modelData
+            property ListModel toasts: ListModel {}
 
-        anchors { top: true; right: true }
-        // +48 (24 each side) so the toast cards' drop shadow can bleed instead
-        // of being clipped hard by the layer-surface edge.
-        implicitWidth:  316 + 48
-        implicitHeight: toastStack.implicitHeight
-                      + Commons.Appearance.bar.marginTop
-                      + Commons.Appearance.bar.height
-                      + 48
-        color: "transparent"
+            function removeToast(uid) {
+                for (var i = 0; i < toasts.count; i++) {
+                    if (toasts.get(i).uid === uid) { toasts.remove(i); return }
+                }
+            }
 
-        Column {
-            id: toastStack
-            anchors.right:      parent.right
-            anchors.rightMargin: 24
-            anchors.top:        parent.top
-            anchors.topMargin:  Commons.Appearance.bar.marginTop + Commons.Appearance.bar.height + 16
-            width: 316
-            spacing: 8
+            visible: toasts.count > 0
+            exclusionMode: ExclusionMode.Ignore
+            WlrLayershell.layer: WlrLayer.Overlay
+            WlrLayershell.namespace: "quickshell:toasts"
+            WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
-            Repeater {
-                model: shell._toastQueue
-                delegate: Item {
-                    required property int index
-                    required property var modelData
-                    width: 316
-                    height: _toast.height
+            anchors { top: true; right: true }
+            // +48 (24 each side) so the toast cards' drop shadow can bleed instead
+            // of being clipped hard by the layer-surface edge.
+            implicitWidth:  316 + 48
+            implicitHeight: toastStack.implicitHeight
+                          + Commons.Appearance.bar.marginTop
+                          + Commons.Appearance.bar.height
+                          + 48
+            color: "transparent"
 
-                    NotifToast {
-                        id: _toast
+            Column {
+                id: toastStack
+                anchors.right:      parent.right
+                anchors.rightMargin: 24
+                anchors.top:        parent.top
+                anchors.topMargin:  Commons.Appearance.bar.marginTop + Commons.Appearance.bar.height + 16
+                width: 316
+                spacing: 8
+
+                Repeater {
+                    model: toastWindow.toasts
+                    delegate: Item {
+                        id: toastSlot
+                        required property var model
+                        required property int uid
                         width: 316
-                        notification: parent.modelData
-                        onDismissClicked: {
-                            var q = shell._toastQueue.slice()
-                            q.splice(parent.index, 1)
-                            shell._toastQueue = q
-                        }
-                        onTimedOut: {
-                            var q = shell._toastQueue.slice()
-                            q.splice(parent.index, 1)
-                            shell._toastQueue = q
+                        height: _toast.height
+
+                        NotifToast {
+                            id: _toast
+                            width: 316
+                            notification: toastSlot.model
+                            onDismissClicked: toastWindow.removeToast(toastSlot.uid)
+                            onTimedOut:       toastWindow.removeToast(toastSlot.uid)
                         }
                     }
                 }

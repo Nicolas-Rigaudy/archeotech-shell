@@ -40,13 +40,32 @@ QtObject {
     }
 
     // ── nmcli event monitor ────────────────────────────────────────────────────
+    // Respawns with exponential backoff (1s → cap 30s). Without NetworkManager,
+    // nmcli exits at once; an immediate restart was a 100% CPU spin. A monitor
+    // that stayed up for 10s+ was healthy, so its next restart starts from 1s.
     property var monitor: Process {
+        property double _startedAt: 0
         command: ["nmcli", "monitor"]
         running: false
+        onStarted: _startedAt = Date.now()
         stdout: SplitParser {
-            onRead: _line => { root.refresh.running = true; root._scan() }
+            onRead: _line => root._eventDebounce.restart()
         }
-        onExited: (code, status) => { running = true }
+        onExited: (code, status) => {
+            var t = root._monitorRestart
+            t.interval = (Date.now() - _startedAt >= 10000) ? 1000 : Math.min(t.interval * 2, 30000)
+            t.start()
+        }
+    }
+    property var _monitorRestart: Timer {
+        interval: 500; repeat: false
+        onTriggered: root.monitor.running = true
+    }
+    // nmcli monitor is chatty (DHCP, connectivity and device-state lines); coalesce
+    // a burst of lines into one refresh + scan instead of one wifi scan per line.
+    property var _eventDebounce: Timer {
+        interval: 300; repeat: false
+        onTriggered: { root.refresh.running = true; root._scan() }
     }
 
     // ── Basic connection state refresh ─────────────────────────────────────────
@@ -156,17 +175,19 @@ QtObject {
         property string _cmd: ""
         command: ["bash", "-c", _cmd]
         running: false
-        onExited: (code, status) => {
-            var s = root.connectingTo
-            root.connectingTo = ""
-            if (code !== 0 && s !== "") {
-                // Forget the stale partial profile on auth failure then rescan
-                root._forgetCmd._cmd = "nmcli connection delete " + root._esc(s) + " 2>/dev/null; true"
-                root._forgetCmd.running = true
-            }
-            root.refresh.running = true
-            root._scan()
+        onExited: (code, status) => root._onConnectExited(code)
+    }
+
+    function _onConnectExited(code) {
+        var s = root.connectingTo
+        root.connectingTo = ""
+        if (code !== 0 && s !== "") {
+            // Forget the stale partial profile on auth failure then rescan
+            root._forgetCmd._cmd = "nmcli connection delete " + root._esc(s) + " 2>/dev/null; true"
+            root._forgetCmd.running = true
         }
+        root.refresh.running = true
+        root._scan()
     }
 
     function connect(targetSsid) {
@@ -176,11 +197,25 @@ QtObject {
         root._connCmd.running = true
     }
 
+    // The password never goes on a command line (argv is readable by any local
+    // user via ps or /proc/<pid>/cmdline): nmcli --ask prompts for the secret and
+    // reads it from stdin, which only this process holds.
+    property var _connPskCmd: Process {
+        property string _pw: ""
+        running: false
+        stdinEnabled: true
+        // Close stdin after the one secret: a re-prompt (wrong password) then hits
+        // EOF and nmcli fails instead of waiting forever.
+        onStarted: { write(_pw + "\n"); _pw = ""; stdinEnabled = false }
+        onExited: (code, status) => root._onConnectExited(code)
+    }
+
     function connectWithPassword(targetSsid, pw) {
         if (root.connectingTo !== "") return
         root.connectingTo = targetSsid
-        root._connCmd._cmd = "nmcli dev wifi connect " + root._esc(targetSsid) + " password " + root._esc(pw)
-        root._connCmd.running = true
+        root._connPskCmd._pw = pw
+        root._connPskCmd.command = ["nmcli", "--ask", "dev", "wifi", "connect", targetSsid]
+        root._connPskCmd.running = true
     }
 
     property var _disconnCmd: Process {
