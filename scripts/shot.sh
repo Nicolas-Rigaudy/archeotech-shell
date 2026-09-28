@@ -7,31 +7,48 @@
 # (no synthetic input), then grabs a PNG — or a BURST of PNGs — with grim. Lets a
 # tool or CI *see* a visual (or motion) change with no physical display attached.
 #
-#   shot.sh [out.png]                        # full shell (qs -c archeotech)
+#   shot.sh [out.png]                        # full shell from this checkout
+#   shot.sh --root ../wt/feature out.png     # render another checkout/worktree
 #   shot.sh --qml Widgets/Bar/Foo.qml [out]  # one component in isolation
 #   shot.sh -w 10 out.png                    # longer settle wait (default 8s)
 #   shot.sh --state launcher out.png         # open the launcher, then capture
 #   shot.sh --state settings:appearance out  # open settings on a named pane
+#   shot.sh --theme archeotech-latte --pack grimdark --flat 1 out.png
 #   shot.sh --notify --burst 6 -i 1 out.png  # fire a toast, capture 6 frames 1s
 #                                            #   apart → out-000.png … out-005.png
 #
 # STATE-DRIVING (--state <name>): before capture, calls the shell's own IPC
 # handler to open a panel — launcher | settings[:pane] | dashboard | wallpaper |
-# media | layout | notifications | editmode | theme(reload). Runs INSIDE the
-# nested session, so it drives the nested shell, never your real one.
+# media | layout | notifications | editmode | theme(reload).
+#
+# LOOK (--theme/--pack/--flat): --theme takes a variant dir under <root>/themes
+# (dark/light mode comes from that theme.json); --pack takes a pack id or "base";
+# --flat 0|1 toggles flat mode. Unset flags keep the user's current choice.
 #
 # BURST (--burst N [-i SECS]): captures N frames spaced SECS apart into
 # out-000.png … out-(N-1).png instead of a single file. Combine with --notify to
 # confirm a motion state changed (a toast appears in early frames, gone later).
 #
-# SAFETY: this NEVER kills processes by name. It launches the nested compositor
-# in the background, remembers ITS pid, and tears down only that pid. `pkill -x
-# mango` / `pkill quickshell` would match your REAL session compositor+shell and
-# log you out — so they are deliberately not used here. Likewise every `qs ipc`
-# and `notify-send` runs inside the nested WAYLAND_DISPLAY.
+# ISOLATION: every run gets its own temp dir holding
+#   • a fake HOME seeded with COPIES of the user's archeotech config/state/cache,
+#     so the nested shell can read and write freely without touching the real ones;
+#   • a private XDG_RUNTIME_DIR, so the nested Wayland, qs-ipc, awww and PipeWire
+#     sockets can never meet the live session's (no audio: the live PipeWire is
+#     deliberately unreachable);
+#   • its own D-Bus session (dbus-run-session) and a generated minimal mango
+#     config passed with -c, so the user's autostart never runs;
+#   • a clean environment (env -i + allowlist), so live-session variables such as
+#     WAYLAND_DISPLAY or HYPRLAND_INSTANCE_SIGNATURE cannot leak in.
+# The shell is launched with `qs -p <root>/shell.qml`, never `qs -c archeotech`,
+# so any checkout renders — including git worktrees.
 #
-# Requires: mango, qs (quickshell), grim, wlroots headless backend. 1280x720.
-# --notify additionally requires notify-send.
+# SAFETY: this NEVER kills processes by name. The nested session runs in its own
+# process group, torn down by PGID; anything left behind is found by its unique
+# private XDG_RUNTIME_DIR and killed by pid. `pkill -x mango` / `pkill quickshell`
+# would match your REAL session compositor+shell and log you out.
+#
+# Requires: mango, qs (quickshell), grim, setsid, wlroots headless backend.
+# 1280x720. --notify needs notify-send; wallpaper needs awww (optional).
 ################################################################################
 set -u
 
@@ -42,6 +59,12 @@ STATE=""            # panel to drive open via qs ipc before capture (empty = non
 BURST=1             # frames to capture (1 = single shot); >1 → out-NNN.png series
 INTERVAL=1          # seconds between burst frames
 NOTIFY=0            # 1 → fire a demo notification to exercise the toast pipeline
+ROOT=""             # checkout to render (default: the repo this script lives in)
+THEME=""            # theme variant dir under <root>/themes (empty = user's current)
+PACK="-"            # pack id, "base" for none, "-" = user's current
+FLAT="-"            # 0|1, "-" = user's current
+WALLPAPER=""        # image path (default: what the live awww shows, if anything)
+KEEP=0              # 1 → keep the run dir (logs, fake HOME) even on success
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -51,32 +74,98 @@ while [ $# -gt 0 ]; do
     --burst)    BURST="$2"; shift 2 ;;
     -i|--interval) INTERVAL="$2"; shift 2 ;;
     --notify)   NOTIFY=1; shift ;;
+    --root)     ROOT="$2"; shift 2 ;;
+    --theme)    THEME="$2"; shift 2 ;;
+    --pack)     PACK="$2"; shift 2 ;;
+    --flat)     FLAT="$2"; shift 2 ;;
+    --wallpaper) WALLPAPER="$2"; shift 2 ;;
+    --keep)     KEEP=1; shift ;;
     -*)         echo "unknown flag: $1" >&2; exit 2 ;;
     *)          OUT="$1"; shift ;;
   esac
 done
+
+ROOT="$(cd "${ROOT:-$(dirname "$(readlink -f "$0")")/..}" && pwd)" || { echo "bad --root" >&2; exit 2; }
+[ -f "$ROOT/shell.qml" ] || { echo "no shell.qml in $ROOT" >&2; exit 2; }
+
 OUT="${OUT:-/tmp/archeotech-shot.png}"
-DONE="$OUT.done"        # sentinel the inner script touches when it has finished;
-                       # the teardown loop waits on THIS, so burst (many files,
-                       # no single "$OUT") is observed as reliably as a single shot.
-rm -f "$OUT" "$OUT.tmp" "$DONE"
-# Clear any stale burst frames from a previous run of the same prefix.
+case "$OUT" in /*) ;; *) OUT="$PWD/$OUT" ;; esac
 BASE="${OUT%.png}"
-rm -f "$BASE"-[0-9][0-9][0-9].png 2>/dev/null
+rm -f "$OUT" "$OUT.tmp" "$BASE"-[0-9][0-9][0-9].png 2>/dev/null
 
 if [ -n "$QML" ]; then
+  [ -f "$QML" ] || QML="$ROOT/$QML"
+  [ -f "$QML" ] || { echo "no such component: $QML" >&2; exit 2; }
+  QML="$(readlink -f "$QML")"
   LAUNCH="qs -p '$QML'"
 else
-  LAUNCH="qs -c archeotech"
+  LAUNCH="qs -p '$ROOT/shell.qml'"
+fi
+
+# ── Run dir + fake HOME ──────────────────────────────────────────────────────
+# The real home comes from passwd, not $HOME: sandboxed callers may have a
+# different $HOME, and the copies must come from the user's actual config.
+USER_NAME="$(id -un)"
+REAL_HOME="$(getent passwd "$USER_NAME" | cut -d: -f6)"
+RUN="$(mktemp -d "${TMPDIR:-/tmp}/archeotech-shot.XXXXXX")"
+FH="$RUN/home/$USER_NAME"            # basename = user name, so greetings match
+RT="$RUN/runtime"
+LOG="$RUN/log"
+DONE="$RUN/done"
+mkdir -p "$FH/.config/archeotech" "$FH/.local/share/archeotech" "$FH/.cache" "$RT" "$LOG"
+chmod 700 "$RT"
+
+RA="$REAL_HOME/.config/archeotech"
+for f in config.json shell-config.json theme.json; do
+  [ -f "$RA/$f" ] && cp "$RA/$f" "$FH/.config/archeotech/$f"
+done
+# Read-only resources: symlinks are fine, nothing writes into them.
+ln -s "$ROOT/themes"         "$FH/.config/archeotech/themes"
+ln -s "$ROOT/scripts/assets" "$FH/.config/archeotech/assets"
+[ -e "$RA/wallpapers" ] && ln -s "$(readlink -f "$RA/wallpapers")" "$FH/.config/archeotech/wallpapers"
+[ -d "$REAL_HOME/.local/share/archeotech" ] && cp -a "$REAL_HOME/.local/share/archeotech/." "$FH/.local/share/archeotech/"
+[ -d "$REAL_HOME/.cache/archeotech" ] && cp -a "$REAL_HOME/.cache/archeotech" "$FH/.cache/"
+for d in .local/bin .local/share/fonts .local/share/icons .config/fontconfig Projects; do
+  [ -e "$REAL_HOME/$d" ] && { mkdir -p "$(dirname "$FH/$d")"; ln -s "$REAL_HOME/$d" "$FH/$d"; }
+done
+
+# ── Look overrides (theme / pack / flat) ─────────────────────────────────────
+if [ -n "$THEME" ] || [ "$PACK" != "-" ] || [ "$FLAT" != "-" ]; then
+  python3 - "$ROOT" "$FH" "$THEME" "$PACK" "$FLAT" <<'PY' || { echo "bad --theme/--pack/--flat" >&2; exit 2; }
+import json, os, sys
+root, fh, theme, pack, flat = sys.argv[1:]
+cfg_path = f"{fh}/.config/archeotech/config.json"
+cfg = json.load(open(cfg_path)) if os.path.exists(cfg_path) else {}
+if theme:
+    t = json.load(open(f"{root}/themes/{theme}/theme.json"))
+    t["_dir"] = f"{fh}/.config/archeotech/themes/{theme}"
+    json.dump(t, open(f"{fh}/.config/archeotech/theme.json", "w"), indent=2)
+    mode = t.get("mode", "dark")
+    cfg.setdefault("theme", {})["variant"] = theme
+    cs = cfg.setdefault("colorScheme", {})
+    cs["mode"] = mode
+    if t.get("family"): cs["family"] = t["family"]
+    if t.get("flavor"): cs["flavorDark" if mode == "dark" else "flavorLight"] = t["flavor"]
+ap = cfg.setdefault("appearance", {})
+if pack != "-": ap["activePack"] = "" if pack == "base" else pack
+if flat != "-": ap["flatMode"] = flat == "1"
+json.dump(cfg, open(cfg_path, "w"), indent=2)
+PY
+fi
+
+# ── Minimal nested mango config: wallpaper only, never the user's autostart ──
+if [ -z "$WALLPAPER" ] && command -v awww >/dev/null 2>&1; then
+  WALLPAPER="$(timeout 2 awww query 2>/dev/null | sed -n 's/.*currently displaying: image: //p' | head -1)"
+fi
+: > "$RUN/mango.conf"
+if [ -n "$WALLPAPER" ] && [ -f "$WALLPAPER" ] && command -v awww-daemon >/dev/null 2>&1; then
+  echo "exec-once=sh -c 'awww-daemon >$LOG/awww.log 2>&1 & sleep 1; awww img \"$WALLPAPER\" >>$LOG/awww.log 2>&1'" > "$RUN/mango.conf"
 fi
 
 # Build the state-driving step (runs inside the nested session). --state settings
 # accepts a "settings:pane" form that maps onto the openPane(pane) IPC function.
-#
-# SAFETY: the ipc call selects the instance by the NESTED qs pid (\$QSPID, set in
-# the inner script), never by `-c archeotech` config name. The live session runs
-# the SAME config and shares this $XDG_RUNTIME_DIR, so a config-name selection
-# could drive the user's REAL bar. Pid selection can only ever hit our own shell.
+# The call selects the nested shell by pid; with the private runtime dir it could
+# not reach the live shell anyway.
 DRIVE=":"   # no-op by default
 if [ -n "$STATE" ]; then
   case "$STATE" in
@@ -85,15 +174,14 @@ if [ -n "$STATE" ]; then
     nc|notifications) DRIVE="qs ipc --pid \$QSPID call notifications open" ;;
     launcher|settings|dashboard|wallpaper|media|layout|editmode)
                 DRIVE="qs ipc --pid \$QSPID call $STATE open" ;;
-    *) echo "unknown --state: $STATE" >&2; exit 2 ;;
+    *) echo "unknown --state: $STATE" >&2; rm -rf "$RUN"; exit 2 ;;
   esac
 fi
 
 # Optional toast driver: a real D-Bus notification the shell's own server catches,
 # so a toast appears and later self-dismisses across burst frames — no fake input.
+# Short expiry (2.5s) so the toast dismisses partway through a typical burst.
 NOTIFY_CMD=":"
-# Short expiry (2.5s) so the toast dismisses partway through a typical burst,
-# giving frames that show it present AND later gone — the motion AC3 asks for.
 [ "$NOTIFY" = 1 ] && NOTIFY_CMD="notify-send -t 2500 \"archeotech shot\" \"burst motion probe\""
 
 # Capture step: single grim (atomic tmp→final) or a burst series out-NNN.png.
@@ -109,12 +197,10 @@ else
 fi
 
 # Runs INSIDE the nested compositor, so it inherits the nested WAYLAND_DISPLAY and
-# grim/qs-ipc/notify-send all target the headless session — never your real one.
-# QSPID is the nested shell's pid, used to address ipc at OUR instance only. No
-# kills here: when we terminate the nested mango below, this qs child dies too.
+# grim/qs-ipc/notify-send all target the headless session.
 STARTUP="bash -c '
   sleep 2
-  $LAUNCH > /tmp/archeotech-shot-qs.log 2>&1 &
+  $LAUNCH > $LOG/qs.log 2>&1 &
   QSPID=\$!
   sleep $WAIT
   $DRIVE
@@ -127,45 +213,68 @@ STARTUP="bash -c '
 # A burst needs the whole series to land before teardown; budget for it.
 CAP_SECS=$((BURST * (INTERVAL + 1) + 5))
 
-# Isolate the nested session behind its OWN D-Bus when possible: the live shell
-# already owns org.freedesktop.Notifications on the real session bus, so without
-# this a --notify probe would toast the USER'S bar and the nested server would
-# get nothing. A fresh bus keeps notifications (and any other bus traffic) inside
-# the headless session. Degrade gracefully if dbus-run-session is unavailable.
+# Isolate the nested session behind its OWN D-Bus: the live shell already owns
+# org.freedesktop.Notifications on the real session bus.
 if command -v dbus-run-session >/dev/null 2>&1; then
   BUS=(dbus-run-session --)
 else
   BUS=()
-  [ "$NOTIFY" = 1 ] && echo "warn: no dbus-run-session; --notify may leak to the live session" >&2
+  [ "$NOTIFY" = 1 ] && echo "warn: no dbus-run-session; --notify may reach the live session bus" >&2
 fi
 
-# Launch the nested headless compositor in the background; remember ITS pid.
-WLR_BACKENDS=headless WLR_HEADLESS_OUTPUTS=1 WLR_RENDERER=pixman \
-  timeout $((WAIT + CAP_SECS + 20)) "${BUS[@]}" mango -s "$STARTUP" >/tmp/archeotech-shot-mango.log 2>&1 &
-MANGO_PID=$!
+# Clean environment: only what the nested session needs, pointed at the fake HOME.
+ENVV=(env -i
+  PATH="$PATH" HOME="$FH" USER="$USER_NAME" LOGNAME="$USER_NAME" SHELL=/bin/bash
+  LANG="${LANG:-C.UTF-8}" TERM="${TERM:-xterm-256color}"
+  XDG_RUNTIME_DIR="$RT" XDG_CONFIG_HOME="$FH/.config" XDG_DATA_HOME="$FH/.local/share"
+  XDG_CACHE_HOME="$FH/.cache" XDG_STATE_HOME="$FH/.local/state"
+  XDG_DATA_DIRS="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+  WLR_BACKENDS=headless WLR_HEADLESS_OUTPUTS=1 WLR_RENDERER=pixman WLR_LIBINPUT_NO_DEVICES=1
+  QT_WAYLAND_DECORATION=none)
 
-# Wait for the sentinel to land, then tear down ONLY our nested compositor.
+# Launch the nested headless compositor in its own session/process group.
+setsid "${ENVV[@]}" timeout $((WAIT + CAP_SECS + 20)) "${BUS[@]}" \
+  mango -c "$RUN/mango.conf" -s "$STARTUP" >"$LOG/mango.log" 2>&1 &
+PGID=$!
+
+# Wait for the sentinel to land, then tear down ONLY our nested session.
 for _ in $(seq 1 $((WAIT + CAP_SECS + 15))); do
   [ -e "$DONE" ] && break
   sleep 1
 done
-kill "$MANGO_PID" 2>/dev/null   # SIGTERM to our timeout→mango only, by pid
-wait "$MANGO_PID" 2>/dev/null
+kill -TERM -- "-$PGID" 2>/dev/null
+wait "$PGID" 2>/dev/null
+
+# Anything that escaped the group (a daemon that re-parented) still carries our
+# unique private runtime dir in its environment: find it by that, kill by pid.
+LEFT=()
+for p in /proc/[0-9]*; do
+  if grep -qzxF "XDG_RUNTIME_DIR=$RT" "$p/environ" 2>/dev/null; then
+    LEFT+=("${p#/proc/}")
+  fi
+done
+if [ "${#LEFT[@]}" -gt 0 ]; then
+  kill "${LEFT[@]}" 2>/dev/null
+  echo "note: reaped ${#LEFT[@]} leftover nested process(es): ${LEFT[*]}" >&2
+fi
 
 # Report what landed. Burst success = at least one frame; single = the one file.
+ok=0
 if [ "$BURST" -gt 1 ]; then
   shopt -s nullglob
   frames=("$BASE"-[0-9][0-9][0-9].png)
   shopt -u nullglob
   if [ "${#frames[@]}" -gt 0 ]; then
-    echo "shot: ${#frames[@]} frame(s) ${frames[0]} … ${frames[-1]}"
-  else
-    echo "FAILED — see /tmp/archeotech-shot-{mango,qs}.log" >&2
-    exit 1
+    echo "shot: ${#frames[@]} frame(s) ${frames[0]} … ${frames[-1]}"; ok=1
   fi
 elif [ -s "$OUT" ]; then
-  echo "shot: $OUT ($(file -b "$OUT"))"
-else
-  echo "FAILED — see /tmp/archeotech-shot-{mango,qs}.log" >&2
-  exit 1
+  echo "shot: $OUT ($(file -b "$OUT"))"; ok=1
 fi
+
+if [ "$ok" = 1 ] && [ "$KEEP" = 0 ]; then
+  rm -rf "$RUN"
+else
+  [ "$ok" = 1 ] || echo "FAILED — logs kept in $LOG" >&2
+  [ "$KEEP" = 1 ] && echo "run dir kept: $RUN"
+fi
+[ "$ok" = 1 ]
