@@ -14,6 +14,7 @@
 #   shot.sh --state launcher out.png         # open the launcher, then capture
 #   shot.sh --state settings:appearance out  # open settings on a named pane
 #   shot.sh --theme archeotech-latte --pack grimdark --flat 1 out.png
+#   shot.sh --shell-config fixtures/bar.json out.png  # render a fixed layout
 #   shot.sh --notify --burst 6 -i 1 out.png  # fire a toast, capture 6 frames 1s
 #                                            #   apart → out-000.png … out-005.png
 #
@@ -64,6 +65,7 @@ THEME=""            # theme variant dir under <root>/themes (empty = user's curr
 PACK="-"            # pack id, "base" for none, "-" = user's current
 FLAT="-"            # 0|1, "-" = user's current
 WALLPAPER=""        # image path (default: what the live awww shows, if anything)
+SHELL_CONFIG=""     # shell-config.json to render with (default: the user's copy)
 KEEP=0              # 1 → keep the run dir (logs, fake HOME) even on success
 
 while [ $# -gt 0 ]; do
@@ -79,6 +81,7 @@ while [ $# -gt 0 ]; do
     --pack)     PACK="$2"; shift 2 ;;
     --flat)     FLAT="$2"; shift 2 ;;
     --wallpaper) WALLPAPER="$2"; shift 2 ;;
+    --shell-config) SHELL_CONFIG="$(readlink -f "$2")"; shift 2 ;;
     --keep)     KEEP=1; shift ;;
     -*)         echo "unknown flag: $1" >&2; exit 2 ;;
     *)          OUT="$1"; shift ;;
@@ -119,6 +122,10 @@ RA="$REAL_HOME/.config/archeotech"
 for f in config.json shell-config.json theme.json; do
   [ -f "$RA/$f" ] && cp "$RA/$f" "$FH/.config/archeotech/$f"
 done
+if [ -n "$SHELL_CONFIG" ]; then
+  [ -f "$SHELL_CONFIG" ] || { echo "no such --shell-config: $SHELL_CONFIG" >&2; rm -rf "$RUN"; exit 2; }
+  cp "$SHELL_CONFIG" "$FH/.config/archeotech/shell-config.json"
+fi
 # Read-only resources: symlinks are fine, nothing writes into them.
 ln -s "$ROOT/themes"         "$FH/.config/archeotech/themes"
 ln -s "$ROOT/scripts/assets" "$FH/.config/archeotech/assets"
