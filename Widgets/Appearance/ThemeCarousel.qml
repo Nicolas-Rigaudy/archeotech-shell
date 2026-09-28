@@ -45,8 +45,26 @@ Item {
         { id: "auto",  label: "Auto",  glyph: "󰃟" }
     ]
 
+    // When the active pack owns the palette (e.g. Grimdark) these pickers would
+    // recolour other apps but not the shell, so they are replaced by a pointer to
+    // where the look is actually chosen — same rule as Settings → Appearance.
+    readonly property bool _packOwned: Commons.Appearance.packOwnsPalette
+
+    Text {
+        visible: root._packOwned
+        anchors.centerIn: parent
+        width: Math.min(parent.width - 32, 420)
+        horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.WordWrap
+        text: "The active theme pack sets the colours. Pick the Base pack in Settings → Appearance to choose a theme here."
+        color: Commons.Appearance.colors.subtext0
+        font.family: Commons.Appearance.font.family
+        font.pixelSize: Commons.Appearance.font.sizeSm
+    }
+
     ColumnLayout {
         id: col
+        visible: !root._packOwned
         anchors.fill: parent
         spacing: 6
 

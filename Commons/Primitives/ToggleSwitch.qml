@@ -72,6 +72,10 @@ Item {
         id: ma
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
-        onClicked: { root.checked = !root.checked; root.toggled(root.checked) }
+        // Controlled component: report the requested state and let the owner
+        // update the real setting; `checked` follows that state via the caller's
+        // binding. Assigning `checked` here would break the binding, so the switch
+        // would stop following external changes after one click (design rule 6).
+        onClicked: root.toggled(!root.checked)
     }
 }

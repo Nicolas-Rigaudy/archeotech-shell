@@ -21,15 +21,19 @@ QtObject {
         watchChanges: true
         preload: false
         printErrors: false
-        onTextChanged: {
+        // `ready` means config.json has actually been read (or does not exist).
+        // It used to flip on the first textChanged, which fires with empty text
+        // before the file loads, so boot-time writers (ColorScheme._bootResolve)
+        // ran against empty data and a Config.set() could race the load and
+        // overwrite config.json. loaded()/loadFailed() only fire once the read ends.
+        function _parse() {
             var content = text()
-            if (!content.trim()) {
-                root.ready = true
-                return
-            }
+            if (!content.trim()) return
             try { root._data = JSON.parse(content) } catch (_) { root._data = {} }
-            root.ready = true
         }
+        onTextChanged: _parse()             // also picks up external edits (watchChanges)
+        onLoaded:      { _parse(); root.ready = true }
+        onLoadFailed:  root.ready = true    // no file yet: defaults are correct
     }
 
     property Timer _debounce: Timer {

@@ -18,9 +18,30 @@ Item {
     property bool sleepEnabled: true
     property int  sleepTimeout: 1800
 
+    // Backends these controls drive. A control whose backend is missing is shown
+    // disabled with the reason, rather than silently doing nothing (design rule 6).
+    // The idle script ships with the owner's dotfiles, not with the shell.
+    property bool ppdAvailable:  false
+    property bool idleAvailable: false
+
     Component.onCompleted: {
+        backendProbe.running     = true
         profileReader.running    = true
         idleConfigReader.running = true
+    }
+
+    Process {
+        id: backendProbe
+        command: ["bash", "-c",
+            "command -v powerprofilesctl >/dev/null 2>&1 && echo ppd; " +
+            "[ -x \"$HOME/.config/swayidle/config.sh\" ] && command -v swayidle >/dev/null 2>&1 && echo idle; true"]
+        running: false
+        stdout: SplitParser {
+            onRead: data => {
+                if (data.trim() === "ppd")  root.ppdAvailable  = true
+                if (data.trim() === "idle") root.idleAvailable = true
+            }
+        }
     }
 
     // ── Process helpers ────────────────────────────────────────────────────────
@@ -112,8 +133,14 @@ Item {
                 spacing: 6
 
                 SectionLabel { text: "POWER PROFILE" }
+                UnavailableNote {
+                    visible: !root.ppdAvailable
+                    text: "power-profiles-daemon (powerprofilesctl) is not installed."
+                }
 
                 SettingsCard {
+                    enabled: root.ppdAvailable
+                    opacity: enabled ? 1.0 : 0.45
                     ButtonGroupRow {
                         label: "Mode"
                         description: "Balance battery life and performance"
@@ -129,8 +156,14 @@ Item {
 
                 Item { implicitHeight: 10; Layout.fillWidth: true }
                 SectionLabel { text: "IDLE & SLEEP" }
+                UnavailableNote {
+                    visible: !root.idleAvailable
+                    text: "Idle control needs swayidle and an executable ~/.config/swayidle/config.sh."
+                }
 
                 SettingsCard {
+                    enabled: root.idleAvailable
+                    opacity: enabled ? 1.0 : 0.45
                     ToggleRow {
                         label: "Dim screen on idle"
                         description: "Reduce brightness when inactive"
@@ -201,5 +234,15 @@ Item {
                 }
             }
         }
+    }
+
+    // One-line reason shown above a section whose backend is missing.
+    component UnavailableNote: Text {
+        Layout.fillWidth: true
+        Layout.bottomMargin: 4
+        wrapMode: Text.WordWrap
+        color: Commons.Appearance.colors.yellow
+        font.family: Commons.Appearance.font.family
+        font.pixelSize: Commons.Appearance.font.sizeSm
     }
 }

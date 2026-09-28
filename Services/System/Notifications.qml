@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell.Services.Notifications
+import "../Persistence" as Persistence
 
 Item {
     id: root
@@ -11,6 +12,28 @@ Item {
     property var  history: []
 
     signal arrived(var notification)
+
+    // Settings → "Persist Do Not Disturb": when on, DND survives a restart. The
+    // saved state is restored once config.json has been read (Config.ready) and
+    // only written after that, so a startup default can never overwrite it.
+    property bool _dndRestored: false
+    function _restoreDnd() {
+        if (_dndRestored || !Persistence.Config.ready) return
+        // Assign before marking restored, so onDndEnabledChanged doesn't write the
+        // value it was just read from straight back to disk.
+        if (Persistence.Config.get("notifications.persistDnd", false))
+            dndEnabled = Persistence.Config.get("notifications.dnd", false)
+        _dndRestored = true
+    }
+    Component.onCompleted: _restoreDnd()
+    Connections {
+        target: Persistence.Config
+        function onReadyChanged() { root._restoreDnd() }
+    }
+    onDndEnabledChanged: {
+        if (_dndRestored && Persistence.Config.get("notifications.persistDnd", false))
+            Persistence.Config.set("notifications.dnd", dndEnabled)
+    }
 
     NotificationServer {
         id: server

@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import "../../../Commons" as Commons
 import "../../../Services/Persistence" as Persistence
+import "../../../Services/System" as SystemServices
 import "../Widgets"
 
 Item {
@@ -73,7 +74,12 @@ Item {
                         label: "Persist Do Not Disturb"
                         description: "Remember DND state between sessions"
                         checked: Persistence.Config.get("notifications.persistDnd", false)
-                        onToggled: value => Persistence.Config.set("notifications.persistDnd", value)
+                        onToggled: value => {
+                            Persistence.Config.set("notifications.persistDnd", value)
+                            // Save the current state now, so turning this on while DND
+                            // is already active keeps it across the next restart.
+                            if (value) Persistence.Config.set("notifications.dnd", SystemServices.Notifications.dndEnabled)
+                        }
                     }
                 }
             }

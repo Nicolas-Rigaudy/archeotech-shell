@@ -229,16 +229,28 @@ ShellRoot {
     Connections {
         target: SystemServices.Notifications
         function onArrived(notification) {
-            if (!SystemServices.Notifications.dndEnabled) {
-                shell._toastQueue = shell._toastQueue.concat([{
-                    appIcon:       notification.appIcon       || "",
-                    appName:       notification.appName       || "",
-                    summary:       notification.summary       || "",
-                    body:          notification.body          || "",
-                    urgency:       notification.urgency       || 0,
-                    expireTimeout: notification.expireTimeout || -1
-                }])
-            }
+            if (SystemServices.Notifications.dndEnabled) return
+            var urgency = notification.urgency || 0
+            // Settings → Notifications "Show when fullscreen": off by default, so a
+            // fullscreen app on the focused output is not covered. Critical
+            // notifications always show.
+            var comp = CompositorServices.CompositorService
+            if (urgency !== 2
+                    && !Persistence.Config.get("notifications.showOnFullscreen", false)
+                    && comp.isFullscreen(comp.focusedOutput))
+                return
+            var q = shell._toastQueue.concat([{
+                appIcon:       notification.appIcon       || "",
+                appName:       notification.appName       || "",
+                summary:       notification.summary       || "",
+                body:          notification.body          || "",
+                urgency:       urgency,
+                expireTimeout: notification.expireTimeout || -1
+            }])
+            // "Max Visible Toasts": drop the oldest beyond the limit.
+            var max = Math.max(1, Math.round(Persistence.Config.get("notifications.maxToasts", 5)))
+            if (q.length > max) q = q.slice(q.length - max)
+            shell._toastQueue = q
         }
     }
 

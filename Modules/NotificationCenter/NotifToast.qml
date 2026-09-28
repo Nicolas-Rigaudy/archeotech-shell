@@ -4,6 +4,7 @@ import QtQuick.Effects
 import "../../Commons" as Commons
 import "../../Commons/Primitives"
 import "../../Services/System" as SystemServices
+import "../../Services/Persistence" as Persistence
 
 Item {
     id: root
@@ -56,8 +57,10 @@ Item {
         property int ms: {
             if (!root.notification) return 0
             if (root.notification.urgency === 2) return 0  // critical: never auto-dismiss
+            // An app-requested timeout wins; otherwise Settings → "Toast Duration".
             var t = root.notification.expireTimeout
-            return (t > 0) ? Math.max(t, 3000) : 5000
+            return (t > 0) ? Math.max(t, 3000)
+                           : Persistence.Config.get("notifications.toastTimeout", 5000)
         }
         interval: ms
         running: ms > 0

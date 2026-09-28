@@ -51,7 +51,13 @@ DashCard {
             "else aur=0; fi; echo aur:${aur:-0}; " +
             "vpn=$(nmcli con show --active 2>/dev/null | awk '/vpn/{print $1;exit}'); " +
             "echo vpn:${vpn:-inactive}; " +
-            "echo aws:${AWS_PROFILE:-unset}; " +
+            // AWS profile a NEW terminal gets: the shell's own $AWS_PROFILE is
+            // meaningless (set per terminal), so read the login shell's startup
+            // value (fish universal/config vars), falling back to [default] if
+            // ~/.aws/config defines it — the AWS CLI's own fallback.
+            "p=''; if command -v fish >/dev/null 2>&1; then p=$(timeout 1 fish -c 'printf %s \"$AWS_PROFILE\"' 2>/dev/null); fi; " +
+            "if [ -z \"$p\" ] && grep -q '^\\[default\\]' \"$HOME/.aws/config\" 2>/dev/null; then p=default; fi; " +
+            "echo aws:${p:-none}; " +
             "echo up:$(awk '{d=int($1/86400);h=int(($1%86400)/3600);m=int(($1%3600)/60); " +
             "if(d>0)printf \"%dd %dh\",d,h; else if(h>0)printf \"%dh %dm\",h,m; else printf \"%dm\",m}' /proc/uptime); " +
             "echo kern:$(uname -r); " +
@@ -154,7 +160,7 @@ DashCard {
         NoteRow {
             label: "AWS"
             value: root.aws
-            valueColor: root.aws === "unset" ? Commons.Appearance.colors.overlay1 : Commons.Appearance.colors.blue
+            valueColor: root.aws === "none" ? Commons.Appearance.colors.overlay1 : Commons.Appearance.colors.blue
         }
         NoteRow {
             label: "IP"
