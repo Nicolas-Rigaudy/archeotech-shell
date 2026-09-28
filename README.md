@@ -39,4 +39,4 @@ Your compositor needs a few required rules and the launch/IPC keybinds — see
 
 ## License
 
-TBD.
+[GPL-3.0](LICENSE) (`GPL-3.0-only`). Add-on theme packs and plugins that live in their own repositories may use their own license.
