@@ -15,6 +15,7 @@
 #   shot.sh --state settings:appearance out  # open settings on a named pane
 #   shot.sh --theme archeotech-latte --pack grimdark --flat 1 out.png
 #   shot.sh --shell-config fixtures/bar.json out.png  # render a fixed layout
+#   shot.sh --set notifications.maxToasts=2 --notify-count 4 out.png
 #   shot.sh --notify --burst 6 -i 1 out.png  # fire a toast, capture 6 frames 1s
 #                                            #   apart → out-000.png … out-005.png
 #
@@ -66,6 +67,8 @@ PACK="-"            # pack id, "base" for none, "-" = user's current
 FLAT="-"            # 0|1, "-" = user's current
 WALLPAPER=""        # image path (default: what the live awww shows, if anything)
 SHELL_CONFIG=""     # shell-config.json to render with (default: the user's copy)
+SETS=()             # config.json overrides, key.path=json-value (repeatable --set)
+NOTIFY_COUNT=0      # >0 → fire N notifications with no expiry (the shell's own timeout applies)
 KEEP=0              # 1 → keep the run dir (logs, fake HOME) even on success
 
 while [ $# -gt 0 ]; do
@@ -82,6 +85,8 @@ while [ $# -gt 0 ]; do
     --flat)     FLAT="$2"; shift 2 ;;
     --wallpaper) WALLPAPER="$2"; shift 2 ;;
     --shell-config) SHELL_CONFIG="$(readlink -f "$2")"; shift 2 ;;
+    --set)      SETS+=("$2"); shift 2 ;;
+    --notify-count) NOTIFY_COUNT="$2"; shift 2 ;;
     --keep)     KEEP=1; shift ;;
     -*)         echo "unknown flag: $1" >&2; exit 2 ;;
     *)          OUT="$1"; shift ;;
@@ -160,6 +165,24 @@ json.dump(cfg, open(cfg_path, "w"), indent=2)
 PY
 fi
 
+# ── Arbitrary config.json overrides (--set a.b.c=<json or string>) ──────────
+if [ "${#SETS[@]}" -gt 0 ]; then
+  python3 - "$FH/.config/archeotech/config.json" "${SETS[@]}" <<'PY' || { echo "bad --set" >&2; exit 2; }
+import json, os, sys
+path, sets = sys.argv[1], sys.argv[2:]
+cfg = json.load(open(path)) if os.path.exists(path) else {}
+for kv in sets:
+    key, _, raw = kv.partition("=")
+    try: val = json.loads(raw)
+    except ValueError: val = raw
+    node = cfg
+    parts = key.split(".")
+    for p in parts[:-1]: node = node.setdefault(p, {})
+    node[parts[-1]] = val
+json.dump(cfg, open(path, "w"), indent=2)
+PY
+fi
+
 # ── Minimal nested mango config: wallpaper only, never the user's autostart ──
 if [ -z "$WALLPAPER" ] && command -v awww >/dev/null 2>&1; then
   WALLPAPER="$(timeout 2 awww query 2>/dev/null | sed -n 's/.*currently displaying: image: //p' | head -1)"
@@ -190,6 +213,9 @@ fi
 # Short expiry (2.5s) so the toast dismisses partway through a typical burst.
 NOTIFY_CMD=":"
 [ "$NOTIFY" = 1 ] && NOTIFY_CMD="notify-send -t 2500 \"archeotech shot\" \"burst motion probe\""
+if [ "$NOTIFY_COUNT" -gt 0 ]; then
+  NOTIFY_CMD="for n in \$(seq 1 $NOTIFY_COUNT); do notify-send \"archeotech shot \$n\" \"probe \$n of $NOTIFY_COUNT\"; sleep 0.2; done"
+fi
 
 # Capture step: single grim (atomic tmp→final) or a burst series out-NNN.png.
 if [ "$BURST" -gt 1 ]; then

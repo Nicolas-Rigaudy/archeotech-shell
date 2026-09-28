@@ -43,9 +43,14 @@ magick montage *.png -tile 4x -geometry 640x360+4+4 -label '%t' sheet.png
 ```
 Independent runs can go two or three at a time.
 
-### Motion
+### Motion, notifications and settings
 `--burst N -i SECS` captures a series (`out-000.png` …); `--notify` fires a real
-notification inside the nested session so toast motion can be checked across frames.
+notification inside the nested session so toast motion can be checked across frames;
+`--notify-count N` fires N notifications with no expiry (the shell's own timeout
+applies). `--set key.path=value` edits the fake HOME's `config.json` (repeatable, value
+parsed as JSON when possible), and `--shell-config file.json` renders a fixed layout.
+Note: harness components rendered with `--qml` don't get the shell's theme wiring
+(Appearance colours are undefined), so test panel behaviour in the full shell.
 
 ### Hover and click popups (no IPC state)
 Calendar (clock hover), wifi / bluetooth (tray click) and hover-cards have no IPC.
@@ -55,12 +60,13 @@ the repo (a scratch dir), never at the repo root:
 scripts/shot.sh --qml /path/to/scratch/calendar-harness.qml -w 9 out.png
 ```
 Template (the harness forces a pack and mocks the `holderRoot` the component reads;
+absolute imports need the `file:` scheme;
 adjust the import paths to point at the checkout being rendered):
 ```qml
 import QtQuick
 import Quickshell
-import "/home/<you>/Projects/archeotech-shell/Commons" as Commons
-import "/home/<you>/Projects/archeotech-shell/Widgets/Bar"
+import "file:/home/<you>/Projects/archeotech-shell/Commons" as Commons
+import "file:/home/<you>/Projects/archeotech-shell/Widgets/Bar"
 ShellRoot { FloatingWindow {
     implicitWidth: 460; implicitHeight: 420; color: "#0c0f16"
     Component.onCompleted: {
