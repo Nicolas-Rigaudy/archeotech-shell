@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 import "../../../Commons" as Commons
+import "../../../Commons/Primitives" as Prim
 import "../../../Services/Shell" as ShellServices
 import "../../Settings/Widgets" as SettingsWidgets
 
@@ -254,6 +256,11 @@ Item {
     }
 
     // ── Banner ──────────────────────────────────────────────────────────────────
+    RectangularShadow {
+        anchors.fill: banner; radius: banner.radius; blur: 12
+        offset: Qt.vector2d(0, 3); spread: 0
+        color: Qt.rgba(0, 0, 0, 0.5 * Commons.Appearance.shadowStrength)
+    }
     Rectangle {
         id: banner
         anchors.top: parent.top
@@ -262,7 +269,10 @@ Item {
         width: bannerRow.implicitWidth + 28
         height: 40
         radius: Commons.Appearance.radius.pill
-        color: Commons.Appearance.colors.glassBg
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
+            GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+        }
         border.width: 1
         border.color: Commons.Appearance.colors.accentBorder
 
@@ -286,51 +296,18 @@ Item {
                 font.pixelSize: Commons.Appearance.font.sizeSm
             }
             // Frame style (S22): framed (hugs screen) ↔ pill (floating, rounded).
-            Rectangle {
+            Prim.GlassButton {
                 anchors.verticalCenter: parent.verticalCenter
                 readonly property bool on: editOverlay._cfg.pillMode()
-                width: _pillTxt.implicitWidth + 18; height: 26
-                radius: Commons.Appearance.radius.sm
-                color: on ? Commons.Appearance.colors.accentAlpha : Commons.Appearance.colors.surface0
-                border.width: 1
-                border.color: on ? Commons.Appearance.colors.accentBorder : Commons.Appearance.colors.glassBorder
-                Text {
-                    id: _pillTxt
-                    anchors.centerIn: parent
-                    text: parent.on ? "󰗖  Pill frame" : "󰝤  Framed"
-                    color: parent.on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext0
-                    font.family: Commons.Appearance.font.family
-                    font.pixelSize: Commons.Appearance.font.sizeSm
-                }
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: editOverlay._cfg.setPillMode(!editOverlay._cfg.pillMode())
-                }
+                text: on ? "󰗖  Pill frame" : "󰝤  Framed"
+                active: on
+                onClicked: editOverlay._cfg.setPillMode(!editOverlay._cfg.pillMode())
             }
-            Rectangle {
+            Prim.GlassButton {
                 anchors.verticalCenter: parent.verticalCenter
-                width: doneTxt.implicitWidth + 18; height: 26
-                radius: Commons.Appearance.radius.sm
-                color: _doneMa.containsMouse ? Commons.Appearance.colors.accent
-                                             : Commons.Appearance.colors.accentAlpha
-                Text {
-                    id: doneTxt
-                    anchors.centerIn: parent
-                    text: "Done"
-                    color: _doneMa.containsMouse ? Commons.Appearance.colors.crust
-                                                 : Commons.Appearance.colors.accent
-                    font.family: Commons.Appearance.font.family
-                    font.pixelSize: Commons.Appearance.font.sizeSm
-                    font.bold: true
-                }
-                MouseArea {
-                    id: _doneMa
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: Commons.State.editMode = false
-                }
+                text: "Done"
+                active: true
+                onClicked: Commons.State.editMode = false
             }
         }
     }
@@ -383,7 +360,10 @@ Item {
                 width:  sideCard._horizontal ? (sideCard._isBar ? undefined : sideCard._stripLen) : sideCard._thick
                 height: sideCard._horizontal ? sideCard._thick : (sideCard._isBar ? undefined : sideCard._stripLen)
                 radius: Commons.Appearance.radius.lg
-                color:  Commons.Appearance.colors.glassBg
+                gradient: Gradient {
+                    GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
+                    GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+                }
                 opacity: sideCard._on ? 1 : 0.5
                 border.width: 1
                 border.color: Commons.Appearance.colors.glassBorder
@@ -487,13 +467,26 @@ Item {
                                         implicitHeight: chip._iconOnly ? 30 : (sideCard._isBar ? 30 : 28)
                                         Behavior on implicitWidth { NumberAnimation { duration: 70; easing.type: Easing.OutQuad } }
                                         radius: Commons.Appearance.radius.md
-                                        color: dragMA.containsMouse ? Commons.Appearance.colors.surface2
-                                                                    : Commons.Appearance.colors.surface1
+                                        // Raised surfaceCard sheen (shared scale) instead of a flat
+                                        // fill; hover is a StateLayer wash overlay below.
+                                        gradient: Gradient {
+                                            GradientStop { position: 0.0; color: Commons.Appearance.sheenHi(Commons.Appearance.colors.surfaceCard, Commons.Appearance.sheen.surface.hi) }
+                                            GradientStop { position: 1.0; color: Commons.Appearance.sheenLo(Commons.Appearance.colors.surfaceCard, Commons.Appearance.sheen.surface.lo) }
+                                        }
                                         border.width: 1
                                         border.color: chip._isSource ? Commons.Appearance.colors.accentBorder
                                                                      : Commons.Appearance.colors.glassBorder
                                         opacity: chip._isSource ? 0.35 : 1
                                         Behavior on opacity { NumberAnimation { duration: 90 } }
+
+                                        // Hover wash — the StateLayer micro-interaction language
+                                        // (accent-tinted overlay) rather than a flat surface swap.
+                                        Rectangle {
+                                            anchors.fill: parent; radius: parent.radius
+                                            color: Commons.Appearance.colors.stateHover
+                                            opacity: dragMA.containsMouse ? 1 : 0
+                                            Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.fast } }
+                                        }
 
                                         // Drag handle over the chip body (declared before
                                         // chipRow so the hover controls stack above it).
@@ -673,56 +666,17 @@ Item {
                 anchors.topMargin: 8; anchors.bottomMargin: 8
                 anchors.leftMargin: 8; anchors.rightMargin: 8
 
-                // Type switch — one segmented track; the active mode is a solid
-                // accent fill (crust text, clearly readable), the rest quiet until
-                // hovered. Compact, no inter-segment gaps.
-                Rectangle {
-                    radius: Commons.Appearance.radius.md
-                    color: Commons.Appearance.colors.glassBg
-                    border.width: 1
-                    border.color: Commons.Appearance.colors.glassBorder
-                    implicitWidth: _seg.implicitWidth + 6
-                    implicitHeight: _seg.implicitHeight + 6
-                    Grid {
-                        id: _seg
-                        anchors.centerIn: parent
-                        columns: sideCard._horizontal ? 4 : 1
-                        Repeater {
-                            model: [
-                                { t: "bar",    l: "Bar"    },
-                                { t: "strip",  l: "Strip"  },
-                                { t: "holder", l: "Holder" },
-                                { t: "none",   l: "Off"    }
-                            ]
-                            delegate: Rectangle {
-                                id: typeBtn
-                                required property var modelData
-                                readonly property bool active: editOverlay._cfg.sideType(sideCard.side) === modelData.t
-                                width:  sideCard._horizontal ? (_tl.implicitWidth + 18) : 62
-                                height: 24
-                                radius: Commons.Appearance.radius.sm
-                                color: active ? Commons.Appearance.colors.accent
-                                              : (_segMa.containsMouse ? Commons.Appearance.colors.accentAlpha : "transparent")
-                                Text {
-                                    id: _tl
-                                    anchors.centerIn: parent
-                                    text: typeBtn.modelData.l
-                                    color: typeBtn.active ? Commons.Appearance.colors.crust
-                                                          : Commons.Appearance.colors.subtext0
-                                    font.family: Commons.Appearance.font.family
-                                    font.pixelSize: Commons.Appearance.font.sizeSm
-                                    font.bold: typeBtn.active
-                                }
-                                MouseArea {
-                                    id: _segMa
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: editOverlay._cfg.setSideType(sideCard.side, typeBtn.modelData.t)
-                                }
-                            }
-                        }
-                    }
+                // Type switch — the shared SegmentedControl (recessed track + raised
+                // accent pill). Vertical stack beside a strip so a vertical side
+                // never draws a wide control across the screen.
+                Prim.SegmentedControl {
+                    id: _typeSeg
+                    readonly property var _types: ["bar", "strip", "holder", "none"]
+                    vertical: !sideCard._horizontal
+                    implicitWidth: sideCard._horizontal ? 240 : 66
+                    model: [ { label: "Bar" }, { label: "Strip" }, { label: "Holder" }, { label: "Off" } ]
+                    currentIndex: Math.max(0, _types.indexOf(editOverlay._cfg.sideType(sideCard.side)))
+                    onActivated: (i) => editOverlay._cfg.setSideType(sideCard.side, _typeSeg._types[i])
                 }
 
                 // Widget adding moved to the always-visible Widget Library (centre);
@@ -736,6 +690,12 @@ Item {
     // two-column grid so ragged pill widths don't hurt readability. Drag a tile
     // onto a mock zone to add it; drag an existing chip back here to remove it
     // (KDE-style — no separate trash). Turns red as a remove target on hover.
+    RectangularShadow {
+        z: 139
+        anchors.fill: library; radius: library.radius; blur: 20
+        offset: Qt.vector2d(0, 6); spread: 0
+        color: Qt.rgba(0, 0, 0, 0.5 * Commons.Appearance.shadowStrength)
+    }
     Rectangle {
         id: library
         z: 140
@@ -743,7 +703,10 @@ Item {
         width: 470
         height: Math.min(parent.height - 120, libCol.implicitHeight + 28)
         radius: Commons.Appearance.radius.lg
-        color: Commons.Appearance.colors.glassBg
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
+            GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+        }
         border.width: 1
         readonly property bool _removing: libDrop.containsDrag && Commons.State.dragActive
                                           && Commons.State.draggedSource.indexOf("lib:") !== 0
@@ -812,10 +775,21 @@ Item {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 28
                                 radius: Commons.Appearance.radius.md
-                                color: libMa.containsMouse ? Commons.Appearance.colors.surface2
-                                                           : Commons.Appearance.colors.surface1
+                                // Raised surfaceCard sheen + StateLayer hover wash (below),
+                                // matching the chips and the shared button language.
+                                gradient: Gradient {
+                                    GradientStop { position: 0.0; color: Commons.Appearance.sheenHi(Commons.Appearance.colors.surfaceCard, Commons.Appearance.sheen.surface.hi) }
+                                    GradientStop { position: 1.0; color: Commons.Appearance.sheenLo(Commons.Appearance.colors.surfaceCard, Commons.Appearance.sheen.surface.lo) }
+                                }
                                 border.width: 1
                                 border.color: Commons.Appearance.colors.glassBorder
+
+                                Rectangle {
+                                    anchors.fill: parent; radius: parent.radius
+                                    color: Commons.Appearance.colors.stateHover
+                                    opacity: libMa.containsMouse ? 1 : 0
+                                    Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.fast } }
+                                }
 
                                 // Content: icon column-aligned at the left, label
                                 // fills and elides so every tile stays the same size.
@@ -873,32 +847,14 @@ Item {
 
             // Manage / get more widgets → opens the Plugins & modules settings pane
             // (the manager; the community index/install lands there in 0.27).
-            Rectangle {
+            Prim.GlassButton {
                 Layout.fillWidth: true
                 Layout.topMargin: 2
-                height: 32
-                radius: Commons.Appearance.radius.sm
-                color: _storeMa.containsMouse ? Commons.Appearance.colors.accentAlpha : "transparent"
-                border.width: 1
-                border.color: _storeMa.containsMouse ? Commons.Appearance.colors.accentBorder
-                                                     : Commons.Appearance.colors.glassBorder
-                Text {
-                    anchors.centerIn: parent
-                    text: "󰏗  Manage & get more widgets  →"
-                    color: _storeMa.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext0
-                    font.family: Commons.Appearance.font.family
-                    font.pixelSize: Commons.Appearance.font.sizeSm
-                }
-                MouseArea {
-                    id: _storeMa
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        Commons.State.settingsOpenPane = "plugins"
-                        ShellServices.ShellState.openGlobal("settings")
-                        Commons.State.editMode = false
-                    }
+                text: "󰏗  Manage & get more widgets  →"
+                onClicked: {
+                    Commons.State.settingsOpenPane = "plugins"
+                    ShellServices.ShellState.openGlobal("settings")
+                    Commons.State.editMode = false
                 }
             }
         }
@@ -954,12 +910,21 @@ Item {
             MouseArea { anchors.fill: parent; onClicked: editOverlay._cfgOpen = false }
         }
 
+        RectangularShadow {
+            anchors.fill: cfgCard; radius: cfgCard.radius; blur: 20
+            offset: Qt.vector2d(0, 6); spread: 0
+            color: Qt.rgba(0, 0, 0, 0.5 * Commons.Appearance.shadowStrength)
+        }
         Rectangle {
+            id: cfgCard
             anchors.centerIn: parent
             width: 380
             height: cfgCol.implicitHeight + 32
             radius: Commons.Appearance.radius.lg
-            color: Commons.Appearance.colors.glassBg
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
+                GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+            }
             border.width: 1
             border.color: Commons.Appearance.colors.accentBorder
 

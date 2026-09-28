@@ -19,9 +19,13 @@ Item {
     property var  model: []
     property int  currentIndex: 0
     property bool iconOnly: false
+    // Opt-in vertical stack (segments top→bottom, pill slides in y) for narrow
+    // side panels; horizontal (default) is unchanged.
+    property bool vertical: false
     signal activated(int index)
 
-    implicitHeight: 30
+    readonly property bool _v: root.vertical
+    implicitHeight: _v ? 30 * Math.max(1, model.length) : 30
 
     // Steel pack (Grimdark): the selected pill is a raised machined-steel key
     // edged with the teal live-line (the "cyan pinpoint = this is live"), not a
@@ -40,7 +44,7 @@ Item {
         color: root._steel ? Qt.rgba(0, 0, 0, 0.5) : Commons.Appearance.colors.recessedTrack
         border.width: root._steel ? 1 : 0
         border.color: root._steel ? Qt.rgba(root._cu.r, root._cu.g, root._cu.b, 0.35) : "transparent"
-        readonly property real _segW: root.model.length > 0 ? width / root.model.length : width
+        readonly property real _segW: root.model.length > 0 ? (root._v ? height : width) / root.model.length : (root._v ? height : width)
 
         // top inner shadow line → reads as recessed into the plate (not a flat box)
         Rectangle {
@@ -66,10 +70,10 @@ Item {
         Rectangle {
             id: pill
             visible: root.model.length > 0
-            width:  track._segW - 8
-            height: track.height - 8
-            y: 4
-            x: root.currentIndex * track._segW + 4
+            width:  root._v ? track.width - 8 : track._segW - 8
+            height: root._v ? track._segW - 8 : track.height - 8
+            x: root._v ? 4 : root.currentIndex * track._segW + 4
+            y: root._v ? root.currentIndex * track._segW + 4 : 4
             // Square-cut machined key on steel; rounded pill on base packs.
             radius: root._steel ? 1 : track.radius - 3
             border.width: root._steel ? 1.2 : 0
@@ -83,6 +87,7 @@ Item {
                                                                   : Commons.Appearance.sheenLo(Commons.Appearance.colors.accent, Commons.Appearance.sheen.control.lo) }
             }
             Behavior on x { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+            Behavior on y { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
         }
 
         Repeater {
@@ -93,9 +98,10 @@ Item {
                 required property int index
                 readonly property bool _on: root.currentIndex === index
                 property bool _hov: false
-                x: index * track._segW
-                width: track._segW
-                height: track.height
+                x: root._v ? 0 : index * track._segW
+                y: root._v ? index * track._segW : 0
+                width:  root._v ? track.width : track._segW
+                height: root._v ? track._segW : track.height
 
                 Rectangle {
                     anchors.fill: parent
