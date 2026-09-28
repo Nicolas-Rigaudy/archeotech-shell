@@ -16,6 +16,7 @@
 #   shot.sh --theme archeotech-latte --pack grimdark --flat 1 out.png
 #   shot.sh --shell-config fixtures/bar.json out.png  # render a fixed layout
 #   shot.sh --set notifications.maxToasts=2 --notify-count 4 out.png
+#   shot.sh --fresh out.png                  # first boot: no user config or state at all
 #   shot.sh --notify --burst 6 -i 1 out.png  # fire a toast, capture 6 frames 1s
 #                                            #   apart → out-000.png … out-005.png
 #
@@ -70,6 +71,7 @@ SHELL_CONFIG=""     # shell-config.json to render with (default: the user's copy
 SETS=()             # config.json overrides, key.path=json-value (repeatable --set)
 NOTIFY_COUNT=0      # >0 → fire N notifications with no expiry (the shell's own timeout applies)
 KEEP=0              # 1 → keep the run dir (logs, fake HOME) even on success
+FRESH=0             # 1 → copy none of the user's config/state/cache (a stranger's first boot)
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -88,6 +90,7 @@ while [ $# -gt 0 ]; do
     --set)      SETS+=("$2"); shift 2 ;;
     --notify-count) NOTIFY_COUNT="$2"; shift 2 ;;
     --keep)     KEEP=1; shift ;;
+    --fresh)    FRESH=1; shift ;;
     -*)         echo "unknown flag: $1" >&2; exit 2 ;;
     *)          OUT="$1"; shift ;;
   esac
@@ -124,9 +127,11 @@ mkdir -p "$FH/.config/archeotech" "$FH/.local/share/archeotech" "$FH/.cache" "$R
 chmod 700 "$RT"
 
 RA="$REAL_HOME/.config/archeotech"
-for f in config.json shell-config.json theme.json; do
-  [ -f "$RA/$f" ] && cp "$RA/$f" "$FH/.config/archeotech/$f"
-done
+if [ "$FRESH" = 0 ]; then
+  for f in config.json shell-config.json theme.json; do
+    [ -f "$RA/$f" ] && cp "$RA/$f" "$FH/.config/archeotech/$f"
+  done
+fi
 if [ -n "$SHELL_CONFIG" ]; then
   [ -f "$SHELL_CONFIG" ] || { echo "no such --shell-config: $SHELL_CONFIG" >&2; rm -rf "$RUN"; exit 2; }
   cp "$SHELL_CONFIG" "$FH/.config/archeotech/shell-config.json"
@@ -135,8 +140,10 @@ fi
 ln -s "$ROOT/themes"         "$FH/.config/archeotech/themes"
 ln -s "$ROOT/scripts/assets" "$FH/.config/archeotech/assets"
 [ -e "$RA/wallpapers" ] && ln -s "$(readlink -f "$RA/wallpapers")" "$FH/.config/archeotech/wallpapers"
-[ -d "$REAL_HOME/.local/share/archeotech" ] && cp -a "$REAL_HOME/.local/share/archeotech/." "$FH/.local/share/archeotech/"
-[ -d "$REAL_HOME/.cache/archeotech" ] && cp -a "$REAL_HOME/.cache/archeotech" "$FH/.cache/"
+if [ "$FRESH" = 0 ]; then
+  [ -d "$REAL_HOME/.local/share/archeotech" ] && cp -a "$REAL_HOME/.local/share/archeotech/." "$FH/.local/share/archeotech/"
+  [ -d "$REAL_HOME/.cache/archeotech" ] && cp -a "$REAL_HOME/.cache/archeotech" "$FH/.cache/"
+fi
 for d in .local/bin .local/share/fonts .local/share/icons .config/fontconfig Projects; do
   [ -e "$REAL_HOME/$d" ] && { mkdir -p "$(dirname "$FH/$d")"; ln -s "$REAL_HOME/$d" "$FH/$d"; }
 done

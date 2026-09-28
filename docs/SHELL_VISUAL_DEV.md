@@ -48,7 +48,8 @@ Independent runs can go two or three at a time.
 notification inside the nested session so toast motion can be checked across frames;
 `--notify-count N` fires N notifications with no expiry (the shell's own timeout
 applies). `--set key.path=value` edits the fake HOME's `config.json` (repeatable, value
-parsed as JSON when possible), and `--shell-config file.json` renders a fixed layout.
+parsed as JSON when possible), `--shell-config file.json` renders a fixed layout, and
+`--fresh` copies none of your config or state (a stranger's first boot).
 Note: harness components rendered with `--qml` don't get the shell's theme wiring
 (Appearance colours are undefined), so test panel behaviour in the full shell.
 
