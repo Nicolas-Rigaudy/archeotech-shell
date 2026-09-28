@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import Quickshell.Io
 import "../../../../Commons" as Commons
 import "../../../../Services/Media" as MediaServices
 import "../.." as ShellUI
@@ -44,13 +43,8 @@ Item {
     // Responsive: faces key on this to stack when narrow (vertical side strip).
     readonly property bool _narrow: width < 360
 
-    Process {
-        id: cmdRunner
-        running: false
-        property string cmd: ""
-        command: ["bash", "-c", cmd]
-    }
-    function run(cmd) { cmdRunner.cmd = cmd; cmdRunner.running = true }
+    Commons.CommandRunner { id: cmdRunner }
+    function run(cmd) { cmdRunner.runShell(cmd) }
 
     function formatTime(secs) {
         var s = Math.floor(secs)

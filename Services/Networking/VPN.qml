@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell.Io
+import "../../Commons" as Commons
 
 QtObject {
     id: root
@@ -74,15 +75,13 @@ QtObject {
         onExited: (code, status) => { if (code !== 0 || status !== 0) running = true }
     }
 
-    property var _cmd: Process {
-        property string cmd: ""
-        command: ["bash", "-c", cmd]
-        running: false
-        onExited: (code, status) => {
-            if (code !== 0) console.warn("VPN: command failed with code " + code)
+    // Queued: a second up/down while nmcli is still busy is no longer dropped.
+    property var _cmd: Commons.CommandRunner {
+        label: "VPN"
+        onFinished: (argv, code) => {
             root.connections = []
             _load._parsed = []
-            _load.running = true
+            if (!root._load.running) root._load.running = true
         }
     }
 
@@ -94,7 +93,6 @@ QtObject {
             if (connections[i].name === name) { conn = connections[i]; break }
         if (!conn) return
         var action = conn.active ? "down" : "up"
-        _cmd.cmd = "nmcli connection " + action + " '" + name.replace(/'/g, "'\\''") + "'"
-        _cmd.running = true
+        _cmd.run(["nmcli", "connection", action, name])   // argv: no shell quoting needed
     }
 }

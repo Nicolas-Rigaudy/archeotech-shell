@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import Quickshell.Io
 import "../../../Commons" as Commons
 import "../../../Commons/Primitives"
 import "../Widgets"
@@ -8,12 +7,7 @@ import "../Widgets"
 Item {
     id: root
 
-    Process {
-        id: runner
-        property string cmd: ""
-        command: ["bash", "-c", cmd]
-        running: false
-    }
+    Commons.CommandRunner { id: runner }
 
     ColumnLayout {
         anchors.fill: parent
@@ -180,7 +174,7 @@ Item {
 
                                     StateLayer {
                                         anchors.fill: parent
-                                        onClicked: { runner.cmd = modelData.cmd; runner.running = true }
+                                        onClicked: runner.runShell(modelData.cmd)
                                     }
                                 }
                             }

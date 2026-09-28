@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell.Io
+import "../../Commons" as Commons
 
 QtObject {
     id: root
@@ -128,17 +129,12 @@ QtObject {
     }
 
     // ── Commands ───────────────────────────────────────────────────────────────
-    property var _cmd: Process {
-        property string cmd: ""
-        command: ["bash", "-c", cmd]
-        running: false
-        onExited: (code, status) => {
-            if (code !== 0) console.warn("Bluetooth: command exited with code " + code)
-            root._refresh()
-        }
+    property var _cmd: Commons.CommandRunner {
+        label: "Bluetooth"
+        onFinished: (argv, code) => root._refresh()
     }
 
-    function _run(cmd) { _cmd.cmd = cmd; _cmd.running = true }
+    function _run(cmd) { _cmd.runShell(cmd) }
 
     function _devPath(address) {
         return "/org/bluez/hci0/dev_" + address.replace(/:/g, "_")

@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell.Io
+import "../../Commons" as Commons
 
 // Screen backlight.
 //
@@ -64,18 +65,15 @@ QtObject {
     // While running, udev events are treated as our own set's echo and ignored.
     property var _selfGuard: Timer { interval: 500; repeat: false }
 
-    property var _cmd: Process {
-        property string cmd: ""
-        command: ["bash", "-c", cmd]
-        running: false
-    }
+    // Coalescing: while one write runs, only the newest requested value is kept,
+    // so a slider drag ends on the value the user let go at (it used to drop it).
+    property var _cmd: Commons.CommandRunner { coalesce: true; label: "Brightness" }
 
     function setBrightness(pct) {
         var clamped = Math.max(1, Math.min(100, Math.round(pct)))
         root.percent = clamped          // authoritative — set N% yields N%
         root._selfGuard.restart()       // ignore the udev echo from this write
-        _cmd.cmd = "brightnessctl set " + clamped + "% -q"
-        _cmd.running = true
+        _cmd.run(["brightnessctl", "set", clamped + "%", "-q"])
     }
 
     function adjust(delta) { setBrightness(root.percent + delta) }

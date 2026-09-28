@@ -45,13 +45,8 @@ Item {
     }
 
     // ── Process helpers ────────────────────────────────────────────────────────
-    Process {
-        id: cmdRunner
-        property string cmd: ""
-        command: ["bash", "-c", cmd]
-        running: false
-    }
-    function run(cmd) { cmdRunner.cmd = cmd; cmdRunner.running = true }
+    Commons.CommandRunner { id: cmdRunner }
+    function run(cmd) { cmdRunner.runShell(cmd) }
 
     Process {
         id: profileReader

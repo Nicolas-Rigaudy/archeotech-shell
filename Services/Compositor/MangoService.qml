@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "../../Commons" as Commons
 
 // MangoWC backend for CompositorService — mangowm 0.15+ `mmsg` JSON IPC
 // (get/watch/dispatch). The pre-0.15 flag interface was removed upstream; this
@@ -266,17 +267,9 @@ QtObject {
             + "mmsg dispatch switch_keyboard_layout 2>/dev/null; sleep 0.1; done; fi; fi"])
     }
 
-    property var _cmdRunner: Process {
-        property var argv: []
-        command: argv
-        running: false
-        onExited: (code, status) => {
-            if (code !== 0) console.warn("MangoWC: command exited with code " + code)
-        }
-    }
+    // Queued, never dropped: a tag click issued while a decoration script is
+    // still running used to be lost (a busy Process ignores running = true).
+    property var _cmdRunner: Commons.CommandRunner { label: "MangoWC" }
 
-    function _cmd(argv) {
-        _cmdRunner.argv = argv
-        _cmdRunner.running = true
-    }
+    function _cmd(argv) { _cmdRunner.run(argv) }
 }

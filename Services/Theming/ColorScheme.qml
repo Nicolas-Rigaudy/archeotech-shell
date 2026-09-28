@@ -68,9 +68,12 @@ QtObject {
     // _lastApplied is a "variant|accent" key so an accent-only change (same
     // variant) still re-applies instead of being deduped away.
     property string _lastApplied: ""
-    property var _applyProc: Process { command: []; running: false }
+    // Queued: a second pick made while theme-switch is still running used to be
+    // shown in the UI but never applied (a busy Process ignores running = true).
+    property var _applyRunner: Commons.CommandRunner { label: "theme-switch" }
 
     function _apply() {
+        if (!root._booted) return          // boot resolve applies once it can
         var v = _resolveVariant()
         if (!v) return
         var a = _resolveAccent()
@@ -84,16 +87,23 @@ QtObject {
         var cmd = [Commons.Paths.themeSwitch, v]
         if (a) cmd.push(a)
         if (pack) { cmd.push("--pack"); cmd.push(pack) }
-        _applyProc.command = cmd
-        _applyProc.running = true
+        _applyRunner.run(cmd)
         Persistence.Config.set("theme.variant", v)
+        // Persist the applied key so the next boot recognises a steady state and
+        // skips theme-switch entirely (it used to re-run on every boot with a pack).
+        // The key holds the pack's absolute dir, so moving the shell costs one extra
+        // apply on the next boot, after which the stored key matches again.
+        Persistence.Config.set("theme.appliedKey", key)
     }
 
     // Re-apply cross-app theming when the active pack changes (activePackDir is
     // resolved + pushed onto Appearance from shell.qml after pack discovery).
     property var _packConn: Connections {
         target: Commons.Appearance
-        function onActivePackDirChanged() { root._apply() }
+        function onActivePackDirChanged() {
+            if (!root._booted) root._bootResolve()   // the pack boot was waiting for
+            else root._apply()
+        }
     }
 
     // Auto-mode clock — re-resolve every minute; applies on day↔night crossing.
@@ -104,7 +114,27 @@ QtObject {
     }
 
     // ── Boot: seed from the applied variant, then resolve once Config is ready ───
+    // Boot waits for two things: config.json read (Config.ready) and, if config
+    // names a pack, that pack's dir resolved by the pack scan. Resolving before
+    // the pack dir was known seeded the dedup key without the pack, so the pack
+    // arriving a moment later re-ran theme-switch on every boot. A pack that never
+    // resolves (configured but not installed) stops blocking after 5 s.
+    property bool _booted: false
+    property bool _packWaitExpired: false
+    property var _packWait: Timer {
+        interval: 5000; repeat: false
+        onTriggered: { root._packWaitExpired = true; root._bootResolve() }
+    }
+
     function _bootResolve() {
+        if (root._booted || !Persistence.Config.ready) return
+        var wantPack = Persistence.Config.get("appearance.activePack", "")
+        if (wantPack !== "" && Commons.Appearance.activePackDir === "" && !root._packWaitExpired) {
+            if (!_packWait.running) _packWait.start()
+            return
+        }
+        _packWait.stop()
+        root._booted = true
         var applied = Persistence.Config.get("theme.variant", "archeotech-macchiato")
         if (Persistence.Config.get("colorScheme.family", "") === "") {
             Persistence.Config.set("colorScheme.family", ThemeCatalog.familyOfVariant(applied))
@@ -116,7 +146,8 @@ QtObject {
         // Seed the dedup key to the on-disk state so a steady-state boot doesn't
         // redundantly re-run the whole switch — but a resolved difference (e.g.
         // auto-mode now resolves to the day flavor) still applies.
-        root._lastApplied = applied + "|" + _resolveAccent() + "|" + Commons.Appearance.activePackDir
+        root._lastApplied = Persistence.Config.get("theme.appliedKey",
+            applied + "|" + _resolveAccent() + "|" + Commons.Appearance.activePackDir)
         root._apply()
     }
     property var _readyConn: Connections {
