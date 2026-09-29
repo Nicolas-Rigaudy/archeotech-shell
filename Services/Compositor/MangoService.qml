@@ -89,41 +89,50 @@ QtObject {
     Component.onCompleted: if (_active) { _watchMonitors.running = true; _watchClient.running = true; _watchClients.running = true }
 
     property var _watchMonitors: Process {
+        property double _startedAt: 0
         command: ["mmsg", "watch", "all-monitors"]
         running: false
+        onStarted: _startedAt = Date.now()
         stdout: SplitParser { onRead: line => root._parseMonitors(line) }
-        onExited: (code, status) => root._scheduleRestart(root._monRestart)
+        onExited: (code, status) => root._scheduleRestart(root._monRestart, _startedAt)
     }
     property var _monRestart: Timer {
-        interval: 500; repeat: false
-        onTriggered: { root._watchMonitors.running = true; interval = 500 }
+        interval: 250; repeat: false
+        onTriggered: { root._watchMonitors._startedAt = 0; root._watchMonitors.running = true }
     }
 
     property var _watchClient: Process {
+        property double _startedAt: 0
         command: ["mmsg", "watch", "focusing-client"]
         running: false
+        onStarted: _startedAt = Date.now()
         stdout: SplitParser { onRead: line => root._parseClient(line) }
-        onExited: (code, status) => root._scheduleRestart(root._cliRestart)
+        onExited: (code, status) => root._scheduleRestart(root._cliRestart, _startedAt)
     }
     property var _cliRestart: Timer {
-        interval: 500; repeat: false
-        onTriggered: { root._watchClient.running = true; interval = 500 }
+        interval: 250; repeat: false
+        onTriggered: { root._watchClient._startedAt = 0; root._watchClient.running = true }
     }
 
     property var _watchClients: Process {
+        property double _startedAt: 0
         command: ["mmsg", "watch", "all-clients"]
         running: false
+        onStarted: _startedAt = Date.now()
         stdout: SplitParser { onRead: line => root._parseClients(line) }
-        onExited: (code, status) => root._scheduleRestart(root._clisRestart)
+        onExited: (code, status) => root._scheduleRestart(root._clisRestart, _startedAt)
     }
     property var _clisRestart: Timer {
-        interval: 500; repeat: false
-        onTriggered: { root._watchClients.running = true; interval = 500 }
+        interval: 250; repeat: false
+        onTriggered: { root._watchClients._startedAt = 0; root._watchClients.running = true }
     }
 
-    // Exponential backoff 500ms → cap 8s (reset to 500 on each (re)start attempt).
-    function _scheduleRestart(timer) {
-        timer.interval = Math.min(timer.interval * 2, 8000)
+    // Exponential backoff 500ms → cap 8s. When mmsg can't reach Mango each watch
+    // exits at once; resetting the interval on every trigger kept retries at ~1s
+    // forever. A stream that stayed up 10s+ was healthy, so it restarts from 500ms.
+    // Each trigger zeroes _startedAt, so a stale start time never counts as uptime.
+    function _scheduleRestart(timer, startedAt) {
+        timer.interval = (startedAt > 0 && Date.now() - startedAt >= 10000) ? 500 : Math.min(timer.interval * 2, 8000)
         timer.start()
     }
 
