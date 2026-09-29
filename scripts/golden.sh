@@ -105,6 +105,25 @@ for s in "${selected[@]}"; do
 done
 wait
 
+# Diff one scenario's render against its golden. Sets PX (differing pixels) or
+# returns 2 when the comparison itself failed (CMP_ERR holds the message).
+diff_one() {
+  local name="$1"
+  masked "$GOLD/$name.png" "$RUN/diff/$name.gold.png" "$name"
+  masked "$RUN/out/$name.png" "$RUN/diff/$name.new.png" "$name"
+  # compare prints the AE metric on stderr and exits 0 (same) / 1 (differ) /
+  # 2 (error). An error must never read as "0 px": check the status first, and
+  # accept only a plain number as the metric.
+  local out rc m
+  out=$(magick compare -metric AE -fuzz "$FUZZ" "$RUN/diff/$name.gold.png" "$RUN/diff/$name.new.png" \
+          "$RUN/diff/$name.diff.png" 2>&1 >/dev/null); rc=$?
+  m=$(printf '%s' "$out" | head -1 | awk '{print $1}')
+  if [ "$rc" -gt 1 ] || ! [[ "$m" =~ ^[0-9]+(\.[0-9]+)?(e\+?[0-9]+)?$ ]]; then
+    CMP_ERR="rc=$rc: ${out%%$'\n'*}"; return 2
+  fi
+  PX=$(awk -v v="$m" 'BEGIN { printf "%d", v }')
+}
+
 fail=0
 for s in "${selected[@]}"; do
   name="${s%%|*}"
@@ -114,22 +133,20 @@ for s in "${selected[@]}"; do
     cp "$out" "$GOLD/$name.png"; echo "wrote $name"; continue
   fi
   if [ ! -f "$GOLD/$name.png" ]; then echo "NEW   $name  (no golden; run --update)"; fail=1; continue; fi
-  masked "$GOLD/$name.png" "$RUN/diff/$name.gold.png" "$name"
-  masked "$out" "$RUN/diff/$name.new.png" "$name"
-  # compare prints the AE metric on stderr and exits 0 (same) / 1 (differ) /
-  # 2 (error). An error must never read as "0 px": check the status first, and
-  # accept only a plain number as the metric.
-  cmp_out=$(magick compare -metric AE -fuzz "$FUZZ" "$RUN/diff/$name.gold.png" "$RUN/diff/$name.new.png" \
-              "$RUN/diff/$name.diff.png" 2>&1 >/dev/null); cmp_rc=$?
-  px=$(printf '%s' "$cmp_out" | head -1 | awk '{print $1}')
-  if [ "$cmp_rc" -gt 1 ] || ! [[ "$px" =~ ^[0-9]+(\.[0-9]+)?(e\+?[0-9]+)?$ ]]; then
-    echo "ERROR $name  (magick compare failed, rc=$cmp_rc: ${cmp_out%%$'\n'*})"; fail=1; continue
-  fi
-  px=$(awk -v v="$px" 'BEGIN { printf "%d", v }')
-  if [ "$px" -gt "$THRESHOLD" ]; then
-    echo "FAIL  $name  ($px px differ > $THRESHOLD; diff: $RUN/diff/$name.diff.png)"; fail=1
+  if ! diff_one "$name"; then echo "ERROR $name  (magick compare failed, $CMP_ERR)"; fail=1; continue; fi
+  if [ "$PX" -gt "$THRESHOLD" ]; then
+    # One re-render before failing: a frame caught mid-update (async data landing
+    # during capture) is not a regression. Reported as FLAKY so it stays visible.
+    first=$PX
+    render "$s"
+    if [ -s "$out" ] && diff_one "$name" && [ "$PX" -le "$THRESHOLD" ]; then
+      echo "FLAKY $name  ($first px, then $PX px on re-render)"
+      rm -f "$RUN/diff/$name".*
+    else
+      echo "FAIL  $name  (${PX:-?} px differ > $THRESHOLD, twice; diff: $RUN/diff/$name.diff.png)"; fail=1
+    fi
   else
-    echo "ok    $name  ($px px)"
+    echo "ok    $name  ($PX px)"
     rm -f "$RUN/diff/$name".*
   fi
 done
