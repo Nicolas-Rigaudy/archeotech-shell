@@ -53,5 +53,8 @@ jobs:
       - name: QML logic tests (qmltestrunner)
         run: tests/run.sh
 
-      - name: Theme token contrast (informational)
-        run: python3 scripts/contrast-check.py
+      - name: Theme fidelity — every colour from its official palette
+        run: python3 scripts/theme-fidelity.py
+
+      - name: Theme role contrast — AA body / 3:1 muted on every theme
+        run: python3 scripts/contrast-check.py --strict

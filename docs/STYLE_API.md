@@ -37,6 +37,10 @@ component, layered above the delegate.
 
 ## Versioning
 
+Colours in `api.colors` are semantic: `api.colors.text` is the label colour for the
+control (the `textSecondary` role on GlassButton), so it follows each theme's
+contrast-checked role map rather than a fixed palette step.
+
 `api` is a single object, not N positional props, so the contract can gain new
 fields without breaking older delegates. **Add fields; never remove or repurpose
 them.** A pack declares the minimum contract it needs via `minShellVersion` in

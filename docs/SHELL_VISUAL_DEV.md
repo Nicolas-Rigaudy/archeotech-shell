@@ -110,13 +110,20 @@ Rerun with `--keep`; the run dir it prints holds `log/qs.log` and `log/mango.log
   Quickshell's types live in the `qs` binary, so testable logic goes in plain
   `.pragma library` JS next to its service (e.g. `Services/Shell/ShellConfigLogic.js`)
   and tests import that; see `tests/qml/tst_*.qml`.
-- **Contrast:** `scripts/contrast-check.py` reports each theme's text-token contrast
-  (body 4.5:1, muted 3:1); informational until the design-system floor lands
-  (`--strict` to gate).
+- **Theme colours:** every colour in a theme comes from its designer's official
+  palette, snapshotted in `themes/_official/<family>.json` with source and commit
+  (`scripts/theme-fidelity.py`). Nothing is mixed or interpolated; a palette with
+  fewer tones reuses official colours. Components use semantic roles
+  (`Appearance.colors.textPrimary/textSecondary/textMuted/textDisabled/textOnAccent/
+  borderSubtle/borderStrong/focus`), which each theme maps in theme.json `roles`.
+- **Contrast:** `scripts/contrast-check.py` checks each theme's text roles on base,
+  mantle and card surfaces (body 4.5:1, muted 3:1). A failing role is fixed by
+  mapping it to a stronger official slot, never by changing the colour.
 - **CI** (`.github/workflows/ci.yml`, job `qml`, Arch container): Qt6 qmllint via
   `scripts/qmllint-ci.py` (fails on syntax errors, prints per-id counts), the logic
-  tests, and the contrast report. Renders need mango (AUR), so goldens run locally
-  until a cached CI image exists.
+  tests, theme fidelity and strict role contrast. Renders stay local by owner
+  decision (2026-09-29): mango needs a GPU (DRM device) that hosted runners lack,
+  so `scripts/golden.sh` is the pre-land gate.
 
 ## Hot-reload and the live bar
 The live bar follows whatever `~/.config/quickshell/archeotech` points at. If it

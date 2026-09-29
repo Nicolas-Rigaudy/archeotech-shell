@@ -1,0 +1,47 @@
+{
+  "source": "https://github.com/dracula/dracula-theme README.md (Dracula and Alucard tables) + https://github.com/dracula/visual-studio-code src/dracula.yml (BGLight/BGLighter/BGDark/BGDarker, bright ANSI)",
+  "commit": "1e04a4b768302fa2de37d09cc7b8087eabcd3ed8 / a08a206f2c8420ba3c05f0e8d01d43b2f933fdf8",
+  "variants": {
+    "dracula": {
+      "background": "#282a36",
+      "current_line": "#44475a",
+      "selection": "#44475a",
+      "foreground": "#f8f8f2",
+      "comment": "#6272a4",
+      "cyan": "#8be9fd",
+      "green": "#50fa7b",
+      "orange": "#ffb86c",
+      "pink": "#ff79c6",
+      "purple": "#bd93f9",
+      "red": "#ff5555",
+      "yellow": "#f1fa8c",
+      "vscode_color0": "#21222c",
+      "vscode_color9": "#ff6e6e",
+      "vscode_color10": "#69ff94",
+      "vscode_color11": "#ffffa5",
+      "vscode_color12": "#d6acff",
+      "vscode_color13": "#ff92df",
+      "vscode_color14": "#a4ffff",
+      "vscode_color15": "#ffffff",
+      "vscode_white": "#ffffff",
+      "vscode_bglighter": "#424450",
+      "vscode_bglight": "#343746",
+      "vscode_bgdark": "#21222c",
+      "vscode_bgdarker": "#191a21"
+    },
+    "alucard": {
+      "background": "#fffbeb",
+      "current_line": "#6c664b",
+      "selection": "#cfcfde",
+      "foreground": "#1f1f1f",
+      "comment": "#6c664b",
+      "cyan": "#036a96",
+      "green": "#14710a",
+      "orange": "#a34d14",
+      "pink": "#a3144d",
+      "purple": "#644ac9",
+      "red": "#cb3a2a",
+      "yellow": "#846e15"
+    }
+  }
+}

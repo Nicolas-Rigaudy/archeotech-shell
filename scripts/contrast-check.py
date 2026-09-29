@@ -1,23 +1,28 @@
 #!/usr/bin/env python3
-"""contrast-check.py — WCAG contrast of each theme's text tokens on its surfaces.
+"""contrast-check.py — WCAG contrast of each theme's semantic text roles.
 
-Token-level, not pixel-level: for every themes/*/theme.json it checks the text
-roles the shell draws (text, subtext1, subtext0 for body copy; overlay1,
-overlay0 for muted labels) against the surfaces they sit on (base, mantle,
-surface0). Body copy needs 4.5:1 (AA), muted labels 3:1.
+Token-level, not pixel-level: for every themes/*/theme.json it resolves the text
+roles the shell draws (theme.json `roles`, falling back to the Catppuccin map)
+to their palette slots and checks them against the surfaces text sits on
+(base, mantle, surface0). Body roles (textPrimary, textSecondary) need 4.5:1
+(AA); textMuted needs 3:1; focus (the accent) needs 3:1 on base. textDisabled
+is exempt (WCAG 1.4.3). textOnAccent is reported but not gated yet. Packs that
+own a palette (packs/*/tokens.json colors) are checked with their own roles,
+once per faction register.
 
-Informational by default (exit 0). --strict exits 1 when any pair is below its
-floor; the design-system contrast floor (0.40) turns that on in CI.
+Owner rule (2026-09-29): official palettes only. A failing role is fixed by
+mapping it to a stronger official slot in that theme's `roles`, never by mixing
+a colour. --strict exits 1 on any failure (CI).
 """
 import argparse
 import json
 import pathlib
 import sys
 
-BODY = ["text", "subtext1", "subtext0"]
-MUTED = ["overlay1", "overlay0"]
+ROLES = {"textPrimary": ("body", "text"), "textSecondary": ("body", "subtext0"),
+         "textMuted": ("muted", "overlay1")}
 SURFACES = ["base", "mantle", "surface0"]
-FLOOR = {"body": 4.5, "muted": 3.0}
+FLOOR = {"body": 4.5, "muted": 3.0, "focus": 3.0}
 
 
 def luminance(hex_color):
@@ -32,29 +37,55 @@ def ratio(a, b):
     return (la + 0.05) / (lb + 0.05)
 
 
+def check(name, colors, roles, accent_name):
+    """One row: the three text roles (gated), focus on base (gated 3:1) and
+    text-on-accent (reported, not gated yet). Returns the number of failures."""
+    failures, cells = 0, []
+    for role, (kind, default) in ROLES.items():
+        slot = roles.get(role, default)
+        if slot not in colors:
+            cells.append(f"{slot}: missing FAIL"); failures += 1; continue
+        worst, surf = min((ratio(colors[slot], colors[s]), s) for s in SURFACES if s in colors)
+        ok = worst >= FLOOR[kind]
+        failures += not ok
+        cells.append(f"{worst:5.2f} {slot}/{surf}{'' if ok else ' FAIL'}")
+    accent = colors.get(roles.get("focus", accent_name) if roles.get("focus", "accent") != "accent" else accent_name)
+    if accent and "base" in colors:
+        f = ratio(accent, colors["base"])
+        failures += f < FLOOR["focus"]
+        cells.append(f"{f:5.2f}{'' if f >= FLOOR['focus'] else ' FAIL'}")
+        on = colors.get(roles.get("textOnAccent", "base"))
+        cells.append(f"{ratio(on, accent):5.2f}{'' if ratio(on, accent) >= 4.5 else ' (below 4.5)'}" if on else "n/a")
+    print(f"{name:<22} " + " ".join(f"{c:<24}" for c in cells))
+    return failures
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--themes", default=str(pathlib.Path(__file__).resolve().parent.parent / "themes"))
-    ap.add_argument("--strict", action="store_true", help="exit 1 when any pair is below its floor")
+    root = pathlib.Path(__file__).resolve().parent.parent
+    ap.add_argument("--themes", default=str(root / "themes"))
+    ap.add_argument("--packs", default=str(root / "packs"))
+    ap.add_argument("--strict", action="store_true", help="exit 1 when any gated role is below its floor")
     args = ap.parse_args()
 
     failures = 0
-    print(f"{'theme':<22} {'worst body':<28} {'worst muted':<28}")
+    print(f"{'theme / pack':<22} " + " ".join(f"{r:<24}" for r in list(ROLES) + ["focus/base", "textOnAccent (info)"]))
     for tj in sorted(pathlib.Path(args.themes).glob("*/theme.json")):
-        colors = json.loads(tj.read_text()).get("colors", {})
-        worst = {}
-        for kind, roles in (("body", BODY), ("muted", MUTED)):
-            pairs = [(ratio(colors[r], colors[s]), r, s)
-                     for r in roles for s in SURFACES if r in colors and s in colors]
-            if not pairs:
-                worst[kind] = "n/a"
-                continue
-            r_, role, surf = min(pairs)
-            bad = r_ < FLOOR[kind]
-            failures += sum(1 for p in pairs if p[0] < FLOOR[kind])
-            worst[kind] = f"{r_:4.2f} {role}/{surf}{' FAIL' if bad else ''}"
-        print(f"{tj.parent.name:<22} {worst['body']:<28} {worst['muted']:<28}")
-    print(f"\ncontrast: {failures} token pair(s) below floor (body {FLOOR['body']}, muted {FLOOR['muted']})"
+        d = json.loads(tj.read_text())
+        failures += check(tj.parent.name, d.get("colors", {}), d.get("roles", {}), d.get("accent", "mauve"))
+    # Packs that own a palette, checked with their own roles; each register
+    # overlays its colours on the pack's.
+    for tk in sorted(pathlib.Path(args.packs).glob("*/tokens.json")):
+        d = json.loads(tk.read_text())
+        if not d.get("colors"):
+            continue
+        variants = {tk.parent.name: d["colors"]}
+        for reg, spec in (d.get("registers") or {}).items():
+            if isinstance(spec, dict) and spec.get("colors"):
+                variants[f"{tk.parent.name}:{reg}"] = {**d["colors"], **spec["colors"]}
+        for name, colors in variants.items():
+            failures += check(name, colors, d.get("roles", {}), d.get("accent", "mauve"))
+    print(f"\ncontrast: {failures} gated role(s) below floor (body {FLOOR['body']}, muted {FLOOR['muted']}, focus {FLOOR['focus']})"
           + ("" if args.strict else " — informational"))
     return 1 if (args.strict and failures) else 0
 

@@ -60,7 +60,6 @@ QtObject {
             id: "nord", label: "Nord", accents: [],
             swatch: ["#88c0d0", "#5e81ac", "#a3be8c", "#ebcb8b"],
             flavors: [
-                { id: "light", label: "Light", variant: "nord-light", mode: "light" },
                 { id: "nord",  label: "Dark",  variant: "nord",       mode: "dark"  }
             ]
         },

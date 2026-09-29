@@ -10,9 +10,9 @@
     "text": "#ebdbb2",
     "subtext1": "#d5c4a1",
     "subtext0": "#bdae93",
-    "overlay2": "#7c6f64",
+    "overlay2": "#a89984",
     "overlay1": "#928374",
-    "overlay0": "#a89984",
+    "overlay0": "#7c6f64",
     "mauve": "#fabd2f",
     "blue": "#83a598",
     "sapphire": "#83a598",
@@ -28,6 +28,7 @@
     "rosewater": "#fbf1c7",
     "lavender": "#d3869b"
   },
+  "roles": {"textPrimary": "text", "textSecondary": "subtext0", "textMuted": "overlay1", "textDisabled": "overlay0", "textOnAccent": "base", "borderSubtle": "surface1", "borderStrong": "surface2", "focus": "accent"},
   "mango": {
     "shadowscolor": "0x00000066",
     "shadows_size": 20,

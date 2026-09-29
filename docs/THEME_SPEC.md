@@ -60,6 +60,11 @@ All fields are required unless noted *(optional)*. Hex colors are full
     "red":       "#ed8796", "pink":     "#f5bde6", "flamingo": "#f0c6c6",
     "rosewater": "#f4dbd6", "lavender": "#b7bdf8"
   },
+  "roles": {                               // semantic roles -> palette slot (item_110)
+    "textPrimary": "text", "textSecondary": "subtext0", "textMuted": "overlay1",
+    "textDisabled": "overlay0", "textOnAccent": "base",
+    "borderSubtle": "surface1", "borderStrong": "surface2", "focus": "accent"
+  },
 
   "mango": {                               // mango/config.conf patches
     "shadowscolor": "0x00000066",          // ⚠ neutral, never accent-colored
@@ -233,3 +238,18 @@ warning but never breaks the rest of the switch.
 - DMS template registry: `core/internal/matugen/matugen.go`
 - Noctalia `Services/Theming/`: declarative TemplateRegistry table
 - HyDE `Configs/.local/lib/hyde/theme.switch.sh`: gold-standard for fan-out
+
+## Official palettes and semantic roles (adr_033)
+
+- Every colour in a theme comes from its designer's official palette, snapshotted in
+  `themes/_official/<family>.json` with its upstream source and commit. Nothing is
+  mixed, lightened or interpolated. A palette with fewer tones than the slot ladder
+  reuses official colours (Dracula: one foreground, one comment). Archeotech's own
+  themes (monochrome) are listed as custom in `scripts/theme-fidelity.py`.
+- Components draw text through `roles`, never raw slots: `Appearance.colors.textPrimary`,
+  `textSecondary`, `textMuted`, `textDisabled`, `textOnAccent`, `borderSubtle`,
+  `borderStrong`, `focus`. Each theme maps a role to the weakest official slot that
+  passes its floor on base, mantle and surface0: body roles 4.5:1, muted 3:1, focus 3:1
+  on base. If no slot passes, move text onto a surface where the official text does
+  (Tokyo Night Day: every text surface is `bg`).
+- Checks: `scripts/theme-fidelity.py` and `scripts/contrast-check.py --strict` (both in CI).

@@ -52,6 +52,9 @@ token repaints the whole shell live — no per-component work.
     "maroon": "#...", "red": "#...", "pink": "#...", "flamingo": "#...",
     "rosewater": "#...", "lavender": "#..."
   },
+  "roles": {                           // which slot each text role uses (see THEME_SPEC)
+    "textPrimary": "text", "textSecondary": "subtext1", "textMuted": "overlay1"
+  },
   "radius":  { "sm": 2, "base": 2, "md": 3, "lg": 4, "xl": 5, "pill": 999 },
   "spacing": { "xs": 4, "sm": 6, "base": 8, "md": 10, "lg": 12, "xl": 16 },
   "font":    { "family": "monospace",
@@ -78,6 +81,9 @@ token repaints the whole shell live — no per-component work.
                                               // Appearance.qml `curve` for keys)
 }
 ```
+
+A pack that ships its own `colors` should declare `roles`; `scripts/contrast-check.py`
+tests them against the pack's colours and again for each faction register.
 
 Notes:
 - **Own palette**: a pack MAY override the whole `colors` block, not just the

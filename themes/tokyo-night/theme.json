@@ -28,6 +28,7 @@
     "rosewater": "#c0caf5",
     "lavender": "#9d7cd8"
   },
+  "roles": {"textPrimary": "text", "textSecondary": "subtext0", "textMuted": "overlay2", "textDisabled": "overlay0", "textOnAccent": "base", "borderSubtle": "surface1", "borderStrong": "surface2", "focus": "accent"},
   "mango": {
     "shadowscolor": "0x00000066",
     "shadows_size": 20,

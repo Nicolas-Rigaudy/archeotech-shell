@@ -21,8 +21,8 @@
 # from this machine), so regenerate them here with --update after an intended
 # visual change and commit them with that change.
 #
-# The token contrast report (scripts/contrast-check.py) runs at the end; it is
-# informational until the design-system contrast floor lands.
+# The role contrast report (scripts/contrast-check.py) runs at the end for
+# reference; CI enforces it with --strict (see .github/workflows/ci.yml).
 ################################################################################
 set -u
 
