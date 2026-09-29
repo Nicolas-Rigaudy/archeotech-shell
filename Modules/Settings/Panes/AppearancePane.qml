@@ -144,47 +144,6 @@ Item {
 
                 Item { implicitHeight: 10; Layout.fillWidth: true }
 
-                // ── Typography ────────────────────────────────────────────────
-                SectionLabel { text: "TYPOGRAPHY" }
-
-                SettingsCard {
-                    SliderRow {
-                        label: "Font Size Scale"
-                        description: "Scales all text relative to the base size"
-                        from: 0.8; to: 1.4; stepSize: 0.05
-                        value: Persistence.Config.get("appearance.fontScale", 1.0)
-                        valueDisplay: Math.round(value * 100) + "%"
-                        onMoved: Persistence.Config.set("appearance.fontScale", value)
-                    }
-                }
-
-                Item { implicitHeight: 10; Layout.fillWidth: true }
-
-                // ── Geometry ──────────────────────────────────────────────────
-                SectionLabel { text: "GEOMETRY" }
-
-                SettingsCard {
-                    SliderRow {
-                        label: "Corner Rounding"
-                        description: "Scales all border radii"
-                        from: 0.5; to: 2.0; stepSize: 0.1
-                        value: Persistence.Config.get("appearance.radiusScale", 1.0)
-                        valueDisplay: value.toFixed(1) + "×"
-                        onMoved: Persistence.Config.set("appearance.radiusScale", value)
-                    }
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
-                    SliderRow {
-                        label: "Padding Scale"
-                        description: "Scales spacing inside panels"
-                        from: 0.5; to: 2.0; stepSize: 0.1
-                        value: Persistence.Config.get("appearance.paddingScale", 1.0)
-                        valueDisplay: value.toFixed(1) + "×"
-                        onMoved: Persistence.Config.set("appearance.paddingScale", value)
-                    }
-                }
-
-                Item { implicitHeight: 10; Layout.fillWidth: true }
-
                 // ── Behavior ──────────────────────────────────────────────────
                 SectionLabel { text: "BEHAVIOR" }
                 SettingsCard {
