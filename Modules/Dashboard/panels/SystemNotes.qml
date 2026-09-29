@@ -1,22 +1,31 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Io
 import "../../../Commons" as Commons
 import "../../../Services/Shell" as ShellServices
+import "../../../Services/Persistence" as Persistence
+import "SystemNotesLogic.js" as Logic
 
 DashCard {
     id: root
     title: "SYSTEM NOTES"
 
-    property string snap:    "…"
-    property string updates: "…"
-    property string aur:     "0"
-    property string vpn:     "…"
-    property string aws:     "…"
-    property string uptime:  "…"
-    property string kernel:  "…"
-    property string host:    "…"
-    property string ip:      "…"
+    // Which stats show, in registry order: Settings → Shell → Dashboard writes
+    // "dashboard.notes" (unset = all). Each stat is fetched by its own process
+    // (system-notes.sh <id>), so a slow one (updates) never holds back the rest,
+    // and a stat whose source does not exist here (__NA__) is hidden, not faked.
+    // Config.get() depends on the whole config object, so any Config.set() (any
+    // key) re-evaluates it and hands back a NEW array. Compare by value: the
+    // string only changes when the selection does, so the fetchers and rows are
+    // left alone by unrelated settings changes.
+    readonly property string _selKey: JSON.stringify(Logic.selection(Persistence.Config.get("dashboard.notes", null)))
+    property var _selected: JSON.parse(_selKey)
+    on_SelKeyChanged: _selected = JSON.parse(_selKey)
+    property var values:      ({})   // id → display string
+    property var unavailable: ({})   // id → true when the source is missing
+    readonly property var _shown: _selected.filter(function(id) { return !root.unavailable[id] })
+    readonly property string _script: decodeURIComponent(Qt.resolvedUrl("system-notes.sh").toString().replace(/^file:\/\//, ""))
 
     Component.onCompleted: _refresh()
 
@@ -28,61 +37,65 @@ DashCard {
     }
 
     function _refresh() {
-        if (!notesProc.running) notesProc.running = true
-    }
-
-    Process {
-        id: notesProc
-        running: false
-        // checkupdates (pacman-contrib) syncs to a temp DB without touching
-        // /var/lib/pacman/sync, so the count is always fresh. `paru -Qua` queries
-        // AUR directly. Both fall back to `pacman -Qu` if the helper is missing.
-        command: ["bash", "-c",
-            "snap=$(snapper -c root list 2>/dev/null | awk -F'│' " +
-            "'NR>2 && NF>1 && length($4)>4 {gsub(/^[[:space:]]+|[[:space:]]+$/,\"\",$(4)); last=$(4)} " +
-            "END{print length(last)>0 ? last : \"N/A\"}'); echo snap:${snap:-N/A}; " +
-            "if command -v checkupdates >/dev/null 2>&1; then " +
-            "  upd=$(checkupdates 2>/dev/null | wc -l | tr -d ' '); " +
-            "else " +
-            "  upd=$(pacman -Qu 2>/dev/null | wc -l | tr -d ' '); " +
-            "fi; echo updates:${upd:-0}; " +
-            "if command -v paru >/dev/null 2>&1; then " +
-            "  aur=$(paru -Qua 2>/dev/null | wc -l | tr -d ' '); " +
-            "else aur=0; fi; echo aur:${aur:-0}; " +
-            "vpn=$(nmcli con show --active 2>/dev/null | awk '/vpn/{print $1;exit}'); " +
-            "echo vpn:${vpn:-inactive}; " +
-            // AWS profile a NEW terminal gets: the shell's own $AWS_PROFILE is
-            // meaningless (set per terminal), so read the login shell's startup
-            // value (fish universal/config vars), falling back to [default] if
-            // ~/.aws/config defines it — the AWS CLI's own fallback.
-            "p=''; if command -v fish >/dev/null 2>&1; then p=$(timeout 1 fish -c 'printf %s \"$AWS_PROFILE\"' 2>/dev/null); fi; " +
-            "if [ -z \"$p\" ] && grep -q '^\\[default\\]' \"$HOME/.aws/config\" 2>/dev/null; then p=default; fi; " +
-            "echo aws:${p:-none}; " +
-            "echo up:$(awk '{d=int($1/86400);h=int(($1%86400)/3600);m=int(($1%3600)/60); " +
-            "if(d>0)printf \"%dd %dh\",d,h; else if(h>0)printf \"%dh %dm\",h,m; else printf \"%dm\",m}' /proc/uptime); " +
-            "echo kern:$(uname -r); " +
-            "echo host:$(cat /etc/hostname 2>/dev/null || hostname); " +
-            "echo ip:$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i==\"src\"){print $(i+1);exit}}')"
-        ]
-        stdout: SplitParser {
-            onRead: line => {
-                var sep = line.indexOf(":")
-                if (sep < 0) return
-                var key = line.slice(0, sep), val = line.slice(sep + 1)
-                if (key === "snap")    root.snap    = val
-                if (key === "updates") root.updates = val
-                if (key === "aur")     root.aur     = val
-                if (key === "vpn")     root.vpn     = val
-                if (key === "aws")     root.aws     = val
-                if (key === "up")      root.uptime  = val || "N/A"
-                if (key === "kern")    root.kernel  = val || "N/A"
-                if (key === "host")    root.host    = val || "N/A"
-                if (key === "ip")      root.ip      = val || "offline"
-            }
+        for (var i = 0; i < fetchers.count; i++) {
+            var p = fetchers.objectAt(i)
+            if (p && !p.running) p.running = true
         }
     }
 
+    function _store(id, text) {
+        var t = String(text || "").trim()
+        var na = Object.assign({}, root.unavailable)
+        if (t === "__NA__") { na[id] = true; root.unavailable = na; return }
+        delete na[id]; root.unavailable = na
+        var v
+        if (t === "__ERR__")       v = "check failed"
+        else if (id === "snapshot") v = Logic.shortStamp(Logic.parseSnapper(t))
+        else if (id === "vpn")      v = Logic.parseVpn(t)
+        else if (id === "updates")  v = Logic.formatUpdates(t)
+        else if (id === "ip")       v = t || "offline"
+        else                        v = t || "N/A"
+        var vals = Object.assign({}, root.values); vals[id] = v; root.values = vals
+    }
+
+    function _value(id) {
+        var v = root.values[id]
+        if (v !== undefined) return v
+        return id === "updates" ? "checking…" : "…"
+    }
+
+    function _color(id, v) {
+        var c = Commons.Appearance.colors
+        if (v === "…" || v === "checking…" || v === "check failed") return c.overlay1
+        switch (id) {
+        case "updates": return v === "up to date" ? c.green : c.yellow
+        case "vpn":     return v === "inactive" ? c.overlay1 : c.green
+        case "aws":     return v === "none" ? c.overlay1 : (v.indexOf("(not in config)") !== -1 ? c.yellow : c.blue)
+        case "ip":      return v === "offline" ? c.overlay1 : c.blue
+        case "kernel":
+        case "host":    return c.subtext1
+        default:        return c.text
+        }
+    }
+
+    // One process per selected stat; new selections start fetching at once.
+    Instantiator {
+        id: fetchers
+        model: root._selected
+        delegate: Process {
+            id: fetcher
+            required property string modelData
+            command: ["bash", root._script, fetcher.modelData]
+            stdout: StdioCollector {
+                id: collector
+                onStreamFinished: root._store(fetcher.modelData, collector.text)
+            }
+        }
+        onObjectAdded: (index, object) => object.running = true
+    }
+
     component NoteRow: Item {
+        id: noteRow
         required property string label
         required property string value
         required property color  valueColor
@@ -92,7 +105,7 @@ DashCard {
 
         Text {
             id: noteLbl
-            text: label
+            text: noteRow.label
             color: Commons.Appearance.colors.subtext0
             font.family: Commons.Appearance.font.family
             font.pixelSize: Commons.Appearance.font.sizeBase
@@ -101,8 +114,8 @@ DashCard {
             anchors.verticalCenter: parent.verticalCenter
         }
         Text {
-            text: value
-            color: valueColor
+            text: noteRow.value
+            color: noteRow.valueColor
             font.family: Commons.Appearance.font.family
             font.pixelSize: Commons.Appearance.font.sizeBase
             anchors { left: noteLbl.right; leftMargin: 6; right: parent.right; verticalCenter: parent.verticalCenter }
@@ -111,61 +124,26 @@ DashCard {
         }
     }
 
-    // 2-column key/value grid.
+    // 2-column key/value grid over the selected, resolvable stats.
     GridLayout {
         Layout.fillWidth: true
+        // A child layout fills its cell by default, which centred a short
+        // selection mid-card; keep the grid at its own height, under the title.
+        Layout.fillHeight: false
+        Layout.alignment: Qt.AlignTop
         columns: 2
         columnSpacing: 20
         rowSpacing: 4
 
-        NoteRow {
-            label: "Snapshot"
-            value: root.snap
-            valueColor: Commons.Appearance.colors.text
-        }
-        NoteRow {
-            label: "Uptime"
-            value: root.uptime
-            valueColor: Commons.Appearance.colors.text
-        }
-        NoteRow {
-            label: "Updates"
-            value: {
-                var u = parseInt(root.updates) || 0
-                var a = parseInt(root.aur)     || 0
-                if (u === 0 && a === 0) return "up to date"
-                if (u === 0)            return a + " AUR"
-                if (a === 0)            return u + " pkgs"
-                return u + " + " + a + " AUR"
+        Repeater {
+            model: root._shown
+            delegate: NoteRow {
+                id: note
+                required property string modelData
+                label: Logic.label(note.modelData)
+                value: root._value(note.modelData)
+                valueColor: root._color(note.modelData, note.value)
             }
-            valueColor: (root.updates === "0" && root.aur === "0")
-                ? Commons.Appearance.colors.green
-                : Commons.Appearance.colors.yellow
-        }
-        NoteRow {
-            label: "Kernel"
-            value: root.kernel
-            valueColor: Commons.Appearance.colors.subtext1
-        }
-        NoteRow {
-            label: "VPN"
-            value: root.vpn
-            valueColor: root.vpn === "inactive" ? Commons.Appearance.colors.overlay1 : Commons.Appearance.colors.green
-        }
-        NoteRow {
-            label: "Host"
-            value: root.host
-            valueColor: Commons.Appearance.colors.subtext1
-        }
-        NoteRow {
-            label: "AWS"
-            value: root.aws
-            valueColor: root.aws === "none" ? Commons.Appearance.colors.overlay1 : Commons.Appearance.colors.blue
-        }
-        NoteRow {
-            label: "IP"
-            value: root.ip
-            valueColor: root.ip === "offline" ? Commons.Appearance.colors.overlay1 : Commons.Appearance.colors.blue
         }
     }
 }

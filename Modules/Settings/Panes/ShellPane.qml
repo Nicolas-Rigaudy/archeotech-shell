@@ -8,6 +8,7 @@ import "../../../Services/Persistence" as Persistence
 import "../../../Services/Shell" as ShellServices
 import "../../../Services/Compositor" as CompositorServices
 import "../Widgets"
+import "../../Dashboard/panels/SystemNotesLogic.js" as NotesLogic
 
 // Shell pane (Sprint 24) — hub for shell-structure customization: the visual
 // builder (edit mode), bar layout, clock, module visibility. Renamed from the
@@ -234,6 +235,36 @@ Item {
                 }
 
                 Item { implicitHeight: 10; Layout.fillWidth: true }
+                SectionLabel { text: "DASHBOARD · SYSTEM NOTES" }
+
+                // Which stats the dashboard's System Notes card shows. Bound to
+                // the real "dashboard.notes" list (unset = all); a stat whose
+                // source is missing on this machine is hidden on the card anyway.
+                SettingsCard {
+                    Repeater {
+                        model: NotesLogic.STATS
+                        delegate: ColumnLayout {
+                            id: statRow
+                            required property var modelData
+                            required property int index
+                            Layout.fillWidth: true
+                            spacing: 0
+                            Rectangle {
+                                visible: statRow.index > 0
+                                Layout.fillWidth: true; Layout.preferredHeight: 1
+                                color: Commons.Appearance.colors.surface0
+                            }
+                            ToggleRow {
+                                Layout.fillWidth: true
+                                label: statRow.modelData.label
+                                description: statRow.modelData.description
+                                checked: NotesLogic.isOn(Persistence.Config.get("dashboard.notes", null), statRow.modelData.id)
+                                onToggled: value => Persistence.Config.set("dashboard.notes",
+                                    NotesLogic.toggle(Persistence.Config.get("dashboard.notes", null), statRow.modelData.id, value))
+                            }
+                        }
+                    }
+                }
 
                 SettingsCard {
                     Text {
