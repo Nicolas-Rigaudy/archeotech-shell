@@ -24,13 +24,13 @@ Item {
 
     // ── Content ────────────────────────────────────────────────────────────────
     property string icon:      ""
-    property color  iconColor: Commons.Appearance.colors.subtext1
+    property color  iconColor: Commons.Appearance.colors.textSecondary
     property color  hoverColor: Commons.Appearance.colors.accent
     property int    iconSize:  18
     // Value shown next to the icon on a horizontal bar; hidden when vertical
     // (thin bar) or empty. e.g. "82%", "18:30".
     property string text:      ""
-    property color  textColor: Commons.Appearance.colors.overlay1
+    property color  textColor: Commons.Appearance.colors.textMuted
 
     property bool interactive: true
     // When true the icon adopts hoverColor while hovered (the usual behaviour);

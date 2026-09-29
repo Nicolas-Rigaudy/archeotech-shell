@@ -125,7 +125,7 @@ Item {
                     anchors.centerIn: parent
                     visible: !_toastIcon.visible
                     text: "󰂚"
-                    color: Commons.Appearance.colors.overlay1
+                    color: Commons.Appearance.colors.textMuted
                     font.pixelSize: 16
                     font.family: Commons.Appearance.font.family
                 }
@@ -141,7 +141,7 @@ Item {
 
                     Text {
                         text: (root.notification && root.notification.appName) ? root.notification.appName : "Notification"
-                        color: Commons.Appearance.colors.overlay1
+                        color: Commons.Appearance.colors.textMuted
                         font.pixelSize: Commons.Appearance.font.sizeSm
                         font.family: Commons.Appearance.font.family
                         Layout.fillWidth: true
@@ -156,7 +156,7 @@ Item {
                         Text {
                             anchors.centerIn: parent
                             text: "󰅖"
-                            color: _xLayer.hovered ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0
+                            color: _xLayer.hovered ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
                             font.pixelSize: 13; font.family: Commons.Appearance.font.family
                             Behavior on color { Commons.ColorAnim {} }
                         }
@@ -171,7 +171,7 @@ Item {
                 Text {
                     text: (root.notification && root.notification.summary) ? root.notification.summary : ""
                     visible: text.length > 0
-                    color: Commons.Appearance.colors.text
+                    color: Commons.Appearance.colors.textPrimary
                     font.pixelSize: Commons.Appearance.font.sizeMd
                     font.family: Commons.Appearance.font.family
                     font.weight: Font.Medium
@@ -182,7 +182,7 @@ Item {
                 Text {
                     text: (root.notification && root.notification.body) ? root.notification.body : ""
                     visible: text.length > 0
-                    color: Commons.Appearance.colors.subtext1
+                    color: Commons.Appearance.colors.textSecondary
                     font.pixelSize: Commons.Appearance.font.sizeSm
                     font.family: Commons.Appearance.font.family
                     Layout.fillWidth: true

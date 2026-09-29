@@ -15,7 +15,7 @@ BarPill {
     icon: HardwareServices.Battery.icon()
     iconColor: _low ? Commons.Appearance.colors.red : Commons.Appearance.colors.green
     text: HardwareServices.Battery.percent + "%"
-    textColor: _low ? Commons.Appearance.colors.red : Commons.Appearance.colors.overlay1
+    textColor: _low ? Commons.Appearance.colors.red : Commons.Appearance.colors.textMuted
 
     onEntered: if (holderRoot && holderRoot.horizontal) holderRoot.showPopup(root, "BATTERY",
         _popupPrimary(), _popupSecondary(), "")

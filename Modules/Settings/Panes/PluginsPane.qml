@@ -68,7 +68,7 @@ Item {
                     SectionLabel { text: "INSTALLED MODULES"; Layout.fillWidth: true }
                     Text {
                         text: "󰑐  Rescan"
-                        color: _rescanMa.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext0
+                        color: _rescanMa.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textSecondary
                         font.family: Commons.Appearance.font.family
                         font.pixelSize: Commons.Appearance.font.sizeSm
                         MouseArea {
@@ -118,7 +118,7 @@ Item {
                                         spacing: 6
                                         Text {
                                             text: modCard.modelData.name || modCard.modelData.id
-                                            color: Commons.Appearance.colors.text
+                                            color: Commons.Appearance.colors.textPrimary
                                             font.family: Commons.Appearance.font.family
                                             font.pixelSize: Commons.Appearance.font.sizeBase
                                             font.bold: true
@@ -161,7 +161,7 @@ Item {
                                         text: (modCard.modelData.author || "unknown")
                                               + (modCard.modelData.version ? "  ·  v" + modCard.modelData.version : "")
                                               + "  ·  " + (modCard.modelData.canLiveIn || []).join(", ")
-                                        color: Commons.Appearance.colors.overlay0
+                                        color: Commons.Appearance.colors.textMuted
                                         font.family: Commons.Appearance.font.family
                                         font.pixelSize: Commons.Appearance.font.sizeSm
                                         elide: Text.ElideRight
@@ -172,7 +172,7 @@ Item {
                                     Text {
                                         visible: (modCard.modelData.dependencies || []).length > 0
                                         text: "󰇜  Requires: " + (modCard.modelData.dependencies || []).join(", ")
-                                        color: Commons.Appearance.colors.subtext0
+                                        color: Commons.Appearance.colors.textSecondary
                                         font.family: Commons.Appearance.font.family
                                         font.pixelSize: Commons.Appearance.font.sizeSm
                                         elide: Text.ElideRight
@@ -211,7 +211,7 @@ Item {
                                 Text {
                                     visible: root._hasSchema(modCard.modelData)
                                     text: "󰒓  Configurable — set per-instance in Edit Layout"
-                                    color: Commons.Appearance.colors.subtext0
+                                    color: Commons.Appearance.colors.textSecondary
                                     font.family: Commons.Appearance.font.family
                                     font.pixelSize: Commons.Appearance.font.sizeSm
                                     Layout.fillWidth: true
@@ -222,7 +222,7 @@ Item {
                                 Text {
                                     visible: root._isUserModule(modCard.modelData.dir)
                                     text: modCard._confirming ? "Confirm delete?" : "󰩺  Uninstall"
-                                    color: modCard._confirming ? Commons.Appearance.colors.red : Commons.Appearance.colors.subtext0
+                                    color: modCard._confirming ? Commons.Appearance.colors.red : Commons.Appearance.colors.textSecondary
                                     font.family: Commons.Appearance.font.family
                                     font.pixelSize: Commons.Appearance.font.sizeSm
                                     MouseArea {
@@ -251,7 +251,7 @@ Item {
                 Text {
                     Layout.fillWidth: true
                     text: "Placed and configured from Edit Layout. 󰒓 marks a widget with per-instance options."
-                    color: Commons.Appearance.colors.overlay0
+                    color: Commons.Appearance.colors.textMuted
                     font.family: Commons.Appearance.font.family
                     font.pixelSize: Commons.Appearance.font.sizeSm
                     wrapMode: Text.WordWrap
@@ -291,7 +291,7 @@ Item {
                                 }
                                 Text {
                                     text: catTile.modelData.name
-                                    color: Commons.Appearance.colors.subtext1
+                                    color: Commons.Appearance.colors.textSecondary
                                     font.family: Commons.Appearance.font.family
                                     font.pixelSize: Commons.Appearance.font.sizeSm
                                     elide: Text.ElideRight

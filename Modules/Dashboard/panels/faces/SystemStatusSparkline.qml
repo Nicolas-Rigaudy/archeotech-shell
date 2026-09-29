@@ -24,7 +24,7 @@ ColumnLayout {
         Text {
             id: lbl
             text: label
-            color: Commons.Appearance.colors.subtext1
+            color: Commons.Appearance.colors.textSecondary
             font.family: Commons.Appearance.font.family
             font.pixelSize: Commons.Appearance.font.sizeBase
             width: 42
@@ -95,7 +95,7 @@ ColumnLayout {
         Text {
             id: valLbl
             text: value + "%"
-            color: Commons.Appearance.colors.text
+            color: Commons.Appearance.colors.textPrimary
             font.family: Commons.Appearance.font.family
             font.pixelSize: Commons.Appearance.font.sizeBase
             width: 36

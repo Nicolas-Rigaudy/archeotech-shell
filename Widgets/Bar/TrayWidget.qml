@@ -34,7 +34,7 @@ Item {
         visible: root._empty
         anchors.centerIn: parent
         text: "󰀻"
-        color: Commons.Appearance.colors.overlay0
+        color: Commons.Appearance.colors.textMuted
         font.pixelSize: 16
         font.family: Commons.Appearance.font.family
     }
@@ -100,7 +100,7 @@ Item {
                     visible: iconImg.status !== Image.Ready
                     anchors.centerIn: parent
                     text: (cell.modelData.title || cell.modelData.id || "󰀻").charAt(0).toUpperCase()
-                    color: Commons.Appearance.colors.subtext1
+                    color: Commons.Appearance.colors.textSecondary
                     font.pixelSize: 13
                     font.family: Commons.Appearance.font.family
                     font.weight: Font.Medium

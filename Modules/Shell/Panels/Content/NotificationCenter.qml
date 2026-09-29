@@ -56,13 +56,13 @@ Item {
                     spacing: 6
                     Text {                          // icon on the icon font
                         text: "󰂚"
-                        color: Commons.Appearance.colors.text
+                        color: Commons.Appearance.colors.textPrimary
                         font.pixelSize: Commons.Appearance.font.sizeLg
                         font.family: Commons.Appearance.font.family
                     }
                     Text {                          // label = display face (Cinzel under the pack)
                         text: "Notifications"
-                        color: Commons.Appearance.colors.text
+                        color: Commons.Appearance.colors.textPrimary
                         font.pixelSize: Commons.Appearance.font.sizeLg
                         font.family: Commons.Appearance.font.display
                         font.weight: Font.Medium
@@ -81,7 +81,7 @@ Item {
                         Text {
                             anchors.centerIn: parent
                             text: "󰩺"
-                            color: _clearLayer.hovered ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0
+                            color: _clearLayer.hovered ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
                             font.pixelSize: 15; font.family: Commons.Appearance.font.family
                             Behavior on color { Commons.ColorAnim {} }
                         }
@@ -105,7 +105,7 @@ Item {
                             text: SystemServices.Notifications.dndEnabled ? "󰂛" : "󰂚"
                             color: SystemServices.Notifications.dndEnabled
                                 ? Commons.Appearance.colors.accent
-                                : (_dndLayer.hovered ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0)
+                                : (_dndLayer.hovered ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted)
                             font.pixelSize: 15; font.family: Commons.Appearance.font.family
                             Behavior on color { Commons.ColorAnim {} }
                         }
@@ -125,7 +125,7 @@ Item {
                         Text {
                             anchors.centerIn: parent
                             text: "✕"
-                            color: _closeLayer.hovered ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0
+                            color: _closeLayer.hovered ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
                             font.pixelSize: 14; font.family: Commons.Appearance.font.family
                             Behavior on color { Commons.ColorAnim {} }
                         }
@@ -209,7 +209,7 @@ Item {
                                         anchors.centerIn: parent
                                         visible: !_ncIcon.visible
                                         text: "󰂚"
-                                        color: Commons.Appearance.colors.overlay1
+                                        color: Commons.Appearance.colors.textMuted
                                         font.pixelSize: 16
                                         font.family: Commons.Appearance.font.family
                                     }
@@ -225,14 +225,14 @@ Item {
 
                                         Text {
                                             text: modelData.appName || "Notification"
-                                            color: Commons.Appearance.colors.overlay1
+                                            color: Commons.Appearance.colors.textMuted
                                             font.pixelSize: Commons.Appearance.font.sizeSm
                                             font.family: Commons.Appearance.font.family
                                             Layout.fillWidth: true; elide: Text.ElideRight
                                         }
                                         Text {
                                             text: modelData.timestamp || ""
-                                            color: Commons.Appearance.colors.overlay0
+                                            color: Commons.Appearance.colors.textMuted
                                             font.pixelSize: Commons.Appearance.font.sizeSm - 1
                                             font.family: Commons.Appearance.font.family
                                         }
@@ -245,7 +245,7 @@ Item {
                                             Text {
                                                 anchors.centerIn: parent
                                                 text: "󰅖"
-                                                color: _dismissLayer.hovered ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0
+                                                color: _dismissLayer.hovered ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
                                                 font.pixelSize: 13; font.family: Commons.Appearance.font.family
                                                 Behavior on color { Commons.ColorAnim {} }
                                             }
@@ -260,7 +260,7 @@ Item {
                                     Text {
                                         text: modelData.summary || ""
                                         visible: text.length > 0
-                                        color: Commons.Appearance.colors.text
+                                        color: Commons.Appearance.colors.textPrimary
                                         font.pixelSize: Commons.Appearance.font.sizeMd
                                         font.family: Commons.Appearance.font.family
                                         font.weight: Font.Medium
@@ -271,7 +271,7 @@ Item {
                                     Text {
                                         text: modelData.body || ""
                                         visible: text.length > 0
-                                        color: Commons.Appearance.colors.subtext1
+                                        color: Commons.Appearance.colors.textSecondary
                                         font.pixelSize: Commons.Appearance.font.sizeSm
                                         font.family: Commons.Appearance.font.family
                                         Layout.fillWidth: true

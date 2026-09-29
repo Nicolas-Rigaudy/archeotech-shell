@@ -82,14 +82,14 @@ Item {
                     spacing: 5
                     Text {
                         text: "󰒓"
-                        color: moreBtn._hovered ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext1
+                        color: moreBtn._hovered ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textSecondary
                         font.pixelSize: 13; font.family: Commons.Appearance.font.family
                         anchors.verticalCenter: parent.verticalCenter
                     }
                     Text {
                         visible: !root._vertical
                         text: "More"
-                        color: moreBtn._hovered ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext1
+                        color: moreBtn._hovered ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textSecondary
                         font.pixelSize: Commons.Appearance.font.sizeSm; font.family: Commons.Appearance.font.family
                         anchors.verticalCenter: parent.verticalCenter
                     }

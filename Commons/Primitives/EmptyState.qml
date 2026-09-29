@@ -31,7 +31,7 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             visible: root.title.length > 0
             text:    root.title
-            color:   Commons.Appearance.colors.overlay0
+            color:   Commons.Appearance.colors.textMuted
             font.pixelSize: Commons.Appearance.font.sizeBase
             font.family:    Commons.Appearance.font.family
         }
@@ -39,7 +39,7 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             visible: root.hint.length > 0
             text:    root.hint
-            color:   Commons.Appearance.colors.overlay0
+            color:   Commons.Appearance.colors.textMuted
             font.pixelSize: Commons.Appearance.font.sizeSm
             font.family:    Commons.Appearance.font.family
             opacity: 0.7

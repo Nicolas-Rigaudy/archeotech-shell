@@ -398,7 +398,7 @@ Item {
                 Text {
                     id: recentsLbl
                     text:  "RECENTS"
-                    color: Commons.Appearance.colors.subtext0
+                    color: Commons.Appearance.colors.textSecondary
                     font { family: Commons.Appearance.font.display; pixelSize: Commons.Appearance.font.sizeSm; letterSpacing: 1.5 }
                     opacity: 0.7
                     anchors { top: parent.top; left: parent.left }
@@ -477,14 +477,14 @@ Item {
                                         visible: tileIcon.status !== Image.Ready
                                         text: ""
                                         font { family: Commons.Appearance.font.family; pixelSize: 16 }
-                                        color: Commons.Appearance.colors.overlay1
+                                        color: Commons.Appearance.colors.textMuted
                                     }
                                 }
 
                                 Text {
                                     anchors { bottom: parent.bottom; bottomMargin: 6; left: parent.left; leftMargin: 6; right: parent.right; rightMargin: 6 }
                                     text:  tile.modelData.name || ""
-                                    color: Commons.Appearance.colors.subtext1
+                                    color: Commons.Appearance.colors.textSecondary
                                     font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeSm }
                                     horizontalAlignment: Text.AlignHCenter
                                     elide: Text.ElideRight
@@ -560,7 +560,7 @@ Item {
                     text:  ""
                     font { family: Commons.Appearance.font.family; pixelSize: 15 }
                     color: searchInput.activeFocus ? Commons.Appearance.colors.accent
-                                                   : Commons.Appearance.colors.overlay1
+                                                   : Commons.Appearance.colors.textMuted
                     Behavior on color { Commons.ColorAnim {} }
                 }
                 TextInput {
@@ -570,7 +570,7 @@ Item {
                         right: clearBtn.left;    rightMargin: 6
                         verticalCenter: parent.verticalCenter
                     }
-                    color:         Commons.Appearance.colors.text
+                    color:         Commons.Appearance.colors.textPrimary
                     font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeMd }
                     selectByMouse: true
                     clip:          true
@@ -591,7 +591,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         visible: searchInput.text.length === 0
                         text:  "Search apps, settings, actions…"
-                        color: Commons.Appearance.colors.overlay0
+                        color: Commons.Appearance.colors.textMuted
                         font:  searchInput.font
                     }
                 }
@@ -608,7 +608,7 @@ Item {
                         anchors.centerIn: parent
                         text:  ""
                         font { family: Commons.Appearance.font.family; pixelSize: 12 }
-                        color: Commons.Appearance.colors.overlay1
+                        color: Commons.Appearance.colors.textMuted
                     }
                     MouseArea {
                         id: _clearArea
@@ -697,7 +697,7 @@ Item {
                             visible: appIcon.status !== Image.Ready || iconWrapper._cands.length === 0
                             text:  modelData.__glyph || ""   // action glyph, else app fallback
                             font { family: Commons.Appearance.font.family; pixelSize: 20 }
-                            color: Commons.Appearance.colors.overlay1
+                            color: Commons.Appearance.colors.textMuted
                         }
                     }
 
@@ -715,8 +715,8 @@ Item {
                             width: parent.width
                             text:  modelData.name || ""
                             color: root.selectedIdx === index
-                                       ? Commons.Appearance.colors.text
-                                       : Commons.Appearance.colors.subtext1
+                                       ? Commons.Appearance.colors.textPrimary
+                                       : Commons.Appearance.colors.textSecondary
                             font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeMd; weight: Font.Medium }
                             elide: Text.ElideRight
                         }
@@ -725,7 +725,7 @@ Item {
                             readonly property string _sub: modelData.comment || modelData.genericName || ""
                             text:    _sub
                             visible: _sub.length > 0
-                            color:   Commons.Appearance.colors.overlay1
+                            color:   Commons.Appearance.colors.textMuted
                             font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeSm }
                             elide: Text.ElideRight
                         }
@@ -747,7 +747,7 @@ Item {
                             anchors.centerIn: parent
                             text:  pinBtn._pinned ? "󰐃" : "󰤱"
                             color: pinBtn._pinned ? Commons.Appearance.colors.accent
-                                                  : Commons.Appearance.colors.overlay0
+                                                  : Commons.Appearance.colors.textMuted
                             font { family: Commons.Appearance.font.family; pixelSize: 14 }
                             Behavior on color { Commons.ColorAnim {} }
                         }
@@ -780,20 +780,20 @@ Item {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text:  ""
-                        color: Commons.Appearance.colors.overlay0
+                        color: Commons.Appearance.colors.textMuted
                         font { family: Commons.Appearance.font.family; pixelSize: 34 }
                     }
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text:  root.allApps.length === 0 ? "Loading applications…" : "No results"
-                        color: Commons.Appearance.colors.subtext0
+                        color: Commons.Appearance.colors.textSecondary
                         font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeMd }
                     }
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         visible: root.allApps.length > 0
                         text:  "Try a different search"
-                        color: Commons.Appearance.colors.overlay0
+                        color: Commons.Appearance.colors.textMuted
                         font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeSm }
                     }
                 }
@@ -824,7 +824,7 @@ Item {
                     : root.query.length === 0
                     ? root.allApps.length + " apps"
                     : root.filtered.length + (root.filtered.length === 1 ? " result" : " results")
-                color: Commons.Appearance.colors.subtext0
+                color: Commons.Appearance.colors.textSecondary
                 font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeSm }
             }
 
@@ -851,14 +851,14 @@ Item {
                                 id: keyTxt
                                 anchors.centerIn: parent
                                 text: hint.modelData.k
-                                color: Commons.Appearance.colors.subtext0
+                                color: Commons.Appearance.colors.textSecondary
                                 font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeSm }
                             }
                         }
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             text: hint.modelData.l
-                            color: Commons.Appearance.colors.subtext0
+                            color: Commons.Appearance.colors.textSecondary
                             font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeSm }
                         }
                     }

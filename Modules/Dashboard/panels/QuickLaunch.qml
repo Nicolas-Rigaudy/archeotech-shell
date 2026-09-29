@@ -73,7 +73,7 @@ DashCard {
 
                     Text {
                         text: tile.modelData.label
-                        color: Commons.Appearance.colors.text
+                        color: Commons.Appearance.colors.textPrimary
                         font.family: Commons.Appearance.font.family
                         font.pixelSize: Commons.Appearance.font.sizeBase
                         Layout.fillWidth: true

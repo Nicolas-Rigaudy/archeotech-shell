@@ -70,12 +70,12 @@ Item {
 
                             Text {
                                 text: NetworkServices.Network.wifiEnabled ? "󰖩" : "󰖪"
-                                color: NetworkServices.Network.wifiEnabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.overlay0
+                                color: NetworkServices.Network.wifiEnabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
                                 font.pixelSize: 11; font.family: Commons.Appearance.font.family
                             }
                             Text {
                                 text: NetworkServices.Network.wifiEnabled ? "On" : "Off"
-                                color: NetworkServices.Network.wifiEnabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.overlay0
+                                color: NetworkServices.Network.wifiEnabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
                                 font.pixelSize: 11; font.family: Commons.Appearance.font.family
                             }
                         }
@@ -116,7 +116,7 @@ Item {
                         Text {
                             visible: NetworkServices.Network.displayNetworks.filter(function(n){ return !n.saved && !n.active }).length > 0
                             text: "AVAILABLE"
-                            color: Commons.Appearance.colors.overlay0
+                            color: Commons.Appearance.colors.textMuted
                             font.pixelSize: 9; font.family: Commons.Appearance.font.family
                             font.weight: Font.Medium; font.letterSpacing: 1.5
                             Layout.fillWidth: true
@@ -131,7 +131,7 @@ Item {
                         Text {
                             visible: NetworkServices.Network.displayNetworks.length === 0
                             text: "Scanning for networks…"
-                            color: Commons.Appearance.colors.overlay0
+                            color: Commons.Appearance.colors.textMuted
                             font.pixelSize: Commons.Appearance.font.sizeBase
                             font.family: Commons.Appearance.font.family
                             Layout.fillWidth: true; Layout.topMargin: 4; Layout.bottomMargin: 4
@@ -141,7 +141,7 @@ Item {
                 Text {
                     visible: root._tab === 0 && !NetworkServices.Network.wifiEnabled
                     text: "Wi-Fi is disabled."
-                    color: Commons.Appearance.colors.overlay0
+                    color: Commons.Appearance.colors.textMuted
                     font.pixelSize: Commons.Appearance.font.sizeBase
                     font.family: Commons.Appearance.font.family
                 }
@@ -188,12 +188,12 @@ Item {
 
                             Text {
                                 text: NetworkServices.Bluetooth.enabled ? "󰂯" : "󰂲"
-                                color: NetworkServices.Bluetooth.enabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.overlay0
+                                color: NetworkServices.Bluetooth.enabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
                                 font.pixelSize: 11; font.family: Commons.Appearance.font.family
                             }
                             Text {
                                 text: NetworkServices.Bluetooth.enabled ? "On" : "Off"
-                                color: NetworkServices.Bluetooth.enabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.overlay0
+                                color: NetworkServices.Bluetooth.enabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
                                 font.pixelSize: 11; font.family: Commons.Appearance.font.family
                             }
                         }
@@ -206,7 +206,7 @@ Item {
                         Text {
                             visible: NetworkServices.Bluetooth.devices.filter(function(d){ return d.paired }).length === 0
                             text: "No paired devices"
-                            color: Commons.Appearance.colors.overlay0
+                            color: Commons.Appearance.colors.textMuted
                             font.pixelSize: Commons.Appearance.font.sizeBase
                             font.family: Commons.Appearance.font.family
                             Layout.fillWidth: true; Layout.topMargin: 2; Layout.bottomMargin: 2
@@ -232,7 +232,7 @@ Item {
 
                                     Text {
                                         text: modelData.connected ? "󰂱" : "󰂯"
-                                        color: modelData.connected ? Commons.Appearance.colors.accent : Commons.Appearance.colors.overlay0
+                                        color: modelData.connected ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textMuted
                                         font.pixelSize: 16; font.family: Commons.Appearance.font.family
                                         Layout.alignment: Qt.AlignVCenter
                                         Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
@@ -244,7 +244,7 @@ Item {
 
                                         Text {
                                             text: modelData.name
-                                            color: modelData.connected ? Commons.Appearance.colors.text : Commons.Appearance.colors.subtext1
+                                            color: modelData.connected ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textSecondary
                                             font.pixelSize: Commons.Appearance.font.sizeBase
                                             font.family: Commons.Appearance.font.family
                                             elide: Text.ElideRight
@@ -271,7 +271,7 @@ Item {
                                         Text {
                                             anchors.centerIn: parent
                                             text: modelData.trusted ? "󰓎" : "󰓒"
-                                            color: modelData.trusted ? Commons.Appearance.colors.yellow : Commons.Appearance.colors.overlay0
+                                            color: modelData.trusted ? Commons.Appearance.colors.yellow : Commons.Appearance.colors.textMuted
                                             font.pixelSize: 14; font.family: Commons.Appearance.font.family
                                         }
                                         StateLayer {
@@ -335,7 +335,7 @@ Item {
                                             Text {
                                                 anchors.centerIn: parent
                                                 text: "󰩺"
-                                                color: btRmLayer.hovered ? Commons.Appearance.colors.red : Commons.Appearance.colors.overlay0
+                                                color: btRmLayer.hovered ? Commons.Appearance.colors.red : Commons.Appearance.colors.textMuted
                                                 font.pixelSize: 14; font.family: Commons.Appearance.font.family
                                             }
                                             StateLayer {
@@ -359,7 +359,7 @@ Item {
                             visible: NetworkServices.Bluetooth.discovering
                                   || NetworkServices.Bluetooth.devices.filter(function(d){ return !d.paired }).length > 0
                             text: "AVAILABLE"
-                            color: Commons.Appearance.colors.overlay0
+                            color: Commons.Appearance.colors.textMuted
                             font.pixelSize: 9; font.family: Commons.Appearance.font.family
                             font.weight: Font.Medium; font.letterSpacing: 1.5
                             Layout.fillWidth: true; Layout.topMargin: 6; Layout.bottomMargin: 2
@@ -368,7 +368,7 @@ Item {
                             visible: NetworkServices.Bluetooth.discovering
                                   && NetworkServices.Bluetooth.devices.filter(function(d){ return !d.paired }).length === 0
                             text: "Searching…"
-                            color: Commons.Appearance.colors.overlay0
+                            color: Commons.Appearance.colors.textMuted
                             font.pixelSize: Commons.Appearance.font.sizeSm
                             font.family: Commons.Appearance.font.family
                             Layout.fillWidth: true; Layout.bottomMargin: 2
@@ -382,13 +382,13 @@ Item {
                                 RowLayout {
                                     anchors.fill: parent; spacing: 10
                                     Text {
-                                        text: "󰂯"; color: Commons.Appearance.colors.overlay0
+                                        text: "󰂯"; color: Commons.Appearance.colors.textMuted
                                         font.pixelSize: 16; font.family: Commons.Appearance.font.family
                                         Layout.alignment: Qt.AlignVCenter
                                     }
                                     Text {
                                         text: modelData.name
-                                        color: Commons.Appearance.colors.subtext1
+                                        color: Commons.Appearance.colors.textSecondary
                                         font.pixelSize: Commons.Appearance.font.sizeBase
                                         font.family: Commons.Appearance.font.family
                                         elide: Text.ElideRight; Layout.fillWidth: true
@@ -424,7 +424,7 @@ Item {
                 Text {
                     visible: root._tab === 1 && !NetworkServices.Bluetooth.enabled
                     text: "Bluetooth is disabled."
-                    color: Commons.Appearance.colors.overlay0
+                    color: Commons.Appearance.colors.textMuted
                     font.pixelSize: Commons.Appearance.font.sizeBase
                     font.family: Commons.Appearance.font.family
                 }
@@ -455,7 +455,7 @@ Item {
 
             Text {
                 text: NetworkServices.Network.signalIcon(modelData.signal, modelData.security !== "" && modelData.security !== "--")
-                color: modelData.active ? Commons.Appearance.colors.accent : Commons.Appearance.colors.overlay0
+                color: modelData.active ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textMuted
                 font.pixelSize: 14; font.family: Commons.Appearance.font.family
                 Layout.alignment: Qt.AlignVCenter
                 Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
@@ -467,7 +467,7 @@ Item {
 
                 Text {
                     text: modelData.ssid
-                    color: modelData.active ? Commons.Appearance.colors.text : Commons.Appearance.colors.subtext1
+                    color: modelData.active ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textSecondary
                     font.pixelSize: Commons.Appearance.font.sizeBase
                     font.family: Commons.Appearance.font.family
                     elide: Text.ElideRight
@@ -477,7 +477,7 @@ Item {
                 Text {
                     visible: modelData.active
                     text: NetworkServices.Network.signal + "%  ·  " + NetworkServices.Network.band
-                    color: Commons.Appearance.colors.overlay0
+                    color: Commons.Appearance.colors.textMuted
                     font.pixelSize: Commons.Appearance.font.sizeSm
                     font.family: Commons.Appearance.font.family
                 }
@@ -535,12 +535,12 @@ Item {
                     spacing: 4
                     Text {
                         text: "󰁪"
-                        color: modelData.autoconnect ? Commons.Appearance.colors.base : Commons.Appearance.colors.overlay0
+                        color: modelData.autoconnect ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
                         font.pixelSize: 10; font.family: Commons.Appearance.font.family
                     }
                     Text {
                         text: "Auto"
-                        color: modelData.autoconnect ? Commons.Appearance.colors.base : Commons.Appearance.colors.overlay0
+                        color: modelData.autoconnect ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
                         font.pixelSize: 10; font.family: Commons.Appearance.font.family
                     }
                 }
@@ -556,7 +556,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: "󰩺"
-                    color: forgetLayer.hovered ? Commons.Appearance.colors.red : Commons.Appearance.colors.overlay0
+                    color: forgetLayer.hovered ? Commons.Appearance.colors.red : Commons.Appearance.colors.textMuted
                     font.pixelSize: 14; font.family: Commons.Appearance.font.family
                 }
                 StateLayer {
@@ -581,8 +581,8 @@ Item {
                 echoMode: TextInput.Password
                 font.pixelSize: Commons.Appearance.font.sizeSm
                 font.family: Commons.Appearance.font.family
-                color: Commons.Appearance.colors.text
-                placeholderTextColor: Commons.Appearance.colors.overlay0
+                color: Commons.Appearance.colors.textPrimary
+                placeholderTextColor: Commons.Appearance.colors.textMuted
                 background: Rectangle {
                     radius: Commons.Appearance.radius.sm
                     color: Commons.Appearance.colors.base

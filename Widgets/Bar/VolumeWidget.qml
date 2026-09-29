@@ -7,7 +7,7 @@ import "../../Services/Media" as MediaServices
 BarPill {
     id: root
     icon: MediaServices.Audio.muted ? "󰖁" : MediaServices.Audio.volume > 66 ? "󰕾" : MediaServices.Audio.volume > 33 ? "󰖀" : "󰕿"
-    iconColor: MediaServices.Audio.muted ? Commons.Appearance.colors.overlay0 : Commons.Appearance.colors.subtext1
+    iconColor: MediaServices.Audio.muted ? Commons.Appearance.colors.textMuted : Commons.Appearance.colors.textSecondary
     text: MediaServices.Audio.volume + "%"
 
     onClicked: MediaServices.Audio.toggleMute()

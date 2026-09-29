@@ -127,7 +127,7 @@ Item {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
                 text: "󰕰  Tiling Layouts"
-                color: Commons.Appearance.colors.text
+                color: Commons.Appearance.colors.textPrimary
                 font.pixelSize: Commons.Appearance.font.sizeLg
                 font.family: Commons.Appearance.font.family
                 font.weight: Font.Medium
@@ -136,7 +136,7 @@ Item {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Super+T cycles all · click to set"
-                color: Commons.Appearance.colors.subtext0
+                color: Commons.Appearance.colors.textSecondary
                 font.pixelSize: Commons.Appearance.font.sizeSm
                 font.family: Commons.Appearance.font.family
             }
@@ -241,7 +241,7 @@ Item {
                             Layout.fillWidth: true
                             text: cell.modelData.label
                             color: cell._active ? Commons.Appearance.colors.accent
-                                                : Commons.Appearance.colors.text
+                                                : Commons.Appearance.colors.textPrimary
                             font.pixelSize: Commons.Appearance.font.sizeBase
                             font.family: Commons.Appearance.font.family
                             font.weight: cell._active ? Font.Medium : Font.Normal
@@ -265,7 +265,7 @@ Item {
                                     id: keyText
                                     anchors.centerIn: parent
                                     text: cell.modelData.key
-                                    color: Commons.Appearance.colors.subtext0
+                                    color: Commons.Appearance.colors.textSecondary
                                     font.pixelSize: Commons.Appearance.font.sizeSm - 1
                                     font.family: Commons.Appearance.font.family
                                 }
@@ -274,7 +274,7 @@ Item {
                                 visible: !cell._hov && cell.modelData.key === ""
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: "↻ Super+T"
-                                color: Commons.Appearance.colors.subtext0
+                                color: Commons.Appearance.colors.textSecondary
                                 font.pixelSize: Commons.Appearance.font.sizeSm - 1
                                 font.family: Commons.Appearance.font.family
                                 opacity: 0.7
@@ -284,7 +284,7 @@ Item {
                                 anchors.fill: parent
                                 verticalAlignment: Text.AlignVCenter
                                 text: cell.modelData.desc
-                                color: Commons.Appearance.colors.subtext1
+                                color: Commons.Appearance.colors.textSecondary
                                 font.pixelSize: Commons.Appearance.font.sizeSm - 1
                                 font.family: Commons.Appearance.font.family
                                 wrapMode: Text.WordWrap

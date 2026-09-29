@@ -114,14 +114,14 @@ Item {
                             spacing: 2
                             Text {
                                 text: "Edit Layout"
-                                color: Commons.Appearance.colors.text
+                                color: Commons.Appearance.colors.textPrimary
                                 font.pixelSize: Commons.Appearance.font.sizeMd
                                 font.family: Commons.Appearance.font.family
                                 font.weight: Font.Medium
                             }
                             Text {
                                 text: "Click-to-assign builder for the bar, strips & widgets  ·  Super+Shift+E"
-                                color: Commons.Appearance.colors.subtext0
+                                color: Commons.Appearance.colors.textSecondary
                                 font.pixelSize: Commons.Appearance.font.sizeSm
                                 font.family: Commons.Appearance.font.family
                                 Layout.fillWidth: true
@@ -130,7 +130,7 @@ Item {
                         }
                         Text {
                             text: "󰅂"
-                            color: Commons.Appearance.colors.overlay1
+                            color: Commons.Appearance.colors.textMuted
                             font.pixelSize: 18; font.family: Commons.Appearance.font.family
                             Layout.alignment: Qt.AlignVCenter
                         }
@@ -212,14 +212,14 @@ Item {
                                 }
                                 Text {
                                     text: root._savedProp ? "Saved as default" : "Save as default"
-                                    color: Commons.Appearance.colors.text
+                                    color: Commons.Appearance.colors.textPrimary
                                     font.pixelSize: Commons.Appearance.font.sizeBase
                                     font.family: Commons.Appearance.font.family
                                     Layout.fillWidth: true
                                 }
                                 Text {
                                     text: "new windows, after reload"
-                                    color: Commons.Appearance.colors.overlay0
+                                    color: Commons.Appearance.colors.textMuted
                                     font.pixelSize: Commons.Appearance.font.sizeSm
                                     font.family: Commons.Appearance.font.family
                                 }
@@ -269,7 +269,7 @@ Item {
                 SettingsCard {
                     Text {
                         text: "󰋽  Add, remove and arrange widgets in the bar and edge strips from Edit Layout above. Frame changes apply live."
-                        color: Commons.Appearance.colors.overlay0
+                        color: Commons.Appearance.colors.textMuted
                         font.pixelSize: Commons.Appearance.font.sizeSm
                         font.family: Commons.Appearance.font.family
                         wrapMode: Text.WordWrap

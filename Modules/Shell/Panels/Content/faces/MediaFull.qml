@@ -82,7 +82,7 @@ Item {
         Text {
             Layout.fillWidth: true
             text: MediaServices.MprisService.title || "Unknown track"
-            color: Commons.Appearance.colors.text
+            color: Commons.Appearance.colors.textPrimary
             font.pixelSize: Commons.Appearance.font.sizeMd
             font.family: Commons.Appearance.font.family
             font.weight: Font.Medium
@@ -91,7 +91,7 @@ Item {
         Text {
             Layout.fillWidth: true
             text: MediaServices.MprisService.artist || MediaServices.MprisService.identity || ""
-            color: Commons.Appearance.colors.subtext0
+            color: Commons.Appearance.colors.textSecondary
             font.pixelSize: Commons.Appearance.font.sizeSm
             font.family: Commons.Appearance.font.family
             elide: Text.ElideRight
@@ -127,13 +127,13 @@ Item {
             Text {
                 anchors.left: parent.left; anchors.bottom: parent.bottom
                 text: face.host ? face.host.formatTime(MediaServices.MprisService.position) : ""
-                color: Commons.Appearance.colors.overlay0
+                color: Commons.Appearance.colors.textMuted
                 font.pixelSize: 9; font.family: Commons.Appearance.font.family
             }
             Text {
                 anchors.right: parent.right; anchors.bottom: parent.bottom
                 text: MediaServices.MprisService.length > 0 && face.host ? face.host.formatTime(MediaServices.MprisService.length) : ""
-                color: Commons.Appearance.colors.overlay0
+                color: Commons.Appearance.colors.textMuted
                 font.pixelSize: 9; font.family: Commons.Appearance.font.family
             }
         }
@@ -144,7 +144,7 @@ Item {
             Item { Layout.fillWidth: true }
             Text {
                 text: "󰒮"
-                color: prevArea.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext1
+                color: prevArea.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textSecondary
                 font.pixelSize: 20; font.family: Commons.Appearance.font.family
                 Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                 MouseArea { id: prevArea; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; onClicked: MediaServices.MprisService.previous() }
@@ -178,7 +178,7 @@ Item {
             Item { Layout.preferredWidth: 24 }
             Text {
                 text: "󰒭"
-                color: nextArea.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext1
+                color: nextArea.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textSecondary
                 font.pixelSize: 20; font.family: Commons.Appearance.font.family
                 Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                 MouseArea { id: nextArea; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; onClicked: MediaServices.MprisService.next() }

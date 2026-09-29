@@ -46,7 +46,7 @@ PanelWindow {
 
     property color osdColor: osdType === "brightness"
         ? Commons.Appearance.colors.yellow
-        : (osdMuted ? Commons.Appearance.colors.overlay0 : Commons.Appearance.colors.accent)
+        : (osdMuted ? Commons.Appearance.colors.textMuted : Commons.Appearance.colors.accent)
 
     // ── Auto-hide ──────────────────────────────────────────────────────────────
     Timer {
@@ -117,7 +117,7 @@ PanelWindow {
 
                 Text {
                     text: osdWindow.osdMuted ? "Muted" : osdWindow.osdValue + "%"
-                    color: Commons.Appearance.colors.subtext0
+                    color: Commons.Appearance.colors.textSecondary
                     font.pixelSize: Commons.Appearance.font.sizeSm
                     font.family: Commons.Appearance.font.family
                     font.weight: Font.Medium

@@ -11,7 +11,7 @@ BarPill {
     id: root
     visible: Persistence.Config.get("bar.modules.wifi", true)
     icon: NetworkServices.Network.icon()
-    iconColor: NetworkServices.Network.connected ? Commons.Appearance.colors.blue : Commons.Appearance.colors.overlay0
+    iconColor: NetworkServices.Network.connected ? Commons.Appearance.colors.blue : Commons.Appearance.colors.textMuted
 
     onClicked: {
         if (!holderRoot) return

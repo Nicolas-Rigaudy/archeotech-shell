@@ -55,14 +55,14 @@ Item {
                 spacing: 3
                 Text {
                     text: root._greeting()
-                    color: Commons.Appearance.colors.text
+                    color: Commons.Appearance.colors.textPrimary
                     font.family: Commons.Appearance.font.display
                     font.pixelSize: 22
                     font.weight: Font.DemiBold
                 }
                 Text {
                     text: Qt.formatDateTime(root._now, "dddd, d MMMM")
-                    color: Commons.Appearance.colors.subtext0
+                    color: Commons.Appearance.colors.textSecondary
                     font.family: Commons.Appearance.font.family
                     font.pixelSize: Commons.Appearance.font.sizeMd
                 }
@@ -89,7 +89,7 @@ Item {
                 Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                 Text {
                     text: "✕"
-                    color: closeBtnHov.containsMouse ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay1
+                    color: closeBtnHov.containsMouse ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
                     font.family: Commons.Appearance.font.family
                     font.pixelSize: Commons.Appearance.font.sizeMd
                     anchors.centerIn: parent

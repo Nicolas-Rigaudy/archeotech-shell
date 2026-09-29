@@ -27,7 +27,7 @@ Item {
             Text {
                 visible: root.label !== ""
                 text: root.label
-                color: Commons.Appearance.colors.text
+                color: Commons.Appearance.colors.textPrimary
                 font.pixelSize: Commons.Appearance.font.sizeBase
                 font.family: Commons.Appearance.font.family
             }
@@ -35,7 +35,7 @@ Item {
             Text {
                 visible: root.description !== ""
                 text: root.description
-                color: Commons.Appearance.colors.overlay0
+                color: Commons.Appearance.colors.textMuted
                 font.pixelSize: Commons.Appearance.font.sizeSm
                 font.family: Commons.Appearance.font.family
             }

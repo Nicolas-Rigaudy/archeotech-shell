@@ -10,7 +10,7 @@ BarPill {
     icon: "󰂚"
     iconColor: _open ? Commons.Appearance.colors.accent
              : SystemServices.Notifications.unreadCount > 0 ? Commons.Appearance.colors.red
-             :                                                 Commons.Appearance.colors.subtext1
+             :                                                 Commons.Appearance.colors.textSecondary
 
     onClicked: {
         if (holderRoot) { holderRoot._wifiPopupVisible = false; holderRoot._btPopupVisible = false }

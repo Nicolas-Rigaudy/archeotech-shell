@@ -81,6 +81,17 @@ QtObject {
         return (d && d.colors && d.colors[key]) || fallback
     }
 
+    // Slot a semantic role maps to: the active pack's roles win, then the theme's
+    // roles, then `fallbackSlot`. Resolved through _c() (pack colours > theme >
+    // hex), never through `colors`, so a role binding inside `colors` does not
+    // read the object while it is still being built.
+    function _role(name, fallbackSlot, fallbackHex) {
+        var p = root._mergedPack, d = root._data
+        var slot = (p && p.roles && p.roles[name]) || (d && d.roles && d.roles[name]) || fallbackSlot
+        if (slot === "accent") return root._c(root._accentName, "#c6a0f6")
+        return root._c(slot, root._c(fallbackSlot, fallbackHex))
+    }
+
     // Palette color name that drives `accent` (Sprint 25 accent picker). The
     // theme's top-level `accent` key holds a color name (e.g. "blue"); falls
     // back to "mauve" so themes without the key behave as before.
@@ -334,6 +345,20 @@ QtObject {
         readonly property color warning: yellow
         readonly property color success: green
         readonly property color info:    blue
+
+        // Semantic roles (item_110). Components pick a ROLE, never a palette step:
+        // each theme's theme.json `roles` names the official slot that passes the
+        // role's contrast floor there (body 4.5:1, muted 3:1 on base/mantle/cards;
+        // scripts/contrast-check.py --strict). The fallbacks are the Catppuccin
+        // dark map. Owner rule: official colours only, never mixed to pass.
+        readonly property color textPrimary:   root._role("textPrimary",   "text",     "#cad3f5")
+        readonly property color textSecondary: root._role("textSecondary", "subtext0", "#a5adcb")
+        readonly property color textMuted:     root._role("textMuted",     "overlay1", "#8087a2")
+        readonly property color textDisabled:  root._role("textDisabled",  "overlay0", "#6e738d")
+        readonly property color textOnAccent:  root._role("textOnAccent",  "base",     "#24273a")
+        readonly property color borderSubtle:  root._role("borderSubtle",  "surface1", "#494d64")
+        readonly property color borderStrong:  root._role("borderStrong",  "surface2", "#5b6078")
+        readonly property color focus:         root._role("focus",         "accent",   "#c6a0f6")
 
         // Recessed track — the sunk groove behind sliders and dashboard stat
         // bars (a fixed black overlay for the 3d "sunk" read, not a palette

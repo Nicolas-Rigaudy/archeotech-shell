@@ -6,7 +6,7 @@ import "../../Services/Media" as MediaServices
 BarPill {
     id: root
     icon: MediaServices.Audio.micMuted ? "󰍭" : "󰍬"
-    iconColor: MediaServices.Audio.micMuted ? Commons.Appearance.colors.red : Commons.Appearance.colors.overlay1
+    iconColor: MediaServices.Audio.micMuted ? Commons.Appearance.colors.red : Commons.Appearance.colors.textMuted
 
     onClicked: MediaServices.Audio.toggleMicMute()
     onEntered: if (holderRoot && holderRoot.horizontal) holderRoot.showPopup(root, "MICROPHONE",

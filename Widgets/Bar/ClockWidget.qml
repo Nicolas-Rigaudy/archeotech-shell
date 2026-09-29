@@ -44,11 +44,11 @@ Item {
         font.family: Commons.Appearance.font.family
 
         function clockText() {
-            return "<span style='color:" + Commons.Appearance.colors.text + ";font-weight:600'>"
+            return "<span style='color:" + Commons.Appearance.colors.textPrimary + ";font-weight:600'>"
                 + Qt.formatDateTime(new Date(), root._timeFmt())
                 + "</span>"
                 + "<span style='color:" + Commons.Appearance.colors.surface1 + "'> &nbsp;·&nbsp; </span>"
-                + "<span style='color:" + Commons.Appearance.colors.subtext0
+                + "<span style='color:" + Commons.Appearance.colors.textSecondary
                 + ";font-family:\"" + Commons.Appearance.font.display + "\""
                 + ";font-size:" + (Commons.Appearance.font.sizeMd + 2) + "px'>"
                 + Qt.formatDateTime(new Date(), "ddd d MMM")
@@ -70,14 +70,14 @@ Item {
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: Qt.formatDateTime(vClock._now, root._hourFmt())
-            color: Commons.Appearance.colors.text
+            color: Commons.Appearance.colors.textPrimary
             font.pixelSize: Commons.Appearance.font.sizeMd; font.weight: Font.DemiBold
             font.family: Commons.Appearance.font.family
         }
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: Qt.formatDateTime(vClock._now, "mm")
-            color: Commons.Appearance.colors.subtext0
+            color: Commons.Appearance.colors.textSecondary
             font.pixelSize: Commons.Appearance.font.sizeMd
             font.family: Commons.Appearance.font.family
         }

@@ -28,7 +28,7 @@ BarPill {
     anchors.fill: _onStrip ? parent : undefined
     icon:     glyph !== "" ? glyph : ((_meta && _meta.icon) ? _meta.icon : "󰏗")
     iconSize: _onStrip ? 22 : 18
-    iconColor: _open ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext1
+    iconColor: _open ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textSecondary
     hoverColor: Commons.Appearance.colors.accent
     showActiveBg: _onStrip
     active:       _open

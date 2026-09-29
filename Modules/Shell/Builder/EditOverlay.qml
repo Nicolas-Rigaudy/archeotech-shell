@@ -291,7 +291,7 @@ Item {
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Drag chips to move · Esc to exit"
-                color: Commons.Appearance.colors.subtext0
+                color: Commons.Appearance.colors.textSecondary
                 font.family: Commons.Appearance.font.family
                 font.pixelSize: Commons.Appearance.font.sizeSm
             }
@@ -373,7 +373,7 @@ Item {
                     visible: !sideCard._on
                     anchors.centerIn: parent
                     text: editOverlay._label(sideCard.side) + " · Off"
-                    color: Commons.Appearance.colors.overlay1
+                    color: Commons.Appearance.colors.textMuted
                     font.family: Commons.Appearance.font.family
                     font.pixelSize: Commons.Appearance.font.sizeSm
                 }
@@ -528,7 +528,7 @@ Item {
                                                 visible: !chip._iconOnly && dragMA.containsMouse
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 text: chip.meta.name || chip._id
-                                                color: Commons.Appearance.colors.text
+                                                color: Commons.Appearance.colors.textPrimary
                                                 font.family: Commons.Appearance.font.family
                                                 font.pixelSize: Commons.Appearance.font.sizeSm
                                             }
@@ -537,7 +537,7 @@ Item {
                                                 visible: !chip._iconOnly && editOverlay._hasConfig(chip._id) && dragMA.containsMouse
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 text: "󰒓"
-                                                color: Commons.Appearance.colors.subtext0
+                                                color: Commons.Appearance.colors.textSecondary
                                                 font.family: Commons.Appearance.font.family
                                                 font.pixelSize: Commons.Appearance.font.sizeBase
                                                 MouseArea {
@@ -724,7 +724,7 @@ Item {
                 spacing: 2
                 Text {
                     text: "Widget Library"
-                    color: Commons.Appearance.colors.text
+                    color: Commons.Appearance.colors.textPrimary
                     font.family: Commons.Appearance.font.family
                     font.pixelSize: Commons.Appearance.font.sizeMd
                     font.bold: true
@@ -734,7 +734,7 @@ Item {
                     wrapMode: Text.WordWrap
                     text: library._removing ? "󰩹  Release to remove"
                                             : "Drag onto a bar or strip · drag a chip back here to remove"
-                    color: library._removing ? Commons.Appearance.colors.red : Commons.Appearance.colors.subtext0
+                    color: library._removing ? Commons.Appearance.colors.red : Commons.Appearance.colors.textSecondary
                     font.family: Commons.Appearance.font.family
                     font.pixelSize: Commons.Appearance.font.sizeSm
                     font.bold: library._removing
@@ -754,7 +754,7 @@ Item {
 
                     Text {
                         text: section.modelData.toUpperCase()
-                        color: Commons.Appearance.colors.subtext0
+                        color: Commons.Appearance.colors.textSecondary
                         font.family: Commons.Appearance.font.family
                         font.pixelSize: Commons.Appearance.font.sizeSm
                         font.bold: true
@@ -810,7 +810,7 @@ Item {
                                         Layout.alignment: Qt.AlignVCenter
                                         elide: Text.ElideRight
                                         text: libChip.modelData.name || libChip._id
-                                        color: Commons.Appearance.colors.text
+                                        color: Commons.Appearance.colors.textPrimary
                                         font.family: Commons.Appearance.font.family
                                         font.pixelSize: Commons.Appearance.font.sizeSm
                                     }
@@ -940,7 +940,7 @@ Item {
                         text: "Configure · " + (editOverlay._reg.isPlugin(editOverlay._cfgId)
                                 ? ((editOverlay._mods.moduleFor(editOverlay._cfgId) || {}).name || editOverlay._cfgId)
                                 : editOverlay._meta(editOverlay._cfgZone, editOverlay._cfgId).name)
-                        color: Commons.Appearance.colors.text
+                        color: Commons.Appearance.colors.textPrimary
                         font.family: Commons.Appearance.font.family
                         font.pixelSize: Commons.Appearance.font.sizeMd
                         font.bold: true
@@ -948,7 +948,7 @@ Item {
                     }
                     Text {
                         text: "×"
-                        color: Commons.Appearance.colors.subtext0
+                        color: Commons.Appearance.colors.textSecondary
                         font.family: Commons.Appearance.font.family
                         font.pixelSize: Commons.Appearance.font.sizeLg
                         MouseArea {

@@ -106,7 +106,7 @@ Item {
                     Text {
                         anchors.centerIn: parent
                         text: NetworkServices.Network.icon()
-                        color: NetworkServices.Network.wifiEnabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.overlay0
+                        color: NetworkServices.Network.wifiEnabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
                         font.pixelSize: 13; font.family: Commons.Appearance.font.family
                     }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: NetworkServices.Network.toggleWifi() }
@@ -114,13 +114,13 @@ Item {
                 Text {
                     text: !NetworkServices.Network.wifiEnabled ? "WiFi — Off"
                         : NetworkServices.Network.connected ? "WiFi · " + NetworkServices.Network.ssid : "WiFi — Not connected"
-                    color: NetworkServices.Network.wifiEnabled ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0
+                    color: NetworkServices.Network.wifiEnabled ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
                     font.pixelSize: Commons.Appearance.font.sizeMd; font.family: Commons.Appearance.font.display
                     font.weight: Font.Medium; Layout.fillWidth: true; elide: Text.ElideRight
                 }
                 Text {
                     text: "✕"
-                    color: _wifiCloseMA.containsMouse ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0
+                    color: _wifiCloseMA.containsMouse ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
                     font.pixelSize: 11; font.family: Commons.Appearance.font.family
                     Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                     MouseArea {
@@ -141,7 +141,7 @@ Item {
             Text {
                 anchors.centerIn: parent
                 text: "Enable WiFi to see networks"
-                color: Commons.Appearance.colors.overlay0
+                color: Commons.Appearance.colors.textMuted
                 font.pixelSize: Commons.Appearance.font.sizeSm; font.family: Commons.Appearance.font.family
             }
         }
@@ -160,12 +160,12 @@ Item {
                     Text {
                         text: NetworkServices.Network.signalIcon(
                             modelData.signal, modelData.security !== "" && modelData.security !== "--")
-                        color: modelData.active ? Commons.Appearance.colors.accent : Commons.Appearance.colors.overlay0
+                        color: modelData.active ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textMuted
                         font.pixelSize: 13; font.family: Commons.Appearance.font.family
                     }
                     Text {
                         text: modelData.ssid
-                        color: modelData.active ? Commons.Appearance.colors.text : Commons.Appearance.colors.subtext1
+                        color: modelData.active ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textSecondary
                         font.pixelSize: Commons.Appearance.font.sizeSm; font.family: Commons.Appearance.font.family
                         Layout.fillWidth: true; elide: Text.ElideRight
                     }
@@ -199,7 +199,7 @@ Item {
                                 id: _wBtnTxt; anchors.centerIn: parent
                                 text: modelData.active ? "Disconnect" : (_needsPw ? "Open CC" : "Connect")
                                 color: modelData.active ? Commons.Appearance.colors.red
-                                    : _needsPw ? Commons.Appearance.colors.subtext0
+                                    : _needsPw ? Commons.Appearance.colors.textSecondary
                                     : Commons.Appearance.colors.accent
                                 font.pixelSize: Commons.Appearance.font.sizeSm - 1; font.family: Commons.Appearance.font.family
                             }
@@ -229,7 +229,7 @@ Item {
             Text {
                 anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
                 text: NetworkServices.Network.scanning ? "Scanning…" : "󰑙  Rescan"
-                color: NetworkServices.Network.scanning ? Commons.Appearance.colors.overlay0 : Commons.Appearance.colors.accent
+                color: NetworkServices.Network.scanning ? Commons.Appearance.colors.textMuted : Commons.Appearance.colors.accent
                 font.pixelSize: Commons.Appearance.font.sizeSm - 1; font.family: Commons.Appearance.font.family
                 MouseArea {
                     anchors.fill: parent; anchors.margins: -4

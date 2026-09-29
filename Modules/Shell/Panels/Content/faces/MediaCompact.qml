@@ -47,7 +47,7 @@ RowLayout {
         Text {
             Layout.fillWidth: true
             text: MediaServices.MprisService.title || "Unknown track"
-            color: Commons.Appearance.colors.text
+            color: Commons.Appearance.colors.textPrimary
             font.pixelSize: Commons.Appearance.font.sizeBase
             font.family: Commons.Appearance.font.family
             font.weight: Font.Medium
@@ -56,7 +56,7 @@ RowLayout {
         Text {
             Layout.fillWidth: true
             text: MediaServices.MprisService.artist || MediaServices.MprisService.identity || ""
-            color: Commons.Appearance.colors.subtext0
+            color: Commons.Appearance.colors.textSecondary
             font.pixelSize: Commons.Appearance.font.sizeSm
             font.family: Commons.Appearance.font.family
             elide: Text.ElideRight
@@ -66,7 +66,7 @@ RowLayout {
     // Inline transport
     Text {
         text: "󰒮"
-        color: cPrev.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext1
+        color: cPrev.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textSecondary
         font.pixelSize: 16; font.family: Commons.Appearance.font.family
         Layout.alignment: Qt.AlignVCenter
         Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
@@ -74,7 +74,7 @@ RowLayout {
     }
     Text {
         text: MediaServices.MprisService.playing ? "󰏤" : "󰐊"
-        color: cPlay.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.text
+        color: cPlay.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textPrimary
         font.pixelSize: 22; font.family: Commons.Appearance.font.family
         Layout.alignment: Qt.AlignVCenter
         Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
@@ -82,7 +82,7 @@ RowLayout {
     }
     Text {
         text: "󰒭"
-        color: cNext.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext1
+        color: cNext.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textSecondary
         font.pixelSize: 16; font.family: Commons.Appearance.font.family
         Layout.alignment: Qt.AlignVCenter
         Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }

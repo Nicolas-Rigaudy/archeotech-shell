@@ -29,7 +29,7 @@ Item {
 
             Text {
                 text: root.label
-                color: Commons.Appearance.colors.text
+                color: Commons.Appearance.colors.textPrimary
                 font.pixelSize: Commons.Appearance.font.sizeBase
                 font.family: Commons.Appearance.font.family
                 Layout.fillWidth: true
@@ -37,7 +37,7 @@ Item {
 
             Text {
                 text: root.format(slider.value)
-                color: Commons.Appearance.colors.subtext1
+                color: Commons.Appearance.colors.textSecondary
                 font.pixelSize: Commons.Appearance.font.sizeSm
                 font.family: Commons.Appearance.font.family
             }
@@ -46,7 +46,7 @@ Item {
         Text {
             visible: root.description !== ""
             text: root.description
-            color: Commons.Appearance.colors.overlay0
+            color: Commons.Appearance.colors.textMuted
             font.pixelSize: Commons.Appearance.font.sizeSm
             font.family: Commons.Appearance.font.family
         }

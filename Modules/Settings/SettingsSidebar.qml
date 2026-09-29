@@ -55,7 +55,7 @@ Item {
 
                         Text {
                             text: "󰍉"
-                            color: Commons.Appearance.colors.overlay0
+                            color: Commons.Appearance.colors.textMuted
                             font.pixelSize: 13; font.family: Commons.Appearance.font.family
                         }
                         TextField {
@@ -64,8 +64,8 @@ Item {
                             text: root.query
                             onTextChanged: root.query = text
                             placeholderText: "Search settings…"
-                            color: Commons.Appearance.colors.text
-                            placeholderTextColor: Commons.Appearance.colors.overlay0
+                            color: Commons.Appearance.colors.textPrimary
+                            placeholderTextColor: Commons.Appearance.colors.textMuted
                             font.pixelSize: Commons.Appearance.font.sizeSm
                             font.family: Commons.Appearance.font.family
                             background: null
@@ -75,7 +75,7 @@ Item {
                         Text {
                             visible: root.query !== ""
                             text: "✕"
-                            color: clearMa.containsMouse ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0
+                            color: clearMa.containsMouse ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
                             font.pixelSize: 12; font.family: Commons.Appearance.font.family
                             MouseArea {
                                 id: clearMa; anchors.fill: parent; anchors.margins: -4
@@ -93,7 +93,7 @@ Item {
             Text {
                 visible: root.query !== "" && root._results.length === 0
                 text: "No matches"
-                color: Commons.Appearance.colors.overlay0
+                color: Commons.Appearance.colors.textMuted
                 font.pixelSize: Commons.Appearance.font.sizeSm
                 font.family: Commons.Appearance.font.family
                 Layout.leftMargin: 20; Layout.topMargin: 6
@@ -125,7 +125,7 @@ Item {
                         spacing: 10
                         Text {
                             text: resItem.modelData.paneIcon
-                            color: Commons.Appearance.colors.subtext0
+                            color: Commons.Appearance.colors.textSecondary
                             font.pixelSize: 14; font.family: Commons.Appearance.font.family
                             Layout.alignment: Qt.AlignVCenter
                         }
@@ -134,7 +134,7 @@ Item {
                             spacing: 0
                             Text {
                                 text: resItem.modelData.label
-                                color: Commons.Appearance.colors.text
+                                color: Commons.Appearance.colors.textPrimary
                                 font.pixelSize: Commons.Appearance.font.sizeSm
                                 font.family: Commons.Appearance.font.family
                                 elide: Text.ElideRight
@@ -142,7 +142,7 @@ Item {
                             }
                             Text {
                                 text: resItem.modelData.paneLabel
-                                color: Commons.Appearance.colors.overlay0
+                                color: Commons.Appearance.colors.textMuted
                                 font.pixelSize: Commons.Appearance.font.sizeSm - 1
                                 font.family: Commons.Appearance.font.family
                             }
@@ -214,7 +214,7 @@ Item {
                             text: navItem.modelData.icon
                             color: root.activeIndex === navItem.index
                                 ? Commons.Appearance.colors.accent
-                                : Commons.Appearance.colors.subtext0
+                                : Commons.Appearance.colors.textSecondary
                             font.pixelSize: 16
                             font.family: Commons.Appearance.font.family
                             Layout.alignment: Qt.AlignVCenter
@@ -224,8 +224,8 @@ Item {
                         Text {
                             text: navItem.modelData.label
                             color: root.activeIndex === navItem.index
-                                ? Commons.Appearance.colors.text
-                                : Commons.Appearance.colors.subtext0
+                                ? Commons.Appearance.colors.textPrimary
+                                : Commons.Appearance.colors.textSecondary
                             font.pixelSize: Commons.Appearance.font.sizeMd
                             font.family: Commons.Appearance.font.display   // page names in the display face
                             font.weight: root.activeIndex === navItem.index ? Font.Medium : Font.Normal

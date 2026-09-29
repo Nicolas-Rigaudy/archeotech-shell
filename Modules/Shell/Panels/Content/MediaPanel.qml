@@ -96,13 +96,13 @@ Item {
             spacing: 8
             Text {
                 text: "󰝚"
-                color: Commons.Appearance.colors.text
+                color: Commons.Appearance.colors.textPrimary
                 font.pixelSize: Commons.Appearance.font.sizeLg
                 font.family: Commons.Appearance.font.family
             }
             Text {
                 text: "Media"
-                color: Commons.Appearance.colors.text
+                color: Commons.Appearance.colors.textPrimary
                 font.pixelSize: Commons.Appearance.font.sizeLg
                 font.family: Commons.Appearance.font.display
                 font.weight: Font.Medium
@@ -131,7 +131,7 @@ Item {
             Text {
                 Layout.alignment: Qt.AlignHCenter
                 text: "Nothing playing"
-                color: Commons.Appearance.colors.text
+                color: Commons.Appearance.colors.textPrimary
                 font.pixelSize: Commons.Appearance.font.sizeMd
                 font.family: Commons.Appearance.font.family
                 font.weight: Font.Medium
@@ -144,7 +144,7 @@ Item {
                 text: root.installedPlayers.length > 0
                     ? "Start something and it shows up here"
                     : "No media player found; anything that speaks MPRIS shows up here"
-                color: Commons.Appearance.colors.subtext0
+                color: Commons.Appearance.colors.textSecondary
                 font.pixelSize: Commons.Appearance.font.sizeSm
                 font.family: Commons.Appearance.font.family
             }

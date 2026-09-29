@@ -152,7 +152,7 @@ Item {
             x: marqueeContainer.needsScroll ? -marqueeContainer.scrollPos : 0
             anchors.verticalCenter: parent.verticalCenter
             text: root.displayText
-            color: Commons.Appearance.colors.subtext1
+            color: Commons.Appearance.colors.textSecondary
             font.pixelSize: Commons.Appearance.font.sizeSm
             font.family: Commons.Appearance.font.family
             elide: marqueeContainer.needsScroll ? Text.ElideNone : Text.ElideRight
@@ -164,7 +164,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             visible: marqueeContainer.needsScroll
             text: root.displayText
-            color: Commons.Appearance.colors.subtext1
+            color: Commons.Appearance.colors.textSecondary
             font.pixelSize: Commons.Appearance.font.sizeSm
             font.family: Commons.Appearance.font.family
         }

@@ -29,7 +29,7 @@ Item {
 
             Text {
                 text: title
-                color: Commons.Appearance.colors.text
+                color: Commons.Appearance.colors.textPrimary
                 font.pixelSize: 18
                 // Display face (adr_027 font hook) — a pack's header font when it
                 // ships one; the body family otherwise.
@@ -39,7 +39,7 @@ Item {
 
             Text {
                 text: description
-                color: Commons.Appearance.colors.subtext0
+                color: Commons.Appearance.colors.textSecondary
                 font.pixelSize: Commons.Appearance.font.sizeBase
                 font.family: Commons.Appearance.font.family
                 wrapMode: Text.WordWrap

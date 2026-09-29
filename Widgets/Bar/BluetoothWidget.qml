@@ -10,8 +10,8 @@ BarPill {
     visible: Persistence.Config.get("bar.modules.bluetooth", true)
     icon: NetworkServices.Bluetooth.icon()
     iconColor: NetworkServices.Bluetooth.connected ? Commons.Appearance.colors.accent
-             : NetworkServices.Bluetooth.enabled   ? Commons.Appearance.colors.subtext1
-             :                                        Commons.Appearance.colors.overlay0
+             : NetworkServices.Bluetooth.enabled   ? Commons.Appearance.colors.textSecondary
+             :                                        Commons.Appearance.colors.textMuted
 
     onClicked: {
         if (!holderRoot) return

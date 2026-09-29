@@ -110,7 +110,7 @@ Item {
         }
         Text {
             text: card.holderRoot ? card.holderRoot._popupPrimary : ""
-            color: Commons.Appearance.colors.text
+            color: Commons.Appearance.colors.textPrimary
             font.pixelSize: Commons.Appearance.font.sizeLg
             font.family: Commons.Appearance.font.family
             font.weight: Font.Medium
@@ -118,14 +118,14 @@ Item {
         Text {
             visible: !!(card.holderRoot && card.holderRoot._popupSecondary.length > 0)
             text: card.holderRoot ? card.holderRoot._popupSecondary : ""
-            color: Commons.Appearance.colors.subtext0
+            color: Commons.Appearance.colors.textSecondary
             font.pixelSize: Commons.Appearance.font.sizeSm
             font.family: Commons.Appearance.font.family
         }
         Text {
             visible: !!(card.holderRoot && card.holderRoot._popupHint.length > 0)
             text: card.holderRoot ? card.holderRoot._popupHint : ""
-            color: Commons.Appearance.colors.overlay0
+            color: Commons.Appearance.colors.textMuted
             font.pixelSize: Commons.Appearance.font.sizeSm - 1
             font.family: Commons.Appearance.font.family
         }

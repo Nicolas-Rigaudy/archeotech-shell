@@ -108,7 +108,7 @@ Item {
                             Layout.fillWidth: true
                             Text {
                                 text: famCard.modelData.label
-                                color: Commons.Appearance.colors.text
+                                color: Commons.Appearance.colors.textPrimary
                                 font.pixelSize: Commons.Appearance.font.sizeBase
                                 font.family: Commons.Appearance.font.family
                                 font.weight: Font.Medium
@@ -252,7 +252,7 @@ Item {
     component SLabel: Text {
         Layout.fillWidth: true
         Layout.topMargin: 4
-        color: Commons.Appearance.colors.overlay0
+        color: Commons.Appearance.colors.textMuted
         font.pixelSize: 10
         font.family: Commons.Appearance.font.family
         font.weight: Font.Medium
@@ -285,7 +285,7 @@ Item {
         spacing: 8
         Text {
             text: tp.label
-            color: Commons.Appearance.colors.subtext0
+            color: Commons.Appearance.colors.textSecondary
             font.pixelSize: Commons.Appearance.font.sizeSm
             font.family: Commons.Appearance.font.family
         }

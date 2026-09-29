@@ -57,7 +57,7 @@ Item {
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.WordWrap
         text: "The active theme pack sets the colours. Pick the Base pack in Settings → Appearance to choose a theme here."
-        color: Commons.Appearance.colors.subtext0
+        color: Commons.Appearance.colors.textSecondary
         font.family: Commons.Appearance.font.family
         font.pixelSize: Commons.Appearance.font.sizeSm
     }
@@ -243,7 +243,7 @@ Item {
                         spacing: 6
                         Text {
                             text: tile.modelData.label
-                            color: Commons.Appearance.colors.text
+                            color: Commons.Appearance.colors.textPrimary
                             font.pixelSize: Commons.Appearance.font.sizeBase
                             font.family: Commons.Appearance.font.family
                             font.weight: Font.Medium

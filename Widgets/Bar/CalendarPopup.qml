@@ -119,7 +119,7 @@ Item {
             width: parent.width
             Text {
                 text: "‹"
-                color: Commons.Appearance.colors.subtext1
+                color: Commons.Appearance.colors.textSecondary
                 font.pixelSize: Commons.Appearance.font.sizeMd
                 font.family: Commons.Appearance.font.family
                 width: 20; horizontalAlignment: Text.AlignHCenter
@@ -140,7 +140,7 @@ Item {
                 text: card.holderRoot
                     ? card._monthName(card.holderRoot._calendarMonth) + " " + card.holderRoot._calendarYear
                     : ""
-                color: Commons.Appearance.colors.text
+                color: Commons.Appearance.colors.textPrimary
                 font.pixelSize: Commons.Appearance.font.sizeMd
                 font.family: Commons.Appearance.font.display
                 font.weight: Font.Medium
@@ -149,7 +149,7 @@ Item {
             }
             Text {
                 text: "›"
-                color: Commons.Appearance.colors.subtext1
+                color: Commons.Appearance.colors.textSecondary
                 font.pixelSize: Commons.Appearance.font.sizeMd
                 font.family: Commons.Appearance.font.family
                 width: 20; horizontalAlignment: Text.AlignHCenter
@@ -177,7 +177,7 @@ Item {
                     text: modelData
                     width: card.cellW
                     horizontalAlignment: Text.AlignHCenter
-                    color: Commons.Appearance.colors.overlay1
+                    color: Commons.Appearance.colors.textMuted
                     font.pixelSize: Commons.Appearance.font.sizeSm - 1
                     font.family: Commons.Appearance.font.family
                 }
@@ -216,7 +216,7 @@ Item {
                     Text {
                         anchors.centerIn: parent
                         text: parent.modelData > 0 ? parent.modelData : ""
-                        color: parent.isToday ? Commons.Appearance.colors.base : Commons.Appearance.colors.text
+                        color: parent.isToday ? Commons.Appearance.colors.base : Commons.Appearance.colors.textPrimary
                         font.pixelSize: Commons.Appearance.font.sizeSm
                         font.family: Commons.Appearance.font.family
                         font.weight: parent.isToday ? Font.Medium : Font.Normal

@@ -77,7 +77,7 @@ Item {
                 "accent":  Commons.Appearance.colors.accent,
                 "surface": Commons.Appearance.colors.surfaceCard,
                 "border":  Commons.Appearance.colors.glassBorder,
-                "text":    Commons.Appearance.colors.subtext1,
+                "text":    Commons.Appearance.colors.textSecondary,
                 "base":    Commons.Appearance.colors.base,
                 "teal":    Commons.Appearance.colors.teal,
                 // Flat welded-steel family (matches the frame); pack delegates
@@ -105,9 +105,9 @@ Item {
         text: btn.text
         // Active text: dark `base` reads on the base accent fill, but the steel
         // pack's active chrome is dark steel + a teal edge → use light text there.
-        color: btn.active ? (Commons.Appearance.frameChamfer ? Commons.Appearance.colors.text
+        color: btn.active ? (Commons.Appearance.frameChamfer ? Commons.Appearance.colors.textPrimary
                                                              : Commons.Appearance.colors.base)
-                          : Commons.Appearance.colors.subtext1
+                          : Commons.Appearance.colors.textSecondary
         font.pixelSize: Commons.Appearance.font.sizeSm
         font.family: Commons.Appearance.font.family
         Behavior on color { Commons.ColorAnim {} }

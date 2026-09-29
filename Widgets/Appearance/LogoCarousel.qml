@@ -164,7 +164,7 @@ Item {
                     anchors.centerIn: parent
                     visible: cell._svgData === ""
                     text: cell.modelData.glyph
-                    color: cell._active ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext1
+                    color: cell._active ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textSecondary
                     font.pixelSize: Math.floor(cell._s * 0.4)
                     font.family: Commons.Appearance.font.family
                 }
@@ -174,7 +174,7 @@ Item {
                 anchors { top: parent.bottom; topMargin: 4; horizontalCenter: parent.horizontalCenter }
                 visible: cell._current
                 text: cell.modelData.label
-                color: Commons.Appearance.colors.subtext0
+                color: Commons.Appearance.colors.textSecondary
                 font.pixelSize: Commons.Appearance.font.sizeBase
                 font.family: Commons.Appearance.font.family
             }

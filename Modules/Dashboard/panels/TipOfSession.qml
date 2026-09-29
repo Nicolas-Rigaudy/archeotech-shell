@@ -50,7 +50,7 @@ DashCard {
         Text {
             Layout.fillWidth: true
             text: root.tip || "loading…"
-            color: Commons.Appearance.colors.subtext1
+            color: Commons.Appearance.colors.textSecondary
             font.family: Commons.Appearance.font.family
             font.pixelSize: Commons.Appearance.font.sizeBase
             font.italic: root.tip === ""

@@ -6,7 +6,7 @@ import "../../Commons" as Commons
 BarPill {
     id: root
     icon: "󰐥"
-    iconColor:  Commons.Appearance.colors.subtext1
+    iconColor:  Commons.Appearance.colors.textSecondary
     hoverColor: Commons.Appearance.colors.red
 
     Process { id: powerCmd; command: ["bash", "-c", "wlogout-launch.sh &"]; running: false }

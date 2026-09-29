@@ -49,7 +49,7 @@ Item {
         rightPadding: root._seg ? root._pad : 0
         verticalAlignment: Text.AlignVCenter
         text: root.display
-        color: Commons.Appearance.colors.subtext0
+        color: Commons.Appearance.colors.textSecondary
         font.pixelSize: Commons.Appearance.font.sizeSm
         font.family: Commons.Appearance.font.family
         elide: Text.ElideRight

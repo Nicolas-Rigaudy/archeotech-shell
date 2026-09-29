@@ -53,7 +53,7 @@ RowLayout {
             Text {
                 anchors.centerIn: parent
                 text: value + "%"
-                color: Commons.Appearance.colors.text
+                color: Commons.Appearance.colors.textPrimary
                 font.family: Commons.Appearance.font.family
                 font.pixelSize: Commons.Appearance.font.sizeMd
                 font.bold: true
@@ -66,7 +66,7 @@ RowLayout {
             anchors.topMargin: 6
             anchors.horizontalCenter: parent.horizontalCenter
             text: parent.label
-            color: Commons.Appearance.colors.subtext1
+            color: Commons.Appearance.colors.textSecondary
             font.family: Commons.Appearance.font.family
             font.pixelSize: Commons.Appearance.font.sizeSm
         }

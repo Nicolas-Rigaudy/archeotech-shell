@@ -78,7 +78,7 @@ DashCard {
         visible: root.projects.length === 0
         Layout.fillWidth: true
         text: projectsProc.running ? "scanning…" : "no repositories found"
-        color: Commons.Appearance.colors.overlay1
+        color: Commons.Appearance.colors.textMuted
         font.family: Commons.Appearance.font.family
         font.pixelSize: Commons.Appearance.font.sizeBase
         font.italic: true
@@ -134,7 +134,7 @@ DashCard {
             Text {
                 id: nameLbl
                 text: modelData.name
-                color: Commons.Appearance.colors.text
+                color: Commons.Appearance.colors.textPrimary
                 font.family: Commons.Appearance.font.family
                 font.pixelSize: Commons.Appearance.font.sizeBase
                 anchors { left: parent.left; leftMargin: 23; verticalCenter: parent.verticalCenter }
@@ -143,7 +143,7 @@ DashCard {
             }
             Text {
                 text: modelData.branch
-                color: Commons.Appearance.colors.subtext0
+                color: Commons.Appearance.colors.textSecondary
                 font.family: Commons.Appearance.font.family
                 font.pixelSize: Commons.Appearance.font.sizeBase
                 anchors { left: nameLbl.right; leftMargin: 8; verticalCenter: parent.verticalCenter }

@@ -99,27 +99,27 @@ Item {
                     Text {
                         anchors.centerIn: parent
                         text: NetworkServices.Bluetooth.icon()
-                        color: NetworkServices.Bluetooth.enabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.overlay0
+                        color: NetworkServices.Bluetooth.enabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
                         font.pixelSize: 13; font.family: Commons.Appearance.font.family
                     }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: NetworkServices.Bluetooth.toggle() }
                 }
                 Text {
                     text: "Bluetooth"
-                    color: Commons.Appearance.colors.text
+                    color: Commons.Appearance.colors.textPrimary
                     font.pixelSize: Commons.Appearance.font.sizeMd; font.family: Commons.Appearance.font.display
                     font.weight: Font.Medium; Layout.fillWidth: true
                 }
                 Text {
                     text: !NetworkServices.Bluetooth.enabled ? "Off"
                         : NetworkServices.Bluetooth.connected ? NetworkServices.Bluetooth.device : "On"
-                    color: NetworkServices.Bluetooth.enabled ? Commons.Appearance.colors.subtext0 : Commons.Appearance.colors.overlay0
+                    color: NetworkServices.Bluetooth.enabled ? Commons.Appearance.colors.textSecondary : Commons.Appearance.colors.textMuted
                     font.pixelSize: Commons.Appearance.font.sizeSm; font.family: Commons.Appearance.font.family
                     elide: Text.ElideRight; Layout.maximumWidth: 80
                 }
                 Text {
                     text: "✕"
-                    color: _btCloseMA.containsMouse ? Commons.Appearance.colors.text : Commons.Appearance.colors.overlay0
+                    color: _btCloseMA.containsMouse ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
                     font.pixelSize: 11; font.family: Commons.Appearance.font.family
                     Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                     MouseArea {
@@ -140,7 +140,7 @@ Item {
             Text {
                 anchors.centerIn: parent
                 text: "Bluetooth adapter is off"
-                color: Commons.Appearance.colors.overlay0
+                color: Commons.Appearance.colors.textMuted
                 font.pixelSize: Commons.Appearance.font.sizeSm; font.family: Commons.Appearance.font.family
             }
         }
@@ -151,7 +151,7 @@ Item {
             Text {
                 anchors.left: parent.left; anchors.leftMargin: 2; anchors.verticalCenter: parent.verticalCenter
                 text: "No paired devices"
-                color: Commons.Appearance.colors.overlay0
+                color: Commons.Appearance.colors.textMuted
                 font.pixelSize: Commons.Appearance.font.sizeSm; font.family: Commons.Appearance.font.family
             }
         }
@@ -165,12 +165,12 @@ Item {
                     anchors.fill: parent; spacing: 8
                     Text {
                         text: modelData.connected ? "󰂱" : "󰂯"
-                        color: modelData.connected ? Commons.Appearance.colors.accent : Commons.Appearance.colors.overlay0
+                        color: modelData.connected ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textMuted
                         font.pixelSize: 14; font.family: Commons.Appearance.font.family
                     }
                     Text {
                         text: modelData.name
-                        color: modelData.connected ? Commons.Appearance.colors.text : Commons.Appearance.colors.subtext1
+                        color: modelData.connected ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textSecondary
                         font.pixelSize: Commons.Appearance.font.sizeSm; font.family: Commons.Appearance.font.family
                         Layout.fillWidth: true; elide: Text.ElideRight
                     }

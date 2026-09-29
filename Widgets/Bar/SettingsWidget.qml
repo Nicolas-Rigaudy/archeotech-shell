@@ -5,7 +5,7 @@ import "../../Commons" as Commons
 BarPill {
     id: root
     icon: "󰒓"
-    iconColor: Commons.Appearance.colors.subtext1
+    iconColor: Commons.Appearance.colors.textSecondary
 
     onClicked: {
         if (holderRoot) { holderRoot.dismissPopups(); holderRoot.togglePanel("settings", "") }

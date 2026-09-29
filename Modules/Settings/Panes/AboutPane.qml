@@ -49,7 +49,7 @@ Item {
 
                     Text {
                         text: "Archeotech Shell"
-                        color: Commons.Appearance.colors.text
+                        color: Commons.Appearance.colors.textPrimary
                         font.pixelSize: 22
                         font.family: Commons.Appearance.font.family
                         font.weight: Font.Bold
@@ -57,14 +57,14 @@ Item {
 
                     Text {
                         text: "Quickshell-based Wayland shell for MangoWC"
-                        color: Commons.Appearance.colors.subtext0
+                        color: Commons.Appearance.colors.textSecondary
                         font.pixelSize: Commons.Appearance.font.sizeBase
                         font.family: Commons.Appearance.font.family
                     }
 
                     Text {
                         text: "Catppuccin Macchiato  ·  FiraCode Nerd Font"
-                        color: Commons.Appearance.colors.overlay0
+                        color: Commons.Appearance.colors.textMuted
                         font.pixelSize: Commons.Appearance.font.sizeSm
                         font.family: Commons.Appearance.font.family
                     }
@@ -100,7 +100,7 @@ Item {
 
                                     Text {
                                         text: modelData.label
-                                        color: Commons.Appearance.colors.overlay0
+                                        color: Commons.Appearance.colors.textMuted
                                         font.pixelSize: Commons.Appearance.font.sizeBase
                                         font.family: Commons.Appearance.font.family
                                         Layout.preferredWidth: 100
@@ -108,7 +108,7 @@ Item {
 
                                     Text {
                                         text: modelData.value
-                                        color: Commons.Appearance.colors.subtext1
+                                        color: Commons.Appearance.colors.textSecondary
                                         font.pixelSize: Commons.Appearance.font.sizeBase
                                         font.family: Commons.Appearance.font.family
                                         Layout.fillWidth: true
@@ -152,14 +152,14 @@ Item {
 
                                         Text {
                                             text: modelData.icon
-                                            color: Commons.Appearance.colors.overlay0
+                                            color: Commons.Appearance.colors.textMuted
                                             font.pixelSize: 16; font.family: Commons.Appearance.font.family
                                             Layout.alignment: Qt.AlignVCenter
                                         }
 
                                         Text {
                                             text: modelData.label
-                                            color: Commons.Appearance.colors.subtext1
+                                            color: Commons.Appearance.colors.textSecondary
                                             font.pixelSize: Commons.Appearance.font.sizeBase
                                             font.family: Commons.Appearance.font.family
                                             Layout.fillWidth: true
@@ -167,7 +167,7 @@ Item {
 
                                         Text {
                                             text: "󰏌"
-                                            color: Commons.Appearance.colors.overlay0
+                                            color: Commons.Appearance.colors.textMuted
                                             font.pixelSize: 12; font.family: Commons.Appearance.font.family
                                         }
                                     }

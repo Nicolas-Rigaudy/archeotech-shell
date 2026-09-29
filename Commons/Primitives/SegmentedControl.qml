@@ -116,8 +116,8 @@ Item {
                     Text {
                         visible: !!seg.modelData.glyph
                         text: seg.modelData.glyph || ""
-                        color: seg._on ? (root._steel ? Commons.Appearance.colors.text : Commons.Appearance.colors.base)
-                                       : Commons.Appearance.colors.subtext0
+                        color: seg._on ? (root._steel ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.base)
+                                       : Commons.Appearance.colors.textSecondary
                         font.pixelSize: 14; font.family: Commons.Appearance.font.family
                         anchors.verticalCenter: parent.verticalCenter
                         Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
@@ -125,8 +125,8 @@ Item {
                     Text {
                         visible: !root.iconOnly && !!seg.modelData.label
                         text: seg.modelData.label || ""
-                        color: seg._on ? (root._steel ? Commons.Appearance.colors.text : Commons.Appearance.colors.base)
-                                       : Commons.Appearance.colors.subtext0
+                        color: seg._on ? (root._steel ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.base)
+                                       : Commons.Appearance.colors.textSecondary
                         font.pixelSize: Commons.Appearance.font.sizeBase
                         font.family: Commons.Appearance.font.family
                         font.weight: seg._on ? Font.Medium : Font.Normal

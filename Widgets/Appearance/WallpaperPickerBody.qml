@@ -94,7 +94,7 @@ Item {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
                 text: "󰸉  Wallpapers"
-                color: Commons.Appearance.colors.text
+                color: Commons.Appearance.colors.textPrimary
                 font.pixelSize: Commons.Appearance.font.sizeLg
                 font.family: Commons.Appearance.font.family
                 font.weight: Font.Medium
@@ -107,7 +107,7 @@ Item {
 
                 Text {
                     text: (root.wallpapers ? root.wallpapers.length : 0) + " items"
-                    color: Commons.Appearance.colors.subtext0
+                    color: Commons.Appearance.colors.textSecondary
                     font.pixelSize: Commons.Appearance.font.sizeSm
                     font.family: Commons.Appearance.font.family
                     anchors.verticalCenter: parent.verticalCenter
@@ -126,7 +126,7 @@ Item {
                         text: "󰏘"
                         color: paletteBtn._hovered
                             ? Commons.Appearance.colors.accent
-                            : Commons.Appearance.colors.subtext1
+                            : Commons.Appearance.colors.textSecondary
                         font.pixelSize: 16
                         font.family: Commons.Appearance.font.family
                         Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }

@@ -64,17 +64,19 @@ DashCard {
         return id === "updates" ? "checking…" : "…"
     }
 
+    // Neutral states ("inactive", "checking…", "none", …) are values the user
+    // reads, so they take textSecondary (4.5:1), not a faint muted step.
     function _color(id, v) {
         var c = Commons.Appearance.colors
-        if (v === "…" || v === "checking…" || v === "check failed") return c.overlay1
+        if (v === "…" || v === "checking…" || v === "check failed") return c.textSecondary
         switch (id) {
         case "updates": return v === "up to date" ? c.green : c.yellow
-        case "vpn":     return v === "inactive" ? c.overlay1 : c.green
-        case "aws":     return v === "none" ? c.overlay1 : (v.indexOf("(not in config)") !== -1 ? c.yellow : c.blue)
-        case "ip":      return v === "offline" ? c.overlay1 : c.blue
+        case "vpn":     return v === "inactive" ? c.textSecondary : c.green
+        case "aws":     return v === "none" ? c.textSecondary : (v.indexOf("(not in config)") !== -1 ? c.yellow : c.blue)
+        case "ip":      return v === "offline" ? c.textSecondary : c.blue
         case "kernel":
-        case "host":    return c.subtext1
-        default:        return c.text
+        case "host":    return c.textSecondary
+        default:        return c.textPrimary
         }
     }
 
@@ -106,7 +108,7 @@ DashCard {
         Text {
             id: noteLbl
             text: noteRow.label
-            color: Commons.Appearance.colors.subtext0
+            color: Commons.Appearance.colors.textSecondary
             font.family: Commons.Appearance.font.family
             font.pixelSize: Commons.Appearance.font.sizeBase
             width: 74
