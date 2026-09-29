@@ -89,7 +89,9 @@ Item {
             to:   spec.max !== undefined ? spec.max : 100
             stepSize: spec.step !== undefined ? spec.step : 1
             value: { var v = root._value(fieldKey); return v !== undefined ? v : from }
-            valueDisplay: Math.round(value) + (spec.unit || "")
+            // Label precision follows the step (0.05 → 2 decimals, 1 → none).
+            readonly property int _decimals: { var m = String(stepSize).split(".")[1]; return m ? m.length : 0 }
+            format: v => v.toFixed(_decimals) + (spec.unit || "")
             onMoved: v => root._set(fieldKey, spec.type === "int" ? Math.round(v) : v)
         }
     }

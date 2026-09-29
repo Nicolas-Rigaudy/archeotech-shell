@@ -45,7 +45,7 @@ Item {
                         description: "How long notifications stay on screen"
                         from: 2000; to: 15000; stepSize: 500
                         value: Persistence.Config.get("notifications.toastTimeout", 5000)
-                        valueDisplay: (value / 1000).toFixed(1) + "s"
+                        format: v => (v / 1000).toFixed(1) + "s"
                         onMoved: Persistence.Config.set("notifications.toastTimeout", Math.round(value))
                     }
                     Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
@@ -54,7 +54,7 @@ Item {
                         description: "How many toasts can stack at once"
                         from: 1; to: 10; stepSize: 1
                         value: Persistence.Config.get("notifications.maxToasts", 5)
-                        valueDisplay: Math.round(value) + ""
+                        format: v => Math.round(v) + ""
                         onMoved: Persistence.Config.set("notifications.maxToasts", Math.round(value))
                     }
                 }

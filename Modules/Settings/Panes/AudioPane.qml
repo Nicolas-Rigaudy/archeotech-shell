@@ -199,7 +199,7 @@ Item {
                                             label: "Max volume"
                                             from: 20; to: 100; stepSize: 5
                                             value: MediaServices.Audio.volumeLimitFor(sinkDelegate.modelData.name)
-                                            valueDisplay: Math.round(value) + "%"
+                                            format: v => Math.round(v) + "%"
                                             onMoved: v => MediaServices.Audio.setVolumeLimit(sinkDelegate.modelData.name, v)
                                         }
                                     }

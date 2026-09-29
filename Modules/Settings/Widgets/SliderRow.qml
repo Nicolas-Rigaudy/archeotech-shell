@@ -11,7 +11,10 @@ Item {
     property real from: 0
     property real to: 1
     property real stepSize: 0.1
-    property string valueDisplay: Math.round(value * 100) + "%"
+    // Label text for a value. Applied to the slider's LIVE value, not `value`:
+    // callers bind `value` to a store (Config, ShellConfig) that some only write
+    // after a debounce, so a label derived from it froze for the whole drag.
+    property var format: v => Math.round(v * 100) + "%"
     signal moved(real value)
 
     implicitHeight: description ? 80 : 62
@@ -33,7 +36,7 @@ Item {
             }
 
             Text {
-                text: root.valueDisplay
+                text: root.format(slider.value)
                 color: Commons.Appearance.colors.subtext1
                 font.pixelSize: Commons.Appearance.font.sizeSm
                 font.family: Commons.Appearance.font.family
@@ -55,6 +58,7 @@ Item {
             from: root.from
             to: root.to
             stepSize: root.stepSize
+            snapMode: Slider.SnapAlways   // knob sits on the steps the value moves in
             value: root.value
             padding: 0
 

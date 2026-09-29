@@ -159,7 +159,7 @@ Item {
                         description: "Roundness of the frame's inner corners"
                         from: 0; to: 24; stepSize: 1
                         value: ShellServices.ShellConfig.cornerRadius()
-                        valueDisplay: Math.round(value) + "px"
+                        format: v => Math.round(v) + "px"
                         onMoved: (v) => { root._pendingRadius = Math.round(v); _radiusTimer.restart() }
                     }
                     Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
@@ -168,7 +168,7 @@ Item {
                         description: "Breathing space between the shell and tiled windows"
                         from: 0; to: 20; stepSize: 1
                         value: ShellServices.ShellConfig.outerGap()
-                        valueDisplay: Math.round(value) + "px"
+                        format: v => Math.round(v) + "px"
                         onMoved: (v) => { root._pendingGap = Math.round(v); _gapTimer.restart() }
                     }
                 }
@@ -183,7 +183,7 @@ Item {
                             description: "Focused window's width; the rest is the side peek"
                             from: 0.8; to: 1.0; stepSize: 0.01
                             value: Persistence.Config.get("scroller.proportion", 0.98)
-                            valueDisplay: Math.round(value * 100) + "%"
+                            format: v => Math.round(v * 100) + "%"
                             onMoved: (v) => {
                                 root._pendingProp = v
                                 root._savedProp = false
