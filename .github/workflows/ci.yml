@@ -34,6 +34,24 @@ jobs:
           done
           exit $fail
 
-      # Full QML linting requires Quickshell (not packaged on CI runners); run
-      # `qmllint` locally against Qt 6.11. Placeholder to wire up once a
-      # Quickshell CI image is available.
+  # QML in an Arch container: quickshell is in [extra], so qmllint sees the real
+  # Quickshell types. Renders (mango is AUR-only) stay local for now via
+  # scripts/golden.sh; a render smoke + golden diff job follows once a cached
+  # image with mango exists.
+  qml:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - name: Install Qt6 + Quickshell
+        run: pacman -Syu --noconfirm --needed quickshell qt6-declarative python git
+
+      - uses: actions/checkout@v4
+
+      - name: qmllint (Qt6) — fails on syntax errors, counts the rest
+        run: python3 scripts/qmllint-ci.py
+
+      - name: QML logic tests (qmltestrunner)
+        run: tests/run.sh
+
+      - name: Theme token contrast (informational)
+        run: python3 scripts/contrast-check.py

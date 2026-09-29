@@ -3,6 +3,7 @@ import QtQuick
 import QtCore
 import Quickshell.Io
 import "../../Commons" as Commons
+import "ShellConfigLogic.js" as Logic
 
 QtObject {
     id: root
@@ -35,15 +36,7 @@ QtObject {
     property string _schemaNote: ""
 
     function side(name, screenName) {
-        var base = (data.sides && data.sides[name]) || _defaults.sides[name] || { type: "none" }
-        if (screenName && data.perScreen && data.perScreen[screenName] && data.perScreen[screenName].sides && data.perScreen[screenName].sides[name]) {
-            var override = data.perScreen[screenName].sides[name]
-            var merged = {}
-            for (var k in base) merged[k] = base[k]
-            for (var k2 in override) merged[k2] = override[k2]
-            return merged
-        }
-        return base
+        return Logic.resolveSide(data, _defaults, name, screenName)
     }
 
     function sideType(name, screenName) {
@@ -53,11 +46,7 @@ QtObject {
     // Sprint 26 — per-instance config. Entries are { id, config } objects; a bare
     // string id is the legacy form (pre-S26 shell-config.json). Normalize on read
     // so both forms load and old files keep working untouched.
-    function _normEntry(e) {
-        if (typeof e === "string") return { id: e, config: {} }
-        if (e && typeof e === "object") return { id: e.id, config: e.config || {} }
-        return { id: "", config: {} }
-    }
+    function _normEntry(e) { return Logic.normEntry(e) }
 
     // ── Unified per-side content model (Sprint 26-C, phase 3) ────────────────────
     // A side is one ordered list `content: [{ id, config, align }]`. `align` is the
@@ -68,26 +57,8 @@ QtObject {
     // going forward. A single side may legitimately hold both flavours at once
     // (align "" plus align L/C/R): that's how a bar↔strip type flip stays
     // non-destructive — each renderer reads only the align matching its type.
-    function _normContentEntry(e, defAlign) {
-        var n = _normEntry(e)
-        var a = (e && typeof e === "object" && e.align !== undefined) ? e.align : defAlign
-        return { id: n.id, config: n.config, align: a }
-    }
-    function _sideContent(s) {
-        if (!s) return []
-        if (s.content) return s.content.map(function(e) { return root._normContentEntry(e, "") })
-        var out = []
-        if (s.zones) {
-            var order = ["left", "center", "right"]
-            for (var i = 0; i < order.length; i++) {
-                var z = s.zones[order[i]] || []
-                for (var j = 0; j < z.length; j++) out.push(root._normContentEntry(z[j], order[i]))
-            }
-        }
-        if (s.icons)
-            for (var k = 0; k < s.icons.length; k++) out.push(root._normContentEntry(s.icons[k], ""))
-        return out
-    }
+    function _normContentEntry(e, defAlign) { return Logic.normContentEntry(e, defAlign) }
+    function _sideContent(s) { return Logic.sideContent(s) }
     // Canonical accessor — the whole side as [{ id, config, align }] (phase 4 uses
     // this directly; phase 3 derives the legacy zone/strip views from it).
     function contentEntries(sideName, screenName) {
@@ -97,13 +68,7 @@ QtObject {
     // Re-group a content list so bar zones stay clustered (left, center, right),
     // then the strip list ("") and anything else in original order. filter() is
     // order-preserving, so this is a stable regroup without relying on sort().
-    function _regroup(content) {
-        var order = ["left", "center", "right"]
-        var out = []
-        for (var i = 0; i < order.length; i++)
-            out = out.concat(content.filter(function(e) { return e.align === order[i] }))
-        return out.concat(content.filter(function(e) { return order.indexOf(e.align) === -1 }))
-    }
+    function _regroup(content) { return Logic.regroup(content) }
 
     // ── Derived legacy views — config-aware consumers (loaders, edit mode) keep
     // working over the split model while the renderers migrate (phase 4). A bar

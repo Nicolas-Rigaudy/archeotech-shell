@@ -1,0 +1,29 @@
+# Regions masked (painted black in golden AND render) before diffing, because
+# they change between runs or between machines. One per line:
+#   <scenario-name glob> x0,y0 x1,y1   # why
+# Derived from two back-to-back renders of the matrix (1280x720, 2026-09-28).
+
+# Bar: clock + date (minute / day), status values (volume/brightness/battery %,
+# wifi signal strength read from the real hardware).
+*            540,0 735,28      # bar clock + date
+*            900,0 1198,30     # bar status values (vol %, brightness %, wifi, battery %); the
+                               #   pill width follows them, so its left edge moves too
+
+# Dashboard (default face): greeting + date, big clock, gauges (live CPU/RAM/
+# disk/battery), active projects (real repos, git counts), system notes values,
+# rotating tip.
+dashboard-*  160,130 520,195   # greeting + date line
+dashboard-*  930,130 1080,190  # big clock
+dashboard-*  185,255 615,375   # system status gauges
+dashboard-*  655,260 1100,380  # active projects list
+dashboard-*  655,450 1100,560  # system notes values
+dashboard-*  180,590 1125,635  # rotating tip
+
+# Launcher: recents and results come from this machine's desktop entries.
+launcher-*   70,70 450,155     # recents tiles
+launcher-*   70,215 450,405    # result rows
+launcher-*   70,652 170,688    # footer app count
+
+# Wallpaper picker: carousel thumbnails are the machine's wallpaper folder.
+wallpaper-*  0,440 1280,625    # carousel
+launcher-*   95,172 116,200    # blinking text cursor in the search field

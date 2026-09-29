@@ -93,6 +93,31 @@ HoverCard) and ask the owner to check those two on their own screen.
 ### When a render fails
 Rerun with `--keep`; the run dir it prints holds `log/qs.log` and `log/mango.log`.
 
+## Regression checks (goldens, logic tests, CI)
+- **`scripts/golden.sh`** renders a fixed matrix (bar, dashboard, launcher, media,
+  wallpaper, settings:appearance, notifications, editmode × macchiato dark / latte
+  light / macchiato flat, plus a grimdark dashboard) with `--fresh` and the
+  committed `tests/golden/fixture-wallpaper.png`, and diffs each frame against
+  `tests/golden/<name>.png`. Dynamic regions (clocks, battery %, gauges, real repos,
+  installed apps, the text cursor) are masked in `tests/golden/masks.txt`. Masked
+  back-to-back runs measure 0 px; the default fail threshold is 40 px
+  (`THRESHOLD=`/`FUZZ=` override). `--root <wt>` tests a worktree, `--only 'glob'`
+  a subset. A failure leaves `<run>/diff/<name>.diff.png`.
+- **Intended visual change?** Run `scripts/golden.sh --update --only '<affected>'`,
+  look at the new PNGs, and commit them *with* the change. Goldens are
+  machine-bound for now (fonts, icon theme, desktop entries).
+- **Logic tests:** `tests/run.sh` (qmltestrunner, offscreen, throwaway HOME).
+  Quickshell's types live in the `qs` binary, so testable logic goes in plain
+  `.pragma library` JS next to its service (e.g. `Services/Shell/ShellConfigLogic.js`)
+  and tests import that; see `tests/qml/tst_*.qml`.
+- **Contrast:** `scripts/contrast-check.py` reports each theme's text-token contrast
+  (body 4.5:1, muted 3:1); informational until the design-system floor lands
+  (`--strict` to gate).
+- **CI** (`.github/workflows/ci.yml`, job `qml`, Arch container): Qt6 qmllint via
+  `scripts/qmllint-ci.py` (fails on syntax errors, prints per-id counts), the logic
+  tests, and the contrast report. Renders need mango (AUR), so goldens run locally
+  until a cached CI image exists.
+
 ## Hot-reload and the live bar
 The live bar follows whatever `~/.config/quickshell/archeotech` points at. If it
 points at the dev checkout, every save hot-reloads onto the running bar, so keep
