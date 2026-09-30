@@ -27,6 +27,28 @@ OFFICIAL = {
 CUSTOM = {"monochrome", "monochrome-light"}
 
 
+def walk(node, path=""):
+    """(dotted path, string) for every string leaf."""
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if not k.startswith("_"):
+                yield from walk(v, f"{path}.{k}" if path else k)
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            yield from walk(v, f"{path}[{i}]")
+    elif isinstance(node, str):
+        yield path, node
+
+
+def to_hex(value):
+    v = value.strip().lower()
+    if len(v) in (7, 9) and v.startswith("#") and all(c in "0123456789abcdef" for c in v[1:]):
+        return v[:7]
+    if len(v) == 10 and v.startswith("0x") and all(c in "0123456789abcdef" for c in v[2:]):
+        return "#" + v[2:8]
+    return None
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--themes", default=str(ROOT / "themes"))
@@ -44,9 +66,14 @@ def main():
         fam, var = OFFICIAL[name]
         official = json.loads((themes / "_official" / f"{fam}.json").read_text())["variants"][var]
         allowed = {v.lower() for v in official.values()}
-        for slot, value in json.loads(tj.read_text()).get("colors", {}).items():
-            if isinstance(value, str) and value.startswith("#") and value[:7].lower() not in allowed:
-                print(f"{name}: {slot} = {value} is not in the official {fam}/{var} palette")
+        # Every colour anywhere in theme.json (colors, rofi, mango, card swatches),
+        # as #rrggbb or mango's 0xRRGGBBAA. Shadow colours are neutral by design.
+        for where, value in walk(json.loads(tj.read_text())):
+            if where.endswith("shadowscolor"):
+                continue
+            hexv = to_hex(value)
+            if hexv and hexv not in allowed:
+                print(f"{name}: {where} = {value} is not in the official {fam}/{var} palette")
                 bad += 1
     print(f"theme fidelity: {bad} problem(s)")
     return 1 if bad else 0

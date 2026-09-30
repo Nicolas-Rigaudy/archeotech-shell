@@ -6,10 +6,10 @@
   "accent": "blue",
   "colors": {
     "base": "#e1e2e7",
-    "mantle": "#e1e2e7",
-    "crust": "#d0d5e3",
-    "surface0": "#e1e2e7",
-    "surface1": "#c4c8da",
+    "mantle": "#d0d5e3",
+    "crust": "#c1c9df",
+    "surface0": "#c4c8da",
+    "surface1": "#b7c1e3",
     "surface2": "#a8aecb",
     "text": "#3760bf",
     "subtext1": "#6172b0",
@@ -32,6 +32,7 @@
     "rosewater": "#3760bf",
     "lavender": "#7847bd"
   },
+  "contrastExempt": {"mantle": "tokyonight.nvim places fg on bg_dark (floats, sidebars) at 3.99:1; follow the designer, owner 2026-09-29 (adr_033)"},
   "roles": {"textPrimary": "text", "textSecondary": "text", "textMuted": "overlay2", "textDisabled": "overlay0", "textOnAccent": "base", "borderSubtle": "surface1", "borderStrong": "surface2", "focus": "accent"},
   "mango": {
     "shadowscolor": "0x00000033",
@@ -44,12 +45,12 @@
     "theme": "tokyo-night-day"
   },
   "rofi": {
-    "bg": "#d5d6db",
+    "bg": "#d0d5e3",
     "bg_alt": "#c4c8da",
     "fg": "#3760bf",
     "fg_alt": "#6172b0",
     "border": "#9854f1",
-    "selected": "#b7bbce",
+    "selected": "#b7c1e3",
     "urgent": "#f52a65"
   },
   "gtk": {

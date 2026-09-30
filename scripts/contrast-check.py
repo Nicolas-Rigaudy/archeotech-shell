@@ -37,7 +37,17 @@ def ratio(a, b):
     return (la + 0.05) / (lb + 0.05)
 
 
-def check(name, colors, roles, accent_name):
+def surfaces_for(data):
+    """Text-bearing surfaces. Dark: base, mantle, cards on surface0. Light
+    (item_111): cards are base and panels mantle, so surface0 carries no text.
+    A theme may exempt a surface where its designer places text below the floor
+    (theme.json contrastExempt: {surface: reason}); it is reported, not gated."""
+    surf = ["base", "mantle"] if data.get("mode") == "light" else list(SURFACES)
+    exempt = data.get("contrastExempt", {})
+    return [s for s in surf if s not in exempt], exempt
+
+
+def check(name, colors, roles, accent_name, surfaces=None, exempt=None):
     """One row: the three text roles (gated), focus on base (gated 3:1) and
     text-on-accent (reported, not gated yet). Returns the number of failures."""
     failures, cells = 0, []
@@ -45,7 +55,7 @@ def check(name, colors, roles, accent_name):
         slot = roles.get(role, default)
         if slot not in colors:
             cells.append(f"{slot}: missing FAIL"); failures += 1; continue
-        worst, surf = min((ratio(colors[slot], colors[s]), s) for s in SURFACES if s in colors)
+        worst, surf = min((ratio(colors[slot], colors[s]), s) for s in (surfaces or SURFACES) if s in colors)
         ok = worst >= FLOOR[kind]
         failures += not ok
         cells.append(f"{worst:5.2f} {slot}/{surf}{'' if ok else ' FAIL'}")
@@ -57,6 +67,8 @@ def check(name, colors, roles, accent_name):
         on = colors.get(roles.get("textOnAccent", "base"))
         cells.append(f"{ratio(on, accent):5.2f}{'' if ratio(on, accent) >= 4.5 else ' (below 4.5)'}" if on else "n/a")
     print(f"{name:<22} " + " ".join(f"{c:<24}" for c in cells))
+    for surf, why in (exempt or {}).items():
+        print(f"{'':<22} exempt: {surf} ({why})")
     return failures
 
 
@@ -72,7 +84,8 @@ def main():
     print(f"{'theme / pack':<22} " + " ".join(f"{r:<24}" for r in list(ROLES) + ["focus/base", "textOnAccent (info)"]))
     for tj in sorted(pathlib.Path(args.themes).glob("*/theme.json")):
         d = json.loads(tj.read_text())
-        failures += check(tj.parent.name, d.get("colors", {}), d.get("roles", {}), d.get("accent", "mauve"))
+        surf, exempt = surfaces_for(d)
+        failures += check(tj.parent.name, d.get("colors", {}), d.get("roles", {}), d.get("accent", "mauve"), surf, exempt)
     # Packs that own a palette, checked with their own roles; each register
     # overlays its colours on the pack's.
     for tk in sorted(pathlib.Path(args.packs).glob("*/tokens.json")):

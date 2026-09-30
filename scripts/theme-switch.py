@@ -154,10 +154,17 @@ def apply_kitty(theme: dict, vars: Dict[str, str]) -> None:
         for key in ("active_tab_background", "mark2_background"):
             content = re.sub(rf"(?m)^({key}\s+)#[0-9A-Fa-f]{{6}}",
                              rf"\g<1>{accent_hex}", content)
-    opacity = "0.9" if theme.get("mode") == "light" else "0.6"
+    light = theme.get("mode") == "light"
+    opacity = "0.9" if light else "0.6"
     content = (content
                + f"\n# Theme-aware opacity (theme-switch.py): {theme.get('mode','dark')}\n"
                + f"background_opacity {opacity}\n")
+    if light:
+        # Light glass (item_111): the official palettes keep their colours, but
+        # over a translucent background their palest ANSI shades and kitty's dim
+        # text (default 0.4) vanish. Draw dim text at 0.75, and let kitty swap a
+        # glyph to black/white only when it falls under 3:1 against its cell.
+        content += "dim_opacity 0.75\ntext_fg_override_threshold 3 ratio\n"
     atomic_write(dst, content)
     run(["pkill", "-USR1", "-x", "kitty"])
 

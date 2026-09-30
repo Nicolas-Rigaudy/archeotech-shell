@@ -31,7 +31,7 @@
     "rosewater": "#dc8a78",
     "lavender": "#7287fd"
   },
-  "roles": {"textPrimary": "text", "textSecondary": "text", "textMuted": "subtext0", "textDisabled": "overlay0", "textOnAccent": "base", "borderSubtle": "surface1", "borderStrong": "surface2", "focus": "accent"},
+  "roles": {"textPrimary": "text", "textSecondary": "subtext1", "textMuted": "overlay2", "textDisabled": "overlay0", "textOnAccent": "base", "borderSubtle": "surface1", "borderStrong": "surface2", "focus": "accent"},
   "mango": {
     "shadowscolor": "0x00000033",
     "shadows_size": 20,

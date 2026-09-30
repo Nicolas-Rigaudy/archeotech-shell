@@ -253,3 +253,19 @@ warning but never breaks the rest of the switch.
   on base. If no slot passes, move text onto a surface where the official text does
   (Tokyo Night Day: every text surface is `bg`).
 - Checks: `scripts/theme-fidelity.py` and `scripts/contrast-check.py --strict` (both in CI).
+
+## Light themes (item_111)
+
+- Slots follow each designer's surface roles: `base` = main/content background,
+  `mantle` = side panes and floats (Latte mantle, Tokyo Night Day bg_dark, Alucard
+  Floating, Gruvbox bg1), `crust` / `surface0-2` = darker element steps.
+- `Appearance.isLight` (theme `mode: "light"`, unless a pack owns the palette)
+  switches the surface recipe: panels are light glass on mantle (0.92), cards are
+  "paper" on base (0.88, lighter than the panel), the sheen lifts toward base and
+  settles into crust (never black), shadows are x0.4, hover/press washes 0.12/0.18,
+  grooves use surface0. Dark values are unchanged.
+- Text is checked on base and mantle. A designer pairing below the floor may be
+  exempted per theme (`contrastExempt`), e.g. Tokyo Night Day fg on bg_dark (3.99:1).
+- kitty uses each family's official terminal theme; on light themes theme-switch.py
+  adds `dim_opacity 0.75` and `text_fg_override_threshold 3 ratio` so dim text and
+  the palest ANSI shades stay readable over glass without changing the palette.

@@ -6,11 +6,11 @@
   "accent": "mauve",
   "colors": {
     "base": "#fffbeb",
-    "mantle": "#fffbeb",
-    "crust": "#fffbeb",
-    "surface0": "#cfcfde",
-    "surface1": "#cfcfde",
-    "surface2": "#cfcfde",
+    "mantle": "#efeddc",
+    "crust": "#dedccf",
+    "surface0": "#dedccf",
+    "surface1": "#ceccc0",
+    "surface2": "#bcbab3",
     "text": "#1f1f1f",
     "subtext1": "#1f1f1f",
     "subtext0": "#1f1f1f",
@@ -36,7 +36,7 @@
   "mango": {
     "shadowscolor": "0x00000033",
     "shadows_size": 20,
-    "bordercolor": "0x9b957aff",
+    "bordercolor": "0x6c664bff",
     "focuscolor": "0x644ac9ff",
     "urgentcolor": "0xcb3a2aff"
   },
@@ -44,12 +44,12 @@
     "theme": "alucard"
   },
   "rofi": {
-    "bg": "#f2eed9",
+    "bg": "#efeddc",
     "bg_alt": "#cfcfde",
     "fg": "#1f1f1f",
-    "fg_alt": "#3a3a3a",
+    "fg_alt": "#6c664b",
     "border": "#644ac9",
-    "selected": "#c0c0d0",
+    "selected": "#cfcfde",
     "urgent": "#cb3a2a"
   },
   "gtk": {
