@@ -11,7 +11,11 @@ import "../../Services/Compositor" as CompositorServices
 PanelWindow {
     id: osdWindow
 
-    visible: shown && (CompositorServices.CompositorService.focusedOutput === "" || screen.name === CompositorServices.CompositorService.focusedOutput)
+    // The output this OSD was created for (set by the Variants delegate). Reading
+    // the window's own `screen` here looped: mapping/unmapping the layer surface
+    // updates `screen`, which re-evaluated `visible` ("Binding loop detected").
+    property string screenName: ""
+    visible: shown && (CompositorServices.CompositorService.focusedOutput === "" || screenName === CompositorServices.CompositorService.focusedOutput)
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell:osd"

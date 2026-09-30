@@ -273,6 +273,7 @@ ShellRoot {
         delegate: Osd {
             required property var modelData
             screen: modelData
+            screenName: modelData.name
         }
     }
 
