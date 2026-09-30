@@ -21,7 +21,12 @@ QtObject {
     // but still DIMENSIONAL, so it keeps depth (depthFlat false) while packMaterialFlat
     // makes it opaque. With no matte pack, depthFlat == flatMode.
     readonly property bool depthFlat: flatMode && !root.packMaterialMatte
-    readonly property real shadowStrength: depthFlat ? 0.0 : 1.0
+    // Light themes (item_111): the theme's mode, unless a pack owns the palette.
+    // Light surfaces get their own recipe (panel = side-pane colour, lighter
+    // "paper" cards, sheen lit toward base, soft shadows); dark values are untouched.
+    readonly property bool isLight: !root.packOwnsPalette && !!(root._data && root._data.mode === "light")
+    // Light UIs use soft shadows: the dark-tuned alphas read as grime on pale glass.
+    readonly property real shadowStrength: depthFlat ? 0.0 : (isLight ? 0.4 : 1.0)
 
     // Sheen helpers — the gradient-side twin of shadowStrength. A top-lit fill
     // (lighter top → darker bottom) reads as a raised, glossy surface; in
@@ -364,7 +369,9 @@ QtObject {
         // bars (a fixed black overlay for the 3d "sunk" read, not a palette
         // color). Pack-overridable via colors.recessedTrack. Replaces an inline
         // Qt.rgba(0,0,0,0.22) that was copied into 3 components.
-        readonly property color recessedTrack: root._c("recessedTrack", Qt.rgba(0, 0, 0, 0.22))
+        // Light: a black overlay reads as dirt on pale glass; the groove is the
+        // palette's own element step (surface0) instead.
+        readonly property color recessedTrack: root._c("recessedTrack", root.isLight ? root._rgba("surface0", "#ccd0da", 0.90) : Qt.rgba(0, 0, 0, 0.22))
 
         // Transparent variants
         readonly property color baseAlpha:     root._rgba("base",     "#24273a", 0.85)
@@ -378,9 +385,11 @@ QtObject {
         // pack `material:"flat"|"matte"` (→ packMaterialFlat) makes the fills fully
         // OPAQUE (a solid slab, no wallpaper bleed). The base look — glass OR the
         // user's flat toggle — stays translucent; flat just drops the sheen/shadows.
-        readonly property color glassBg:      root.packMaterialFlat ? root._c("mantle", "#1e2030") : root._rgba("mantle", "#1e2030", 0.96)
-        readonly property color glassBgLight: root.packMaterialFlat ? root._c("mantle", "#1e2030") : root._rgba("mantle", "#1e2030", 0.93)
-        readonly property color glassBorder:  root._rgba("surface0", "#363a4f", 0.90)
+        // Light: mantle is each designer's side-pane / float colour (Latte mantle,
+        // Tokyo bg_dark, Alucard Floating, Gruvbox bg1), as a light glass.
+        readonly property color glassBg:      root.packMaterialFlat ? root._c("mantle", "#1e2030") : root._rgba("mantle", "#1e2030", root.isLight ? 0.92 : 0.96)
+        readonly property color glassBgLight: root.packMaterialFlat ? root._c("mantle", "#1e2030") : root._rgba("mantle", "#1e2030", root.isLight ? 0.90 : 0.93)
+        readonly property color glassBorder:  root.isLight ? root._rgba("surface1", "#bcc0cc", 0.85) : root._rgba("surface0", "#363a4f", 0.90)
 
         // Liquid-glass sheen — endpoints for a subtle top-lit vertical gradient
         // (see FrameBackground). SAME alpha as glassBgLight (no transparency
@@ -390,15 +399,21 @@ QtObject {
             // Truly flat: both stops collapse to the panel fill → no sheen gradient.
             // Matte keeps the top-lit gradient but OPAQUE (alpha 1) — grimdark plate.
             if (root.depthFlat) return glassBg
-            var c = root._blend(root._c("mantle", "#1e2030"),
-                                root._c("surface2", "#5b6078"), 0.38)
-            return Qt.rgba(c.r, c.g, c.b, root.packMaterialFlat ? 1.0 : 0.93)
+            // Lit from above: on light palettes surface2 is DARKER than mantle, so
+            // the light recipe lifts toward base (the lightest official background).
+            var c = root.isLight
+                ? root._blend(root._c("mantle", "#1e2030"), root._c("base", "#24273a"), 0.60)
+                : root._blend(root._c("mantle", "#1e2030"), root._c("surface2", "#5b6078"), 0.38)
+            return Qt.rgba(c.r, c.g, c.b, root.packMaterialFlat ? 1.0 : (root.isLight ? 0.90 : 0.93))
         }
         readonly property color glassSheenBot: {
             if (root.depthFlat) return glassBg
-            // crust is barely darker than mantle, so sink toward black instead.
-            var c = root._blend(root._c("mantle", "#1e2030"), "#000000", 0.22)
-            return Qt.rgba(c.r, c.g, c.b, root.packMaterialFlat ? 1.0 : 0.93)
+            // crust is barely darker than mantle, so sink toward black instead —
+            // except on light palettes, where black reads as dirt: settle into crust.
+            var c = root.isLight
+                ? root._blend(root._c("mantle", "#1e2030"), root._c("crust", "#181926"), 0.55)
+                : root._blend(root._c("mantle", "#1e2030"), "#000000", 0.22)
+            return Qt.rgba(c.r, c.g, c.b, root.packMaterialFlat ? 1.0 : (root.isLight ? 0.90 : 0.93))
         }
 
         // ── Warmth (§18.2) — accent-tinted surfaces, not flat grey. ──
@@ -408,14 +423,17 @@ QtObject {
         // values were invisible on our dark glass — dialled up during the
         // launcher taste-test (2026-07-17).
         readonly property color surfaceWarm: {
-            var c = root._blend(root._c("surface0", "#363a4f"),
-                                root._c(root._accentName, "#c6a0f6"), 0.15)
-            return Qt.rgba(c.r, c.g, c.b, 0.85)
+            // Light: resting containers are paper (base) with a faint accent warmth.
+            var c = root.isLight
+                ? root._blend(root._c("base", "#24273a"), root._c(root._accentName, "#c6a0f6"), 0.06)
+                : root._blend(root._c("surface0", "#363a4f"), root._c(root._accentName, "#c6a0f6"), 0.15)
+            return Qt.rgba(c.r, c.g, c.b, root.isLight ? 0.88 : 0.85)
         }
         // State-layer tints (accent-hued). Punchier than the M3 0.08/0.12
         // canon — that wash didn't register on the dark palette.
-        readonly property color stateHover:   root._rgba(root._accentName, "#c6a0f6", 0.20)
-        readonly property color statePressed: root._rgba(root._accentName, "#c6a0f6", 0.30)
+        // Light: the M3-canon washes read fine on pale surfaces.
+        readonly property color stateHover:   root._rgba(root._accentName, "#c6a0f6", root.isLight ? 0.12 : 0.20)
+        readonly property color statePressed: root._rgba(root._accentName, "#c6a0f6", root.isLight ? 0.18 : 0.30)
 
         // Elevated card surface (dashboard): a LIGHTER translucent glass than the
         // panel (surface0 > mantle) so it lifts off with the shadow, but stays
@@ -429,6 +447,11 @@ QtObject {
             // it) — Qt.rgba(str.r,…) would be Qt.rgba(undefined,…) = solid black.
             if (root.packMaterialFlat)
                 return root._rgba("surface0", "#363a4f", 1.0)   // opaque slab, no bleed
+            // Light: "paper" cards — the designer's main background (base), LIGHTER
+            // than the side-pane panel, mostly opaque so the wallpaper does not muddy
+            // them (owner, 2026-09-29). Dark keeps the translucent surface0 glass.
+            if (root.isLight)
+                return root._rgba("base", "#eff1f5", 0.88)
             var c = root._blend(root._c("surface0", "#363a4f"),
                                 root._c(root._accentName, "#c6a0f6"), 0.06)
             return Qt.rgba(c.r, c.g, c.b, 0.58)

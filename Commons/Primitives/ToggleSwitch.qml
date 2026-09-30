@@ -31,8 +31,10 @@ Item {
         }
         Gradient {
             id: offGrad
-            GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.26) }
-            GradientStop { position: 0.55; color: Qt.rgba(0, 0, 0, 0.10) }
+            // Sunk groove: black on dark glass; on light themes a black wash reads
+            // as dirt, so the groove is the shared recessedTrack (palette surface0).
+            GradientStop { position: 0.0; color: Commons.Appearance.isLight ? Commons.Appearance.colors.recessedTrack : Qt.rgba(0, 0, 0, 0.26) }
+            GradientStop { position: 0.55; color: Commons.Appearance.isLight ? Qt.rgba(Commons.Appearance.colors.recessedTrack.r, Commons.Appearance.colors.recessedTrack.g, Commons.Appearance.colors.recessedTrack.b, 0.6) : Qt.rgba(0, 0, 0, 0.10) }
             GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.03) }
         }
 
