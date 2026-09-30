@@ -1,7 +1,7 @@
 {
-  "_comment": "Glass opacity presets (item_139): the ONE table for surface alpha. Read by Commons/Appearance.qml (panel/card fills), scripts/theme-switch.py (kitty background_opacity + mango focused/unfocused window opacity = winFocused/winUnfocused) and scripts/contrast-check.py --glass (text contrast over a mid-grey wallpaper at each preset). panel = frame/panel glass, panelAlt = its lighter twin + sheen stops, card = dashboard/settings cards. soft is the pre-item_139 look (light panels raised 0.92/0.90 -> 0.96/0.95 so text stays AA over a mid-grey wallpaper) and the default. Light panels cannot go below ~0.94 without dropping gruvbox-light text under AA over mid-grey; dark stops at ~0.82 (monochrome). A pack material flat/matte stays opaque whatever the preset.",
+  "_comment": "Glass opacity presets (item_139): the ONE table for surface alpha. Read by Commons/Appearance.qml (panel/card fills), scripts/theme-switch.py (kitty background_opacity + mango focused/unfocused window opacity = winFocused/winUnfocused) and scripts/contrast-check.py --glass (text contrast over a mid-grey wallpaper at each preset). panel = frame/panel glass, panelAlt = its lighter twin + sheen stops, card = dashboard/settings cards. soft is the pre-item_139 look (light panels raised 0.92/0.90 -> 0.96/0.95 so text stays AA over a mid-grey wallpaper) and the default. Two presets by owner decision 2026-09-30 (a third, more transparent 'glass' step was dropped). Light panels cannot go below ~0.94 without dropping gruvbox-light text under AA over mid-grey; dark stops at ~0.82 (monochrome). A pack material flat/matte stays opaque whatever the preset.",
   "default": "soft",
-  "order": ["solid", "soft", "glass"],
+  "order": ["solid", "soft"],
   "presets": {
     "solid": {
       "label": "Solid",
@@ -12,11 +12,6 @@
       "label": "Soft",
       "dark":  { "panel": 0.96, "panelAlt": 0.93, "card": 0.58, "kitty": 0.6, "winFocused": 0.85, "winUnfocused": 0.5 },
       "light": { "panel": 0.96, "panelAlt": 0.95, "card": 0.88, "kitty": 0.9, "winFocused": 0.85, "winUnfocused": 0.5 }
-    },
-    "glass": {
-      "label": "Glass",
-      "dark":  { "panel": 0.84, "panelAlt": 0.82, "card": 0.45, "kitty": 0.5, "winFocused": 0.80, "winUnfocused": 0.5 },
-      "light": { "panel": 0.94, "panelAlt": 0.94, "card": 0.72, "kitty": 0.8, "winFocused": 0.80, "winUnfocused": 0.5 }
     }
   }
 }
