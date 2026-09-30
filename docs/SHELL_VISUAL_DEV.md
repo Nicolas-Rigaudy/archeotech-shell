@@ -154,3 +154,14 @@ edits then reach the bar only when a commit is promoted.
   (icon font) from the label (display) so the nerd-glyph survives.
 - Console chrome primitive: `Commons/Primitives/ConsoleChrome.qml` (copper trim +
   far-corner gussets + a two-bar collar; `showTrim/showGussets/showCollar` flags).
+
+### Renders look like the real session (2026-09-30)
+
+`scripts/shot.sh` starts the nested mango from the owner's real
+`~/.config/mango/config.conf` (borders, gaps, radius, shadows, blur, window and
+layer rules), with comments and every command-capable line removed (exec,
+exec-once, all *bind keys, keymode, monitorrule, env, source, source-optional,
+spawn_on_empty). A guard aborts the run if anything command-like survives. With
+`--theme`, that theme's mango colours (border, focus, urgent, shadow) come first.
+`--fresh` keeps mango's defaults. The wallpaper (`--wallpaper`, default: the live
+one) is started from the in-session startup script.

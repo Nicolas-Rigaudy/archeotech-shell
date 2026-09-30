@@ -216,15 +216,43 @@ fi
 if [ -z "$WALLPAPER" ] && command -v awww >/dev/null 2>&1; then
   WALLPAPER="$(timeout 2 awww query 2>/dev/null | sed -n 's/.*currently displaying: image: //p' | head -1)"
 fi
+# Start from the owner's REAL mango config so renders look like the real session
+# (borders, gaps, radius, shadows, blur, layout, window/layer rules), minus every
+# line that could reach outside the nested session: autostart (exec/exec-once),
+# key/mouse/gesture binds (they call the owner's scripts) and monitor rules for the
+# physical outputs. --fresh renders a stranger's first boot, so it keeps mango's
+# defaults.
 : > "$RUN/mango.conf"
+# Our own lines go FIRST: the wallpaper autostart, then (with --theme) that theme's
+# window colours. The owner's config follows, minus the keys set here.
+# The wallpaper starts from STARTUP below (inside the session), not exec-once:
+# with the owner's full config loaded, mango's exec-once did not fire here.
+WP_CMD=":"
 if [ -n "$WALLPAPER" ] && [ -f "$WALLPAPER" ] && command -v awww-daemon >/dev/null 2>&1; then
-  echo "exec-once=sh -c 'awww-daemon >$LOG/awww.log 2>&1 & sleep 1; awww img \"$WALLPAPER\" >>$LOG/awww.log 2>&1'" > "$RUN/mango.conf"
+  printf '%s' "$WALLPAPER" > "$RUN/wallpaper.path"   # read back in-session: no quoting of the path
+  WP_CMD="(awww-daemon >$LOG/awww.log 2>&1 &) ; sleep 1; awww img \"\$(cat $RUN/wallpaper.path)\" >>$LOG/awww.log 2>&1"
+fi
+OVERRIDE="exec|exec-once|bind|binds|gesturebind|mousebind|axisbind|switchbind|touchbind|keymode|monitorrule|env|source|source-optional|spawn_on_empty"
+if [ -n "$THEME" ] && [ -f "$ROOT/themes/$THEME/theme.json" ]; then
+  python3 - "$ROOT/themes/$THEME/theme.json" >> "$RUN/mango.conf" <<'PY'
+import json, sys
+m = json.load(open(sys.argv[1])).get("mango", {})
+for k in ("bordercolor", "focuscolor", "urgentcolor", "shadowscolor"):
+    if k in m: print(f"{k}={m[k]}")
+PY
+  OVERRIDE="$OVERRIDE|bordercolor|focuscolor|urgentcolor|shadowscolor"
+fi
+if [ "$FRESH" != 1 ] && [ -f "$REAL_HOME/.config/mango/config.conf" ]; then
+  grep -v -E '^[[:space:]]*(#|$)' "$REAL_HOME/.config/mango/config.conf" \
+    | grep -v -i -E "^[[:space:]]*($OVERRIDE)[[:space:]]*=" >> "$RUN/mango.conf"
+fi
+# Guard: refuse to start if anything command-like survived the filter (a mango
+# keyword added after this list was written, or a spawn action inside a rule).
+if grep -n -i -E '^[[:space:]]*[a-z_-]*(exec|bind|source|spawn|env)[a-z_-]*[[:space:]]*=|spawn' "$RUN/mango.conf"; then
+  echo "shot.sh: inherited mango config still has a command-like line (above); not starting" >&2
+  rm -rf "$RUN"; exit 3
 fi
 
-# Build the state-driving step (runs inside the nested session). --state settings
-# accepts a "settings:pane" form that maps onto the openPane(pane) IPC function.
-# The call selects the nested shell by pid; with the private runtime dir it could
-# not reach the live shell anyway.
 DRIVE=":"   # no-op by default
 if [ -n "$STATE" ]; then
   case "$STATE" in
@@ -271,6 +299,7 @@ fi
 # Runs INSIDE the nested compositor, so it inherits the nested WAYLAND_DISPLAY and
 # grim/qs-ipc/notify-send all target the headless session.
 STARTUP="bash -c '
+  $WP_CMD
   sleep 2
   $LAUNCH > $LOG/qs.log 2>&1 &
   QSPID=\$!
