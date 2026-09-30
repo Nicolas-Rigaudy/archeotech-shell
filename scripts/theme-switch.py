@@ -173,6 +173,7 @@ def apply_kitty(theme: dict, vars: Dict[str, str]) -> None:
         content += "dim_opacity 0.75\ntext_fg_override_threshold 3 ratio\n"
     atomic_write(dst, content)
     run(["pkill", "-USR1", "-x", "kitty"])
+    kitty_set_opacity(opacity)
 
 
 def glass_preset() -> str:
@@ -181,6 +182,29 @@ def glass_preset() -> str:
         return json.loads(CONFIG_FILE.read_text()).get("appearance", {}).get("glass", "")
     except (OSError, ValueError, AttributeError):
         return ""
+
+
+def glass_values(mode: str, preset: str = "") -> Dict[str, Any]:
+    """One preset's values for a mode from glass-presets.json; an unset or
+    unknown preset uses the table default (the shell does the same)."""
+    table = json.loads(GLASS_PRESETS_FILE.read_text())
+    presets = table["presets"]
+    p = presets.get(preset) or presets[table["default"]]
+    return p["light" if mode == "light" else "dark"]
+
+
+def mango_opacity_lines(text: str, mode: str, preset: str = "") -> str:
+    """Set mango's global focused/unfocused window opacity for the preset, so
+    Solid really makes every window opaque (per-app windowrules still win)."""
+    try:
+        v = glass_values(mode, preset)
+    except (OSError, ValueError, KeyError) as e:
+        warn(f"glass presets unreadable ({e}); mango opacity unchanged")
+        return text
+    for key, val in (("focused_opacity", v.get("winFocused")), ("unfocused_opacity", v.get("winUnfocused"))):
+        if val is not None:
+            text = re.sub(rf"^{key}=.*$", f"{key}={val}", text, flags=re.M)
+    return text
 
 
 def kitty_opacity(mode: str, preset: str = "") -> str:
@@ -194,6 +218,23 @@ def kitty_opacity(mode: str, preset: str = "") -> str:
     except (OSError, ValueError, KeyError) as e:
         warn(f"glass presets unreadable ({e}); kitty opaque")
         return "1.0"
+
+
+def kitty_set_opacity(opacity: str) -> None:
+    """Re-apply background_opacity to kitty windows that are ALREADY open: the
+    SIGUSR1 reload only uses it for new OS windows. Talks to each instance over
+    its remote-control socket ($XDG_RUNTIME_DIR/kitty-<pid>, see kitty.conf
+    listen_on); instances started without one are skipped (new windows still
+    pick the value up from current-theme.conf)."""
+    rt = os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}"
+    for sock in sorted(Path(rt).glob("kitty-*")):
+        if not sock.is_socket():
+            continue
+        try:
+            run(["kitty", "@", "--to", f"unix:{sock}", "set-background-opacity", "--all", opacity],
+                timeout=3)
+        except (OSError, subprocess.TimeoutExpired) as e:
+            warn(f"kitty {sock.name}: {e}")
 
 
 def apply_glass_only(preset: str) -> None:
@@ -215,7 +256,15 @@ def apply_glass_only(preset: str) -> None:
         content += f"\n{line}\n"
     atomic_write(KITTY_THEME_FILE, content)
     run(["pkill", "-USR1", "-x", "kitty"])
-    info(f"glass {preset}: kitty background_opacity {opacity} ({mode})")
+    kitty_set_opacity(opacity)
+    mango = HOME / ".config" / "mango" / "config.conf"
+    if mango.exists():
+        before = mango.read_text()
+        after = mango_opacity_lines(before, mode, preset)
+        if after != before:
+            atomic_write(mango, after)
+            mango_reload_preserving_kb()
+    info(f"glass {preset}: kitty background_opacity {opacity}, mango windows ({mode})")
 
 
 def apply_mango(theme: dict, vars: Dict[str, str]) -> None:
@@ -263,6 +312,8 @@ def apply_mango(theme: dict, vars: Dict[str, str]) -> None:
     ):
         if val:
             text = re.sub(rf"^{key}=.*$", f"{key}={val}", text, flags=re.M)
+    # Window opacity follows the glass preset (item_139); a pack owns material.
+    text = mango_opacity_lines(text, theme.get("mode", "dark"), "" if theme.get("_pack") else glass_preset())
     atomic_write(path, text)
     mango_reload_preserving_kb()
 
