@@ -407,6 +407,24 @@ QtObject {
         // palette's own element step (surface0) instead.
         readonly property color recessedTrack: root._c("recessedTrack", root.isLight ? root._rgba("surface0", "#ccd0da", 0.90) : Qt.rgba(0, 0, 0, 0.22))
 
+        // Selected state carrying TEXT (item_142): the selected segment, today in
+        // the calendar, a badge. Dark keeps the focal "accent fill + base glyph".
+        // Light is tonal: base tinted toward the accent with dark text, because
+        // base on the accent is under AA on gruvbox-light (3.33) and
+        // tokyo-night-day (3.11) and no official slot reaches AA on those accents
+        // (adr_033: never recolour). Icon-only glyphs on the accent may keep base
+        // (non-text 3:1 holds). contrast-check.py mirrors selectedTint.
+        readonly property real  selectedTint:  0.20
+        readonly property color selectedFill:  root.isLight
+            ? root._blend(root._c("base", "#eff1f5"), root._c(root._accentName, "#8839ef"), selectedTint)
+            : root._c(root._accentName, "#c6a0f6")
+        readonly property color onSelected:    root.isLight ? textPrimary : root._c("base", "#24273a")
+        // Light tonal pills carry an accent outline so the selection still reads
+        // at a glance (the accent clears 3:1 non-text on every light theme);
+        // dark accent fills need none.
+        readonly property color selectedBorder: root.isLight ? root._c(root._accentName, "#8839ef") : "transparent"
+        readonly property real  selectedBorderWidth: root.isLight ? 1.5 : 0
+
         // Transparent variants
         readonly property color baseAlpha:     root._rgba("base",     "#24273a", 0.85)
         readonly property color mantleAlpha:   root._rgba("mantle",   "#1e2030", 0.90)

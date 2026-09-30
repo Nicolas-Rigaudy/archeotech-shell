@@ -210,13 +210,15 @@ Item {
                         anchors.centerIn: parent
                         width: 20; height: 20
                         radius: Commons.Appearance.radius.pill
-                        color: parent.isToday ? Commons.Appearance.colors.accent : "transparent"
+                        color: parent.isToday ? Commons.Appearance.colors.selectedFill : "transparent"
+                        border.width: parent.isToday ? Commons.Appearance.colors.selectedBorderWidth : 0
+                        border.color: Commons.Appearance.colors.selectedBorder
                         visible: parent.modelData > 0
                     }
                     Text {
                         anchors.centerIn: parent
                         text: parent.modelData > 0 ? parent.modelData : ""
-                        color: parent.isToday ? Commons.Appearance.colors.base : Commons.Appearance.colors.textPrimary
+                        color: parent.isToday ? Commons.Appearance.colors.onSelected : Commons.Appearance.colors.textPrimary
                         font.pixelSize: Commons.Appearance.font.sizeSm
                         font.family: Commons.Appearance.font.family
                         font.weight: parent.isToday ? Font.Medium : Font.Normal

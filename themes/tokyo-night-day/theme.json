@@ -32,7 +32,10 @@
     "rosewater": "#3760bf",
     "lavender": "#7847bd"
   },
-  "contrastExempt": {"mantle": "tokyonight.nvim places fg on bg_dark (floats, sidebars) at 3.99:1; follow the designer, owner 2026-09-29 (adr_033)"},
+  "contrastExempt": {
+    "mantle": "tokyonight.nvim places fg on bg_dark (floats, sidebars) at 3.99:1; follow the designer, owner 2026-09-29 (adr_033)",
+    "selectedFill": "tokyonight.nvim fg is 4.52:1 even on bg, so any accent-tinted selected pill drops below AA; follow the designer as for mantle (item_142)"
+  },
   "roles": {"textPrimary": "text", "textSecondary": "text", "textMuted": "overlay2", "textDisabled": "overlay0", "textOnAccent": "base", "borderSubtle": "surface1", "borderStrong": "surface2", "focus": "accent"},
   "mango": {
     "shadowscolor": "0x00000033",
