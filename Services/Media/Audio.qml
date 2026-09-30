@@ -50,8 +50,15 @@ QtObject {
     // Bind the default sink + source so their `audio` data (volume/mute) is live
     // and writable — without a tracker, PwNode.audio stays null. The objects list
     // re-binds automatically when the default device changes.
-    property var _tracker: PwObjectTracker {
-        objects: [root._sink, root._source].filter(Boolean)
+    // One tracker per device: with a shared list, a Bluetooth headset switching
+    // profile (its mic node appearing/disappearing) rewrote the list and could
+    // leave the SINK unbound: the shell then kept a frozen volume (reads) and its
+    // own changes never reached the device (writes), while wpctl/keys still worked.
+    property var _sinkTracker: PwObjectTracker {
+        objects: root._sink ? [root._sink] : []
+    }
+    property var _sourceTracker: PwObjectTracker {
+        objects: root._source ? [root._source] : []
     }
 
     // ── Public state (same contract the old pactl service exposed) ───────────────
