@@ -7,9 +7,8 @@ import ".." as Commons
 // like the SliderRow / stat bars); a raised accent pill slides to the selected
 // segment with a top-lit gradient + lift shadow (gated on shadowStrength so it
 // flattens in flat mode). Inactive segments take a StateLayer hover wash; the
-// active pill + label use the selectedFill / onSelected tokens: the shell's
-// "accent fill + base glyph" on dark, a tonal accent-tinted pill with dark text
-// on light themes (item_142, AA on every official light accent).
+// active label/glyph flips to `base` (dark) over the accent, matching the
+// shell's "accent fill + base glyph" focal language.
 //
 // model items are { label, glyph } (either may be omitted). Bind `currentIndex`
 // to your own state and update it in `onActivated` — the control is stateless.
@@ -77,15 +76,15 @@ Item {
             y: root._v ? root.currentIndex * track._segW + 4 : 4
             // Square-cut machined key on steel; rounded pill on base packs.
             radius: root._steel ? 1 : track.radius - 3
-            border.width: root._steel ? 1.2 : Commons.Appearance.colors.selectedBorderWidth
+            border.width: root._steel ? 1.2 : 0
             // Selected key = lit copper edge (the register metal). Teal dropped — read too modern.
-            border.color: root._steel ? Qt.lighter(Commons.Appearance.colors.accent, 1.25) : Commons.Appearance.colors.selectedBorder
+            border.color: root._steel ? Qt.lighter(Commons.Appearance.colors.accent, 1.25) : "transparent"
             gradient: Gradient {
                 GradientStop { position: 0.0; color: root._steel ? Qt.lighter(Commons.Appearance.steel.hi, 1.18)
-                                                                  : Commons.Appearance.sheenHi(Commons.Appearance.colors.selectedFill, Commons.Appearance.sheen.control.hi) }
-                GradientStop { position: 0.5; color: root._steel ? Commons.Appearance.steel.md : Commons.Appearance.sheenHi(Commons.Appearance.colors.selectedFill, Commons.Appearance.sheen.control.hi) }
+                                                                  : Commons.Appearance.sheenHi(Commons.Appearance.colors.accent, Commons.Appearance.sheen.control.hi) }
+                GradientStop { position: 0.5; color: root._steel ? Commons.Appearance.steel.md : Commons.Appearance.sheenHi(Commons.Appearance.colors.accent, Commons.Appearance.sheen.control.hi) }
                 GradientStop { position: 1.0; color: root._steel ? Commons.Appearance.steel.lo
-                                                                  : Commons.Appearance.sheenLo(Commons.Appearance.colors.selectedFill, Commons.Appearance.sheen.control.lo) }
+                                                                  : Commons.Appearance.sheenLo(Commons.Appearance.colors.accent, Commons.Appearance.sheen.control.lo) }
             }
             Behavior on x { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
             Behavior on y { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
@@ -117,7 +116,7 @@ Item {
                     Text {
                         visible: !!seg.modelData.glyph
                         text: seg.modelData.glyph || ""
-                        color: seg._on ? (root._steel ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.onSelected)
+                        color: seg._on ? (root._steel ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.base)
                                        : Commons.Appearance.colors.textSecondary
                         font.pixelSize: 14; font.family: Commons.Appearance.font.family
                         anchors.verticalCenter: parent.verticalCenter
@@ -126,7 +125,7 @@ Item {
                     Text {
                         visible: !root.iconOnly && !!seg.modelData.label
                         text: seg.modelData.label || ""
-                        color: seg._on ? (root._steel ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.onSelected)
+                        color: seg._on ? (root._steel ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.base)
                                        : Commons.Appearance.colors.textSecondary
                         font.pixelSize: Commons.Appearance.font.sizeBase
                         font.family: Commons.Appearance.font.family

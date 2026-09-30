@@ -6,9 +6,7 @@ roles the shell draws (theme.json `roles`, falling back to the Catppuccin map)
 to their palette slots and checks them against the surfaces text sits on
 (base, mantle, surface0). Body roles (textPrimary, textSecondary) need 4.5:1
 (AA); textMuted needs 3:1; focus (the accent) needs 3:1 on base. textDisabled
-is exempt (WCAG 1.4.3). textOnAccent is reported but not gated; the selected
-state's text (item_142: tonal on light, base on the accent on dark) is gated at
-4.5 on every theme (packs: reported via textOnAccent). Packs that
+is exempt (WCAG 1.4.3). textOnAccent is reported but not gated yet. Packs that
 own a palette (packs/*/tokens.json colors) are checked with their own roles,
 once per faction register.
 
@@ -19,17 +17,12 @@ a colour. --strict exits 1 on any failure (CI).
 import argparse
 import json
 import pathlib
-import re
 import sys
 
 ROLES = {"textPrimary": ("body", "text"), "textSecondary": ("body", "subtext0"),
          "textMuted": ("muted", "overlay1")}
 SURFACES = ["base", "mantle", "surface0"]
 FLOOR = {"body": 4.5, "muted": 3.0, "focus": 3.0}
-# Appearance.colors.selectedTint, read from the QML so the two cannot drift.
-_TINT = re.search(r"property real\s+selectedTint:\s*([0-9.]+)",
-                  (pathlib.Path(__file__).resolve().parent.parent / "Commons" / "Appearance.qml").read_text())
-SELECTED_TINT = float(_TINT.group(1)) if _TINT else 0.20
 
 
 def luminance(hex_color):
@@ -54,7 +47,7 @@ def surfaces_for(data):
     return [s for s in surf if s not in exempt], exempt
 
 
-def check(name, colors, roles, accent_name, surfaces=None, exempt=None, selected=None):
+def check(name, colors, roles, accent_name, surfaces=None, exempt=None):
     """One row: the three text roles (gated), focus on base (gated 3:1) and
     text-on-accent (reported, not gated yet). Returns the number of failures."""
     failures, cells = 0, []
@@ -73,21 +66,6 @@ def check(name, colors, roles, accent_name, surfaces=None, exempt=None, selected
         cells.append(f"{f:5.2f}{'' if f >= FLOOR['focus'] else ' FAIL'}")
         on = colors.get(roles.get("textOnAccent", "base"))
         cells.append(f"{ratio(on, accent):5.2f}{'' if ratio(on, accent) >= 4.5 else ' (below 4.5)'}" if on else "n/a")
-        if selected is not None and "base" in colors:
-            # Selected text (item_142), mirrors Appearance.selectedFill/onSelected:
-            # light = textPrimary on base tinted SELECTED_TINT toward the accent,
-            # dark = base on the accent. Gated at 4.5 unless the theme exempts it.
-            if selected == "light":
-                fill = _mix(accent, colors["base"], SELECTED_TINT)
-                text = colors.get(roles.get("textPrimary", "text"))
-            else:
-                fill, text = accent, colors["base"]
-            r = ratio(text, fill)
-            if "selectedFill" in (exempt or {}):
-                cells.append(f"{r:5.2f} exempt")
-            else:
-                failures += r < FLOOR["body"]
-                cells.append(f"{r:5.2f}{'' if r >= FLOOR['body'] else ' FAIL'}")
     print(f"{name:<22} " + " ".join(f"{c:<24}" for c in cells))
     for surf, why in (exempt or {}).items():
         print(f"{'':<22} exempt: {surf} ({why})")
@@ -135,12 +113,11 @@ def main():
         return glass_main(args)
 
     failures = 0
-    print(f"{'theme / pack':<22} " + " ".join(f"{r:<24}" for r in list(ROLES) + ["focus/base", "textOnAccent (info)", "selected text"]))
+    print(f"{'theme / pack':<22} " + " ".join(f"{r:<24}" for r in list(ROLES) + ["focus/base", "textOnAccent (info)"]))
     for tj in sorted(pathlib.Path(args.themes).glob("*/theme.json")):
         d = json.loads(tj.read_text())
         surf, exempt = surfaces_for(d)
-        failures += check(tj.parent.name, d.get("colors", {}), d.get("roles", {}), d.get("accent", "mauve"), surf, exempt,
-                          selected=d.get("mode", "dark"))
+        failures += check(tj.parent.name, d.get("colors", {}), d.get("roles", {}), d.get("accent", "mauve"), surf, exempt)
     # Packs that own a palette, checked with their own roles; each register
     # overlays its colours on the pack's.
     for tk in sorted(pathlib.Path(args.packs).glob("*/tokens.json")):

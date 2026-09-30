@@ -124,20 +124,17 @@ Item {
                                             font.bold: true
                                         }
                                         // Official badge — first-party plugin (accent fill, the
-                                        // highest trust tier; tonal on light, item_142). Shown for
-                                        // `official: true` (AC1).
+                                        // highest trust tier). Shown for `official: true` (AC1).
                                         Rectangle {
                                             visible: modCard.modelData.official === true
                                             height: 16; width: _ot.implicitWidth + 12
                                             radius: Commons.Appearance.radius.sm
-                                            color: Commons.Appearance.colors.selectedFill
-                                            border.width: Commons.Appearance.colors.selectedBorderWidth
-                                            border.color: Commons.Appearance.colors.selectedBorder
+                                            color: Commons.Appearance.colors.accent
                                             Text {
                                                 id: _ot
                                                 anchors.centerIn: parent
                                                 text: "★ Official"
-                                                color: Commons.Appearance.colors.onSelected
+                                                color: Commons.Appearance.colors.base
                                                 font.family: Commons.Appearance.font.family
                                                 font.pixelSize: Commons.Appearance.font.sizeSm
                                             }

@@ -70,12 +70,12 @@ Item {
 
                             Text {
                                 text: NetworkServices.Network.wifiEnabled ? "󰖩" : "󰖪"
-                                color: NetworkServices.Network.wifiEnabled ? Commons.Appearance.colors.onSelected : Commons.Appearance.colors.textMuted
+                                color: NetworkServices.Network.wifiEnabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
                                 font.pixelSize: 11; font.family: Commons.Appearance.font.family
                             }
                             Text {
                                 text: NetworkServices.Network.wifiEnabled ? "On" : "Off"
-                                color: NetworkServices.Network.wifiEnabled ? Commons.Appearance.colors.onSelected : Commons.Appearance.colors.textMuted
+                                color: NetworkServices.Network.wifiEnabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
                                 font.pixelSize: 11; font.family: Commons.Appearance.font.family
                             }
                         }
@@ -166,13 +166,13 @@ Item {
                             Text {
                                 id: scanIco
                                 text: NetworkServices.Bluetooth.discovering ? "󰑙" : "󰂰"
-                                color: NetworkServices.Bluetooth.discovering ? Commons.Appearance.colors.onSelected : Commons.Appearance.colors.accent
+                                color: NetworkServices.Bluetooth.discovering ? Commons.Appearance.colors.base : Commons.Appearance.colors.accent
                                 font.pixelSize: 11; font.family: Commons.Appearance.font.family
                                 RotationAnimator { target: scanIco; running: NetworkServices.Bluetooth.discovering; loops: Animation.Infinite; from: 0; to: 360; duration: 900 }
                             }
                             Text {
                                 text: NetworkServices.Bluetooth.discovering ? "Scanning…" : "Scan"
-                                color: NetworkServices.Bluetooth.discovering ? Commons.Appearance.colors.onSelected : Commons.Appearance.colors.accent
+                                color: NetworkServices.Bluetooth.discovering ? Commons.Appearance.colors.base : Commons.Appearance.colors.accent
                                 font.pixelSize: 11; font.family: Commons.Appearance.font.family
                             }
                         }
@@ -188,12 +188,12 @@ Item {
 
                             Text {
                                 text: NetworkServices.Bluetooth.enabled ? "󰂯" : "󰂲"
-                                color: NetworkServices.Bluetooth.enabled ? Commons.Appearance.colors.onSelected : Commons.Appearance.colors.textMuted
+                                color: NetworkServices.Bluetooth.enabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
                                 font.pixelSize: 11; font.family: Commons.Appearance.font.family
                             }
                             Text {
                                 text: NetworkServices.Bluetooth.enabled ? "On" : "Off"
-                                color: NetworkServices.Bluetooth.enabled ? Commons.Appearance.colors.onSelected : Commons.Appearance.colors.textMuted
+                                color: NetworkServices.Bluetooth.enabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
                                 font.pixelSize: 11; font.family: Commons.Appearance.font.family
                             }
                         }
@@ -535,12 +535,12 @@ Item {
                     spacing: 4
                     Text {
                         text: "󰁪"
-                        color: modelData.autoconnect ? Commons.Appearance.colors.onSelected : Commons.Appearance.colors.textMuted
+                        color: modelData.autoconnect ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
                         font.pixelSize: 10; font.family: Commons.Appearance.font.family
                     }
                     Text {
                         text: "Auto"
-                        color: modelData.autoconnect ? Commons.Appearance.colors.onSelected : Commons.Appearance.colors.textMuted
+                        color: modelData.autoconnect ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
                         font.pixelSize: 10; font.family: Commons.Appearance.font.family
                     }
                 }
