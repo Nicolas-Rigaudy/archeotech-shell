@@ -61,6 +61,13 @@ ShellRoot {
         value: Persistence.Config.get("appearance.flatMode", false) || Commons.Appearance.packMaterialFlat
     }
 
+    // Glass opacity preset (item_139): solid / soft / glass, same wiring.
+    Binding {
+        target: Commons.Appearance
+        property: "glassPreset"
+        value: Persistence.Config.get("appearance.glass", "")   // "" = table default
+    }
+
     // Drive the active theme pack (adr_027 Layer A) from the persisted setting,
     // same reason/wiring as flatMode. Empty string = base look (no token overlay).
     // activePackDir is resolved via PackRegistry here (Commons can't import a

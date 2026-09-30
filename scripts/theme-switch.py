@@ -34,6 +34,11 @@ ACTIVE_THEME_FILE = ARCHEOTECH_DIR / "theme.json"
 LOCK_FILE = ARCHEOTECH_DIR / "theme.lock"
 
 REPO_DIR = Path(__file__).resolve().parent.parent
+CONFIG_FILE = ARCHEOTECH_DIR / "config.json"
+# Glass opacity presets (item_139): one table shared with Appearance.qml and
+# contrast-check.py. Read from this script's own checkout.
+GLASS_PRESETS_FILE = REPO_DIR / "themes" / "glass-presets.json"
+KITTY_THEME_FILE = HOME / ".config" / "kitty" / "current-theme.conf"
 TEMPLATES_DIR = Path(__file__).resolve().parent / "themes" / "templates"
 
 
@@ -142,10 +147,10 @@ def apply_kitty(theme: dict, vars: Dict[str, str]) -> None:
             warn(f"kitty theme file missing: {src}")
             return
         content = src.read_text()
-    # Background opacity is theme-aware: dark themes keep the glass look, but
-    # light themes must be (near-)opaque — at the dark transparency the
-    # wallpaper shows through and dark-on-light text is unreadable. kitty.conf
-    # no longer hardcodes opacity; it lives here, after the include.
+    # Background opacity is theme-aware and follows the glass preset (item_139,
+    # themes/glass-presets.json): light themes stay more opaque than dark, since
+    # at the dark transparency the wallpaper muddies dark-on-light text.
+    # kitty.conf no longer hardcodes opacity; it lives here, after the include.
     # Accent picker (Catppuccin): make the active tab + mark2 follow the chosen
     # accent instead of the package's baked mauve. apply_accent stored the hex
     # under theme['kitty']['accent']; absent it, the baked colors stay untouched.
@@ -155,7 +160,8 @@ def apply_kitty(theme: dict, vars: Dict[str, str]) -> None:
             content = re.sub(rf"(?m)^({key}\s+)#[0-9A-Fa-f]{{6}}",
                              rf"\g<1>{accent_hex}", content)
     light = theme.get("mode") == "light"
-    opacity = "0.9" if light else "0.6"
+    # A pack owns material (adr_027): the preset control is hidden, so the default.
+    opacity = kitty_opacity(theme.get("mode", "dark"), "" if theme.get("_pack") else glass_preset())
     content = (content
                + f"\n# Theme-aware opacity (theme-switch.py): {theme.get('mode','dark')}\n"
                + f"background_opacity {opacity}\n")
@@ -167,6 +173,49 @@ def apply_kitty(theme: dict, vars: Dict[str, str]) -> None:
         content += "dim_opacity 0.75\ntext_fg_override_threshold 3 ratio\n"
     atomic_write(dst, content)
     run(["pkill", "-USR1", "-x", "kitty"])
+
+
+def glass_preset() -> str:
+    """The user's glass preset (config.json appearance.glass), else the table's default."""
+    try:
+        return json.loads(CONFIG_FILE.read_text()).get("appearance", {}).get("glass", "")
+    except (OSError, ValueError, AttributeError):
+        return ""
+
+
+def kitty_opacity(mode: str, preset: str = "") -> str:
+    """kitty background_opacity for a mode + glass preset, from glass-presets.json.
+    An unset or unknown preset uses the table default (the shell does the same)."""
+    try:
+        table = json.loads(GLASS_PRESETS_FILE.read_text())
+        presets = table["presets"]
+        p = presets.get(preset) or presets[table["default"]]
+        return str(p["light" if mode == "light" else "dark"]["kitty"])
+    except (OSError, ValueError, KeyError) as e:
+        warn(f"glass presets unreadable ({e}); kitty opaque")
+        return "1.0"
+
+
+def apply_glass_only(preset: str) -> None:
+    """`--glass <preset>`: re-set kitty's opacity for the applied theme's mode
+    without a full theme switch (the shell changes panel/card alpha itself)."""
+    try:
+        mode = json.loads(ACTIVE_THEME_FILE.read_text()).get("mode", "dark")
+    except (OSError, ValueError):
+        mode = "dark"
+    if not KITTY_THEME_FILE.exists():
+        warn(f"kitty theme missing: {KITTY_THEME_FILE}")
+        return
+    opacity = kitty_opacity(mode, preset)
+    content = KITTY_THEME_FILE.read_text()
+    line = f"background_opacity {opacity}"
+    if re.search(r"(?m)^background_opacity\s+\S+", content):
+        content = re.sub(r"(?m)^background_opacity\s+\S+", line, content)
+    else:
+        content += f"\n{line}\n"
+    atomic_write(KITTY_THEME_FILE, content)
+    run(["pkill", "-USR1", "-x", "kitty"])
+    info(f"glass {preset}: kitty background_opacity {opacity} ({mode})")
 
 
 def apply_mango(theme: dict, vars: Dict[str, str]) -> None:
@@ -572,8 +621,23 @@ def main() -> None:
         i = args.index("--pack")
         pack_dir = args[i + 1] if i + 1 < len(args) else None
         del args[i:i + 2]
+    if "--glass" in args:
+        i = args.index("--glass")
+        preset = args[i + 1] if i + 1 < len(args) else ""
+        try:
+            known = json.loads(GLASS_PRESETS_FILE.read_text())["presets"]
+        except (OSError, ValueError, KeyError) as e:
+            fail(f"glass presets unreadable: {e}")
+        if preset not in known:
+            fail(f"unknown glass preset '{preset}' (known: {', '.join(known)})")
+        # Blocking lock: wait for a running full switch instead of dropping the change.
+        LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(LOCK_FILE, "w") as lock_fd:
+            fcntl.flock(lock_fd, fcntl.LOCK_EX)
+            apply_glass_only(preset)
+        return
     if not args:
-        fail("usage: theme-switch.py <variant> [accent] [--pack <dir>]")
+        fail("usage: theme-switch.py <variant> [accent] [--pack <dir>] | --glass <preset>")
     variant = args[0]
 
     src = THEMES_DIR / variant / "theme.json"

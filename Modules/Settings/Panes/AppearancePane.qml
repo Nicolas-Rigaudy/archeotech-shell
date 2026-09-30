@@ -105,14 +105,23 @@ Item {
                 Item { implicitHeight: 10; Layout.fillWidth: true; visible: !Commons.Appearance.packOwnsPalette }
 
                 // ── Style ─────────────────────────────────────────────────────
-                // Flat mode is the BASE look's material control — hidden when a
-                // pack is active, since the pack owns material (adr_027).
+                // Flat mode + glass opacity are the BASE look's material controls —
+                // hidden when a pack is active, since the pack owns material (adr_027).
                 SectionLabel { text: "STYLE"; visible: root._activePack === "" }
                 SettingsCard {
                     visible: root._activePack === ""
+                    // Glass opacity (item_139): panels, cards and kitty. Options come
+                    // from themes/glass-presets.json (the same table Appearance reads).
+                    ButtonGroupRow {
+                        label: "Opacity"
+                        description: "How much wallpaper shows through panels, cards and kitty"
+                        options: Commons.Appearance.glassPresets
+                        currentValue: Commons.Appearance.effectiveGlassPreset
+                        onSelected: v => Persistence.Config.set("appearance.glass", v)
+                    }
                     ToggleRow {
                         label: "Flat mode"
-                        description: "Drop the liquid-glass sheen + card shadows for a flatter look — the shell stays translucent, just without the 3D depth"
+                        description: "Drop the liquid-glass sheen + card shadows for a flatter look — opacity stays as set above, just without the 3D depth"
                         checked: Persistence.Config.get("appearance.flatMode", false)
                         onToggled: v => Persistence.Config.set("appearance.flatMode", v)
                     }

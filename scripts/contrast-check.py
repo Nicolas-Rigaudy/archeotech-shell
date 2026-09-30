@@ -72,13 +72,45 @@ def check(name, colors, roles, accent_name, surfaces=None, exempt=None):
     return failures
 
 
+def _mix(fg, bg, a):
+    """fg composited over bg at alpha a (sRGB, like the renderer)."""
+    f, b = fg.lstrip("#")[:6], bg.lstrip("#")[:6]
+    return "#" + "".join(f"{round(int(f[i:i+2], 16) * a + int(b[i:i+2], 16) * (1 - a)):02x}" for i in (0, 2, 4))
+
+
+def glass_surfaces(data, table, preset, wall):
+    """Effective text surfaces at a glass preset (item_139) over wallpaper `wall`:
+    the panel (mantle at panel alpha) and a card on that panel (dark: surface0,
+    light: base, at card alpha). Mirrors Appearance.qml glassBg/surfaceCard."""
+    c = data.get("colors", {})
+    m = table["presets"][preset]["light" if data.get("mode") == "light" else "dark"]
+    panel = _mix(c["mantle"], wall, m["panel"])
+    card = _mix(c["base" if data.get("mode") == "light" else "surface0"], panel, m["card"])
+    return {**c, "panel": panel, "panelAlt": _mix(c["mantle"], wall, m["panelAlt"]), "card": card}
+
+
+def glass_gated(data):
+    """Glass surfaces to gate. A theme that exempts mantle (its designer puts text
+    on that side-pane colour below the floor) exempts the panel and the cards
+    resting on it too; they are reported, not gated."""
+    if "mantle" in data.get("contrastExempt", {}):
+        return [], {"panel/panelAlt/card": "mantle exempt: " + data["contrastExempt"]["mantle"][:60]}
+    return ["panel", "panelAlt", "card"], {}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     root = pathlib.Path(__file__).resolve().parent.parent
     ap.add_argument("--themes", default=str(root / "themes"))
     ap.add_argument("--packs", default=str(root / "packs"))
     ap.add_argument("--strict", action="store_true", help="exit 1 when any gated role is below its floor")
+    ap.add_argument("--glass", metavar="PRESET", nargs="?", const="all",
+                    help="check text over a mid-grey wallpaper through the glass preset(s) "
+                         "in themes/glass-presets.json (item_139) instead of the opaque slots")
+    ap.add_argument("--wallpaper", default="#808080", help="wallpaper colour for --glass")
     args = ap.parse_args()
+    if args.glass:
+        return glass_main(args)
 
     failures = 0
     print(f"{'theme / pack':<22} " + " ".join(f"{r:<24}" for r in list(ROLES) + ["focus/base", "textOnAccent (info)"]))
@@ -99,6 +131,26 @@ def main():
         for name, colors in variants.items():
             failures += check(name, colors, d.get("roles", {}), d.get("accent", "mauve"))
     print(f"\ncontrast: {failures} gated role(s) below floor (body {FLOOR['body']}, muted {FLOOR['muted']}, focus {FLOOR['focus']})"
+          + ("" if args.strict else " — informational"))
+    return 1 if (args.strict and failures) else 0
+
+
+def glass_main(args):
+    table = json.loads((pathlib.Path(args.themes) / "glass-presets.json").read_text())
+    presets = table["order"] if args.glass == "all" else [args.glass]
+    failures = 0
+    print(f"{'theme @ preset':<22} " + " ".join(f"{r:<24}" for r in list(ROLES) + ["focus/base", "textOnAccent (info)"]))
+    for preset in presets:
+        for tj in sorted(pathlib.Path(args.themes).glob("*/theme.json")):
+            d = json.loads(tj.read_text())
+            colors = glass_surfaces(d, table, preset, args.wallpaper)
+            gated, exempt = glass_gated(d)
+            if not gated:
+                print(f"{tj.parent.name + '@' + preset:<22} exempt: {list(exempt.values())[0]}")
+                continue
+            failures += check(f"{tj.parent.name}@{preset}", colors, d.get("roles", {}),
+                              d.get("accent", "mauve"), gated)
+    print(f"\ncontrast over {args.wallpaper} through glass: {failures} gated role(s) below floor"
           + ("" if args.strict else " — informational"))
     return 1 if (args.strict and failures) else 0
 

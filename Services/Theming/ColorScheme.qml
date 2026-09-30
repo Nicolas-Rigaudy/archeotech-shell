@@ -106,6 +106,25 @@ QtObject {
         }
     }
 
+    // Glass preset (item_139): the shell re-alphas its own surfaces from
+    // Appearance.glassPreset; kitty follows via `theme-switch --glass`, which only
+    // patches its background_opacity. Deduped against the last applied preset
+    // (persisted) so a boot with an unchanged setting does not touch kitty. A full
+    // theme apply reads the preset from config.json itself. Queued on the SAME
+    // runner as the full apply, so the two never race for theme-switch's lock (a
+    // full apply that loses the lock skips, which would drop a theme pick).
+    property var _glassConn: Connections {
+        target: Commons.Appearance
+        function onEffectiveGlassPresetChanged() { root._applyGlass() }
+    }
+    function _applyGlass() {
+        if (!Persistence.Config.ready) return
+        var g = Commons.Appearance.effectiveGlassPreset
+        if (g === Persistence.Config.get("theme.appliedGlass", Commons.Appearance.glassDefault)) return
+        Persistence.Config.set("theme.appliedGlass", g)
+        _applyRunner.run([Commons.Paths.themeSwitch, "--glass", g])
+    }
+
     // Auto-mode clock — re-resolve every minute; applies on day↔night crossing.
     property var _clock: Timer {
         interval: 60000; repeat: true; triggeredOnStart: false
@@ -152,7 +171,7 @@ QtObject {
     }
     property var _readyConn: Connections {
         target: Persistence.Config
-        function onReadyChanged() { if (Persistence.Config.ready) root._bootResolve() }
+        function onReadyChanged() { if (Persistence.Config.ready) { root._bootResolve(); root._applyGlass() } }
     }
     Component.onCompleted: if (Persistence.Config.ready) _bootResolve()
 

@@ -58,3 +58,6 @@ jobs:
 
       - name: Theme role contrast — AA body / 3:1 muted on every theme
         run: python3 scripts/contrast-check.py --strict
+
+      - name: Text contrast over mid-grey through every glass preset
+        run: python3 scripts/contrast-check.py --glass --strict

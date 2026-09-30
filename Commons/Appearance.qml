@@ -25,6 +25,40 @@ QtObject {
     // Light surfaces get their own recipe (panel = side-pane colour, lighter
     // "paper" cards, sheen lit toward base, soft shadows); dark values are untouched.
     readonly property bool isLight: !root.packOwnsPalette && !!(root._data && root._data.mode === "light")
+    // Glass opacity preset (item_139): "solid" | "soft" | "glass", set from
+    // shell.qml (Persistence.Config "appearance.glass"), same wiring as flatMode.
+    // The alphas live in ONE table, themes/glass-presets.json, shared with
+    // theme-switch.py (kitty) and contrast-check.py --glass. A pack material
+    // flat/matte stays opaque whatever the preset; any active pack owns material
+    // (adr_027, the control is hidden), so it uses the table default.
+    property string glassPreset: ""
+    property var _glassTable: ({})
+    readonly property string glassDefault: (root._glassTable && root._glassTable["default"]) || "soft"
+    readonly property string effectiveGlassPreset:
+        (root.activePack !== "" || !root.glassPreset) ? root.glassDefault : root.glassPreset
+    // Options for the Settings control, in the table's order: [{ value, label }].
+    readonly property var glassPresets: {
+        var t = root._glassTable
+        return ((t && t.order) || []).map(id => ({ value: id, label: (t.presets[id] && t.presets[id].label) || id }))
+    }
+    property FileView _glassFile: FileView {
+        path: decodeURIComponent(Qt.resolvedUrl("../themes/glass-presets.json").toString().replace("file://", ""))
+        blockLoading: true
+        printErrors: false
+        onTextChanged: {
+            try { root._glassTable = JSON.parse(text()) } catch (_) {}
+        }
+    }
+    // Alpha of one surface role (panel | panelAlt | card) for the active preset
+    // and mode. Opaque (1.0) for a pack slab, or if the table is unreadable.
+    function glassAlpha(role) {
+        if (root.packMaterialFlat) return 1.0
+        var t = root._glassTable && root._glassTable.presets
+        var p = t && (t[root.effectiveGlassPreset] || t[root.glassDefault])
+        var m = p && p[root.isLight ? "light" : "dark"]
+        return (m && m[role] !== undefined) ? m[role] : 1.0
+    }
+
     // Light UIs use soft shadows: the dark-tuned alphas read as grime on pale glass.
     readonly property real shadowStrength: depthFlat ? 0.0 : (isLight ? 0.4 : 1.0)
 
@@ -381,14 +415,14 @@ QtObject {
         readonly property color accentBorder:  root._rgba(root._accentName, "#c6a0f6", 0.40)
 
         // Glass panel backgrounds
-        // Opacity is a PACK MATERIAL decision, not the user's flat toggle: only a
-        // pack `material:"flat"|"matte"` (→ packMaterialFlat) makes the fills fully
-        // OPAQUE (a solid slab, no wallpaper bleed). The base look — glass OR the
-        // user's flat toggle — stays translucent; flat just drops the sheen/shadows.
+        // Opacity is the user's glass preset (item_139, glassAlpha) or a PACK
+        // MATERIAL decision: a pack `material:"flat"|"matte"` (→ packMaterialFlat)
+        // makes the fills fully OPAQUE (a solid slab, no wallpaper bleed). The flat
+        // toggle never touches opacity; it just drops the sheen/shadows.
         // Light: mantle is each designer's side-pane / float colour (Latte mantle,
         // Tokyo bg_dark, Alucard Floating, Gruvbox bg1), as a light glass.
-        readonly property color glassBg:      root.packMaterialFlat ? root._c("mantle", "#1e2030") : root._rgba("mantle", "#1e2030", root.isLight ? 0.92 : 0.96)
-        readonly property color glassBgLight: root.packMaterialFlat ? root._c("mantle", "#1e2030") : root._rgba("mantle", "#1e2030", root.isLight ? 0.90 : 0.93)
+        readonly property color glassBg:      root._rgba("mantle", "#1e2030", root.glassAlpha("panel"))
+        readonly property color glassBgLight: root._rgba("mantle", "#1e2030", root.glassAlpha("panelAlt"))
         readonly property color glassBorder:  root.isLight ? root._rgba("surface1", "#bcc0cc", 0.85) : root._rgba("surface0", "#363a4f", 0.90)
 
         // Liquid-glass sheen — endpoints for a subtle top-lit vertical gradient
@@ -404,7 +438,7 @@ QtObject {
             var c = root.isLight
                 ? root._blend(root._c("mantle", "#1e2030"), root._c("base", "#24273a"), 0.60)
                 : root._blend(root._c("mantle", "#1e2030"), root._c("surface2", "#5b6078"), 0.38)
-            return Qt.rgba(c.r, c.g, c.b, root.packMaterialFlat ? 1.0 : (root.isLight ? 0.90 : 0.93))
+            return Qt.rgba(c.r, c.g, c.b, root.glassAlpha("panelAlt"))
         }
         readonly property color glassSheenBot: {
             if (root.depthFlat) return glassBg
@@ -413,7 +447,7 @@ QtObject {
             var c = root.isLight
                 ? root._blend(root._c("mantle", "#1e2030"), root._c("crust", "#181926"), 0.55)
                 : root._blend(root._c("mantle", "#1e2030"), "#000000", 0.22)
-            return Qt.rgba(c.r, c.g, c.b, root.packMaterialFlat ? 1.0 : (root.isLight ? 0.90 : 0.93))
+            return Qt.rgba(c.r, c.g, c.b, root.glassAlpha("panelAlt"))
         }
 
         // ── Warmth (§18.2) — accent-tinted surfaces, not flat grey. ──
@@ -451,10 +485,10 @@ QtObject {
             // than the side-pane panel, mostly opaque so the wallpaper does not muddy
             // them (owner, 2026-09-29). Dark keeps the translucent surface0 glass.
             if (root.isLight)
-                return root._rgba("base", "#eff1f5", 0.88)
+                return root._rgba("base", "#eff1f5", root.glassAlpha("card"))
             var c = root._blend(root._c("surface0", "#363a4f"),
                                 root._c(root._accentName, "#c6a0f6"), 0.06)
-            return Qt.rgba(c.r, c.g, c.b, 0.58)
+            return Qt.rgba(c.r, c.g, c.b, root.glassAlpha("card"))
         }
     }
 
