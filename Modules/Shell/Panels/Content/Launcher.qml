@@ -398,9 +398,8 @@ Item {
                 Text {
                     id: recentsLbl
                     text:  "RECENTS"
-                    color: Commons.Appearance.colors.textSecondary
+                    color: Commons.Appearance.colors.textMuted
                     font { family: Commons.Appearance.font.display; pixelSize: Commons.Appearance.font.sizeSm; letterSpacing: Commons.Appearance.font.trackingLabel }
-                    opacity: 0.7
                     anchors { top: parent.top; left: parent.left }
                 }
 
@@ -424,10 +423,10 @@ Item {
                             RectangularShadow {
                                 anchors.fill: card
                                 radius: card.radius
-                                blur:   16
-                                offset: Qt.vector2d(0, 4)
-                                spread: 0
-                                color:  Qt.rgba(0, 0, 0, 0.45 * Commons.Appearance.shadowStrength)
+                                blur:   Commons.Appearance.elevation.e3.blur
+                                offset: Qt.vector2d(0, Commons.Appearance.elevation.e3.y)
+                                spread: Commons.Appearance.elevation.e3.spread
+                                color:  Commons.Appearance.elevation.e3.color
                             }
 
                             Rectangle {

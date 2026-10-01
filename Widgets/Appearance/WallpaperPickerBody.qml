@@ -152,7 +152,7 @@ Item {
             Layout.fillWidth: true
             Layout.preferredHeight: root.embedded ? 0 : 1
             color: Commons.Appearance.colors.surface0
-            opacity: 0.5
+            opacity: Commons.Appearance.opacity.divider
         }
 
         // Wallpaper carousel — snap-to-centre; the centred item is the large
@@ -227,10 +227,10 @@ Item {
                     anchors.fill: parent
                     visible: cell._current
                     radius: Commons.Appearance.radius.lg
-                    blur:   32
-                    offset: Qt.vector2d(0, 12)
-                    spread: 2
-                    color:  Qt.rgba(0, 0, 0, 0.55 * Commons.Appearance.shadowStrength)
+                    blur:   Commons.Appearance.elevation.e5.blur
+                    offset: Qt.vector2d(0, Commons.Appearance.elevation.e5.y)
+                    spread: Commons.Appearance.elevation.e5.spread
+                    color:  Commons.Appearance.elevation.e5.color
                 }
 
                 Image {

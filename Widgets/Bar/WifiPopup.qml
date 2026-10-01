@@ -180,8 +180,8 @@ Item {
                         }
                         RectangularShadow {
                             anchors.fill: _wBtn; radius: _wBtn.radius
-                            blur: 6; offset: Qt.vector2d(0, 1.5); spread: 0
-                            color: Qt.rgba(0, 0, 0, 0.35 * Commons.Appearance.shadowStrength)
+                            blur:   Commons.Appearance.elevation.e1.blur; offset: Qt.vector2d(0, Commons.Appearance.elevation.e1.y); spread: Commons.Appearance.elevation.e1.spread
+                            color:  Commons.Appearance.elevation.e1.color
                             visible: !_busy
                         }
                         Rectangle {

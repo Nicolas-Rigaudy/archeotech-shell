@@ -80,7 +80,7 @@ QtObject {
             Text {
                 anchors.centerIn: parent
                 text: "(panel content TODO)"
-                color: "#cad3f5"
+                color: Commons.Appearance.colors.textPrimary
                 font.pixelSize: Commons.Appearance.font.sizeLg
                 font.family: "FiraCode Nerd Font"
             }

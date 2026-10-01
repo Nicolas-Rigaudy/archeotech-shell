@@ -42,7 +42,6 @@ Item {
             color:   Commons.Appearance.colors.textMuted
             font.pixelSize: Commons.Appearance.font.sizeSm
             font.family:    Commons.Appearance.font.family
-            opacity: 0.7
         }
     }
 }

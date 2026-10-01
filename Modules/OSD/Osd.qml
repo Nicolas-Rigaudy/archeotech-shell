@@ -72,8 +72,8 @@ PanelWindow {
         RectangularShadow {
             anchors.fill: pill
             radius: pill.radius
-            blur: 14; offset: Qt.vector2d(0, 4); spread: 0
-            color: Qt.rgba(0, 0, 0, 0.5 * Commons.Appearance.shadowStrength)
+            blur:   Commons.Appearance.elevation.e2.blur; offset: Qt.vector2d(0, Commons.Appearance.elevation.e2.y); spread: Commons.Appearance.elevation.e2.spread
+            color:  Commons.Appearance.elevation.e2.color
             opacity: pill.opacity
         }
 

@@ -166,8 +166,8 @@ Item {
                     // (shadowStrength-gated) so the active row lifts instead of a flat tint.
                     RectangularShadow {
                         anchors.fill: activeBg; radius: activeBg.radius
-                        blur: 10; offset: Qt.vector2d(0, 2); spread: 0
-                        color: Qt.rgba(0, 0, 0, 0.33 * Commons.Appearance.shadowStrength)
+                        blur:   Commons.Appearance.elevation.e2.blur; offset: Qt.vector2d(0, Commons.Appearance.elevation.e2.y); spread: Commons.Appearance.elevation.e2.spread
+                        color:  Commons.Appearance.elevation.e2.color
                         opacity: root.activeIndex === navItem.index ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.fast } }
                     }

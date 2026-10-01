@@ -129,8 +129,8 @@ Item {
                     RectangularShadow {
                         anchors.fill: dot
                         radius: dot.radius
-                        blur: 7; offset: Qt.vector2d(0, 1.5); spread: 0
-                        color: Qt.rgba(0, 0, 0, 0.5 * Commons.Appearance.shadowStrength)
+                        blur:   Commons.Appearance.elevation.e1.blur; offset: Qt.vector2d(0, Commons.Appearance.elevation.e1.y); spread: Commons.Appearance.elevation.e1.spread
+                        color:  Commons.Appearance.elevation.e1.color
                     }
                     Rectangle {
                         id: dot
@@ -223,10 +223,10 @@ Item {
                     anchors.fill: parent
                     visible: tile._current
                     radius: Commons.Appearance.radius.md
-                    blur:   32
-                    offset: Qt.vector2d(0, 12)
-                    spread: 2
-                    color:  Qt.rgba(0, 0, 0, 0.55 * Commons.Appearance.shadowStrength)
+                    blur:   Commons.Appearance.elevation.e5.blur
+                    offset: Qt.vector2d(0, Commons.Appearance.elevation.e5.y)
+                    spread: Commons.Appearance.elevation.e5.spread
+                    color:  Commons.Appearance.elevation.e5.color
                 }
 
                 Rectangle {

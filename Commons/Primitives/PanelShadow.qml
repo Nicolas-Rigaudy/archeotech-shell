@@ -46,8 +46,8 @@ RectangularShadow {
     width:  panelW - _cL - _cR
     height: panelH - _cT - _cB
     radius: cornerRadius
-    blur:   16
-    spread: 0
-    offset: Qt.vector2d(0, 5)
-    color:  Qt.rgba(0, 0, 0, 0.45 * Commons.Appearance.shadowStrength)
+    blur:   Commons.Appearance.elevation.e3.blur
+    spread: Commons.Appearance.elevation.e3.spread
+    offset: Qt.vector2d(0, Commons.Appearance.elevation.e3.y)
+    color:  Commons.Appearance.elevation.e3.color
 }

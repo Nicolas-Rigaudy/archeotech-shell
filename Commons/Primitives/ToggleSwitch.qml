@@ -42,10 +42,10 @@ Item {
         RectangularShadow {
             anchors.fill: thumb
             radius: thumb.radius
-            blur:   7
-            offset: Qt.vector2d(0, 1.5)
-            spread: 0
-            color:  Qt.rgba(0, 0, 0, 0.55 * Commons.Appearance.shadowStrength)
+            blur:   Commons.Appearance.elevation.e1.blur
+            offset: Qt.vector2d(0, Commons.Appearance.elevation.e1.y)
+            spread: Commons.Appearance.elevation.e1.spread
+            color:  Commons.Appearance.elevation.e1.color
         }
 
         Rectangle {

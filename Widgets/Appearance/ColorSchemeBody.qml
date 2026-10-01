@@ -77,8 +77,8 @@ Item {
                         anchors.fill: famBg
                         visible: !Commons.Appearance.frameChamfer
                         radius: famBg.radius
-                        blur: 10; offset: Qt.vector2d(0, 3); spread: 0
-                        color: Qt.rgba(0, 0, 0, 0.5 * Commons.Appearance.shadowStrength)
+                        blur:   Commons.Appearance.elevation.e2.blur; offset: Qt.vector2d(0, Commons.Appearance.elevation.e2.y); spread: Commons.Appearance.elevation.e2.spread
+                        color:  Commons.Appearance.elevation.e2.color
                     }
                     Rectangle {
                         id: famBg
@@ -193,8 +193,8 @@ Item {
                     RectangularShadow {
                         anchors.fill: dot
                         radius: dot.radius
-                        blur: 7; offset: Qt.vector2d(0, 1.5); spread: 0
-                        color: Qt.rgba(0, 0, 0, 0.5 * Commons.Appearance.shadowStrength)
+                        blur:   Commons.Appearance.elevation.e1.blur; offset: Qt.vector2d(0, Commons.Appearance.elevation.e1.y); spread: Commons.Appearance.elevation.e1.spread
+                        color:  Commons.Appearance.elevation.e1.color
                     }
                     Rectangle {
                         id: dot

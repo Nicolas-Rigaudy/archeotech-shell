@@ -144,8 +144,10 @@ edits then reach the bar only when a commit is promoted.
   (to be replaced by surface recipes, item_112).
 
 ## Theme tokens (single sources)
-- Steel family: `packs/grimdark/tokens.json` → `panels.steel {hi,md,lo,edge,lip}`
-  → `Commons/Appearance.qml` `steel` object. Mirrors FrameFx `_faHi/_faMd/_faLo`.
+- Steel family: `packs/grimdark/tokens.json` → `panels.steel {hi,md,lo,edge,lip,mid,faceHi,faceMd,faceLo,lit}`
+  → `Commons/Appearance.qml` `steel` object. FrameFx reads all of them (its plate
+  colours moved there in item_110 wave 4, so a pack can now override the corner
+  plate too).
 - Copper/accent = pack `colors.peach` (`Appearance.colors.accent`); NMM ramp in
   consumers = `peach` + `Qt.lighter/darker`. Teal `colors.teal`: **not** used on
   selectors (reads modern); reserved for genuine live data only.

@@ -70,11 +70,12 @@ Item {
                 RectangularShadow {
                     anchors.fill: pill
                     radius: pill.radius
-                    blur:   6
-                    offset: Qt.vector2d(0, 1)
-                    spread: 0
+                    blur:   Commons.Appearance.elevation.e1.blur
+                    offset: Qt.vector2d(0, Commons.Appearance.elevation.e1.y)
+                    spread: Commons.Appearance.elevation.e1.spread
                     visible: cell._glass
-                    color:  Qt.rgba(0, 0, 0, (cell.sel ? 0.5 : cell.occ ? 0.45 : 0.28) * Commons.Appearance.shadowStrength)
+                    // e1 alpha (0.5) for the selected tag, softer for occupied / empty tags.
+                    color:  Qt.rgba(0, 0, 0, Commons.Appearance.elevation.e1.alpha * (cell.sel ? 1.0 : cell.occ ? 0.9 : 0.56) * Commons.Appearance.shadowStrength)
                 }
 
                 Rectangle {

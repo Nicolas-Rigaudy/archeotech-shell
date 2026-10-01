@@ -39,10 +39,10 @@ Item {
         anchors.fill: bg
         visible: !styleDelegate.active
         radius: bg.radius
-        blur:   10
-        offset: Qt.vector2d(0, 3)
-        spread: 0
-        color:  Qt.rgba(0, 0, 0, 0.5 * Commons.Appearance.shadowStrength)
+        blur:   Commons.Appearance.elevation.e2.blur
+        offset: Qt.vector2d(0, Commons.Appearance.elevation.e2.y)
+        spread: Commons.Appearance.elevation.e2.spread
+        color:  Commons.Appearance.elevation.e2.color
     }
     Rectangle {
         id: bg

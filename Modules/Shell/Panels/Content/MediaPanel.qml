@@ -110,7 +110,7 @@ Item {
             }
         }
 
-        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0; opacity: 0.5 }
+        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0; opacity: Commons.Appearance.opacity.divider }
 
         // Nothing playing — a designed empty state: glyph, title, a hint and one
         // launch button per installed player (wraps when narrow).

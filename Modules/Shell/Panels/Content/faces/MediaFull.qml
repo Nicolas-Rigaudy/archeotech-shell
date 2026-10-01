@@ -33,8 +33,8 @@ Item {
 
         RectangularShadow {
             anchors.fill: artRect; radius: artRect.radius
-            blur: 12; offset: Qt.vector2d(0, 3); spread: 0
-            color: Qt.rgba(0, 0, 0, 0.4 * Commons.Appearance.shadowStrength)
+            blur:   Commons.Appearance.elevation.e2.blur; offset: Qt.vector2d(0, Commons.Appearance.elevation.e2.y); spread: Commons.Appearance.elevation.e2.spread
+            color:  Commons.Appearance.elevation.e2.color
         }
         Rectangle {
             id: artRect
@@ -157,8 +157,8 @@ Item {
                 Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
                 RectangularShadow {
                     anchors.fill: playKey; radius: playKey.radius
-                    blur: 10; offset: Qt.vector2d(0, 3); spread: 0
-                    color: Qt.rgba(0, 0, 0, 0.45 * Commons.Appearance.shadowStrength)
+                    blur:   Commons.Appearance.elevation.e2.blur; offset: Qt.vector2d(0, Commons.Appearance.elevation.e2.y); spread: Commons.Appearance.elevation.e2.spread
+                    color:  Commons.Appearance.elevation.e2.color
                 }
                 Rectangle {
                     id: playKey; anchors.fill: parent; radius: width / 2; antialiasing: true

@@ -45,7 +45,6 @@ DashCard {
             font.family: Commons.Appearance.font.family
             font.pixelSize: Commons.Appearance.font.sizeBase
             font.letterSpacing: Commons.Appearance.font.trackingLabel
-            opacity: 0.85
         }
         Text {
             Layout.fillWidth: true

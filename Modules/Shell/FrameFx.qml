@@ -119,11 +119,11 @@ Item {
     // machined bezel rather than four pipes. (Old NMM ridge caused the tube look.)
     readonly property bool  _rlOn:   !!(_fx.rails && _fx.rails.enabled) && _hasHole
     readonly property color _stHi:   Qt.lighter(Commons.Appearance.colors.surface2, 1.45)  // (kept for compat)
-    readonly property color _stMid:  "#2b3542"
+    readonly property color _stMid:  Commons.Appearance.steel.mid
     readonly property color _stLo:   Qt.darker(Commons.Appearance.colors.mantle, 1.12)
-    readonly property color _faHi:   "#333f4d"   // top-lit face
-    readonly property color _faMd:   "#28313d"   // body face
-    readonly property color _faLo:   "#1c232d"   // lower face
+    readonly property color _faHi:   Commons.Appearance.steel.hi   // top-lit face
+    readonly property color _faMd:   Commons.Appearance.steel.md   // body face
+    readonly property color _faLo:   Commons.Appearance.steel.lo   // lower face
     Rectangle {   // top band (bar) — top-lit flat panel
         visible: fx._rlOn && fx.contentRect.y > 1
         x: 0; y: 0; width: fx.width; height: fx.contentRect.y
@@ -169,11 +169,11 @@ Item {
     // always this cool steel; only the copper trim follows the accent). Tuned tones,
     // brighter than the derived chassis so the plate reads as a RAISED piece.
     readonly property bool  _coOn:     _rlOn && Commons.Appearance.frameChamfer
-    readonly property color _faceHi:   "#3a4757"   // facet hotspot at the outer corner
-    readonly property color _faceMd:   "#2c3644"
-    readonly property color _faceLo:   "#1a212b"   // toward the content
-    readonly property color _coLit:    "#cdd9e8"   // lit outer bevel
-    readonly property color _coShadow: "#05080d"   // cut / inlay shadow
+    readonly property color _faceHi:   Commons.Appearance.steel.faceHi   // facet hotspot at the outer corner
+    readonly property color _faceMd:   Commons.Appearance.steel.faceMd
+    readonly property color _faceLo:   Commons.Appearance.steel.faceLo   // toward the content
+    readonly property color _coLit:    Commons.Appearance.steel.lit   // lit outer bevel
+    readonly property color _coShadow: Commons.Appearance.steel.edge   // cut / inlay shadow
 
     // Chamfer corner treatment kept SMALL and at the content edge — a tiny wedge that
     // fills the chamfer gap the flat rect-bands leave (so no glass shows through),

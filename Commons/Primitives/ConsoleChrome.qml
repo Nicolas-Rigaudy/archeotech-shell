@@ -80,7 +80,7 @@ Item {
             Rectangle {                          // top-left specular → domed, not flat
                 width: parent.s * 0.32; height: parent.s * 0.32; radius: width / 2
                 x: parent.s * 0.2; y: parent.s * 0.18
-                color: chrome._cuHi; opacity: 0.9; antialiasing: true
+                color: chrome._cuHi; opacity: Commons.Appearance.opacity.specular; antialiasing: true
             }
         }
     }

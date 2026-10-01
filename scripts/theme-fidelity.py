@@ -7,7 +7,7 @@ fewer tones than the slot ladder, slots reuse an official colour. Official
 palettes are snapshotted in themes/_official/<family>.json with their upstream
 source and commit. Themes that are Archeotech's own design are listed in CUSTOM.
 """
-import argparse, json, pathlib, sys
+import argparse, json, pathlib, re, sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 # theme dir -> (official family file, variant)
@@ -75,8 +75,34 @@ def main():
             if hexv and hexv not in allowed:
                 print(f"{name}: {where} = {value} is not in the official {fam}/{var} palette")
                 bad += 1
+    bad += check_catalog_swatches(themes)
     print(f"theme fidelity: {bad} problem(s)")
     return 1 if bad else 0
+
+
+def check_catalog_swatches(themes):
+    """ThemeCatalog.qml family preview swatches are catalogue data (the one QML
+    file allowed hex colours, item_110 wave 4): each family's swatch must come
+    entirely from the theme.json of one of its own flavors."""
+    src = (ROOT / "Services" / "Theming" / "ThemeCatalog.qml").read_text()
+    bad = 0
+    for m in re.finditer(r'id:\s*"([\w-]+)",\s*label:[^\n]*\n\s*swatch:\s*\[([^\]]*)\]', src):
+        fam, sw = m.group(1), [h.lower() for h in re.findall(r"#[0-9a-fA-F]{6}", m.group(2))]
+        nxt = src.find("swatch:", m.end())
+        variants = re.findall(r'variant:\s*"([\w-]+)"', src[m.end(): nxt if nxt > 0 else len(src)])
+        if not sw or not variants:
+            print(f"ThemeCatalog {fam}: empty swatch or no flavors"); bad += 1
+            continue
+        ok = False
+        for v in variants:
+            tj = themes / v / "theme.json"
+            if tj.exists():
+                cols = {str(c).lower() for c in json.loads(tj.read_text()).get("colors", {}).values()}
+                ok = ok or all(h in cols for h in sw)
+        if not ok:
+            print(f"ThemeCatalog {fam}: swatch {sw} is not entirely from one of its flavors {variants}")
+            bad += 1
+    return bad
 
 
 if __name__ == "__main__":

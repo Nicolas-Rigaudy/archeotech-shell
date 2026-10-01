@@ -83,10 +83,10 @@ Item {
             // popup's console trim (reads as clipping) and is a "modern" tell.
             visible: !(pill.showActiveBg && Commons.Appearance.frameChamfer)
             radius: keyBg.radius
-            blur:   10
-            offset: Qt.vector2d(0, 3)
-            spread: 0
-            color:  Qt.rgba(0, 0, 0, 0.45 * Commons.Appearance.shadowStrength)
+            blur:   Commons.Appearance.elevation.e2.blur
+            offset: Qt.vector2d(0, Commons.Appearance.elevation.e2.y)
+            spread: Commons.Appearance.elevation.e2.spread
+            color:  Commons.Appearance.elevation.e2.color
         }
         Rectangle {
             id: keyBg

@@ -181,10 +181,10 @@ Item {
                 RectangularShadow {
                     anchors.fill: card
                     radius: card.radius
-                    blur:   8
-                    offset: Qt.vector2d(0, 2)
-                    spread: 0
-                    color:  Qt.rgba(0, 0, 0, 0.30 * Commons.Appearance.shadowStrength)
+                    blur:   Commons.Appearance.elevation.e1.blur
+                    offset: Qt.vector2d(0, Commons.Appearance.elevation.e1.y)
+                    spread: Commons.Appearance.elevation.e1.spread
+                    color:  Commons.Appearance.elevation.e1.color
                 }
                 Rectangle {
                     id: card
@@ -274,10 +274,9 @@ Item {
                                 visible: !cell._hov && cell.modelData.key === ""
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: "↻ Super+T"
-                                color: Commons.Appearance.colors.textSecondary
+                                color: Commons.Appearance.colors.textMuted
                                 font.pixelSize: Commons.Appearance.font.size2xs
                                 font.family: Commons.Appearance.font.family
-                                opacity: 0.7
                             }
                             Text {
                                 visible: cell._hov

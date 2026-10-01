@@ -70,10 +70,10 @@ Item {
     RectangularShadow {
         anchors.fill: card
         radius: card.radius
-        blur:   16
-        offset: Qt.vector2d(0, 4)
-        spread: 0
-        color:  Qt.rgba(0, 0, 0, 0.45 * Commons.Appearance.shadowStrength)
+        blur:   Commons.Appearance.elevation.e3.blur
+        offset: Qt.vector2d(0, Commons.Appearance.elevation.e3.y)
+        spread: Commons.Appearance.elevation.e3.spread
+        color:  Commons.Appearance.elevation.e3.color
     }
 
     Rectangle {

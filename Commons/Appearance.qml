@@ -66,6 +66,32 @@ QtObject {
     // Light UIs use soft shadows: the dark-tuned alphas read as grime on pale glass.
     readonly property real shadowStrength: depthFlat ? 0.0 : (isLight ? 0.4 : 1.0)
 
+    // ── Elevation (item_110 wave 4) ──
+    // Five drop-shadow tiers for RectangularShadow: blur, y offset, spread and a
+    // colour whose alpha already carries shadowStrength (flat = none, light =
+    // softer). e1 knobs/chips/swatches · e2 buttons, bar pills, segmented pill ·
+    // e3 cards, toasts, panels · e4 edit-mode floating panels · e5 hero (the
+    // selected carousel card).
+    function _elev(blur, y, alpha, spread) {
+        return { blur: blur, y: y, spread: spread, alpha: alpha,
+                 color: Qt.rgba(0, 0, 0, alpha * root.shadowStrength) }
+    }
+    readonly property QtObject elevation: QtObject {
+        readonly property var e1: root._elev(7,  1.5, 0.50, 0)
+        readonly property var e2: root._elev(12, 3,   0.45, 0)
+        readonly property var e3: root._elev(16, 4,   0.45, 0)
+        readonly property var e4: root._elev(20, 6,   0.50, 0)
+        readonly property var e5: root._elev(32, 12,  0.55, 2)
+    }
+
+    // ── Opacity tiers (item_110 wave 4) ── for decoration only; never fade
+    // text (use a text role: the roles carry the contrast floor).
+    readonly property QtObject opacity: QtObject {
+        readonly property real divider:  0.5    // hairline separators
+        readonly property real ghost:    0.85   // drag previews
+        readonly property real specular: 0.9    // decorative highlights
+    }
+
     // Sheen helpers — the gradient-side twin of shadowStrength. A top-lit fill
     // (lighter top → darker bottom) reads as a raised, glossy surface; in
     // depthFlat mode that sheen must collapse so the fill reads as a flat slab,
@@ -307,6 +333,12 @@ QtObject {
         readonly property color lo:   root._steelTok("lo",   "#1c232d")
         readonly property color edge: root._steelTok("edge", "#05080d")
         readonly property color lip:  root._steelTok("lip",  "#9fb0c2")
+        // Frame-corner plate (FrameFx; item_110 wave 4 moved them here).
+        readonly property color mid:    root._steelTok("mid",    "#2b3542")
+        readonly property color faceHi: root._steelTok("faceHi", "#3a4757")   // facet hotspot, outer corner
+        readonly property color faceMd: root._steelTok("faceMd", "#2c3644")
+        readonly property color faceLo: root._steelTok("faceLo", "#1a212b")   // toward the content
+        readonly property color lit:    root._steelTok("lit",    "#cdd9e8")   // lit outer bevel
     }
 
     // Pack material (adr_027 / item_083): a pack may drop the base frosted-glass

@@ -257,9 +257,9 @@ Item {
 
     // ── Banner ──────────────────────────────────────────────────────────────────
     RectangularShadow {
-        anchors.fill: banner; radius: banner.radius; blur: 12
-        offset: Qt.vector2d(0, 3); spread: 0
-        color: Qt.rgba(0, 0, 0, 0.5 * Commons.Appearance.shadowStrength)
+        anchors.fill: banner; radius: banner.radius; blur:   Commons.Appearance.elevation.e2.blur
+        offset: Qt.vector2d(0, Commons.Appearance.elevation.e2.y); spread: Commons.Appearance.elevation.e2.spread
+        color:  Commons.Appearance.elevation.e2.color
     }
     Rectangle {
         id: banner
@@ -389,7 +389,7 @@ Item {
                         delegate: Rectangle {
                             required property int index
                             color: Commons.Appearance.colors.glassBorder
-                            opacity: 0.5
+                            opacity: Commons.Appearance.opacity.divider
                             width:  sideCard._horizontal ? 1 : parent.width
                             height: sideCard._horizontal ? parent.height : 1
                             x: sideCard._horizontal ? Math.round(parent.width  * (index + 1) / 3) : 0
@@ -692,9 +692,9 @@ Item {
     // (KDE-style — no separate trash). Turns red as a remove target on hover.
     RectangularShadow {
         z: 139
-        anchors.fill: library; radius: library.radius; blur: 20
-        offset: Qt.vector2d(0, 6); spread: 0
-        color: Qt.rgba(0, 0, 0, 0.5 * Commons.Appearance.shadowStrength)
+        anchors.fill: library; radius: library.radius; blur:   Commons.Appearance.elevation.e4.blur
+        offset: Qt.vector2d(0, Commons.Appearance.elevation.e4.y); spread: Commons.Appearance.elevation.e4.spread
+        color:  Commons.Appearance.elevation.e4.color
     }
     Rectangle {
         id: library
@@ -889,7 +889,7 @@ Item {
     Image {
         id: ghost
         visible: Commons.State.dragActive && source != ""
-        opacity: 0.85
+        opacity: Commons.Appearance.opacity.ghost
         z: 151
         fillMode: Image.Pad
     }
@@ -911,9 +911,9 @@ Item {
         }
 
         RectangularShadow {
-            anchors.fill: cfgCard; radius: cfgCard.radius; blur: 20
-            offset: Qt.vector2d(0, 6); spread: 0
-            color: Qt.rgba(0, 0, 0, 0.5 * Commons.Appearance.shadowStrength)
+            anchors.fill: cfgCard; radius: cfgCard.radius; blur:   Commons.Appearance.elevation.e4.blur
+            offset: Qt.vector2d(0, Commons.Appearance.elevation.e4.y); spread: Commons.Appearance.elevation.e4.spread
+            color:  Commons.Appearance.elevation.e4.color
         }
         Rectangle {
             id: cfgCard
