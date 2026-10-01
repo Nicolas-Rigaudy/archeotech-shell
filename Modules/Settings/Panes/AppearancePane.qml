@@ -119,6 +119,9 @@ Item {
                         currentValue: Commons.Appearance.effectiveGlassPreset
                         onSelected: v => Persistence.Config.set("appearance.glass", v)
                     }
+                    Item { implicitHeight: 8; Layout.fillWidth: true }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                    Item { implicitHeight: 8; Layout.fillWidth: true }
                     // Text size (item_110 wave 2): multiplies every step of the type scale.
                     ButtonGroupRow {
                         label: "Text size"
@@ -132,11 +135,20 @@ Item {
                         currentValue: String(Commons.Appearance.fontScale)
                         onSelected: v => Persistence.Config.set("appearance.fontScale", Number(v))
                     }
-                    ToggleRow {
-                        label: "Flat mode"
-                        description: "Drop the liquid-glass sheen + card shadows for a flatter look — opacity stays as set above, just without the 3D depth"
-                        checked: Persistence.Config.get("appearance.flatMode", false)
-                        onToggled: v => Persistence.Config.set("appearance.flatMode", v)
+                    Item { implicitHeight: 8; Layout.fillWidth: true }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                    Item { implicitHeight: 8; Layout.fillWidth: true }
+                    // Depth: the same pick-one-of-N selector as Opacity / Text size
+                    // (was a Flat mode toggle); still the appearance.flatMode bool.
+                    ButtonGroupRow {
+                        label: "Depth"
+                        description: "Flat drops the glass sheen and card shadows"
+                        options: [
+                            { value: "3d",   label: "3D" },
+                            { value: "flat", label: "Flat" }
+                        ]
+                        currentValue: Persistence.Config.get("appearance.flatMode", false) ? "flat" : "3d"
+                        onSelected: v => Persistence.Config.set("appearance.flatMode", v === "flat")
                     }
                 }
 
