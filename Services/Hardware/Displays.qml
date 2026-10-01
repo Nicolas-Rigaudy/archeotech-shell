@@ -23,7 +23,9 @@ QtObject {
     // Set while an applied change awaits "Keep" (revert snapshot = previous outputs).
     property var  revertSnapshot: null
     readonly property bool pendingConfirm: revertSnapshot !== null
-    readonly property int  confirmSeconds: 15
+    // 20 s (GNOME's figure), counted from when the change has APPLIED: a mode
+    // or refresh switch can take a couple of seconds to settle on the screen.
+    readonly property int  confirmSeconds: 20
     property int  confirmLeft: 0
 
     // ── Read ──────────────────────────────────────────────────────────────────
@@ -68,7 +70,12 @@ QtObject {
             // A failed apply changed nothing: drop the countdown instead of
             // "reverting" a layout that never took effect.
             // Content compare: Process.command hands back a fresh array each read.
-            if (code !== 0 && JSON.stringify(argv) === JSON.stringify(root._applyArgv)) {
+            var isApply = JSON.stringify(argv) === JSON.stringify(root._applyArgv)
+            if (isApply && code === 0 && root.pendingConfirm) {
+                root.confirmLeft = root.confirmSeconds
+                root._countdown.restart()
+            }
+            if (code !== 0 && isApply) {
                 root._countdown.stop()
                 root.revertSnapshot = null
                 root.lastError = "The display settings could not be applied (wlr-randr exit " + code + ")."
@@ -101,7 +108,7 @@ QtObject {
         if (confirm) {
             root.revertSnapshot = JSON.parse(JSON.stringify(root.outputs))
             root.confirmLeft = root.confirmSeconds
-            _countdown.restart()
+            // The countdown starts once wlr-randr returns (see _afterApply).
         }
         _runner.run(root._applyArgv)
         return true

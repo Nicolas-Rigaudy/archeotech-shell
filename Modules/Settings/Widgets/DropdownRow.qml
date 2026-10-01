@@ -19,7 +19,9 @@ Item {
     property real fieldWidth: 220
     signal selected(string value)
 
-    implicitHeight: Math.max(_text.implicitHeight, field.implicitHeight)
+    // Same row rhythm as ToggleRow (44, or 56 with a description) so stacked
+    // pickers never touch (two 30 px fields used to sit flush and overlap).
+    implicitHeight: Math.max(description ? 56 : 44, _text.implicitHeight + 2 * Commons.Appearance.spacing.s2)
     Layout.fillWidth: true
 
     // Close when the surrounding Settings Flickable scrolls: the open list
@@ -50,8 +52,15 @@ Item {
         ColumnLayout {
             id: _text
             Layout.fillWidth: true
+            // Takes all the slack, so the field sits at the row's right edge like
+            // ToggleRow's switch, aligned across rows whatever the label length.
+            Layout.preferredWidth: 0
             spacing: 2
             Text {
+                // fillWidth here too: a ColumnLayout cannot grow past its
+                // children's maximum width, so without it the slack went to the
+                // right of the field and fields misaligned across rows.
+                Layout.fillWidth: true
                 text: root.label
                 color: Commons.Appearance.colors.textPrimary
                 font.pixelSize: Commons.Appearance.font.sizeBase

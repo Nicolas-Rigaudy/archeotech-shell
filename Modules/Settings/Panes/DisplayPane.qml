@@ -129,7 +129,9 @@ Item {
         if (mode === "off")
             run("pkill -x wlsunset 2>/dev/null; true")
         else
-            run("pkill -x wlsunset 2>/dev/null; sleep 0.2; setsid -f wlsunset -t " + mode + " -T " + (Number(mode) + 1) + " >/dev/null 2>&1")
+            // Restart immediately (wlsunset owns the gamma ramp exclusively, so
+            // two cannot overlap): keeps the drop back to neutral as short as possible.
+            run("pkill -x wlsunset 2>/dev/null; setsid -f wlsunset -t " + mode + " -T " + (Number(mode) + 1) + " >/dev/null 2>&1")
         _nightPending = true
     }
     // Read back once the command has actually run (the runner queues), plus a
