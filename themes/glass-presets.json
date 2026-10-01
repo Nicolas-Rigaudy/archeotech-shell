@@ -1,17 +1,17 @@
 {
-  "_comment": "Glass opacity presets (item_139): the ONE table for surface alpha. Read by Commons/Appearance.qml (panel/card fills), scripts/theme-switch.py (kitty background_opacity + mango focused/unfocused window opacity = winFocused/winUnfocused) and scripts/contrast-check.py --glass (text contrast over a mid-grey wallpaper at each preset). panel = frame/panel glass, panelAlt = its lighter twin + sheen stops, card = dashboard/settings cards. soft is the pre-item_139 look (light panels raised 0.92/0.90 -> 0.96/0.95 so text stays AA over a mid-grey wallpaper) and the default. Two presets by owner decision 2026-09-30 (a third, more transparent 'glass' step was dropped). Light panels cannot go below ~0.94 without dropping gruvbox-light text under AA over mid-grey; dark stops at ~0.82 (monochrome). A pack material flat/matte stays opaque whatever the preset.",
-  "default": "soft",
-  "order": ["solid", "soft"],
+  "_comment": "Glass opacity presets (item_139): the ONE table for surface alpha. Read by Commons/Appearance.qml (panel/card fills), scripts/theme-switch.py (kitty background_opacity + mango focused/unfocused window opacity = winFocused/winUnfocused) and scripts/contrast-check.py --glass (text contrast over a mid-grey wallpaper at each preset). panel = frame/panel glass, panelAlt = its lighter twin + sheen stops, card = dashboard/settings cards. glass is the pre-item_139 look (light panels raised 0.92/0.90 -> 0.96/0.95 so text stays AA over a mid-grey wallpaper) and the default. Two presets by owner decision 2026-09-30 (a third, more transparent step was dropped; the base look was renamed soft -> glass 2026-10-01). kitty is opaque in mango (windowrule, dotfiles), so its own kitty value carries the whole look: 0.5/0.77 = the old 0.6/0.9 x mango's 0.85. Light panels cannot go below ~0.94 without dropping gruvbox-light text under AA over mid-grey; dark stops at ~0.82 (monochrome). A pack material flat/matte stays opaque whatever the preset.",
+  "default": "glass",
+  "order": ["solid", "glass"],
   "presets": {
     "solid": {
       "label": "Solid",
       "dark":  { "panel": 1.0,  "panelAlt": 1.0,  "card": 1.0,  "kitty": 1.0, "winFocused": 1.0,  "winUnfocused": 1.0 },
       "light": { "panel": 1.0,  "panelAlt": 1.0,  "card": 1.0,  "kitty": 1.0, "winFocused": 1.0,  "winUnfocused": 1.0 }
     },
-    "soft": {
-      "label": "Soft",
-      "dark":  { "panel": 0.96, "panelAlt": 0.93, "card": 0.58, "kitty": 0.6, "winFocused": 0.85, "winUnfocused": 0.5 },
-      "light": { "panel": 0.96, "panelAlt": 0.95, "card": 0.88, "kitty": 0.9, "winFocused": 0.85, "winUnfocused": 0.5 }
+    "glass": {
+      "label": "Glass",
+      "dark":  { "panel": 0.96, "panelAlt": 0.93, "card": 0.58, "kitty": 0.5,  "winFocused": 0.85, "winUnfocused": 0.5 },
+      "light": { "panel": 0.96, "panelAlt": 0.95, "card": 0.88, "kitty": 0.77, "winFocused": 0.85, "winUnfocused": 0.5 }
     }
   }
 }

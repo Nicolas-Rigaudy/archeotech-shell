@@ -25,8 +25,8 @@ QtObject {
     // Light surfaces get their own recipe (panel = side-pane colour, lighter
     // "paper" cards, sheen lit toward base, soft shadows); dark values are untouched.
     readonly property bool isLight: !root.packOwnsPalette && !!(root._data && root._data.mode === "light")
-    // Glass opacity preset (item_139): "solid" | "soft" (an unknown saved value,
-    // e.g. the dropped "glass", falls back to the table default), set from
+    // Glass opacity preset (item_139): "solid" | "glass" (an unknown saved value,
+    // e.g. the old "soft", falls back to the table default), set from
     // shell.qml (Persistence.Config "appearance.glass"), same wiring as flatMode.
     // The alphas live in ONE table, themes/glass-presets.json, shared with
     // theme-switch.py (kitty) and contrast-check.py --glass. A pack material
@@ -34,7 +34,7 @@ QtObject {
     // (adr_027, the control is hidden), so it uses the table default.
     property string glassPreset: ""
     property var _glassTable: ({})
-    readonly property string glassDefault: (root._glassTable && root._glassTable["default"]) || "soft"
+    readonly property string glassDefault: (root._glassTable && root._glassTable["default"]) || "glass"
     readonly property string effectiveGlassPreset: {
         var t = root._glassTable && root._glassTable.presets
         var known = !!(t && t[root.glassPreset])
