@@ -176,18 +176,6 @@ Item {
                     Layout.preferredHeight: 120
                 }
 
-                Item { implicitHeight: 10; Layout.fillWidth: true }
-
-                // ── Behavior ──────────────────────────────────────────────────
-                SectionLabel { text: "BEHAVIOR" }
-                SettingsCard {
-                    ToggleRow {
-                        label: "Restart Zen on theme change"
-                        description: "Zen only recolors on restart; auto-restart it (debounced) so it follows the theme"
-                        checked: Persistence.Config.get("colorScheme.restartZen", true)
-                        onToggled: v => Persistence.Config.set("colorScheme.restartZen", v)
-                    }
-                }
             }
         }
     }

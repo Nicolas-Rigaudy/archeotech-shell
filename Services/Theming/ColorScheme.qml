@@ -1,6 +1,5 @@
 pragma Singleton
 import QtQuick
-import Quickshell.Io
 import "../../Commons" as Commons
 import "../Persistence" as Persistence
 
@@ -175,40 +174,6 @@ QtObject {
     }
     Component.onCompleted: if (Persistence.Config.ready) _bootResolve()
 
-    // ── Optional Zen relaunch ────────────────────────────────────────────────────
-    // Zen reads its chrome CSS only at startup, so a theme switch can't hot-reload
-    // it. With this on (default), an explicit picker change restarts a *running*
-    // Zen — it restores its own session — ~2.5 s after the last change (debounced
-    // so clicking through the picker doesn't thrash the browser). Armed only from
-    // the user-facing setters via _armZenRestart(): never on boot or the auto
-    // day-night clock, which would kill Zen on every login / at sunset.
-    // OFF by default: Zen's chrome is its own workspace gradient (userChrome
-    // can't recolor it), so restarting Zen on a theme change only refreshes minor
-    // accent/text tint — not worth killing the browser for, and the churn left
-    // stale profile locks. Toggle in Settings → Appearance → Behavior if you
-    // still want it (e.g. once the palette→gradient DB-sync lands and Zen
-    // actually follows themes, this becomes worthwhile).
-    readonly property bool restartZen: Persistence.Config.get("colorScheme.restartZen", false)
-    property var _zenProc: Process { command: []; running: false }
-    property var _zenTimer: Timer {
-        interval: 2500
-        onTriggered: {
-            // No-op if Zen isn't running; otherwise kill, wait for a clean exit,
-            // then relaunch detached so it outlives this Process.
-            // NB: match the process NAME (-x zen-bin), NOT the full cmdline
-            // (-f) — this bash command's own cmdline contains "zen-bin", so
-            // `pkill -f zen-bin` would kill THIS script before the relaunch line
-            // ("kills but doesn't restart"). `-x zen-bin` matches only the
-            // browser (comm=zen-bin); this script's comm is "bash".
-            root._zenProc.command = ["bash", "-lc",
-                "pgrep -x zen-bin >/dev/null 2>&1 || exit 0; pkill -x zen-bin; " +
-                "for i in $(seq 1 30); do pgrep -x zen-bin >/dev/null 2>&1 || break; sleep 0.1; done; " +
-                "setsid /opt/zen-browser-bin/zen-bin >/dev/null 2>&1 &"]
-            root._zenProc.running = true
-        }
-    }
-    function _armZenRestart() { if (root.restartZen) _zenTimer.restart() }
-
     // ── Setters (the UI calls these) — write config + apply immediately ──────────
     function setFamily(id) {
         Persistence.Config.set("colorScheme.family", id)
@@ -224,13 +189,12 @@ QtObject {
         // "blue" → dracula, which has no accents) so we don't apply a stale one.
         if (ThemeCatalog.accentsFor(id).indexOf(root.accent) < 0)
             Persistence.Config.set("colorScheme.accent", "")
-        _apply(); _armZenRestart()
+        _apply()
     }
-    function setMode(m)        { Persistence.Config.set("colorScheme.mode", m); _apply(); _armZenRestart() }
-    function setFlavorDark(f)  { Persistence.Config.set("colorScheme.flavorDark", f); _apply(); _armZenRestart() }
-    function setFlavorLight(f) { Persistence.Config.set("colorScheme.flavorLight", f); _apply(); _armZenRestart() }
-    function setAccent(a)      { Persistence.Config.set("colorScheme.accent", a); _apply(); _armZenRestart() }
+    function setMode(m)        { Persistence.Config.set("colorScheme.mode", m); _apply() }
+    function setFlavorDark(f)  { Persistence.Config.set("colorScheme.flavorDark", f); _apply() }
+    function setFlavorLight(f) { Persistence.Config.set("colorScheme.flavorLight", f); _apply() }
+    function setAccent(a)      { Persistence.Config.set("colorScheme.accent", a); _apply() }
     function setLightStart(t)  { Persistence.Config.set("colorScheme.lightStart", t); _apply() }
     function setDarkStart(t)   { Persistence.Config.set("colorScheme.darkStart", t); _apply() }
-    function setRestartZen(b)  { Persistence.Config.set("colorScheme.restartZen", b) }
 }
