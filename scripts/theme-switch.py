@@ -499,26 +499,6 @@ def apply_obsidian(theme: dict, vars: Dict[str, str]) -> None:
         atomic_write(path, r.stdout)
 
 
-def apply_zen(theme: dict, vars: Dict[str, str]) -> None:
-    """Theme Zen browser chrome from the palette and drive its translucent
-    background. Writes chrome/archeotech-colors.css into every profile that
-    already uses userChrome.css, and @imports it once. Transparency relies on
-    the profile's `zen.widget.linux.transparency` pref + the compositor blur;
-    takes effect on the next Zen restart."""
-    zen_root = HOME / ".zen"
-    if not zen_root.is_dir():
-        return
-    css = render("zen-colors.css.tmpl", vars)
-    for chrome in zen_root.glob("*/chrome"):
-        uc = chrome / "userChrome.css"
-        if not uc.exists():
-            continue  # only profiles that already opted into userChrome
-        atomic_write(chrome / "archeotech-colors.css", css)
-        head = uc.read_text()
-        if "archeotech-colors.css" not in head:
-            atomic_write(uc, '@import "archeotech-colors.css";\n' + head)
-
-
 # ── Registry ─────────────────────────────────────────────────────────────────
 
 Applier = Callable[[dict, Dict[str, str]], None]
@@ -535,7 +515,6 @@ REGISTRY: List[tuple[str, Applier]] = [
     ("gtk",        apply_gtk),
     ("vscode",     apply_vscode),
     ("obsidian",   apply_obsidian),
-    ("zen",        apply_zen),
 ]
 
 

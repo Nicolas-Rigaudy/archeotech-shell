@@ -139,7 +139,6 @@ do not race. The optional second arg is an **accent** color name (see below).
 | GTK 3/4    | Regex-patch `settings.ini` + `gsettings set org.gnome.desktop.interface gtk-theme / icon-theme / cursor-theme` | gsettings broadcast                  |
 | VSCode     | `jq` patch on `Code/User/settings.json` (`workbench.colorTheme`, `workbench.iconTheme`, `catppuccin.accentColor`) | VSCode auto-reloads on save      |
 | Obsidian   | `jq` patch on every vault's `.obsidian/appearance.json` (`cssTheme`, `theme` light/dark base, `accentColor`); vaults found via `~/.config/obsidian/obsidian.json` registry. **Per-vault lock:** a `.obsidian/.archeotech-theme-lock` marker keeps that vault's community theme + accent — only the light/dark base still flips. | Obsidian reloads on mtime change |
-| Zen        | Render `zen-colors.css.tmpl` → each profile's `chrome/archeotech-colors.css`, `@import`ed into `userChrome.css` | Zen restart                        |
 
 ### Accent override
 
