@@ -97,7 +97,7 @@ Item {
                 color: Commons.Appearance.colors.textPrimary
                 font.pixelSize: Commons.Appearance.font.sizeLg
                 font.family: Commons.Appearance.font.family
-                font.weight: Font.Medium
+                font.weight: Commons.Appearance.font.weightMedium
             }
 
             Row {
@@ -127,7 +127,7 @@ Item {
                         color: paletteBtn._hovered
                             ? Commons.Appearance.colors.accent
                             : Commons.Appearance.colors.textSecondary
-                        font.pixelSize: 16
+                        font.pixelSize: Commons.Appearance.font.sizeXl
                         font.family: Commons.Appearance.font.family
                         Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                     }
@@ -289,7 +289,7 @@ Item {
                         anchors.centerIn: parent
                         text: "✓"
                         color: Commons.Appearance.colors.base
-                        font.pixelSize: 13
+                        font.pixelSize: Commons.Appearance.font.sizeMd
                         font.bold: true
                     }
                 }

@@ -68,7 +68,7 @@ Item {
                 visible: albumArt.status !== Image.Ready
                 text: MediaServices.MprisService.appIcon || "󰝚"
                 color: Commons.Appearance.colors.accent
-                font.pixelSize: 40
+                font.pixelSize: Commons.Appearance.font.size7xl
                 font.family: Commons.Appearance.font.family
             }
         }
@@ -85,7 +85,7 @@ Item {
             color: Commons.Appearance.colors.textPrimary
             font.pixelSize: Commons.Appearance.font.sizeMd
             font.family: Commons.Appearance.font.family
-            font.weight: Font.Medium
+            font.weight: Commons.Appearance.font.weightMedium
             elide: Text.ElideRight
         }
         Text {
@@ -128,13 +128,13 @@ Item {
                 anchors.left: parent.left; anchors.bottom: parent.bottom
                 text: face.host ? face.host.formatTime(MediaServices.MprisService.position) : ""
                 color: Commons.Appearance.colors.textMuted
-                font.pixelSize: 9; font.family: Commons.Appearance.font.family
+                font.pixelSize: Commons.Appearance.font.size2xs; font.family: Commons.Appearance.font.family
             }
             Text {
                 anchors.right: parent.right; anchors.bottom: parent.bottom
                 text: MediaServices.MprisService.length > 0 && face.host ? face.host.formatTime(MediaServices.MprisService.length) : ""
                 color: Commons.Appearance.colors.textMuted
-                font.pixelSize: 9; font.family: Commons.Appearance.font.family
+                font.pixelSize: Commons.Appearance.font.size2xs; font.family: Commons.Appearance.font.family
             }
         }
 
@@ -145,7 +145,7 @@ Item {
             Text {
                 text: "󰒮"
                 color: prevArea.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textSecondary
-                font.pixelSize: 20; font.family: Commons.Appearance.font.family
+                font.pixelSize: Commons.Appearance.font.size3xl; font.family: Commons.Appearance.font.family
                 Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                 MouseArea { id: prevArea; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; onClicked: MediaServices.MprisService.previous() }
             }
@@ -171,7 +171,7 @@ Item {
                     anchors.centerIn: parent
                     text: MediaServices.MprisService.playing ? "󰏤" : "󰐊"
                     color: Commons.Appearance.colors.base
-                    font.pixelSize: 20; font.family: Commons.Appearance.font.family
+                    font.pixelSize: Commons.Appearance.font.size3xl; font.family: Commons.Appearance.font.family
                 }
                 MouseArea { id: playArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: MediaServices.MprisService.togglePlay() }
             }
@@ -179,7 +179,7 @@ Item {
             Text {
                 text: "󰒭"
                 color: nextArea.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textSecondary
-                font.pixelSize: 20; font.family: Commons.Appearance.font.family
+                font.pixelSize: Commons.Appearance.font.size3xl; font.family: Commons.Appearance.font.family
                 Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                 MouseArea { id: nextArea; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; onClicked: MediaServices.MprisService.next() }
             }

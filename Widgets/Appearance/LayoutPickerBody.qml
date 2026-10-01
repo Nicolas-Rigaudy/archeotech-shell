@@ -130,7 +130,7 @@ Item {
                 color: Commons.Appearance.colors.textPrimary
                 font.pixelSize: Commons.Appearance.font.sizeLg
                 font.family: Commons.Appearance.font.family
-                font.weight: Font.Medium
+                font.weight: Commons.Appearance.font.weightMedium
             }
             Text {
                 anchors.right: parent.right
@@ -244,7 +244,7 @@ Item {
                                                 : Commons.Appearance.colors.textPrimary
                             font.pixelSize: Commons.Appearance.font.sizeBase
                             font.family: Commons.Appearance.font.family
-                            font.weight: cell._active ? Font.Medium : Font.Normal
+                            font.weight: cell._active ? Commons.Appearance.font.weightMedium : Commons.Appearance.font.weightRegular
                             elide: Text.ElideRight
                         }
 
@@ -266,7 +266,7 @@ Item {
                                     anchors.centerIn: parent
                                     text: cell.modelData.key
                                     color: Commons.Appearance.colors.textSecondary
-                                    font.pixelSize: Commons.Appearance.font.sizeSm - 1
+                                    font.pixelSize: Commons.Appearance.font.size2xs
                                     font.family: Commons.Appearance.font.family
                                 }
                             }
@@ -275,7 +275,7 @@ Item {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: "↻ Super+T"
                                 color: Commons.Appearance.colors.textSecondary
-                                font.pixelSize: Commons.Appearance.font.sizeSm - 1
+                                font.pixelSize: Commons.Appearance.font.size2xs
                                 font.family: Commons.Appearance.font.family
                                 opacity: 0.7
                             }
@@ -285,7 +285,7 @@ Item {
                                 verticalAlignment: Text.AlignVCenter
                                 text: cell.modelData.desc
                                 color: Commons.Appearance.colors.textSecondary
-                                font.pixelSize: Commons.Appearance.font.sizeSm - 1
+                                font.pixelSize: Commons.Appearance.font.size2xs
                                 font.family: Commons.Appearance.font.family
                                 wrapMode: Text.WordWrap
                                 elide: Text.ElideRight

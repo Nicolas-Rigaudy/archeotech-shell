@@ -399,7 +399,7 @@ Item {
                     id: recentsLbl
                     text:  "RECENTS"
                     color: Commons.Appearance.colors.textSecondary
-                    font { family: Commons.Appearance.font.display; pixelSize: Commons.Appearance.font.sizeSm; letterSpacing: 1.5 }
+                    font { family: Commons.Appearance.font.display; pixelSize: Commons.Appearance.font.sizeSm; letterSpacing: Commons.Appearance.font.trackingLabel }
                     opacity: 0.7
                     anchors { top: parent.top; left: parent.left }
                 }
@@ -476,7 +476,7 @@ Item {
                                         anchors.centerIn: parent
                                         visible: tileIcon.status !== Image.Ready
                                         text: ""
-                                        font { family: Commons.Appearance.font.family; pixelSize: 16 }
+                                        font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeXl }
                                         color: Commons.Appearance.colors.textMuted
                                     }
                                 }
@@ -513,7 +513,7 @@ Item {
                                         anchors.centerIn: parent
                                         text:  "󰐃"
                                         color: Commons.Appearance.colors.accent
-                                        font { family: Commons.Appearance.font.family; pixelSize: 12 }
+                                        font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeBase }
                                     }
 
                                     MouseArea {
@@ -558,7 +558,7 @@ Item {
                     id: searchGlyph
                     anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
                     text:  ""
-                    font { family: Commons.Appearance.font.family; pixelSize: 15 }
+                    font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeXl }
                     color: searchInput.activeFocus ? Commons.Appearance.colors.accent
                                                    : Commons.Appearance.colors.textMuted
                     Behavior on color { Commons.ColorAnim {} }
@@ -607,7 +607,7 @@ Item {
                     Text {
                         anchors.centerIn: parent
                         text:  ""
-                        font { family: Commons.Appearance.font.family; pixelSize: 12 }
+                        font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeBase }
                         color: Commons.Appearance.colors.textMuted
                     }
                     MouseArea {
@@ -696,7 +696,7 @@ Item {
                             anchors.centerIn: parent
                             visible: appIcon.status !== Image.Ready || iconWrapper._cands.length === 0
                             text:  modelData.__glyph || ""   // action glyph, else app fallback
-                            font { family: Commons.Appearance.font.family; pixelSize: 20 }
+                            font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.size3xl }
                             color: Commons.Appearance.colors.textMuted
                         }
                     }
@@ -717,7 +717,7 @@ Item {
                             color: root.selectedIdx === index
                                        ? Commons.Appearance.colors.textPrimary
                                        : Commons.Appearance.colors.textSecondary
-                            font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeMd; weight: Font.Medium }
+                            font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeMd; weight: Commons.Appearance.font.weightMedium }
                             elide: Text.ElideRight
                         }
                         Text {
@@ -748,7 +748,7 @@ Item {
                             text:  pinBtn._pinned ? "󰐃" : "󰤱"
                             color: pinBtn._pinned ? Commons.Appearance.colors.accent
                                                   : Commons.Appearance.colors.textMuted
-                            font { family: Commons.Appearance.font.family; pixelSize: 14 }
+                            font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeLg }
                             Behavior on color { Commons.ColorAnim {} }
                         }
 
@@ -781,7 +781,7 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text:  ""
                         color: Commons.Appearance.colors.textMuted
-                        font { family: Commons.Appearance.font.family; pixelSize: 34 }
+                        font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.size6xl }
                     }
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter

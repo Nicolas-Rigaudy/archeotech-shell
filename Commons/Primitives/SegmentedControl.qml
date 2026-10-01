@@ -118,7 +118,7 @@ Item {
                         text: seg.modelData.glyph || ""
                         color: seg._on ? (root._steel ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.base)
                                        : Commons.Appearance.colors.textSecondary
-                        font.pixelSize: 14; font.family: Commons.Appearance.font.family
+                        font.pixelSize: Commons.Appearance.font.sizeLg; font.family: Commons.Appearance.font.family
                         anchors.verticalCenter: parent.verticalCenter
                         Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                     }
@@ -129,7 +129,7 @@ Item {
                                        : Commons.Appearance.colors.textSecondary
                         font.pixelSize: Commons.Appearance.font.sizeBase
                         font.family: Commons.Appearance.font.family
-                        font.weight: seg._on ? Font.Medium : Font.Normal
+                        font.weight: seg._on ? Commons.Appearance.font.weightMedium : Commons.Appearance.font.weightRegular
                         anchors.verticalCenter: parent.verticalCenter
                         Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                     }

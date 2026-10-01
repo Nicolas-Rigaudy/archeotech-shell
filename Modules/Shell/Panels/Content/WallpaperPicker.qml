@@ -83,7 +83,7 @@ Item {
                     Text {
                         text: "󰒓"
                         color: moreBtn._hovered ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textSecondary
-                        font.pixelSize: 13; font.family: Commons.Appearance.font.family
+                        font.pixelSize: Commons.Appearance.font.sizeMd; font.family: Commons.Appearance.font.family
                         anchors.verticalCenter: parent.verticalCenter
                     }
                     Text {

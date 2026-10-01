@@ -61,7 +61,15 @@ ShellRoot {
         value: Persistence.Config.get("appearance.flatMode", false) || Commons.Appearance.packMaterialFlat
     }
 
-    // Glass opacity preset (item_139): solid / soft / glass, same wiring.
+    // Text size multiplier (item_110 wave 2), same wiring.
+    Binding {
+        target: Commons.Appearance
+        property: "fontScale"
+        // Clamped: a hand-edited config.json must not blow the layout apart.
+        value: Math.max(0.8, Math.min(1.4, Number(Persistence.Config.get("appearance.fontScale", 1.0)) || 1.0))
+    }
+
+    // Glass opacity preset (item_139), same wiring.
     Binding {
         target: Commons.Appearance
         property: "glassPreset"

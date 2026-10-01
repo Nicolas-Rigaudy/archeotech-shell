@@ -107,7 +107,7 @@ Item {
                         anchors.centerIn: parent
                         text: NetworkServices.Network.icon()
                         color: NetworkServices.Network.wifiEnabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
-                        font.pixelSize: 13; font.family: Commons.Appearance.font.family
+                        font.pixelSize: Commons.Appearance.font.sizeMd; font.family: Commons.Appearance.font.family
                     }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: NetworkServices.Network.toggleWifi() }
                 }
@@ -116,12 +116,12 @@ Item {
                         : NetworkServices.Network.connected ? "WiFi · " + NetworkServices.Network.ssid : "WiFi — Not connected"
                     color: NetworkServices.Network.wifiEnabled ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
                     font.pixelSize: Commons.Appearance.font.sizeMd; font.family: Commons.Appearance.font.display
-                    font.weight: Font.Medium; Layout.fillWidth: true; elide: Text.ElideRight
+                    font.weight: Commons.Appearance.font.weightMedium; Layout.fillWidth: true; elide: Text.ElideRight
                 }
                 Text {
                     text: "✕"
                     color: _wifiCloseMA.containsMouse ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
-                    font.pixelSize: 11; font.family: Commons.Appearance.font.family
+                    font.pixelSize: Commons.Appearance.font.sizeSm; font.family: Commons.Appearance.font.family
                     Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                     MouseArea {
                         id: _wifiCloseMA
@@ -161,7 +161,7 @@ Item {
                         text: NetworkServices.Network.signalIcon(
                             modelData.signal, modelData.security !== "" && modelData.security !== "--")
                         color: modelData.active ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textMuted
-                        font.pixelSize: 13; font.family: Commons.Appearance.font.family
+                        font.pixelSize: Commons.Appearance.font.sizeMd; font.family: Commons.Appearance.font.family
                     }
                     Text {
                         text: modelData.ssid
@@ -175,7 +175,7 @@ Item {
                         Text {
                             id: _wBtnSpinner; visible: _busy; anchors.centerIn: parent
                             text: "󰑙"; color: Commons.Appearance.colors.accent
-                            font.pixelSize: 13; font.family: Commons.Appearance.font.family
+                            font.pixelSize: Commons.Appearance.font.sizeMd; font.family: Commons.Appearance.font.family
                             RotationAnimator { target: _wBtnSpinner; running: _busy; loops: Animation.Infinite; from: 0; to: 360; duration: 900 }
                         }
                         RectangularShadow {
@@ -201,7 +201,7 @@ Item {
                                 color: modelData.active ? Commons.Appearance.colors.red
                                     : _needsPw ? Commons.Appearance.colors.textSecondary
                                     : Commons.Appearance.colors.accent
-                                font.pixelSize: Commons.Appearance.font.sizeSm - 1; font.family: Commons.Appearance.font.family
+                                font.pixelSize: Commons.Appearance.font.size2xs; font.family: Commons.Appearance.font.family
                             }
                             MouseArea {
                                 id: _wBtnMA; anchors.fill: parent; hoverEnabled: true
@@ -230,7 +230,7 @@ Item {
                 anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
                 text: NetworkServices.Network.scanning ? "Scanning…" : "󰑙  Rescan"
                 color: NetworkServices.Network.scanning ? Commons.Appearance.colors.textMuted : Commons.Appearance.colors.accent
-                font.pixelSize: Commons.Appearance.font.sizeSm - 1; font.family: Commons.Appearance.font.family
+                font.pixelSize: Commons.Appearance.font.size2xs; font.family: Commons.Appearance.font.family
                 MouseArea {
                     anchors.fill: parent; anchors.margins: -4
                     enabled: !NetworkServices.Network.scanning; cursorShape: Qt.PointingHandCursor

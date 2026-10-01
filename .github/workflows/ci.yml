@@ -61,3 +61,6 @@ jobs:
 
       - name: Text contrast over mid-grey through every glass preset
         run: python3 scripts/contrast-check.py --glass --strict
+
+      - name: Typography from tokens only (no raw font size, weight or tracking)
+        run: python3 scripts/token-lint.py

@@ -514,13 +514,47 @@ QtObject {
             (root._displayFont.status === FontLoader.Ready && root._displayFont.name)
                 ? root._displayFont.name
                 : root._tok("font", "displayFamily", family)
-        readonly property int sizeSm:   root._tok("font", "sizeSm",   11)
-        readonly property int sizeBase: root._tok("font", "sizeBase", 12)
-        readonly property int sizeMd:   root._tok("font", "sizeMd",   13)
-        readonly property int sizeLg:   root._tok("font", "sizeLg",   14)
-        readonly property int sizeXl:   root._tok("font", "sizeXl",   16)
-        readonly property int sizeIcon: root._tok("font", "sizeIcon", 16)
+        // ── Type scale (item_110 wave 2) ──
+        // ONE size scale for text and icon glyphs; every font.pixelSize in the
+        // shell picks a step (CI: scripts/token-lint.py rejects raw numbers). A
+        // pack may override any step (tokens.json font.<key>); the user's Text
+        // size setting (root.fontScale) multiplies them all.
+        readonly property int size2xs:  root._fsz("size2xs",  10)   // captions, section labels, times
+        readonly property int sizeSm:   root._fsz("sizeSm",   11)
+        readonly property int sizeBase: root._fsz("sizeBase", 12)
+        readonly property int sizeMd:   root._fsz("sizeMd",   13)
+        readonly property int sizeLg:   root._fsz("sizeLg",   14)
+        readonly property int sizeXl:   root._fsz("sizeXl",   16)
+        readonly property int size2xl:  root._fsz("size2xl",  18)
+        readonly property int size3xl:  root._fsz("size3xl",  20)
+        readonly property int size4xl:  root._fsz("size4xl",  22)
+        readonly property int size5xl:  root._fsz("size5xl",  24)
+        readonly property int size6xl:  root._fsz("size6xl",  32)
+        readonly property int size7xl:  root._fsz("size7xl",  40)
+        readonly property int sizeIcon: root._fsz("sizeIcon", 16)
+        // Semantic text tiers on the scale: pane/section titles, hero headings
+        // (dashboard greeting, About, now playing), the big clock.
+        readonly property int sizeTitle:    size2xl
+        readonly property int sizeHeadline: size4xl
+        readonly property int sizeDisplay:  size7xl
+
+        // Weights and tracking. Section labels (SectionLabel, "AVAILABLE") are
+        // spaced caps (label); wide = HoverCard caps; display = a pack's display
+        // face in SectionLabel, which needs less spacing than the mono caps.
+        readonly property int  weightRegular:  Font.Normal
+        readonly property int  weightMedium:   Font.Medium
+        readonly property int  weightSemibold: Font.DemiBold
+        readonly property int  weightBold:     Font.Bold
+        readonly property int  weightLight:    Font.Light
+        readonly property real trackingLabel:  1.5
+        readonly property real trackingWide:   1.2
+        readonly property real trackingDisplay: 1.0
     }
+
+    // Text size multiplier (item_110 wave 2), set from shell.qml (Persistence.Config
+    // "appearance.fontScale"), same wiring as flatMode.
+    property real fontScale: 1.0
+    function _fsz(key, px) { return Math.round(root._tok("font", key, px) * root.fontScale) }
 
     // ── Geometry ───────────────────────────────────────────────────────────────
     readonly property QtObject radius: QtObject {

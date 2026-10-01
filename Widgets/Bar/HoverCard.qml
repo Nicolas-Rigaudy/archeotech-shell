@@ -105,15 +105,15 @@ Item {
             color: Commons.Appearance.colors.accent
             font.pixelSize: Commons.Appearance.font.sizeSm
             font.family: Commons.Appearance.font.display
-            font.letterSpacing: 1.2
-            font.weight: Font.DemiBold
+            font.letterSpacing: Commons.Appearance.font.trackingWide
+            font.weight: Commons.Appearance.font.weightSemibold
         }
         Text {
             text: card.holderRoot ? card.holderRoot._popupPrimary : ""
             color: Commons.Appearance.colors.textPrimary
             font.pixelSize: Commons.Appearance.font.sizeLg
             font.family: Commons.Appearance.font.family
-            font.weight: Font.Medium
+            font.weight: Commons.Appearance.font.weightMedium
         }
         Text {
             visible: !!(card.holderRoot && card.holderRoot._popupSecondary.length > 0)
@@ -126,7 +126,7 @@ Item {
             visible: !!(card.holderRoot && card.holderRoot._popupHint.length > 0)
             text: card.holderRoot ? card.holderRoot._popupHint : ""
             color: Commons.Appearance.colors.textMuted
-            font.pixelSize: Commons.Appearance.font.sizeSm - 1
+            font.pixelSize: Commons.Appearance.font.size2xs
             font.family: Commons.Appearance.font.family
         }
     }

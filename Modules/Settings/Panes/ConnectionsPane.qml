@@ -71,12 +71,12 @@ Item {
                             Text {
                                 text: NetworkServices.Network.wifiEnabled ? "󰖩" : "󰖪"
                                 color: NetworkServices.Network.wifiEnabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
-                                font.pixelSize: 11; font.family: Commons.Appearance.font.family
+                                font.pixelSize: Commons.Appearance.font.sizeSm; font.family: Commons.Appearance.font.family
                             }
                             Text {
                                 text: NetworkServices.Network.wifiEnabled ? "On" : "Off"
                                 color: NetworkServices.Network.wifiEnabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
-                                font.pixelSize: 11; font.family: Commons.Appearance.font.family
+                                font.pixelSize: Commons.Appearance.font.sizeSm; font.family: Commons.Appearance.font.family
                             }
                         }
                     }
@@ -117,8 +117,8 @@ Item {
                             visible: NetworkServices.Network.displayNetworks.filter(function(n){ return !n.saved && !n.active }).length > 0
                             text: "AVAILABLE"
                             color: Commons.Appearance.colors.textMuted
-                            font.pixelSize: 9; font.family: Commons.Appearance.font.family
-                            font.weight: Font.Medium; font.letterSpacing: 1.5
+                            font.pixelSize: Commons.Appearance.font.size2xs; font.family: Commons.Appearance.font.family
+                            font.weight: Commons.Appearance.font.weightMedium; font.letterSpacing: Commons.Appearance.font.trackingLabel
                             Layout.fillWidth: true
                             Layout.topMargin: 6; Layout.bottomMargin: 2
                         }
@@ -167,13 +167,13 @@ Item {
                                 id: scanIco
                                 text: NetworkServices.Bluetooth.discovering ? "󰑙" : "󰂰"
                                 color: NetworkServices.Bluetooth.discovering ? Commons.Appearance.colors.base : Commons.Appearance.colors.accent
-                                font.pixelSize: 11; font.family: Commons.Appearance.font.family
+                                font.pixelSize: Commons.Appearance.font.sizeSm; font.family: Commons.Appearance.font.family
                                 RotationAnimator { target: scanIco; running: NetworkServices.Bluetooth.discovering; loops: Animation.Infinite; from: 0; to: 360; duration: 900 }
                             }
                             Text {
                                 text: NetworkServices.Bluetooth.discovering ? "Scanning…" : "Scan"
                                 color: NetworkServices.Bluetooth.discovering ? Commons.Appearance.colors.base : Commons.Appearance.colors.accent
-                                font.pixelSize: 11; font.family: Commons.Appearance.font.family
+                                font.pixelSize: Commons.Appearance.font.sizeSm; font.family: Commons.Appearance.font.family
                             }
                         }
                     }
@@ -189,12 +189,12 @@ Item {
                             Text {
                                 text: NetworkServices.Bluetooth.enabled ? "󰂯" : "󰂲"
                                 color: NetworkServices.Bluetooth.enabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
-                                font.pixelSize: 11; font.family: Commons.Appearance.font.family
+                                font.pixelSize: Commons.Appearance.font.sizeSm; font.family: Commons.Appearance.font.family
                             }
                             Text {
                                 text: NetworkServices.Bluetooth.enabled ? "On" : "Off"
                                 color: NetworkServices.Bluetooth.enabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
-                                font.pixelSize: 11; font.family: Commons.Appearance.font.family
+                                font.pixelSize: Commons.Appearance.font.sizeSm; font.family: Commons.Appearance.font.family
                             }
                         }
                     }
@@ -233,7 +233,7 @@ Item {
                                     Text {
                                         text: modelData.connected ? "󰂱" : "󰂯"
                                         color: modelData.connected ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textMuted
-                                        font.pixelSize: 16; font.family: Commons.Appearance.font.family
+                                        font.pixelSize: Commons.Appearance.font.sizeXl; font.family: Commons.Appearance.font.family
                                         Layout.alignment: Qt.AlignVCenter
                                         Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                                     }
@@ -272,7 +272,7 @@ Item {
                                             anchors.centerIn: parent
                                             text: modelData.trusted ? "󰓎" : "󰓒"
                                             color: modelData.trusted ? Commons.Appearance.colors.yellow : Commons.Appearance.colors.textMuted
-                                            font.pixelSize: 14; font.family: Commons.Appearance.font.family
+                                            font.pixelSize: Commons.Appearance.font.sizeLg; font.family: Commons.Appearance.font.family
                                         }
                                         StateLayer {
                                             anchors.fill: parent
@@ -294,7 +294,7 @@ Item {
                                             visible: parent._busy
                                             anchors.centerIn: parent
                                             text: "󰑙"; color: Commons.Appearance.colors.accent
-                                            font.pixelSize: 14; font.family: Commons.Appearance.font.family
+                                            font.pixelSize: Commons.Appearance.font.sizeLg; font.family: Commons.Appearance.font.family
                                             RotationAnimator { target: btSpinner; running: btSpinner.visible; loops: Animation.Infinite; from: 0; to: 360; duration: 900 }
                                         }
 
@@ -325,7 +325,7 @@ Item {
                                             id: btRmSpin
                                             visible: parent._busy; anchors.centerIn: parent
                                             text: "󰑙"; color: Commons.Appearance.colors.red
-                                            font.pixelSize: 13; font.family: Commons.Appearance.font.family
+                                            font.pixelSize: Commons.Appearance.font.sizeMd; font.family: Commons.Appearance.font.family
                                             RotationAnimator { target: btRmSpin; running: btRmSpin.visible; loops: Animation.Infinite; from: 0; to: 360; duration: 900 }
                                         }
                                         Rectangle {
@@ -336,7 +336,7 @@ Item {
                                                 anchors.centerIn: parent
                                                 text: "󰩺"
                                                 color: btRmLayer.hovered ? Commons.Appearance.colors.red : Commons.Appearance.colors.textMuted
-                                                font.pixelSize: 14; font.family: Commons.Appearance.font.family
+                                                font.pixelSize: Commons.Appearance.font.sizeLg; font.family: Commons.Appearance.font.family
                                             }
                                             StateLayer {
                                                 id: btRmLayer; anchors.fill: parent
@@ -360,8 +360,8 @@ Item {
                                   || NetworkServices.Bluetooth.devices.filter(function(d){ return !d.paired }).length > 0
                             text: "AVAILABLE"
                             color: Commons.Appearance.colors.textMuted
-                            font.pixelSize: 9; font.family: Commons.Appearance.font.family
-                            font.weight: Font.Medium; font.letterSpacing: 1.5
+                            font.pixelSize: Commons.Appearance.font.size2xs; font.family: Commons.Appearance.font.family
+                            font.weight: Commons.Appearance.font.weightMedium; font.letterSpacing: Commons.Appearance.font.trackingLabel
                             Layout.fillWidth: true; Layout.topMargin: 6; Layout.bottomMargin: 2
                         }
                         Text {
@@ -383,7 +383,7 @@ Item {
                                     anchors.fill: parent; spacing: 10
                                     Text {
                                         text: "󰂯"; color: Commons.Appearance.colors.textMuted
-                                        font.pixelSize: 16; font.family: Commons.Appearance.font.family
+                                        font.pixelSize: Commons.Appearance.font.sizeXl; font.family: Commons.Appearance.font.family
                                         Layout.alignment: Qt.AlignVCenter
                                     }
                                     Text {
@@ -402,7 +402,7 @@ Item {
                                         Text {
                                             id: pairSpin; visible: parent._busy; anchors.centerIn: parent
                                             text: "󰑙"; color: Commons.Appearance.colors.accent
-                                            font.pixelSize: 14; font.family: Commons.Appearance.font.family
+                                            font.pixelSize: Commons.Appearance.font.sizeLg; font.family: Commons.Appearance.font.family
                                             RotationAnimator { target: pairSpin; running: pairSpin.visible; loops: Animation.Infinite; from: 0; to: 360; duration: 900 }
                                         }
                                         GlassButton {
@@ -456,7 +456,7 @@ Item {
             Text {
                 text: NetworkServices.Network.signalIcon(modelData.signal, modelData.security !== "" && modelData.security !== "--")
                 color: modelData.active ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textMuted
-                font.pixelSize: 14; font.family: Commons.Appearance.font.family
+                font.pixelSize: Commons.Appearance.font.sizeLg; font.family: Commons.Appearance.font.family
                 Layout.alignment: Qt.AlignVCenter
                 Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
             }
@@ -495,7 +495,7 @@ Item {
                     visible: _busy
                     anchors.centerIn: parent
                     text: "󰑙"; color: Commons.Appearance.colors.accent
-                    font.pixelSize: 14; font.family: Commons.Appearance.font.family
+                    font.pixelSize: Commons.Appearance.font.sizeLg; font.family: Commons.Appearance.font.family
                     RotationAnimator { target: spinnerTxt; running: _busy; loops: Animation.Infinite; from: 0; to: 360; duration: 900 }
                 }
 
@@ -536,12 +536,12 @@ Item {
                     Text {
                         text: "󰁪"
                         color: modelData.autoconnect ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
-                        font.pixelSize: 10; font.family: Commons.Appearance.font.family
+                        font.pixelSize: Commons.Appearance.font.size2xs; font.family: Commons.Appearance.font.family
                     }
                     Text {
                         text: "Auto"
                         color: modelData.autoconnect ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
-                        font.pixelSize: 10; font.family: Commons.Appearance.font.family
+                        font.pixelSize: Commons.Appearance.font.size2xs; font.family: Commons.Appearance.font.family
                     }
                 }
                 ToolTip { visible: autoBtn.hovered; delay: 400; text: modelData.autoconnect ? "Auto-join: on" : "Auto-join: off" }
@@ -557,7 +557,7 @@ Item {
                     anchors.centerIn: parent
                     text: "󰩺"
                     color: forgetLayer.hovered ? Commons.Appearance.colors.red : Commons.Appearance.colors.textMuted
-                    font.pixelSize: 14; font.family: Commons.Appearance.font.family
+                    font.pixelSize: Commons.Appearance.font.sizeLg; font.family: Commons.Appearance.font.family
                 }
                 StateLayer {
                     id: forgetLayer; anchors.fill: parent

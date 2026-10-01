@@ -71,7 +71,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             text: Qt.formatDateTime(vClock._now, root._hourFmt())
             color: Commons.Appearance.colors.textPrimary
-            font.pixelSize: Commons.Appearance.font.sizeMd; font.weight: Font.DemiBold
+            font.pixelSize: Commons.Appearance.font.sizeMd; font.weight: Commons.Appearance.font.weightSemibold
             font.family: Commons.Appearance.font.family
         }
         Text {

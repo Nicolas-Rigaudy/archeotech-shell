@@ -100,7 +100,7 @@ Item {
                         anchors.centerIn: parent
                         text: NetworkServices.Bluetooth.icon()
                         color: NetworkServices.Bluetooth.enabled ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
-                        font.pixelSize: 13; font.family: Commons.Appearance.font.family
+                        font.pixelSize: Commons.Appearance.font.sizeMd; font.family: Commons.Appearance.font.family
                     }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: NetworkServices.Bluetooth.toggle() }
                 }
@@ -108,7 +108,7 @@ Item {
                     text: "Bluetooth"
                     color: Commons.Appearance.colors.textPrimary
                     font.pixelSize: Commons.Appearance.font.sizeMd; font.family: Commons.Appearance.font.display
-                    font.weight: Font.Medium; Layout.fillWidth: true
+                    font.weight: Commons.Appearance.font.weightMedium; Layout.fillWidth: true
                 }
                 Text {
                     text: !NetworkServices.Bluetooth.enabled ? "Off"
@@ -120,7 +120,7 @@ Item {
                 Text {
                     text: "✕"
                     color: _btCloseMA.containsMouse ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
-                    font.pixelSize: 11; font.family: Commons.Appearance.font.family
+                    font.pixelSize: Commons.Appearance.font.sizeSm; font.family: Commons.Appearance.font.family
                     Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                     MouseArea {
                         id: _btCloseMA
@@ -166,7 +166,7 @@ Item {
                     Text {
                         text: modelData.connected ? "󰂱" : "󰂯"
                         color: modelData.connected ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textMuted
-                        font.pixelSize: 14; font.family: Commons.Appearance.font.family
+                        font.pixelSize: Commons.Appearance.font.sizeLg; font.family: Commons.Appearance.font.family
                     }
                     Text {
                         text: modelData.name
@@ -187,7 +187,7 @@ Item {
                             visible: parent._busy
                             anchors.centerIn: parent
                             text: "󰑙"; color: Commons.Appearance.colors.accent
-                            font.pixelSize: 12; font.family: Commons.Appearance.font.family
+                            font.pixelSize: Commons.Appearance.font.sizeBase; font.family: Commons.Appearance.font.family
                             RotationAnimator { target: _btDevSpinner; running: _btDevSpinner.visible; loops: Animation.Infinite; from: 0; to: 360; duration: 900 }
                         }
 
@@ -214,7 +214,7 @@ Item {
                                 id: _btDevLbl; anchors.centerIn: parent
                                 text: modelData.connected ? "Disconnect" : "Connect"
                                 color: modelData.connected ? Commons.Appearance.colors.red : Commons.Appearance.colors.accent
-                                font.pixelSize: Commons.Appearance.font.sizeSm - 1; font.family: Commons.Appearance.font.family
+                                font.pixelSize: Commons.Appearance.font.size2xs; font.family: Commons.Appearance.font.family
                             }
                             MouseArea {
                                 id: _btDevMA; anchors.fill: parent; hoverEnabled: true

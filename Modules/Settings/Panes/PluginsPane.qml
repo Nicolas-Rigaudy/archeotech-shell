@@ -286,7 +286,7 @@ Item {
                                     text: catTile.modelData.icon || "󰏗"
                                     color: Commons.Appearance.colors.accent
                                     font.family: Commons.Appearance.font.family
-                                    font.pixelSize: 18
+                                    font.pixelSize: Commons.Appearance.font.size2xl
                                     Layout.alignment: Qt.AlignHCenter
                                 }
                                 Text {

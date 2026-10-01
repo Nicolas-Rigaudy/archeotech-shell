@@ -17,7 +17,7 @@ Item {
         Text {
             text: icon
             color: Commons.Appearance.colors.accent
-            font.pixelSize: 30
+            font.pixelSize: Commons.Appearance.font.size6xl
             font.family: Commons.Appearance.font.family
             Layout.alignment: Qt.AlignVCenter
         }
@@ -30,11 +30,11 @@ Item {
             Text {
                 text: title
                 color: Commons.Appearance.colors.textPrimary
-                font.pixelSize: 18
+                font.pixelSize: Commons.Appearance.font.sizeTitle
                 // Display face (adr_027 font hook) — a pack's header font when it
                 // ships one; the body family otherwise.
                 font.family: Commons.Appearance.font.display
-                font.weight: Font.Bold
+                font.weight: Commons.Appearance.font.weightBold
             }
 
             Text {

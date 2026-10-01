@@ -56,7 +56,7 @@ Item {
                         Text {
                             text: "󰍉"
                             color: Commons.Appearance.colors.textMuted
-                            font.pixelSize: 13; font.family: Commons.Appearance.font.family
+                            font.pixelSize: Commons.Appearance.font.sizeMd; font.family: Commons.Appearance.font.family
                         }
                         TextField {
                             id: searchField
@@ -76,7 +76,7 @@ Item {
                             visible: root.query !== ""
                             text: "✕"
                             color: clearMa.containsMouse ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
-                            font.pixelSize: 12; font.family: Commons.Appearance.font.family
+                            font.pixelSize: Commons.Appearance.font.sizeBase; font.family: Commons.Appearance.font.family
                             MouseArea {
                                 id: clearMa; anchors.fill: parent; anchors.margins: -4
                                 hoverEnabled: true; cursorShape: Qt.PointingHandCursor
@@ -126,7 +126,7 @@ Item {
                         Text {
                             text: resItem.modelData.paneIcon
                             color: Commons.Appearance.colors.textSecondary
-                            font.pixelSize: 14; font.family: Commons.Appearance.font.family
+                            font.pixelSize: Commons.Appearance.font.sizeLg; font.family: Commons.Appearance.font.family
                             Layout.alignment: Qt.AlignVCenter
                         }
                         ColumnLayout {
@@ -143,7 +143,7 @@ Item {
                             Text {
                                 text: resItem.modelData.paneLabel
                                 color: Commons.Appearance.colors.textMuted
-                                font.pixelSize: Commons.Appearance.font.sizeSm - 1
+                                font.pixelSize: Commons.Appearance.font.size2xs
                                 font.family: Commons.Appearance.font.family
                             }
                         }
@@ -215,7 +215,7 @@ Item {
                             color: root.activeIndex === navItem.index
                                 ? Commons.Appearance.colors.accent
                                 : Commons.Appearance.colors.textSecondary
-                            font.pixelSize: 16
+                            font.pixelSize: Commons.Appearance.font.sizeXl
                             font.family: Commons.Appearance.font.family
                             Layout.alignment: Qt.AlignVCenter
                             Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
@@ -228,7 +228,7 @@ Item {
                                 : Commons.Appearance.colors.textSecondary
                             font.pixelSize: Commons.Appearance.font.sizeMd
                             font.family: Commons.Appearance.font.display   // page names in the display face
-                            font.weight: root.activeIndex === navItem.index ? Font.Medium : Font.Normal
+                            font.weight: root.activeIndex === navItem.index ? Commons.Appearance.font.weightMedium : Commons.Appearance.font.weightRegular
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignVCenter
                             Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }

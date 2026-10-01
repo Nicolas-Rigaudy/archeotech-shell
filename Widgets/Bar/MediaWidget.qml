@@ -79,7 +79,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         text: MediaServices.MprisService.playing ? "󰝚" : "󰏤"
         color: Commons.Appearance.colors.accent
-        font.pixelSize: 12
+        font.pixelSize: Commons.Appearance.font.sizeBase
         font.family: Commons.Appearance.font.family
         MouseArea {
             anchors.fill: parent

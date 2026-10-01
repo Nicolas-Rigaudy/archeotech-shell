@@ -35,7 +35,7 @@ Item {
         anchors.centerIn: parent
         text: "󰀻"
         color: Commons.Appearance.colors.textMuted
-        font.pixelSize: 16
+        font.pixelSize: Commons.Appearance.font.sizeXl
         font.family: Commons.Appearance.font.family
     }
 
@@ -101,9 +101,9 @@ Item {
                     anchors.centerIn: parent
                     text: (cell.modelData.title || cell.modelData.id || "󰀻").charAt(0).toUpperCase()
                     color: Commons.Appearance.colors.textSecondary
-                    font.pixelSize: 13
+                    font.pixelSize: Commons.Appearance.font.sizeMd
                     font.family: Commons.Appearance.font.family
-                    font.weight: Font.Medium
+                    font.weight: Commons.Appearance.font.weightMedium
                 }
 
                 MouseArea {

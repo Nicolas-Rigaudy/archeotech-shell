@@ -246,7 +246,7 @@ Item {
                             color: Commons.Appearance.colors.textPrimary
                             font.pixelSize: Commons.Appearance.font.sizeBase
                             font.family: Commons.Appearance.font.family
-                            font.weight: Font.Medium
+                            font.weight: Commons.Appearance.font.weightMedium
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                         }
@@ -276,7 +276,7 @@ Item {
                     Text {
                         anchors.centerIn: parent; text: "✓"
                         color: Commons.Appearance.colors.base
-                        font.pixelSize: 11; font.bold: true
+                        font.pixelSize: Commons.Appearance.font.sizeSm; font.bold: true
                     }
                 }
 

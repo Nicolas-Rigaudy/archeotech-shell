@@ -111,7 +111,7 @@ Item {
                                 color: Commons.Appearance.colors.textPrimary
                                 font.pixelSize: Commons.Appearance.font.sizeBase
                                 font.family: Commons.Appearance.font.family
-                                font.weight: Font.Medium
+                                font.weight: Commons.Appearance.font.weightMedium
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
@@ -122,7 +122,7 @@ Item {
                                 Text {
                                     anchors.centerIn: parent; text: "✓"
                                     color: Commons.Appearance.colors.base
-                                    font.pixelSize: 10; font.bold: true
+                                    font.pixelSize: Commons.Appearance.font.size2xs; font.bold: true
                                 }
                             }
                         }
@@ -253,10 +253,10 @@ Item {
         Layout.fillWidth: true
         Layout.topMargin: 4
         color: Commons.Appearance.colors.textMuted
-        font.pixelSize: 10
+        font.pixelSize: Commons.Appearance.font.size2xs
         font.family: Commons.Appearance.font.family
-        font.weight: Font.Medium
-        font.letterSpacing: 1.5
+        font.weight: Commons.Appearance.font.weightMedium
+        font.letterSpacing: Commons.Appearance.font.trackingLabel
     }
 
     component FlavorRow: ColumnLayout {

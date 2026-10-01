@@ -57,8 +57,8 @@ Item {
                     text: root._greeting()
                     color: Commons.Appearance.colors.textPrimary
                     font.family: Commons.Appearance.font.display
-                    font.pixelSize: 22
-                    font.weight: Font.DemiBold
+                    font.pixelSize: Commons.Appearance.font.sizeHeadline
+                    font.weight: Commons.Appearance.font.weightSemibold
                 }
                 Text {
                     text: Qt.formatDateTime(root._now, "dddd, d MMMM")
@@ -74,8 +74,8 @@ Item {
                 text: Qt.formatDateTime(root._now, "HH:mm")
                 color: Commons.Appearance.colors.accent
                 font.family: Commons.Appearance.font.family
-                font.pixelSize: 40
-                font.weight: Font.Light
+                font.pixelSize: Commons.Appearance.font.sizeDisplay
+                font.weight: Commons.Appearance.font.weightLight
             }
 
             // Close button

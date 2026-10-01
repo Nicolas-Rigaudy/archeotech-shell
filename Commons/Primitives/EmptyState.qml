@@ -10,7 +10,7 @@ Item {
     property string icon:     ""
     property string title:    ""
     property string hint:     ""
-    property int    iconSize: 30
+    property int    iconSize: Commons.Appearance.font.size6xl
 
     implicitHeight: col.implicitHeight + 24
 

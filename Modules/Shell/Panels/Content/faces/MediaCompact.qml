@@ -34,7 +34,7 @@ RowLayout {
             visible: art.status !== Image.Ready
             text: MediaServices.MprisService.appIcon || "󰝚"
             color: Commons.Appearance.colors.accent
-            font.pixelSize: 24
+            font.pixelSize: Commons.Appearance.font.size5xl
             font.family: Commons.Appearance.font.family
         }
     }
@@ -50,7 +50,7 @@ RowLayout {
             color: Commons.Appearance.colors.textPrimary
             font.pixelSize: Commons.Appearance.font.sizeBase
             font.family: Commons.Appearance.font.family
-            font.weight: Font.Medium
+            font.weight: Commons.Appearance.font.weightMedium
             elide: Text.ElideRight
         }
         Text {
@@ -67,7 +67,7 @@ RowLayout {
     Text {
         text: "󰒮"
         color: cPrev.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textSecondary
-        font.pixelSize: 16; font.family: Commons.Appearance.font.family
+        font.pixelSize: Commons.Appearance.font.sizeXl; font.family: Commons.Appearance.font.family
         Layout.alignment: Qt.AlignVCenter
         Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
         MouseArea { id: cPrev; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; onClicked: MediaServices.MprisService.previous() }
@@ -75,7 +75,7 @@ RowLayout {
     Text {
         text: MediaServices.MprisService.playing ? "󰏤" : "󰐊"
         color: cPlay.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textPrimary
-        font.pixelSize: 22; font.family: Commons.Appearance.font.family
+        font.pixelSize: Commons.Appearance.font.sizeHeadline; font.family: Commons.Appearance.font.family
         Layout.alignment: Qt.AlignVCenter
         Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
         MouseArea { id: cPlay; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: MediaServices.MprisService.togglePlay() }
@@ -83,7 +83,7 @@ RowLayout {
     Text {
         text: "󰒭"
         color: cNext.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textSecondary
-        font.pixelSize: 16; font.family: Commons.Appearance.font.family
+        font.pixelSize: Commons.Appearance.font.sizeXl; font.family: Commons.Appearance.font.family
         Layout.alignment: Qt.AlignVCenter
         Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
         MouseArea { id: cNext; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; onClicked: MediaServices.MprisService.next() }

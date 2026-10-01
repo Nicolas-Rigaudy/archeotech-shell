@@ -67,7 +67,7 @@ Item {
                 // back to the body family when the pack ships none).
                 font.family: Commons.Appearance.font.display
                 font.pixelSize: Commons.Appearance.font.sizeMd
-                font.letterSpacing: 1.5
+                font.letterSpacing: Commons.Appearance.font.trackingLabel
                 opacity: 0.85
             }
             Rectangle {

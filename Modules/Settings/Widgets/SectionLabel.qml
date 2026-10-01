@@ -10,8 +10,8 @@ Text {
     // Display face for section captions (Cinzel under a grimdark pack; body family otherwise).
     // Slightly larger than the mono caption so the inscriptional caps stay legible.
     readonly property bool _disp: Commons.Appearance.font.display !== Commons.Appearance.font.family
-    font.pixelSize: _disp ? 12 : 10
+    font.pixelSize: _disp ? Commons.Appearance.font.sizeBase : Commons.Appearance.font.size2xs
     font.family: Commons.Appearance.font.display
-    font.weight: Font.Medium
-    font.letterSpacing: _disp ? 1.0 : 1.5
+    font.weight: Commons.Appearance.font.weightMedium
+    font.letterSpacing: _disp ? Commons.Appearance.font.trackingDisplay : Commons.Appearance.font.trackingLabel
 }

@@ -119,6 +119,19 @@ Item {
                         currentValue: Commons.Appearance.effectiveGlassPreset
                         onSelected: v => Persistence.Config.set("appearance.glass", v)
                     }
+                    // Text size (item_110 wave 2): multiplies every step of the type scale.
+                    ButtonGroupRow {
+                        label: "Text size"
+                        description: "Scales all text and icons in the shell"
+                        options: [
+                            { value: "0.9", label: "Small" },
+                            { value: "1",   label: "Default" },
+                            { value: "1.1", label: "Large" },
+                            { value: "1.2", label: "Larger" }
+                        ]
+                        currentValue: String(Commons.Appearance.fontScale)
+                        onSelected: v => Persistence.Config.set("appearance.fontScale", Number(v))
+                    }
                     ToggleRow {
                         label: "Flat mode"
                         description: "Drop the liquid-glass sheen + card shadows for a flatter look — opacity stays as set above, just without the 3D depth"

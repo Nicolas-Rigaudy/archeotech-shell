@@ -105,7 +105,7 @@ Item {
                         Text {
                             text: "󰏬"
                             color: Commons.Appearance.colors.accent
-                            font.pixelSize: 24; font.family: Commons.Appearance.font.family
+                            font.pixelSize: Commons.Appearance.font.size5xl; font.family: Commons.Appearance.font.family
                             Layout.alignment: Qt.AlignVCenter
                         }
                         ColumnLayout {
@@ -117,7 +117,7 @@ Item {
                                 color: Commons.Appearance.colors.textPrimary
                                 font.pixelSize: Commons.Appearance.font.sizeMd
                                 font.family: Commons.Appearance.font.family
-                                font.weight: Font.Medium
+                                font.weight: Commons.Appearance.font.weightMedium
                             }
                             Text {
                                 text: "Click-to-assign builder for the bar, strips & widgets  ·  Super+Shift+E"
@@ -131,7 +131,7 @@ Item {
                         Text {
                             text: "󰅂"
                             color: Commons.Appearance.colors.textMuted
-                            font.pixelSize: 18; font.family: Commons.Appearance.font.family
+                            font.pixelSize: Commons.Appearance.font.size2xl; font.family: Commons.Appearance.font.family
                             Layout.alignment: Qt.AlignVCenter
                         }
                     }
@@ -208,7 +208,7 @@ Item {
                                 Text {
                                     text: root._savedProp ? "󰄬" : "󰆓"
                                     color: Commons.Appearance.colors.accent
-                                    font.pixelSize: 16; font.family: Commons.Appearance.font.family
+                                    font.pixelSize: Commons.Appearance.font.sizeXl; font.family: Commons.Appearance.font.family
                                 }
                                 Text {
                                     text: root._savedProp ? "Saved as default" : "Save as default"

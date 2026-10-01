@@ -65,7 +65,7 @@ Item {
                         color: Commons.Appearance.colors.textPrimary
                         font.pixelSize: Commons.Appearance.font.sizeLg
                         font.family: Commons.Appearance.font.display
-                        font.weight: Font.Medium
+                        font.weight: Commons.Appearance.font.weightMedium
                         elide: Text.ElideRight
                         Layout.fillWidth: true
                     }
@@ -82,7 +82,7 @@ Item {
                             anchors.centerIn: parent
                             text: "󰩺"
                             color: _clearLayer.hovered ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
-                            font.pixelSize: 15; font.family: Commons.Appearance.font.family
+                            font.pixelSize: Commons.Appearance.font.sizeXl; font.family: Commons.Appearance.font.family
                             Behavior on color { Commons.ColorAnim {} }
                         }
                         StateLayer {
@@ -106,7 +106,7 @@ Item {
                             color: SystemServices.Notifications.dndEnabled
                                 ? Commons.Appearance.colors.accent
                                 : (_dndLayer.hovered ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted)
-                            font.pixelSize: 15; font.family: Commons.Appearance.font.family
+                            font.pixelSize: Commons.Appearance.font.sizeXl; font.family: Commons.Appearance.font.family
                             Behavior on color { Commons.ColorAnim {} }
                         }
                         StateLayer {
@@ -126,7 +126,7 @@ Item {
                             anchors.centerIn: parent
                             text: "✕"
                             color: _closeLayer.hovered ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
-                            font.pixelSize: 14; font.family: Commons.Appearance.font.family
+                            font.pixelSize: Commons.Appearance.font.sizeLg; font.family: Commons.Appearance.font.family
                             Behavior on color { Commons.ColorAnim {} }
                         }
                         StateLayer {
@@ -210,7 +210,7 @@ Item {
                                         visible: !_ncIcon.visible
                                         text: "󰂚"
                                         color: Commons.Appearance.colors.textMuted
-                                        font.pixelSize: 16
+                                        font.pixelSize: Commons.Appearance.font.sizeXl
                                         font.family: Commons.Appearance.font.family
                                     }
                                 }
@@ -233,7 +233,7 @@ Item {
                                         Text {
                                             text: modelData.timestamp || ""
                                             color: Commons.Appearance.colors.textMuted
-                                            font.pixelSize: Commons.Appearance.font.sizeSm - 1
+                                            font.pixelSize: Commons.Appearance.font.size2xs
                                             font.family: Commons.Appearance.font.family
                                         }
                                         // Dismiss — StateLayer hit target.
@@ -246,7 +246,7 @@ Item {
                                                 anchors.centerIn: parent
                                                 text: "󰅖"
                                                 color: _dismissLayer.hovered ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
-                                                font.pixelSize: 13; font.family: Commons.Appearance.font.family
+                                                font.pixelSize: Commons.Appearance.font.sizeMd; font.family: Commons.Appearance.font.family
                                                 Behavior on color { Commons.ColorAnim {} }
                                             }
                                             StateLayer {
@@ -263,7 +263,7 @@ Item {
                                         color: Commons.Appearance.colors.textPrimary
                                         font.pixelSize: Commons.Appearance.font.sizeMd
                                         font.family: Commons.Appearance.font.family
-                                        font.weight: Font.Medium
+                                        font.weight: Commons.Appearance.font.weightMedium
                                         Layout.fillWidth: true
                                         wrapMode: Text.WordWrap
                                     }

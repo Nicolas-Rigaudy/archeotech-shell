@@ -43,16 +43,16 @@ Item {
                     Text {
                         text: "󰒓"
                         color: Commons.Appearance.colors.accent
-                        font.pixelSize: 36
+                        font.pixelSize: Commons.Appearance.font.size7xl
                         font.family: Commons.Appearance.font.family
                     }
 
                     Text {
                         text: "Archeotech Shell"
                         color: Commons.Appearance.colors.textPrimary
-                        font.pixelSize: 22
+                        font.pixelSize: Commons.Appearance.font.sizeHeadline
                         font.family: Commons.Appearance.font.family
-                        font.weight: Font.Bold
+                        font.weight: Commons.Appearance.font.weightBold
                     }
 
                     Text {
@@ -153,7 +153,7 @@ Item {
                                         Text {
                                             text: modelData.icon
                                             color: Commons.Appearance.colors.textMuted
-                                            font.pixelSize: 16; font.family: Commons.Appearance.font.family
+                                            font.pixelSize: Commons.Appearance.font.sizeXl; font.family: Commons.Appearance.font.family
                                             Layout.alignment: Qt.AlignVCenter
                                         }
 
@@ -168,7 +168,7 @@ Item {
                                         Text {
                                             text: "󰏌"
                                             color: Commons.Appearance.colors.textMuted
-                                            font.pixelSize: 12; font.family: Commons.Appearance.font.family
+                                            font.pixelSize: Commons.Appearance.font.sizeBase; font.family: Commons.Appearance.font.family
                                         }
                                     }
 

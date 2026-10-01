@@ -98,7 +98,7 @@ PanelWindow {
                 Text {
                     text: osdWindow.osdIcon
                     color: osdWindow.osdColor
-                    font.pixelSize: 20
+                    font.pixelSize: Commons.Appearance.font.size3xl
                     font.family: Commons.Appearance.font.family
                     Layout.alignment: Qt.AlignVCenter
                     Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
@@ -124,7 +124,7 @@ PanelWindow {
                     color: Commons.Appearance.colors.textSecondary
                     font.pixelSize: Commons.Appearance.font.sizeSm
                     font.family: Commons.Appearance.font.family
-                    font.weight: Font.Medium
+                    font.weight: Commons.Appearance.font.weightMedium
                     Layout.alignment: Qt.AlignVCenter
                     Layout.minimumWidth: 38
                     horizontalAlignment: Text.AlignRight

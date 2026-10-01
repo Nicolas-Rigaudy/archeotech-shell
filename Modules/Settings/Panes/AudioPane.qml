@@ -97,7 +97,7 @@ Item {
                                         Text {
                                             text: isDefault ? "󰕾" : "󰖁"
                                             color: isDefault ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textMuted
-                                            font.pixelSize: 16; font.family: Commons.Appearance.font.family
+                                            font.pixelSize: Commons.Appearance.font.sizeXl; font.family: Commons.Appearance.font.family
                                             Layout.alignment: Qt.AlignVCenter
                                             Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                                         }
@@ -133,7 +133,7 @@ Item {
                                                 Behavior on rotation { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                                                 color: sinkDelegate._expanded ? Commons.Appearance.colors.accent
                                                      : (gearLayer.hovered ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted)
-                                                font.pixelSize: 14; font.family: Commons.Appearance.font.family
+                                                font.pixelSize: Commons.Appearance.font.sizeLg; font.family: Commons.Appearance.font.family
                                             }
                                             StateLayer {
                                                 id: gearLayer
@@ -258,7 +258,7 @@ Item {
                                         Text {
                                             text: isDefault ? "󰍬" : "󰍭"
                                             color: isDefault ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textMuted
-                                            font.pixelSize: 16; font.family: Commons.Appearance.font.family
+                                            font.pixelSize: Commons.Appearance.font.sizeXl; font.family: Commons.Appearance.font.family
                                             Layout.alignment: Qt.AlignVCenter
                                             Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                                         }

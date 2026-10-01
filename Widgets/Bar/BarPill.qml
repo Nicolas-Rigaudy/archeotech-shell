@@ -26,7 +26,7 @@ Item {
     property string icon:      ""
     property color  iconColor: Commons.Appearance.colors.textSecondary
     property color  hoverColor: Commons.Appearance.colors.accent
-    property int    iconSize:  18
+    property int    iconSize:  Commons.Appearance.font.size2xl
     // Value shown next to the icon on a horizontal bar; hidden when vertical
     // (thin bar) or empty. e.g. "82%", "18:30".
     property string text:      ""

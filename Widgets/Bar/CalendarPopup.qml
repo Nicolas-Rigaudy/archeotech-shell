@@ -143,7 +143,7 @@ Item {
                 color: Commons.Appearance.colors.textPrimary
                 font.pixelSize: Commons.Appearance.font.sizeMd
                 font.family: Commons.Appearance.font.display
-                font.weight: Font.Medium
+                font.weight: Commons.Appearance.font.weightMedium
                 width: parent.width - 40
                 horizontalAlignment: Text.AlignHCenter
             }
@@ -178,7 +178,7 @@ Item {
                     width: card.cellW
                     horizontalAlignment: Text.AlignHCenter
                     color: Commons.Appearance.colors.textMuted
-                    font.pixelSize: Commons.Appearance.font.sizeSm - 1
+                    font.pixelSize: Commons.Appearance.font.size2xs
                     font.family: Commons.Appearance.font.family
                 }
             }
@@ -219,7 +219,7 @@ Item {
                         color: parent.isToday ? Commons.Appearance.colors.base : Commons.Appearance.colors.textPrimary
                         font.pixelSize: Commons.Appearance.font.sizeSm
                         font.family: Commons.Appearance.font.family
-                        font.weight: parent.isToday ? Font.Medium : Font.Normal
+                        font.weight: parent.isToday ? Commons.Appearance.font.weightMedium : Commons.Appearance.font.weightRegular
                     }
                 }
             }

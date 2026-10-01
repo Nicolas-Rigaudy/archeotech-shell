@@ -1,5 +1,6 @@
 pragma Singleton
 import QtQuick
+import "../../Commons" as Commons
 import "../../Modules/Shell/Panels/Content" as Content
 
 // Sprint 17 Stage 5 — registry mapping panelId → { content, side, size, axisSize }.
@@ -80,7 +81,7 @@ QtObject {
                 anchors.centerIn: parent
                 text: "(panel content TODO)"
                 color: "#cad3f5"
-                font.pixelSize: 14
+                font.pixelSize: Commons.Appearance.font.sizeLg
                 font.family: "FiraCode Nerd Font"
             }
         }

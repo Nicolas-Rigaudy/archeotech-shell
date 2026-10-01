@@ -105,7 +105,7 @@ Item {
                 color: Commons.Appearance.colors.textPrimary
                 font.pixelSize: Commons.Appearance.font.sizeLg
                 font.family: Commons.Appearance.font.display
-                font.weight: Font.Medium
+                font.weight: Commons.Appearance.font.weightMedium
                 Layout.fillWidth: true
             }
         }
@@ -125,7 +125,7 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 text: "󰝚"
                 color: Commons.Appearance.colors.accent
-                font.pixelSize: 34
+                font.pixelSize: Commons.Appearance.font.size6xl
                 font.family: Commons.Appearance.font.family
             }
             Text {
@@ -134,7 +134,7 @@ Item {
                 color: Commons.Appearance.colors.textPrimary
                 font.pixelSize: Commons.Appearance.font.sizeMd
                 font.family: Commons.Appearance.font.family
-                font.weight: Font.Medium
+                font.weight: Commons.Appearance.font.weightMedium
             }
             Text {
                 Layout.alignment: Qt.AlignHCenter

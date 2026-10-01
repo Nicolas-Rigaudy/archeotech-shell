@@ -126,7 +126,7 @@ Item {
                     visible: !_toastIcon.visible
                     text: "󰂚"
                     color: Commons.Appearance.colors.textMuted
-                    font.pixelSize: 16
+                    font.pixelSize: Commons.Appearance.font.sizeXl
                     font.family: Commons.Appearance.font.family
                 }
             }
@@ -157,7 +157,7 @@ Item {
                             anchors.centerIn: parent
                             text: "󰅖"
                             color: _xLayer.hovered ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
-                            font.pixelSize: 13; font.family: Commons.Appearance.font.family
+                            font.pixelSize: Commons.Appearance.font.sizeMd; font.family: Commons.Appearance.font.family
                             Behavior on color { Commons.ColorAnim {} }
                         }
                         StateLayer {
@@ -174,7 +174,7 @@ Item {
                     color: Commons.Appearance.colors.textPrimary
                     font.pixelSize: Commons.Appearance.font.sizeMd
                     font.family: Commons.Appearance.font.family
-                    font.weight: Font.Medium
+                    font.weight: Commons.Appearance.font.weightMedium
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
                 }
