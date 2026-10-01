@@ -17,7 +17,7 @@ Item {
     ColumnLayout {
         id: _col
         anchors { left: parent.left; right: parent.right; top: parent.top }
-        spacing: 6
+        spacing: Commons.Appearance.spacing.s2
 
         ColumnLayout {
             Layout.fillWidth: true

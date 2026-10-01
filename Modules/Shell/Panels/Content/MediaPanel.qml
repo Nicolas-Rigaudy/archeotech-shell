@@ -93,7 +93,7 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Commons.Appearance.spacing.s2
             Text {
                 text: "󰝚"
                 color: Commons.Appearance.colors.textPrimary

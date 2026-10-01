@@ -407,7 +407,7 @@ Item {
                 Row {
                     id: tilesRow
                     spacing: Commons.Appearance.spacing.lg
-                    anchors { left: parent.left; right: parent.right; top: recentsLbl.bottom; topMargin: 4 }
+                    anchors { left: parent.left; right: parent.right; top: recentsLbl.bottom; topMargin: Commons.Appearance.spacing.s1 }
 
                     Repeater {
                         model: root.topRecents
@@ -443,7 +443,7 @@ Item {
 
                                 Item {
                                     id: tileIconWrapper
-                                    anchors { top: parent.top; topMargin: 8; horizontalCenter: parent.horizontalCenter }
+                                    anchors { top: parent.top; topMargin: Commons.Appearance.spacing.s2; horizontalCenter: parent.horizontalCenter }
                                     width: 26; height: 26
                                     property int _idx: 0
                                     property var _cands: {
@@ -482,7 +482,7 @@ Item {
                                 }
 
                                 Text {
-                                    anchors { bottom: parent.bottom; bottomMargin: 6; left: parent.left; leftMargin: 6; right: parent.right; rightMargin: 6 }
+                                    anchors { bottom: parent.bottom; bottomMargin: Commons.Appearance.spacing.s2; left: parent.left; leftMargin: Commons.Appearance.spacing.s2; right: parent.right; rightMargin: Commons.Appearance.spacing.s2 }
                                     text:  tile.modelData.name || ""
                                     color: Commons.Appearance.colors.textSecondary
                                     font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeSm }
@@ -501,7 +501,7 @@ Item {
                                     z: 1
                                     readonly property bool _pinned: root.isPinned(tile.modelData)
                                     visible: _pinned
-                                    anchors { top: parent.top; right: parent.right; margins: 4 }
+                                    anchors { top: parent.top; right: parent.right; margins: Commons.Appearance.spacing.s1 }
                                     width: 20; height: 20
                                     radius: Commons.Appearance.radius.sm
                                     color:   _tileUnpinArea.containsMouse ? Commons.Appearance.colors.surface0 : "transparent"
@@ -556,7 +556,7 @@ Item {
 
                 Text {
                     id: searchGlyph
-                    anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
+                    anchors { left: parent.left; leftMargin: Commons.Appearance.spacing.s3; verticalCenter: parent.verticalCenter }
                     text:  ""
                     font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeXl }
                     color: searchInput.activeFocus ? Commons.Appearance.colors.accent
@@ -566,8 +566,8 @@ Item {
                 TextInput {
                     id: searchInput
                     anchors {
-                        left: searchGlyph.right; leftMargin: 10
-                        right: clearBtn.left;    rightMargin: 6
+                        left: searchGlyph.right; leftMargin: Commons.Appearance.spacing.s3
+                        right: clearBtn.left;    rightMargin: Commons.Appearance.spacing.s2
                         verticalCenter: parent.verticalCenter
                     }
                     color:         Commons.Appearance.colors.textPrimary
@@ -598,7 +598,7 @@ Item {
                 // Clear button — appears once there's a query.
                 Rectangle {
                     id: clearBtn
-                    anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
+                    anchors { right: parent.right; rightMargin: Commons.Appearance.spacing.s2; verticalCenter: parent.verticalCenter }
                     width: 24; height: 24
                     radius: Commons.Appearance.radius.sm
                     visible: searchInput.text.length > 0
@@ -624,7 +624,7 @@ Item {
             ListView {
                 id:             resultList
                 width:          parent.width
-                spacing:        8
+                spacing:        Commons.Appearance.spacing.s2
                 // Two-line rows (§ ref launchers: Caelestia 57 / Dank 52) — a
                 // 40px single-line row read like a menu, not a launcher.
                 readonly property int rowH: 52
@@ -663,7 +663,7 @@ Item {
                     // ── Icon with fallback chain ───────────────────────────────
                     Item {
                         id: iconWrapper
-                        anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
+                        anchors { left: parent.left; leftMargin: Commons.Appearance.spacing.s3; verticalCenter: parent.verticalCenter }
                         width: 34; height: 34
 
                         property int _idx: 0
@@ -705,8 +705,8 @@ Item {
                     // treatment every mature launcher uses.
                     Column {
                         anchors {
-                            left:  iconWrapper.right; leftMargin:  12
-                            right: pinBtn.left;       rightMargin: 6
+                            left:  iconWrapper.right; leftMargin:  Commons.Appearance.spacing.s3
+                            right: pinBtn.left;       rightMargin: Commons.Appearance.spacing.s2
                             verticalCenter: parent.verticalCenter
                         }
                         spacing: 1
@@ -736,7 +736,7 @@ Item {
                     Rectangle {
                         id: pinBtn
                         readonly property bool _pinned: !modelData.__kind && root.isPinned(modelData)
-                        anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
+                        anchors { right: parent.right; rightMargin: Commons.Appearance.spacing.s3; verticalCenter: parent.verticalCenter }
                         width: 24; height: 24
                         radius: Commons.Appearance.radius.sm
                         visible: !modelData.__kind && (_pinned || root.selectedIdx === index)

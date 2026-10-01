@@ -36,15 +36,15 @@ Item {
 
             ColumnLayout {
                 id: col
-                anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: 24; leftMargin: 24; rightMargin: 24 }
+                anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: Commons.Appearance.spacing.s6; leftMargin: Commons.Appearance.spacing.s6; rightMargin: Commons.Appearance.spacing.s6 }
                 width: root.width - 48
-                spacing: 6
+                spacing: Commons.Appearance.spacing.s2
 
                 // ── Wi-Fi | Bluetooth tabs — shared SegmentedControl ──────────
                 SegmentedControl {
                     Layout.preferredWidth: 260
                     Layout.preferredHeight: 30
-                    Layout.bottomMargin: 4
+                    Layout.bottomMargin: Commons.Appearance.spacing.s1
                     model: [
                         { label: "Wi-Fi",     glyph: "󰖩" },
                         { label: "Bluetooth", glyph: "󰂯" }
@@ -66,7 +66,7 @@ Item {
 
                         RowLayout {
                             id: wifiToggleRow
-                            spacing: 5
+                            spacing: Commons.Appearance.spacing.s1
 
                             Text {
                                 text: NetworkServices.Network.wifiEnabled ? "󰖩" : "󰖪"
@@ -120,7 +120,7 @@ Item {
                             font.pixelSize: Commons.Appearance.font.size2xs; font.family: Commons.Appearance.font.family
                             font.weight: Commons.Appearance.font.weightMedium; font.letterSpacing: Commons.Appearance.font.trackingLabel
                             Layout.fillWidth: true
-                            Layout.topMargin: 6; Layout.bottomMargin: 2
+                            Layout.topMargin: Commons.Appearance.spacing.s2; Layout.bottomMargin: 2
                         }
 
                         Repeater {
@@ -134,7 +134,7 @@ Item {
                             color: Commons.Appearance.colors.textMuted
                             font.pixelSize: Commons.Appearance.font.sizeBase
                             font.family: Commons.Appearance.font.family
-                            Layout.fillWidth: true; Layout.topMargin: 4; Layout.bottomMargin: 4
+                            Layout.fillWidth: true; Layout.topMargin: Commons.Appearance.spacing.s1; Layout.bottomMargin: Commons.Appearance.spacing.s1
                         }
                 }
 
@@ -150,7 +150,7 @@ Item {
                 RowLayout {
                     visible: root._tab === 1
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: Commons.Appearance.spacing.s2
                     Item { Layout.fillWidth: true }
 
                     // Scan for new devices — toggles discovery (bt-agent.py --scan).
@@ -162,7 +162,7 @@ Item {
                             : NetworkServices.Bluetooth.startScan()
                         RowLayout {
                             id: scanRow
-                            spacing: 5
+                            spacing: Commons.Appearance.spacing.s1
                             Text {
                                 id: scanIco
                                 text: NetworkServices.Bluetooth.discovering ? "󰑙" : "󰂰"
@@ -184,7 +184,7 @@ Item {
 
                         RowLayout {
                             id: btToggleRow
-                            spacing: 5
+                            spacing: Commons.Appearance.spacing.s1
 
                             Text {
                                 text: NetworkServices.Bluetooth.enabled ? "󰂯" : "󰂲"
@@ -228,7 +228,7 @@ Item {
 
                                 RowLayout {
                                     anchors { fill: parent; topMargin: index > 0 ? 1 : 0 }
-                                    spacing: 10
+                                    spacing: Commons.Appearance.spacing.s3
 
                                     Text {
                                         text: modelData.connected ? "󰂱" : "󰂯"
@@ -352,7 +352,7 @@ Item {
                         Rectangle {
                             visible: NetworkServices.Bluetooth.discovering
                                   || NetworkServices.Bluetooth.devices.filter(function(d){ return !d.paired }).length > 0
-                            Layout.fillWidth: true; Layout.topMargin: 6
+                            Layout.fillWidth: true; Layout.topMargin: Commons.Appearance.spacing.s2
                             height: 1; color: Commons.Appearance.colors.surface0
                         }
                         Text {
@@ -362,7 +362,7 @@ Item {
                             color: Commons.Appearance.colors.textMuted
                             font.pixelSize: Commons.Appearance.font.size2xs; font.family: Commons.Appearance.font.family
                             font.weight: Commons.Appearance.font.weightMedium; font.letterSpacing: Commons.Appearance.font.trackingLabel
-                            Layout.fillWidth: true; Layout.topMargin: 6; Layout.bottomMargin: 2
+                            Layout.fillWidth: true; Layout.topMargin: Commons.Appearance.spacing.s2; Layout.bottomMargin: 2
                         }
                         Text {
                             visible: NetworkServices.Bluetooth.discovering
@@ -380,7 +380,7 @@ Item {
                                 Layout.fillWidth: true
                                 implicitHeight: 36
                                 RowLayout {
-                                    anchors.fill: parent; spacing: 10
+                                    anchors.fill: parent; spacing: Commons.Appearance.spacing.s3
                                     Text {
                                         text: "󰂯"; color: Commons.Appearance.colors.textMuted
                                         font.pixelSize: Commons.Appearance.font.sizeXl; font.family: Commons.Appearance.font.family
@@ -429,7 +429,7 @@ Item {
                     font.family: Commons.Appearance.font.family
                 }
 
-                Item { implicitHeight: 10; Layout.fillWidth: true }
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
             }
         }
     }
@@ -451,7 +451,7 @@ Item {
         RowLayout {
             anchors { left: parent.left; right: parent.right; top: parent.top }
             height: 40
-            spacing: 8
+            spacing: Commons.Appearance.spacing.s2
 
             Text {
                 text: NetworkServices.Network.signalIcon(modelData.signal, modelData.security !== "" && modelData.security !== "--")
@@ -532,7 +532,7 @@ Item {
                 onClicked: NetworkServices.Network.setAutoconnect(modelData.ssid, !modelData.autoconnect)
                 RowLayout {
                     id: _autoRow
-                    spacing: 4
+                    spacing: Commons.Appearance.spacing.s1
                     Text {
                         text: "󰁪"
                         color: modelData.autoconnect ? Commons.Appearance.colors.base : Commons.Appearance.colors.textMuted
@@ -568,9 +568,9 @@ Item {
 
         // Inline password field
         RowLayout {
-            anchors { left: parent.left; right: parent.right; top: parent.top; topMargin: 42 }
+            anchors { left: parent.left; right: parent.right; top: parent.top; topMargin: Commons.Appearance.spacing.s11 }
             height: 34
-            spacing: 8
+            spacing: Commons.Appearance.spacing.s2
             visible: _showPw
 
             TextField {

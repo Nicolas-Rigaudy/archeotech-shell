@@ -37,9 +37,9 @@ Item {
 
             ColumnLayout {
                 id: col
-                anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: 24; leftMargin: 24; rightMargin: 24 }
+                anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: Commons.Appearance.spacing.s6; leftMargin: Commons.Appearance.spacing.s6; rightMargin: Commons.Appearance.spacing.s6 }
                 width: root.width - 48
-                spacing: 6
+                spacing: Commons.Appearance.spacing.s2
 
                 SectionLabel { text: "OUTPUT DEVICE" }
 
@@ -60,8 +60,8 @@ Item {
                                 required property var modelData
                                 required property int index
                                 Layout.fillWidth: true
-                                Layout.leftMargin: 4
-                                Layout.rightMargin: 4
+                                Layout.leftMargin: Commons.Appearance.spacing.s1
+                                Layout.rightMargin: Commons.Appearance.spacing.s1
                                 implicitHeight: 44 + (_expanded ? optsItem.implicitHeight : 0)
                                 clip: true
 
@@ -91,8 +91,8 @@ Item {
                                     Behavior on color { Commons.ColorAnim {} }
 
                                     RowLayout {
-                                        anchors { fill: parent; leftMargin: 12; rightMargin: 8 }
-                                        spacing: 10
+                                        anchors { fill: parent; leftMargin: Commons.Appearance.spacing.s3; rightMargin: Commons.Appearance.spacing.s2 }
+                                        spacing: Commons.Appearance.spacing.s3
 
                                         Text {
                                             text: isDefault ? "󰕾" : "󰖁"
@@ -144,7 +144,7 @@ Item {
                                     }
 
                                     StateLayer {
-                                        anchors { left: parent.left; right: parent.right; top: parent.top; bottom: parent.bottom; rightMargin: 40 }
+                                        anchors { left: parent.left; right: parent.right; top: parent.top; bottom: parent.bottom; rightMargin: Commons.Appearance.spacing.s10 }
                                         onClicked: if (!sinkDelegate.isDefault) MediaServices.Audio.setDefaultSink(sinkDelegate.modelData.name)
                                     }
                                 }
@@ -158,12 +158,12 @@ Item {
 
                                     ColumnLayout {
                                         id: optsCol
-                                        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 26; rightMargin: 8; topMargin: 2 }
-                                        spacing: 6
+                                        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: Commons.Appearance.spacing.s7; rightMargin: Commons.Appearance.spacing.s2; topMargin: 2 }
+                                        spacing: Commons.Appearance.spacing.s2
 
                                         RowLayout {
                                             Layout.fillWidth: true
-                                            spacing: 10
+                                            spacing: Commons.Appearance.spacing.s3
                                             Text {
                                                 text: "Name"
                                                 color: Commons.Appearance.colors.textSecondary
@@ -181,7 +181,7 @@ Item {
                                                 Behavior on border.color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                                                 TextField {
                                                     id: aliasField
-                                                    anchors { fill: parent; leftMargin: 8; rightMargin: 8 }
+                                                    anchors { fill: parent; leftMargin: Commons.Appearance.spacing.s2; rightMargin: Commons.Appearance.spacing.s2 }
                                                     verticalAlignment: TextInput.AlignVCenter
                                                     text: MediaServices.Audio.aliasFor(sinkDelegate.modelData.name)
                                                     placeholderText: sinkDelegate.modelData.description || sinkDelegate.modelData.name
@@ -209,7 +209,7 @@ Item {
 
                 }
 
-                Item { implicitHeight: 10; Layout.fillWidth: true }
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
                 SectionLabel { text: "INPUT DEVICE" }
 
                 SettingsCard {
@@ -228,8 +228,8 @@ Item {
                                 required property var modelData
                                 required property int index
                                 Layout.fillWidth: true
-                                Layout.leftMargin: 4
-                                Layout.rightMargin: 4
+                                Layout.leftMargin: Commons.Appearance.spacing.s1
+                                Layout.rightMargin: Commons.Appearance.spacing.s1
                                 implicitHeight: 44
 
                                 readonly property bool isDefault: modelData.name === MediaServices.Audio.defaultSource
@@ -252,8 +252,8 @@ Item {
                                     Behavior on color { Commons.ColorAnim {} }
 
                                     RowLayout {
-                                        anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
-                                        spacing: 10
+                                        anchors { fill: parent; leftMargin: Commons.Appearance.spacing.s3; rightMargin: Commons.Appearance.spacing.s3 }
+                                        spacing: Commons.Appearance.spacing.s3
 
                                         Text {
                                             text: isDefault ? "󰍬" : "󰍭"
@@ -292,7 +292,7 @@ Item {
 
                 }
 
-                Item { implicitHeight: 10; Layout.fillWidth: true }
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
                 SectionLabel { text: "BEHAVIOUR" }
 
                 SettingsCard {

@@ -8,7 +8,7 @@ import "../../../../Commons" as Commons
 ColumnLayout {
     id: face
     property var card
-    spacing: 8
+    spacing: Commons.Appearance.spacing.s2
 
     component StatSpark: Item {
         required property string label
@@ -35,8 +35,8 @@ ColumnLayout {
             id: spark
             // Fill the row height (rows fillHeight in the card) so charts read as
             // proper trends rather than thin stranded lines.
-            anchors { left: lbl.right; leftMargin: 8; right: valLbl.left; rightMargin: 8
-                      top: parent.top; bottom: parent.bottom; topMargin: 5; bottomMargin: 5 }
+            anchors { left: lbl.right; leftMargin: Commons.Appearance.spacing.s2; right: valLbl.left; rightMargin: Commons.Appearance.spacing.s2
+                      top: parent.top; bottom: parent.bottom; topMargin: Commons.Appearance.spacing.s1; bottomMargin: Commons.Appearance.spacing.s1 }
             property var series: hist
             property color line: col
             onSeriesChanged: requestPaint()

@@ -66,7 +66,7 @@ Item {
         id: col
         visible: !root._packOwned
         anchors.fill: parent
-        spacing: 6
+        spacing: Commons.Appearance.spacing.s2
 
         // ── Mode toggle ─────────────────────────────────────────────────────
         // Shared segmented control — same language as the panel's page selector,
@@ -114,7 +114,7 @@ Item {
             Layout.fillWidth: root.vertical
             Layout.alignment: Qt.AlignHCenter
             visible: root._accents.length > 0
-            spacing: 8
+            spacing: Commons.Appearance.spacing.s2
             Repeater {
                 model: root._accents
                 delegate: Item {
@@ -239,8 +239,8 @@ Item {
                     Behavior on border.width { NumberAnimation { duration: Commons.Appearance.anim.fast } }
 
                     ColumnLayout {
-                        anchors { fill: parent; margins: 10 }
-                        spacing: 6
+                        anchors { fill: parent; margins: Commons.Appearance.spacing.s3 }
+                        spacing: Commons.Appearance.spacing.s2
                         Text {
                             text: tile.modelData.label
                             color: Commons.Appearance.colors.textPrimary
@@ -253,7 +253,7 @@ Item {
                         RowLayout {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            spacing: 4
+                            spacing: Commons.Appearance.spacing.s1
                             Repeater {
                                 model: tile.modelData.swatch
                                 delegate: Rectangle {
@@ -270,8 +270,8 @@ Item {
 
                 Rectangle {
                     visible: tile._active
-                    anchors { right: parent.right; top: parent.top; margins: 6 }
-                    width: 20; height: 20; radius: 10
+                    anchors { right: parent.right; top: parent.top; margins: Commons.Appearance.spacing.s2 }
+                    width: 20; height: 20; radius: width / 2
                     color: Commons.Appearance.colors.accent
                     Text {
                         anchors.centerIn: parent; text: "✓"

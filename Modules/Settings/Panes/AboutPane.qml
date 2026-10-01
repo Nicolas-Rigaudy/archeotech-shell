@@ -32,13 +32,13 @@ Item {
 
             ColumnLayout {
                 id: col
-                anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: 24; leftMargin: 24; rightMargin: 24 }
+                anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: Commons.Appearance.spacing.s6; leftMargin: Commons.Appearance.spacing.s6; rightMargin: Commons.Appearance.spacing.s6 }
                 width: root.width - 48
-                spacing: 6
+                spacing: Commons.Appearance.spacing.s2
 
                 // ── Hero ──────────────────────────────────────────────────────
                 SettingsCard {
-                    Item { implicitHeight: 14; Layout.fillWidth: true }
+                    Item { implicitHeight: Commons.Appearance.spacing.s4; Layout.fillWidth: true }
 
                     Text {
                         text: "󰒓"
@@ -69,10 +69,10 @@ Item {
                         font.family: Commons.Appearance.font.family
                     }
 
-                    Item { implicitHeight: 14; Layout.fillWidth: true }
+                    Item { implicitHeight: Commons.Appearance.spacing.s4; Layout.fillWidth: true }
                 }
 
-                Item { implicitHeight: 10; Layout.fillWidth: true }
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
                 SectionLabel { text: "ENVIRONMENT" }
 
                 SettingsCard {
@@ -118,7 +118,7 @@ Item {
                         }
                 }
 
-                Item { implicitHeight: 10; Layout.fillWidth: true }
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
                 SectionLabel { text: "LINKS" }
 
                 SettingsCard {
@@ -147,8 +147,8 @@ Item {
                                     radius: Commons.Appearance.radius.sm
 
                                     RowLayout {
-                                        anchors { fill: parent; leftMargin: 8; rightMargin: 8 }
-                                        spacing: 10
+                                        anchors { fill: parent; leftMargin: Commons.Appearance.spacing.s2; rightMargin: Commons.Appearance.spacing.s2 }
+                                        spacing: Commons.Appearance.spacing.s3
 
                                         Text {
                                             text: modelData.icon

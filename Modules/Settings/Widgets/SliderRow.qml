@@ -21,8 +21,8 @@ Item {
     Layout.fillWidth: true
 
     ColumnLayout {
-        anchors { fill: parent; topMargin: 8; bottomMargin: 8 }
-        spacing: 4
+        anchors { fill: parent; topMargin: Commons.Appearance.spacing.s2; bottomMargin: Commons.Appearance.spacing.s2 }
+        spacing: Commons.Appearance.spacing.s1
 
         RowLayout {
             Layout.fillWidth: true
@@ -67,7 +67,7 @@ Item {
                 y: (slider.height - height) / 2
                 width: slider.availableWidth
                 height: 8
-                radius: 4
+                radius: Commons.Appearance.radius.xs
                 // Sunk/recessed track + top-lit sheen fill — same language as the
                 // dashboard stat bars for a consistent 3d feel.
                 color: Commons.Appearance.colors.recessedTrack
@@ -87,7 +87,7 @@ Item {
                 id: knob
                 x: slider.visualPosition * (slider.availableWidth - width)
                 y: (slider.height - height) / 2
-                width: 20; height: 20; radius: 10
+                width: 20; height: 20; radius: width / 2
                 color: (slider.pressed || slider.hovered) ? Commons.Appearance.colors.accent : Commons.Appearance.colors.subtext1
                 scale: slider.pressed ? 0.92 : slider.hovered ? 1.08 : 1.0
                 // Raised 3d read: a darker edge + a top-lit gloss overlay, the same

@@ -47,7 +47,7 @@ Item {
     ColumnLayout {
         id: _col
         anchors { left: parent.left; right: parent.right; top: parent.top }
-        spacing: 4
+        spacing: Commons.Appearance.spacing.s1
 
         Repeater {
             model: root._fields

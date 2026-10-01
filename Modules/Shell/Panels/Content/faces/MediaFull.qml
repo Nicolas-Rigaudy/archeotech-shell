@@ -23,8 +23,8 @@ Item {
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         columns: face._narrow ? 1 : 2
-        columnSpacing: 14
-        rowSpacing: 14
+        columnSpacing: Commons.Appearance.spacing.s4
+        rowSpacing: Commons.Appearance.spacing.s4
 
     Item {
         readonly property int _art: face._narrow ? 72 : 92
@@ -77,7 +77,7 @@ Item {
     ColumnLayout {
         Layout.fillWidth: true
         Layout.alignment: Qt.AlignVCenter
-        spacing: 4
+        spacing: Commons.Appearance.spacing.s1
 
         Text {
             Layout.fillWidth: true
@@ -104,8 +104,8 @@ Item {
 
             Rectangle {
                 anchors.left: parent.left; anchors.right: parent.right
-                anchors.top: parent.top; anchors.topMargin: 6
-                height: 4; radius: 2
+                anchors.top: parent.top; anchors.topMargin: Commons.Appearance.spacing.s2
+                height: 4; radius: height / 2
                 color: Commons.Appearance.colors.surface0
 
                 Rectangle {
@@ -116,7 +116,7 @@ Item {
                 }
                 MouseArea {
                     anchors.fill: parent
-                    anchors.margins: -4
+                    anchors.margins: -Commons.Appearance.spacing.s1
                     enabled: MediaServices.MprisService.length > 0
                     onClicked: mouse => {
                         const frac = Math.max(0, Math.min(1, (mouse.x - 4) / parent.width))
@@ -147,7 +147,7 @@ Item {
                 color: prevArea.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textSecondary
                 font.pixelSize: Commons.Appearance.font.size3xl; font.family: Commons.Appearance.font.family
                 Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-                MouseArea { id: prevArea; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; onClicked: MediaServices.MprisService.previous() }
+                MouseArea { id: prevArea; anchors.fill: parent; anchors.margins: -Commons.Appearance.spacing.s2; hoverEnabled: true; onClicked: MediaServices.MprisService.previous() }
             }
             Item { Layout.preferredWidth: 24 }
             Item {
@@ -181,7 +181,7 @@ Item {
                 color: nextArea.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textSecondary
                 font.pixelSize: Commons.Appearance.font.size3xl; font.family: Commons.Appearance.font.family
                 Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-                MouseArea { id: nextArea; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; onClicked: MediaServices.MprisService.next() }
+                MouseArea { id: nextArea; anchors.fill: parent; anchors.margins: -Commons.Appearance.spacing.s2; hoverEnabled: true; onClicked: MediaServices.MprisService.next() }
             }
             Item { Layout.fillWidth: true }
         }

@@ -90,9 +90,9 @@ Item {
 
             ColumnLayout {
                 id: col
-                anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: 24; leftMargin: 24; rightMargin: 24 }
+                anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: Commons.Appearance.spacing.s6; leftMargin: Commons.Appearance.spacing.s6; rightMargin: Commons.Appearance.spacing.s6 }
                 width: root.width - 48
-                spacing: 6
+                spacing: Commons.Appearance.spacing.s2
 
                 SectionLabel { text: "MONITOR LAYOUT" }
 
@@ -109,9 +109,9 @@ Item {
                             currentValue: root.displayLayout
                             onSelected: v => root._applyDisplay(v)
                         }
-                        Item { implicitHeight: 8; Layout.fillWidth: true }
+                        Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                         Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
-                        Item { implicitHeight: 8; Layout.fillWidth: true }
+                        Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                         RowLayout {
                             Layout.fillWidth: true
                             ColumnLayout {
@@ -127,7 +127,7 @@ Item {
                         }
                 }
 
-                Item { implicitHeight: 10; Layout.fillWidth: true }
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
                 SectionLabel { text: "NIGHT LIGHT" }
 
                 SettingsCard {

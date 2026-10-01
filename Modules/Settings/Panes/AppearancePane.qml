@@ -50,9 +50,9 @@ Item {
 
             ColumnLayout {
                 id: col
-                anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: 24; leftMargin: 24; rightMargin: 24 }
+                anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: Commons.Appearance.spacing.s6; leftMargin: Commons.Appearance.spacing.s6; rightMargin: Commons.Appearance.spacing.s6 }
                 width: root.width - 48
-                spacing: 12
+                spacing: Commons.Appearance.spacing.s3
 
                 // ── Theme pack (adr_027 Layer A) ──────────────────────────────
                 // At the top — it drives the whole look. Same SegmentedControl
@@ -72,7 +72,7 @@ Item {
                     onActivated: index => Persistence.Config.set("appearance.activePack", root._packModel[index].id)
                 }
 
-                Item { implicitHeight: 10; Layout.fillWidth: true }
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
 
                 // ── Pack settings (adr_027 Layer D) ───────────────────────────
                 // Directly under the pack selector — the active pack's own knobs.
@@ -90,7 +90,7 @@ Item {
                     }
                 }
 
-                Item { implicitHeight: 10; Layout.fillWidth: true; visible: root._hasPackSettings }
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true; visible: root._hasPackSettings }
 
                 // ── Colour scheme (family → flavor + light/dark + schedule) ───
                 // Shared ColorSchemeBody (also powers the bottom Appearance
@@ -102,7 +102,7 @@ Item {
                     visible: !Commons.Appearance.packOwnsPalette
                 }
 
-                Item { implicitHeight: 10; Layout.fillWidth: true; visible: !Commons.Appearance.packOwnsPalette }
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true; visible: !Commons.Appearance.packOwnsPalette }
 
                 // ── Style ─────────────────────────────────────────────────────
                 // Flat mode + glass opacity are the BASE look's material controls —
@@ -119,9 +119,9 @@ Item {
                         currentValue: Commons.Appearance.effectiveGlassPreset
                         onSelected: v => Persistence.Config.set("appearance.glass", v)
                     }
-                    Item { implicitHeight: 8; Layout.fillWidth: true }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                     Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
-                    Item { implicitHeight: 8; Layout.fillWidth: true }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                     // Text size (item_110 wave 2): multiplies every step of the type scale.
                     ButtonGroupRow {
                         label: "Text size"
@@ -135,9 +135,9 @@ Item {
                         currentValue: String(Commons.Appearance.fontScale)
                         onSelected: v => Persistence.Config.set("appearance.fontScale", Number(v))
                     }
-                    Item { implicitHeight: 8; Layout.fillWidth: true }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                     Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
-                    Item { implicitHeight: 8; Layout.fillWidth: true }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                     // Depth: the same pick-one-of-N selector as Opacity / Text size
                     // (was a Flat mode toggle); still the appearance.flatMode bool.
                     ButtonGroupRow {
@@ -152,7 +152,7 @@ Item {
                     }
                 }
 
-                Item { implicitHeight: 10; Layout.fillWidth: true; visible: root._activePack === "" }
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true; visible: root._activePack === "" }
 
                 // ── Wallpaper ─────────────────────────────────────────────────
                 // Shares the exact WallpaperPickerBody the quick-switcher tab
@@ -166,7 +166,7 @@ Item {
                     carouselHeight: 200
                 }
 
-                Item { implicitHeight: 10; Layout.fillWidth: true }
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
 
                 // ── Logo ──────────────────────────────────────────────────────
                 SectionLabel { text: "LOGO" }

@@ -8,7 +8,7 @@ import "../../../../Commons" as Commons
 ColumnLayout {
     id: face
     property var card
-    spacing: 8
+    spacing: Commons.Appearance.spacing.s2
 
     readonly property int _cpu: card ? card.cpu : 0
     readonly property int _ram: card ? card.ram : 0
@@ -33,9 +33,9 @@ ColumnLayout {
         }
 
         Rectangle {
-            anchors { left: lbl.right; leftMargin: 8; right: valLbl.left; rightMargin: 8; verticalCenter: parent.verticalCenter }
+            anchors { left: lbl.right; leftMargin: Commons.Appearance.spacing.s2; right: valLbl.left; rightMargin: Commons.Appearance.spacing.s2; verticalCenter: parent.verticalCenter }
             height: 8
-            radius: 4
+            radius: Commons.Appearance.radius.xs
             color: Commons.Appearance.colors.recessedTrack
 
             Rectangle {

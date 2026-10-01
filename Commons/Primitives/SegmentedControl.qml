@@ -105,14 +105,14 @@ Item {
 
                 Rectangle {
                     anchors.fill: parent
-                    anchors.margins: 4
+                    anchors.margins: Commons.Appearance.spacing.s1
                     radius: track.radius - 3
                     color: (seg._hov && !seg._on) ? Commons.Appearance.colors.stateHover : "transparent"
                     Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                 }
                 Row {
                     anchors.centerIn: parent
-                    spacing: 6
+                    spacing: Commons.Appearance.spacing.s2
                     Text {
                         visible: !!seg.modelData.glyph
                         text: seg.modelData.glyph || ""

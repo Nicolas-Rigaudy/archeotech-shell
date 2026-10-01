@@ -163,7 +163,7 @@ Item {
         id: dots
         anchors { bottom: parent.bottom; horizontalCenter: parent.horizontalCenter }
         visible: faceHost.faces && faceHost.faces.length > 1
-        spacing: 6
+        spacing: Commons.Appearance.spacing.s2
         Repeater {
             model: faceHost.faces
             delegate: Rectangle {

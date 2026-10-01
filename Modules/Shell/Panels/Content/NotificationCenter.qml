@@ -53,7 +53,7 @@ Item {
                 // ── Header ────────────────────────────────────────────────────
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 6
+                    spacing: Commons.Appearance.spacing.s2
                     Text {                          // icon on the icon font
                         text: "󰂚"
                         color: Commons.Appearance.colors.textPrimary
@@ -151,7 +151,7 @@ Item {
                 // ── Notification list ─────────────────────────────────────────
                 Column {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: Commons.Appearance.spacing.s2
                     visible: SystemServices.Notifications.count > 0
 
                     Repeater {
@@ -186,8 +186,8 @@ Item {
 
                             RowLayout {
                                 id: _itemContent
-                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
-                                spacing: 10
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: Commons.Appearance.spacing.s3 }
+                                spacing: Commons.Appearance.spacing.s3
 
                                 // App icon — top-aligned so it spans the two text lines.
                                 Item {
@@ -217,11 +217,11 @@ Item {
 
                                 ColumnLayout {
                                     Layout.fillWidth: true
-                                    spacing: 4
+                                    spacing: Commons.Appearance.spacing.s1
 
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        spacing: 6
+                                        spacing: Commons.Appearance.spacing.s2
 
                                         Text {
                                             text: modelData.appName || "Notification"

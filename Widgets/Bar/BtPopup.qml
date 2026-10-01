@@ -91,7 +91,7 @@ Item {
         Item {
             width: parent.width; height: 40
             RowLayout {
-                anchors.fill: parent; spacing: 8
+                anchors.fill: parent; spacing: Commons.Appearance.spacing.s2
                 Rectangle {
                     width: 28; height: 28; radius: Commons.Appearance.radius.base
                     color: NetworkServices.Bluetooth.enabled ? Commons.Appearance.colors.accent : Commons.Appearance.colors.surface0
@@ -124,7 +124,7 @@ Item {
                     Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                     MouseArea {
                         id: _btCloseMA
-                        anchors.fill: parent; anchors.margins: -4
+                        anchors.fill: parent; anchors.margins: -Commons.Appearance.spacing.s1
                         hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                         onClicked: if (card.holderRoot) card.holderRoot._btPopupVisible = false
                     }
@@ -162,7 +162,7 @@ Item {
                 required property var modelData
                 width: parent.width; height: 32
                 RowLayout {
-                    anchors.fill: parent; spacing: 8
+                    anchors.fill: parent; spacing: Commons.Appearance.spacing.s2
                     Text {
                         text: modelData.connected ? "󰂱" : "󰂯"
                         color: modelData.connected ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textMuted

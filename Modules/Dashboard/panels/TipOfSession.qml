@@ -37,7 +37,7 @@ DashCard {
 
     RowLayout {
         Layout.fillWidth: true
-        spacing: 10
+        spacing: Commons.Appearance.spacing.s3
 
         Text {
             text: "TIP"

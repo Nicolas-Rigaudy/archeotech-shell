@@ -17,7 +17,7 @@ Item {
         anchors {
             left: parent.left
             right: toggle.left
-            rightMargin: 14
+            rightMargin: Commons.Appearance.spacing.s4
             verticalCenter: parent.verticalCenter
         }
         spacing: 2

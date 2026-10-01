@@ -120,7 +120,7 @@ Item {
     Row {
         id: _row
         anchors.centerIn: parent
-        spacing: 4
+        spacing: Commons.Appearance.spacing.s1
         Text {
             id: _icon
             text: pill.icon

@@ -265,7 +265,7 @@ Item {
         id: banner
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: 16
+        anchors.topMargin: Commons.Appearance.spacing.s4
         width: bannerRow.implicitWidth + 28
         height: 40
         radius: Commons.Appearance.radius.pill
@@ -279,7 +279,7 @@ Item {
         Row {
             id: bannerRow
             anchors.centerIn: parent
-            spacing: 12
+            spacing: Commons.Appearance.spacing.s3
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "󰏬  Edit Mode"
@@ -432,8 +432,8 @@ Item {
                                 // cluster can't hide the centred widget.
                                 z: section._isCenter ? 2 : 1
                                 flow: sideCard._horizontal ? Flow.LeftToRight : Flow.TopToBottom
-                                spacing: 6
-                                anchors.margins: 8
+                                spacing: Commons.Appearance.spacing.s2
+                                anchors.margins: Commons.Appearance.spacing.s2
                                 anchors.left:            (sideCard._horizontal && section._isStart) ? parent.left  : undefined
                                 anchors.right:           (sideCard._horizontal && section._isEnd)   ? parent.right : undefined
                                 anchors.top:             (!sideCard._horizontal && section._isStart) ? parent.top    : undefined
@@ -516,7 +516,7 @@ Item {
                                         Row {
                                             id: chipRow
                                             anchors.centerIn: parent
-                                            spacing: 5
+                                            spacing: Commons.Appearance.spacing.s1
                                             Text {
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 text: chip.meta.icon || ""
@@ -566,8 +566,8 @@ Item {
                                         Rectangle {
                                             visible: chip._iconOnly && dragMA.containsMouse
                                             anchors.top: parent.top; anchors.right: parent.right
-                                            anchors.margins: -4
-                                            width: 16; height: 16; radius: 8
+                                            anchors.margins: -Commons.Appearance.spacing.s1
+                                            width: 16; height: 16; radius: width / 2
                                             color: Commons.Appearance.colors.red
                                             Text {
                                                 anchors.centerIn: parent
@@ -656,15 +656,15 @@ Item {
             Grid {
                 id: toolbar
                 columns: sideCard._horizontal ? 2 : 1
-                spacing: 6
+                spacing: Commons.Appearance.spacing.s2
                 anchors.horizontalCenter: sideCard._horizontal ? mock.horizontalCenter : undefined
                 anchors.verticalCenter:   sideCard._horizontal ? undefined : mock.verticalCenter
                 anchors.top:    sideCard.side === "top"    ? mock.bottom : undefined
                 anchors.bottom: sideCard.side === "bottom" ? mock.top    : undefined
                 anchors.left:   sideCard.side === "left"   ? mock.right  : undefined
                 anchors.right:  sideCard.side === "right"  ? mock.left   : undefined
-                anchors.topMargin: 8; anchors.bottomMargin: 8
-                anchors.leftMargin: 8; anchors.rightMargin: 8
+                anchors.topMargin: Commons.Appearance.spacing.s2; anchors.bottomMargin: Commons.Appearance.spacing.s2
+                anchors.leftMargin: Commons.Appearance.spacing.s2; anchors.rightMargin: Commons.Appearance.spacing.s2
 
                 // Type switch — the shared SegmentedControl (recessed track + raised
                 // accent pill). Vertical stack beside a strip so a vertical side
@@ -716,8 +716,8 @@ Item {
 
         ColumnLayout {
             id: libCol
-            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14 }
-            spacing: 10
+            anchors { left: parent.left; right: parent.right; top: parent.top; margins: Commons.Appearance.spacing.s4 }
+            spacing: Commons.Appearance.spacing.s3
 
             ColumnLayout {
                 Layout.fillWidth: true
@@ -750,7 +750,7 @@ Item {
                     readonly property var _items: library._all.filter(function(e) { return editOverlay._category(e.id) === section.modelData })
                     Layout.fillWidth: true
                     visible: _items.length > 0
-                    spacing: 6
+                    spacing: Commons.Appearance.spacing.s2
 
                     Text {
                         text: section.modelData.toUpperCase()
@@ -763,8 +763,8 @@ Item {
                     GridLayout {
                         Layout.fillWidth: true
                         columns: 3
-                        columnSpacing: 6
-                        rowSpacing: 6
+                        columnSpacing: Commons.Appearance.spacing.s2
+                        rowSpacing: Commons.Appearance.spacing.s2
                         Repeater {
                             model: section._items
                             delegate: Rectangle {
@@ -795,9 +795,9 @@ Item {
                                 // fills and elides so every tile stays the same size.
                                 RowLayout {
                                     anchors.fill: parent
-                                    anchors.leftMargin: 9
-                                    anchors.rightMargin: 9
-                                    spacing: 7
+                                    anchors.leftMargin: Commons.Appearance.spacing.s2
+                                    anchors.rightMargin: Commons.Appearance.spacing.s2
+                                    spacing: Commons.Appearance.spacing.s2
                                     Text {
                                         Layout.alignment: Qt.AlignVCenter
                                         text: libChip.modelData.icon || ""
@@ -930,8 +930,8 @@ Item {
 
             ColumnLayout {
                 id: cfgCol
-                anchors { top: parent.top; left: parent.left; right: parent.right; margins: 16 }
-                spacing: 12
+                anchors { top: parent.top; left: parent.left; right: parent.right; margins: Commons.Appearance.spacing.s4 }
+                spacing: Commons.Appearance.spacing.s3
 
                 RowLayout {
                     Layout.fillWidth: true
@@ -952,7 +952,7 @@ Item {
                         font.family: Commons.Appearance.font.family
                         font.pixelSize: Commons.Appearance.font.sizeLg
                         MouseArea {
-                            anchors.fill: parent; anchors.margins: -4
+                            anchors.fill: parent; anchors.margins: -Commons.Appearance.spacing.s1
                             cursorShape: Qt.PointingHandCursor
                             onClicked: editOverlay._cfgOpen = false
                         }

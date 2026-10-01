@@ -420,7 +420,7 @@ Item {
             // TOP zone
             ColumnLayout {
                 Layout.alignment: Qt.AlignHCenter
-                spacing: 8
+                spacing: Commons.Appearance.spacing.s2
                 Repeater {
                     model: bar.horizontal ? null : _leftModel
                     delegate: WidgetLoader {
@@ -438,7 +438,7 @@ Item {
             // BOTTOM zone
             ColumnLayout {
                 Layout.alignment: Qt.AlignHCenter
-                spacing: 8
+                spacing: Commons.Appearance.spacing.s2
                 Repeater {
                     model: bar.horizontal ? null : _rightModel
                     delegate: WidgetLoader {
@@ -458,7 +458,7 @@ Item {
             visible: !bar.horizontal
             anchors.centerIn: parent
             z: 2
-            spacing: 8
+            spacing: Commons.Appearance.spacing.s2
             Repeater {
                 model: bar.horizontal ? null : _centerModel
                 delegate: WidgetLoader {

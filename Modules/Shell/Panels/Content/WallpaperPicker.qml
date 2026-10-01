@@ -55,7 +55,7 @@ Item {
 
             RowLayout {
                 anchors.fill: parent
-                spacing: 6
+                spacing: Commons.Appearance.spacing.s2
 
             // Page selector — shared segmented control (see SegmentedControl).
             SegmentedControl {
@@ -79,7 +79,7 @@ Item {
                 Row {
                     id: _moreRow
                     anchors.centerIn: parent
-                    spacing: 5
+                    spacing: Commons.Appearance.spacing.s1
                     Text {
                         text: "󰒓"
                         color: moreBtn._hovered ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textSecondary

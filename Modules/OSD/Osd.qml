@@ -63,7 +63,7 @@ PanelWindow {
     Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 20
+        anchors.bottomMargin: Commons.Appearance.spacing.s5
         width: 220
         height: 46
 
@@ -92,8 +92,8 @@ PanelWindow {
 
             RowLayout {
                 anchors.fill: parent
-                anchors.leftMargin: 16; anchors.rightMargin: 16
-                spacing: 12
+                anchors.leftMargin: Commons.Appearance.spacing.s4; anchors.rightMargin: Commons.Appearance.spacing.s4
+                spacing: Commons.Appearance.spacing.s3
 
                 Text {
                     text: osdWindow.osdIcon
@@ -106,7 +106,7 @@ PanelWindow {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    height: 4; radius: 2
+                    height: 4; radius: height / 2
                     color: Commons.Appearance.colors.surface0
                     Layout.alignment: Qt.AlignVCenter
 

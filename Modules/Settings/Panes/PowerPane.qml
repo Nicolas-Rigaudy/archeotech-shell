@@ -123,9 +123,9 @@ Item {
 
             ColumnLayout {
                 id: col
-                anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: 24; leftMargin: 24; rightMargin: 24 }
+                anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: Commons.Appearance.spacing.s6; leftMargin: Commons.Appearance.spacing.s6; rightMargin: Commons.Appearance.spacing.s6 }
                 width: root.width - 48
-                spacing: 6
+                spacing: Commons.Appearance.spacing.s2
 
                 SectionLabel { text: "POWER PROFILE" }
                 UnavailableNote {
@@ -149,7 +149,7 @@ Item {
                     }
                 }
 
-                Item { implicitHeight: 10; Layout.fillWidth: true }
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
                 SectionLabel { text: "IDLE & SLEEP" }
                 UnavailableNote {
                     visible: !root.idleAvailable
@@ -179,9 +179,9 @@ Item {
                         onSelected: v => { root.dimTimeout = parseInt(v); root.applyIdleConfig() }
                     }
 
-                    Item { implicitHeight: 8; Layout.fillWidth: true }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                     Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
-                    Item { implicitHeight: 8; Layout.fillWidth: true }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
 
                     ToggleRow {
                         label: "Lock screen"
@@ -203,9 +203,9 @@ Item {
                         onSelected: v => { root.lockTimeout = parseInt(v); root.applyIdleConfig() }
                     }
 
-                    Item { implicitHeight: 8; Layout.fillWidth: true }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                     Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
-                    Item { implicitHeight: 8; Layout.fillWidth: true }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
 
                     ToggleRow {
                         label: "Sleep displays"
@@ -234,7 +234,7 @@ Item {
     // One-line reason shown above a section whose backend is missing.
     component UnavailableNote: Text {
         Layout.fillWidth: true
-        Layout.bottomMargin: 4
+        Layout.bottomMargin: Commons.Appearance.spacing.s1
         wrapMode: Text.WordWrap
         color: Commons.Appearance.colors.yellow
         font.family: Commons.Appearance.font.family

@@ -90,8 +90,8 @@ DashCard {
         // Bleed 8px into the card padding on each side so the full-row hover
         // highlight is wider than the text (doesn't clip at the content edges).
         // Row content is re-padded to stay flush at 16px like the other cards.
-        Layout.leftMargin:  -8
-        Layout.rightMargin: -8
+        Layout.leftMargin:  -Commons.Appearance.spacing.s2
+        Layout.rightMargin: -Commons.Appearance.spacing.s2
         Layout.preferredHeight: Math.min(root.projects.length, 4) * root._rowH
         visible: root.projects.length > 0
         clip: true
@@ -106,7 +106,7 @@ DashCard {
             id: projScroll
             policy: ScrollBar.AsNeeded
             implicitWidth: 8
-            anchors.rightMargin: -6
+            anchors.rightMargin: -Commons.Appearance.spacing.s2
             contentItem: Rectangle {
                 implicitWidth: 4
                 radius: 2
@@ -128,7 +128,7 @@ DashCard {
             Rectangle {
                 width: 7; height: 7; radius: 4
                 // +8 re-pad to sit flush at 16px from the card edge (list bleeds 8).
-                anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
+                anchors { left: parent.left; leftMargin: Commons.Appearance.spacing.s2; verticalCenter: parent.verticalCenter }
                 color: modelData.dirty > 0 ? Commons.Appearance.colors.peach : Commons.Appearance.colors.green
             }
             Text {
@@ -137,7 +137,7 @@ DashCard {
                 color: Commons.Appearance.colors.textPrimary
                 font.family: Commons.Appearance.font.family
                 font.pixelSize: Commons.Appearance.font.sizeBase
-                anchors { left: parent.left; leftMargin: 23; verticalCenter: parent.verticalCenter }
+                anchors { left: parent.left; leftMargin: Commons.Appearance.spacing.s6; verticalCenter: parent.verticalCenter }
                 elide: Text.ElideRight
                 width: parent.width * 0.48
             }
@@ -146,7 +146,7 @@ DashCard {
                 color: Commons.Appearance.colors.textSecondary
                 font.family: Commons.Appearance.font.family
                 font.pixelSize: Commons.Appearance.font.sizeBase
-                anchors { left: nameLbl.right; leftMargin: 8; verticalCenter: parent.verticalCenter }
+                anchors { left: nameLbl.right; leftMargin: Commons.Appearance.spacing.s2; verticalCenter: parent.verticalCenter }
                 elide: Text.ElideRight
                 width: parent.width * 0.28
             }
@@ -156,7 +156,7 @@ DashCard {
                 font.family: Commons.Appearance.font.family
                 font.pixelSize: Commons.Appearance.font.sizeBase
                 // +8 re-pad to sit flush at 16px from the card edge (list bleeds 8).
-                anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
+                anchors { right: parent.right; rightMargin: Commons.Appearance.spacing.s2; verticalCenter: parent.verticalCenter }
             }
 
             StateLayer {

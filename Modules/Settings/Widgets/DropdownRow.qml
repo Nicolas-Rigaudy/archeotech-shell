@@ -58,7 +58,7 @@ Item {
             }
 
             contentItem: Text {
-                leftPadding: 8; rightPadding: 8
+                leftPadding: Commons.Appearance.spacing.s2; rightPadding: Commons.Appearance.spacing.s2
                 text: combo.displayText
                 color: Commons.Appearance.colors.textPrimary
                 font.pixelSize: Commons.Appearance.font.sizeBase
@@ -88,7 +88,7 @@ Item {
                 y: combo.height + 2
                 width: combo.width
                 implicitHeight: Math.min(contentItem.implicitHeight, 240)
-                padding: 4
+                padding: Commons.Appearance.spacing.s1
 
                 contentItem: ListView {
                     clip: true

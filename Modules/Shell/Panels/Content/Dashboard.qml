@@ -41,9 +41,9 @@ Item {
     // Content container — fills Panel's Loader bounds. Panel.qml owns chrome.
     ColumnLayout {
         anchors.fill: parent
-        anchors.leftMargin: 24; anchors.rightMargin: 24
-        anchors.topMargin: 20;  anchors.bottomMargin: 20
-        spacing: 16
+        anchors.leftMargin: Commons.Appearance.spacing.s6; anchors.rightMargin: Commons.Appearance.spacing.s6
+        anchors.topMargin: Commons.Appearance.spacing.s5;  anchors.bottomMargin: Commons.Appearance.spacing.s5
+        spacing: Commons.Appearance.spacing.s4
 
         // ── Hero — human anchor: greeting + name, big clock, date ────────────
         Item {
@@ -70,7 +70,7 @@ Item {
 
             // Big clock
             Text {
-                anchors { right: closeBtn.left; rightMargin: 16; verticalCenter: parent.verticalCenter }
+                anchors { right: closeBtn.left; rightMargin: Commons.Appearance.spacing.s4; verticalCenter: parent.verticalCenter }
                 text: Qt.formatDateTime(root._now, "HH:mm")
                 color: Commons.Appearance.colors.accent
                 font.family: Commons.Appearance.font.family
@@ -106,8 +106,8 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             columns: root._wide ? 2 : 1
-            columnSpacing: 16
-            rowSpacing: 16
+            columnSpacing: Commons.Appearance.spacing.s4
+            rowSpacing: Commons.Appearance.spacing.s4
 
             // fillHeight stretches cards to the row height (aligns them);
             // minimumHeight floors each at its content so fillHeight can't

@@ -17,7 +17,7 @@ Item {
     ColumnLayout {
         id: col
         anchors.centerIn: parent
-        spacing: 6
+        spacing: Commons.Appearance.spacing.s2
 
         Text {
             Layout.alignment: Qt.AlignHCenter

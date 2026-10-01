@@ -9,7 +9,7 @@ import "../../../../Commons" as Commons
 RowLayout {
     id: face
     property var card
-    spacing: 10
+    spacing: Commons.Appearance.spacing.s3
 
     readonly property int _bat: card ? card.bat : 0
 
@@ -63,7 +63,7 @@ RowLayout {
         Text {
             id: lbl
             anchors.top: ring.bottom
-            anchors.topMargin: 6
+            anchors.topMargin: Commons.Appearance.spacing.s2
             anchors.horizontalCenter: parent.horizontalCenter
             text: parent.label
             color: Commons.Appearance.colors.textSecondary

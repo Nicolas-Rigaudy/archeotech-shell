@@ -558,6 +558,9 @@ QtObject {
 
     // ── Geometry ───────────────────────────────────────────────────────────────
     readonly property QtObject radius: QtObject {
+        // xs: thin tracks/bars (sliders, status bars). Circles and pill bars use
+        // width / 2 or height / 2 at the call site, not a token (item_110 wave 3).
+        readonly property int xs:   root._tok("radius", "xs",   4)
         readonly property int sm:   root._tok("radius", "sm",   6)
         readonly property int base: root._tok("radius", "base", 8)
         readonly property int md:   root._tok("radius", "md",   10)
@@ -566,13 +569,29 @@ QtObject {
         readonly property int pill: root._tok("radius", "pill", 999)
     }
 
+    // ── Spacing: 4pt grid (item_110 wave 3) ──
+    // s<N> = N x 4 px. Every spacing / margin / padding literal >= 4 in the shell
+    // is one of these steps; 0-3 px hairlines and nudges stay literal. The legacy
+    // names are aliases; sm and md were 6 and 10 (off-grid) before wave 3.
     readonly property QtObject spacing: QtObject {
-        readonly property int xs:   root._tok("spacing", "xs",   4)
-        readonly property int sm:   root._tok("spacing", "sm",   6)
-        readonly property int base: root._tok("spacing", "base", 8)
-        readonly property int md:   root._tok("spacing", "md",   10)
-        readonly property int lg:   root._tok("spacing", "lg",   12)
-        readonly property int xl:   root._tok("spacing", "xl",   16)
+        readonly property int s1:  root._tok("spacing", "s1",  4)
+        readonly property int s2:  root._tok("spacing", "s2",  8)
+        readonly property int s3:  root._tok("spacing", "s3",  12)
+        readonly property int s4:  root._tok("spacing", "s4",  16)
+        readonly property int s5:  root._tok("spacing", "s5",  20)
+        readonly property int s6:  root._tok("spacing", "s6",  24)
+        readonly property int s7:  root._tok("spacing", "s7",  28)
+        readonly property int s8:  root._tok("spacing", "s8",  32)
+        // (no s9 / 36 px: nothing uses it yet; add it when something does)
+        readonly property int s10: root._tok("spacing", "s10", 40)
+        readonly property int s11: root._tok("spacing", "s11", 44)
+        readonly property int s12: root._tok("spacing", "s12", 48)
+        readonly property int xs:   root._tok("spacing", "xs",   s1)
+        readonly property int sm:   root._tok("spacing", "sm",   s2)
+        readonly property int base: root._tok("spacing", "base", s2)
+        readonly property int md:   root._tok("spacing", "md",   s3)
+        readonly property int lg:   root._tok("spacing", "lg",   s3)
+        readonly property int xl:   root._tok("spacing", "xl",   s4)
     }
 
     // ── Bar geometry ───────────────────────────────────────────────────────────

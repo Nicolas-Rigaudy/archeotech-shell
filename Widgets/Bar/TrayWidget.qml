@@ -58,7 +58,7 @@ Item {
         anchors.centerIn: parent
         rows:    root._horizontal ? 1 : -1   // -1 = auto (single row / single column)
         columns: root._horizontal ? -1 : 1
-        spacing: 4
+        spacing: Commons.Appearance.spacing.s1
 
         Repeater {
             // `.values` (the plain array), not the ObjectModel directly — the

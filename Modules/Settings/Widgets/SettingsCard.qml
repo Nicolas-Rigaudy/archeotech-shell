@@ -32,7 +32,7 @@ Item {
 
         ColumnLayout {
             id: inner
-            anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 16; rightMargin: 16; topMargin: 6 }
+            anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: Commons.Appearance.spacing.s4; rightMargin: Commons.Appearance.spacing.s4; topMargin: Commons.Appearance.spacing.s2 }
             spacing: 0
         }
     }

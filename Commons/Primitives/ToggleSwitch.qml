@@ -50,7 +50,7 @@ Item {
 
         Rectangle {
             id: thumb
-            width: 16; height: 16; radius: 8
+            width: 16; height: 16; radius: width / 2
             antialiasing: true
             anchors.verticalCenter: parent.verticalCenter
             x: root.checked ? parent.width - width - 3 : 3

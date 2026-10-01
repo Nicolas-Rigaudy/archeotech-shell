@@ -58,9 +58,9 @@ Item {
 
             ColumnLayout {
                 id: col
-                anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: 24; leftMargin: 24; rightMargin: 24 }
+                anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: Commons.Appearance.spacing.s6; leftMargin: Commons.Appearance.spacing.s6; rightMargin: Commons.Appearance.spacing.s6 }
                 width: root.width - 48
-                spacing: 8
+                spacing: Commons.Appearance.spacing.s2
 
                 // ── Installed modules ────────────────────────────────────────────
                 RowLayout {
@@ -73,7 +73,7 @@ Item {
                         font.pixelSize: Commons.Appearance.font.sizeSm
                         MouseArea {
                             id: _rescanMa
-                            anchors.fill: parent; anchors.margins: -4
+                            anchors.fill: parent; anchors.margins: -Commons.Appearance.spacing.s1
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root._mods.rescan()
@@ -102,7 +102,7 @@ Item {
 
                             RowLayout {
                                 Layout.fillWidth: true
-                                spacing: 10
+                                spacing: Commons.Appearance.spacing.s3
 
                                 Text {
                                     text: modCard.modelData.icon || "󰏗"
@@ -115,7 +115,7 @@ Item {
                                     Layout.fillWidth: true
                                     spacing: 1
                                     RowLayout {
-                                        spacing: 6
+                                        spacing: Commons.Appearance.spacing.s2
                                         Text {
                                             text: modCard.modelData.name || modCard.modelData.id
                                             color: Commons.Appearance.colors.textPrimary
@@ -205,7 +205,7 @@ Item {
 
                             RowLayout {
                                 Layout.fillWidth: true
-                                spacing: 10
+                                spacing: Commons.Appearance.spacing.s3
                                 visible: root._hasSchema(modCard.modelData) || root._isUserModule(modCard.modelData.dir)
 
                                 Text {
@@ -226,7 +226,7 @@ Item {
                                     font.family: Commons.Appearance.font.family
                                     font.pixelSize: Commons.Appearance.font.sizeSm
                                     MouseArea {
-                                        anchors.fill: parent; anchors.margins: -4
+                                        anchors.fill: parent; anchors.margins: -Commons.Appearance.spacing.s1
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
                                             if (modCard._confirming) {
@@ -244,7 +244,7 @@ Item {
                     }
                 }
 
-                Item { implicitHeight: 8; Layout.fillWidth: true }
+                Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
 
                 // ── Built-in widgets catalogue ───────────────────────────────────
                 SectionLabel { text: "BUILT-IN WIDGETS" }
@@ -261,8 +261,8 @@ Item {
                 GridLayout {
                     Layout.fillWidth: true
                     columns: 4
-                    columnSpacing: 8
-                    rowSpacing: 8
+                    columnSpacing: Commons.Appearance.spacing.s2
+                    rowSpacing: Commons.Appearance.spacing.s2
 
                     Repeater {
                         model: root._reg.availableBarWidgets.concat(root._reg.availableStripIcons)
@@ -308,13 +308,13 @@ Item {
                                 color: Commons.Appearance.colors.accent
                                 font.family: Commons.Appearance.font.family
                                 font.pixelSize: Commons.Appearance.font.sizeSm
-                                anchors { top: parent.top; right: parent.right; topMargin: 5; rightMargin: 7 }
+                                anchors { top: parent.top; right: parent.right; topMargin: Commons.Appearance.spacing.s1; rightMargin: Commons.Appearance.spacing.s2 }
                             }
                         }
                     }
                 }
 
-                Item { implicitHeight: 12; Layout.fillWidth: true }
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
             }
         }
     }

@@ -103,7 +103,7 @@ Item {
             Row {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 8
+                spacing: Commons.Appearance.spacing.s2
 
                 Text {
                     text: (root.wallpapers ? root.wallpapers.length : 0) + " items"
@@ -115,7 +115,7 @@ Item {
                 Rectangle {
                     id: paletteBtn
                     width: 28; height: 28
-                    radius: 14
+                    radius: Commons.Appearance.radius.lg
                     property bool _hovered: false
                     color: _hovered ? Commons.Appearance.colors.surface0Alpha : "transparent"
                     Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
@@ -282,8 +282,8 @@ Item {
                     visible: cell._active
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
-                    anchors.margins: 8
-                    width: 24; height: 24; radius: 12
+                    anchors.margins: Commons.Appearance.spacing.s2
+                    width: 24; height: 24; radius: width / 2
                     color: Commons.Appearance.colors.accent
                     Text {
                         anchors.centerIn: parent

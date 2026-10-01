@@ -348,11 +348,11 @@ ShellRoot {
             Column {
                 id: toastStack
                 anchors.right:      parent.right
-                anchors.rightMargin: 24
+                anchors.rightMargin: Commons.Appearance.spacing.s6
                 anchors.top:        parent.top
                 anchors.topMargin:  Commons.Appearance.bar.marginTop + Commons.Appearance.bar.height + 16
                 width: 316
-                spacing: 8
+                spacing: Commons.Appearance.spacing.s2
 
                 Repeater {
                     model: toastWindow.toasts

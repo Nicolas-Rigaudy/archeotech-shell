@@ -33,7 +33,7 @@ Item {
         anchors.centerIn: parent
         rows:    root._horizontal ? 1 : -1   // -1 = auto (one row / one column)
         columns: root._horizontal ? -1 : 1
-        spacing: 4
+        spacing: Commons.Appearance.spacing.s1
 
         Repeater {
             model: CompositorServices.CompositorService.tagsFor(root.holderRoot && root.holderRoot.screen ? root.holderRoot.screen.name : "")

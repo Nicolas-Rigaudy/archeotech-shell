@@ -101,8 +101,8 @@ Item {
 
         RowLayout {
             id: cardContent
-            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
-            spacing: 10
+            anchors { left: parent.left; right: parent.right; top: parent.top; margins: Commons.Appearance.spacing.s3 }
+            spacing: Commons.Appearance.spacing.s3
 
             // App icon — top-aligned so it spans the two text lines (matches the
             // notification-center history rows).
@@ -137,7 +137,7 @@ Item {
 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 6
+                    spacing: Commons.Appearance.spacing.s2
 
                     Text {
                         text: (root.notification && root.notification.appName) ? root.notification.appName : "Notification"

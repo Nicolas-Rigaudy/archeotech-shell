@@ -98,7 +98,7 @@ Item {
         Item {
             width: parent.width; height: 40
             RowLayout {
-                anchors.fill: parent; spacing: 8
+                anchors.fill: parent; spacing: Commons.Appearance.spacing.s2
                 Rectangle {
                     width: 28; height: 28; radius: Commons.Appearance.radius.base
                     color: NetworkServices.Network.wifiEnabled ? Commons.Appearance.colors.accent : Commons.Appearance.colors.surface0
@@ -125,7 +125,7 @@ Item {
                     Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                     MouseArea {
                         id: _wifiCloseMA
-                        anchors.fill: parent; anchors.margins: -4
+                        anchors.fill: parent; anchors.margins: -Commons.Appearance.spacing.s1
                         hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                         onClicked: if (card.holderRoot) card.holderRoot._wifiPopupVisible = false
                     }
@@ -156,7 +156,7 @@ Item {
                 property bool _needsPw: !modelData.saved
                     && modelData.security !== "" && modelData.security !== "--"
                 RowLayout {
-                    anchors.fill: parent; spacing: 6
+                    anchors.fill: parent; spacing: Commons.Appearance.spacing.s2
                     Text {
                         text: NetworkServices.Network.signalIcon(
                             modelData.signal, modelData.security !== "" && modelData.security !== "--")
@@ -232,7 +232,7 @@ Item {
                 color: NetworkServices.Network.scanning ? Commons.Appearance.colors.textMuted : Commons.Appearance.colors.accent
                 font.pixelSize: Commons.Appearance.font.size2xs; font.family: Commons.Appearance.font.family
                 MouseArea {
-                    anchors.fill: parent; anchors.margins: -4
+                    anchors.fill: parent; anchors.margins: -Commons.Appearance.spacing.s1
                     enabled: !NetworkServices.Network.scanning; cursorShape: Qt.PointingHandCursor
                     onClicked: NetworkServices.Network.scan()
                 }

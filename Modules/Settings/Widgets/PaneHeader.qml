@@ -11,8 +11,8 @@ Item {
     Layout.fillWidth: true
 
     RowLayout {
-        anchors { fill: parent; leftMargin: 28; rightMargin: 28; topMargin: 20; bottomMargin: 16 }
-        spacing: 18
+        anchors { fill: parent; leftMargin: Commons.Appearance.spacing.s7; rightMargin: Commons.Appearance.spacing.s7; topMargin: Commons.Appearance.spacing.s5; bottomMargin: Commons.Appearance.spacing.s4 }
+        spacing: Commons.Appearance.spacing.s5
 
         Text {
             text: icon

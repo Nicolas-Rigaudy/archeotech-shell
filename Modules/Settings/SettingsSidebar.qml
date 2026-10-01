@@ -32,7 +32,7 @@ Item {
             anchors.fill: parent
             spacing: 0
 
-            Item { implicitHeight: 12; Layout.fillWidth: true }
+            Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
 
             // ── Search field ──────────────────────────────────────────────────
             Item {
@@ -40,7 +40,7 @@ Item {
                 implicitHeight: 42
 
                 Rectangle {
-                    anchors { fill: parent; leftMargin: 8; rightMargin: 8 }
+                    anchors { fill: parent; leftMargin: Commons.Appearance.spacing.s2; rightMargin: Commons.Appearance.spacing.s2 }
                     radius: Commons.Appearance.radius.base
                     // Nested input card — matches the launcher search field.
                     color: Commons.Appearance.colors.surfaceCard
@@ -50,8 +50,8 @@ Item {
                     Behavior on border.color { Commons.ColorAnim {} }
 
                     RowLayout {
-                        anchors { fill: parent; leftMargin: 10; rightMargin: 8 }
-                        spacing: 6
+                        anchors { fill: parent; leftMargin: Commons.Appearance.spacing.s3; rightMargin: Commons.Appearance.spacing.s2 }
+                        spacing: Commons.Appearance.spacing.s2
 
                         Text {
                             text: "󰍉"
@@ -78,7 +78,7 @@ Item {
                             color: clearMa.containsMouse ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
                             font.pixelSize: Commons.Appearance.font.sizeBase; font.family: Commons.Appearance.font.family
                             MouseArea {
-                                id: clearMa; anchors.fill: parent; anchors.margins: -4
+                                id: clearMa; anchors.fill: parent; anchors.margins: -Commons.Appearance.spacing.s1
                                 hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                 onClicked: root.query = ""
                             }
@@ -87,7 +87,7 @@ Item {
                 }
             }
 
-            Item { implicitHeight: 4; Layout.fillWidth: true }
+            Item { implicitHeight: Commons.Appearance.spacing.s1; Layout.fillWidth: true }
 
             // ── Search results (shown while querying) ─────────────────────────
             Text {
@@ -96,7 +96,7 @@ Item {
                 color: Commons.Appearance.colors.textMuted
                 font.pixelSize: Commons.Appearance.font.sizeSm
                 font.family: Commons.Appearance.font.family
-                Layout.leftMargin: 20; Layout.topMargin: 6
+                Layout.leftMargin: Commons.Appearance.spacing.s5; Layout.topMargin: Commons.Appearance.spacing.s2
             }
 
             Repeater {
@@ -109,7 +109,7 @@ Item {
 
                     Rectangle {
                         id: resBg
-                        anchors { fill: parent; leftMargin: 8; rightMargin: 8 }
+                        anchors { fill: parent; leftMargin: Commons.Appearance.spacing.s2; rightMargin: Commons.Appearance.spacing.s2 }
                         radius: Commons.Appearance.radius.base
                         color: "transparent"
 
@@ -121,8 +121,8 @@ Item {
                     }
 
                     RowLayout {
-                        anchors { fill: parent; leftMargin: 20; rightMargin: 16 }
-                        spacing: 10
+                        anchors { fill: parent; leftMargin: Commons.Appearance.spacing.s5; rightMargin: Commons.Appearance.spacing.s4 }
+                        spacing: Commons.Appearance.spacing.s3
                         Text {
                             text: resItem.modelData.paneIcon
                             color: Commons.Appearance.colors.textSecondary
@@ -173,7 +173,7 @@ Item {
                     }
                     Rectangle {
                         id: activeBg
-                        anchors { fill: parent; leftMargin: 8; rightMargin: 8 }
+                        anchors { fill: parent; leftMargin: Commons.Appearance.spacing.s2; rightMargin: Commons.Appearance.spacing.s2 }
                         radius: Commons.Appearance.radius.base
                         // One surface-based progression (coherent with the raised-key
                         // language): resting → subtle neutral pill on hover → raised
@@ -199,7 +199,7 @@ Item {
                     // Left accent bar for active state
                     Rectangle {
                         visible: root.activeIndex === navItem.index
-                        anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
+                        anchors { left: parent.left; leftMargin: Commons.Appearance.spacing.s3; verticalCenter: parent.verticalCenter }
                         width: 3; height: 20; radius: 2
                         // Active pane marker = accent (register metal); teal dropped (too modern).
                         color: Commons.Appearance.colors.accent
@@ -207,8 +207,8 @@ Item {
                     }
 
                     RowLayout {
-                        anchors { fill: parent; leftMargin: 20; rightMargin: 16 }
-                        spacing: 12
+                        anchors { fill: parent; leftMargin: Commons.Appearance.spacing.s5; rightMargin: Commons.Appearance.spacing.s4 }
+                        spacing: Commons.Appearance.spacing.s3
 
                         Text {
                             text: navItem.modelData.icon

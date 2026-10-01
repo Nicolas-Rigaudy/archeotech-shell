@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""token-lint.py — no raw typography outside the token file (item_110 wave 2).
+"""token-lint.py — no raw typography or off-token spacing outside the token file
+(item_110 waves 2-3).
 
 Every font size, weight and letter-spacing in the shell's QML must come from
 Commons/Appearance.qml (`Appearance.font.size*`, `weight*`, `tracking*`), so the
@@ -7,6 +8,9 @@ type scale, pack overrides and the Text size setting reach every label. Flags:
   - `pixelSize: <number>`
   - `Font.Normal|Medium|DemiBold|Bold|Light` in a weight binding
   - `letterSpacing: <number>`
+  - a spacing / margin / padding literal >= 4 px, or a spacer `Item { implicit-
+    Height|Width: N }` with N >= 4 (use Appearance.spacing.s<N>, the 4pt grid;
+    0-3 px hairlines and nudges stay literal)
 Computed sizes (e.g. derived from a cell size) are allowed. Exits 1 on any hit.
 Hex colours outside Commons are item_110 wave 4.
 """
@@ -24,6 +28,11 @@ RULES = [
     ("raw font size", re.compile(r"pixelSize:(?![^;}]*\*)[^;}]*" + _NUM)),
     ("raw font weight", re.compile(r"\bweight\b.*\bFont\.(Thin|ExtraLight|Light|Normal|Medium|DemiBold|Bold|ExtraBold|Black)\b")),
     ("raw letter spacing", re.compile(r"letterSpacing:[^;}]*" + _NUM)),
+    ("off-token spacing", re.compile(
+        r"(?<![\w.])(?:anchors\.|Layout\.)?(?:spacing|rowSpacing|columnSpacing|margins|leftMargin|rightMargin|"
+        r"topMargin|bottomMargin|padding|leftPadding|rightPadding|topPadding|bottomPadding|horizontalPadding|"
+        r"verticalPadding|leftInset|rightInset|topInset|bottomInset)\s*:\s*-?([4-9]|[1-9]\d+)(?![\w.]|\s*[*+/-])")),
+    ("off-token spacer", re.compile(r"Item\s*\{[^}]*?\bimplicit(?:Height|Width)\s*:\s*([4-9]|[1-9]\d+)\s*[;}]")),
 ]
 # modules/ holds the plugin examples: they run against the plugin API and keep
 # literal fallbacks for hosts without Appearance (docs/WIDGET_API.md).
@@ -42,7 +51,7 @@ def main():
                 if rx.search(code):
                     print(f"{rel}:{n}: {name}: {line.strip()[:100]}")
                     hits += 1
-    print(f"token-lint: {hits} raw typography value(s) outside {', '.join(map(str, ALLOWED))}")
+    print(f"token-lint: {hits} raw typography/spacing value(s) outside {', '.join(map(str, ALLOWED))}")
     return 1 if hits else 0
 
 

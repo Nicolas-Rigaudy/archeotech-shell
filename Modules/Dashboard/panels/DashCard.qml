@@ -56,8 +56,8 @@ Item {
             // bottom-anchored so `inner` can fillHeight — lets a card whose
             // content opts into Layout.fillHeight (e.g. QuickLaunch) stretch to
             // the stretched card height. Content without fillHeight stays at top.
-            anchors { left: parent.left; right: parent.right; top: parent.top; bottom: parent.bottom; margins: 16 }
-            spacing: 8
+            anchors { left: parent.left; right: parent.right; top: parent.top; bottom: parent.bottom; margins: Commons.Appearance.spacing.s4 }
+            spacing: Commons.Appearance.spacing.s2
 
             Text {
                 visible: card.title.length > 0
@@ -81,7 +81,7 @@ Item {
                 id: inner
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                spacing: 8
+                spacing: Commons.Appearance.spacing.s2
 
                 // Faces mount here when the card declares any; otherwise the FaceHost
                 // is hidden (excluded from layout) and `_content` children render.

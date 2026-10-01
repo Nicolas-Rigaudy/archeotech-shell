@@ -49,7 +49,7 @@ Item {
             placeholderTextColor: Commons.Appearance.colors.textMuted
             font.pixelSize: Commons.Appearance.font.sizeBase
             font.family: Commons.Appearance.font.family
-            leftPadding: 8; rightPadding: 8
+            leftPadding: Commons.Appearance.spacing.s2; rightPadding: Commons.Appearance.spacing.s2
 
             background: Rectangle {
                 radius: Commons.Appearance.radius.base

@@ -113,7 +113,7 @@ Item {
         id: _calCol
         x: card._r + 12; y: Commons.Appearance.frameChamfer ? 20 : 10
         width: card._bw - 24
-        spacing: 4
+        spacing: Commons.Appearance.spacing.s1
 
         Row {
             width: parent.width

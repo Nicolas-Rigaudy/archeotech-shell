@@ -75,7 +75,7 @@ Item {
     Text {
         id: mprisIcon
         anchors.left: mprisSep.right
-        anchors.leftMargin: 8
+        anchors.leftMargin: Commons.Appearance.spacing.s2
         anchors.verticalCenter: parent.verticalCenter
         text: MediaServices.MprisService.playing ? "󰝚" : "󰏤"
         color: Commons.Appearance.colors.accent
@@ -83,7 +83,7 @@ Item {
         font.family: Commons.Appearance.font.family
         MouseArea {
             anchors.fill: parent
-            anchors.margins: -4
+            anchors.margins: -Commons.Appearance.spacing.s1
             onClicked: MediaServices.MprisService.togglePlay()
         }
     }
@@ -91,7 +91,7 @@ Item {
     Item {
         id: marqueeContainer
         anchors.left: mprisIcon.right
-        anchors.leftMargin: 6
+        anchors.leftMargin: Commons.Appearance.spacing.s2
         anchors.right: parent.right
         // Housed: tail matched to the lead-in so the readout sits balanced between
         // the two end rivets.

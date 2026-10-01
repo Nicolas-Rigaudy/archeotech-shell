@@ -120,7 +120,7 @@ DashCard {
             color: noteRow.valueColor
             font.family: Commons.Appearance.font.family
             font.pixelSize: Commons.Appearance.font.sizeBase
-            anchors { left: noteLbl.right; leftMargin: 6; right: parent.right; verticalCenter: parent.verticalCenter }
+            anchors { left: noteLbl.right; leftMargin: Commons.Appearance.spacing.s2; right: parent.right; verticalCenter: parent.verticalCenter }
             horizontalAlignment: Text.AlignRight
             elide: Text.ElideRight
         }
@@ -134,8 +134,8 @@ DashCard {
         Layout.fillHeight: false
         Layout.alignment: Qt.AlignTop
         columns: 2
-        columnSpacing: 20
-        rowSpacing: 4
+        columnSpacing: Commons.Appearance.spacing.s5
+        rowSpacing: Commons.Appearance.spacing.s1
 
         Repeater {
             model: root._shown

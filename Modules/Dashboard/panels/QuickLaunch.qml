@@ -39,8 +39,8 @@ DashCard {
         Layout.fillWidth: true
         Layout.fillHeight: true
         columns: 4
-        columnSpacing: 8
-        rowSpacing: 8
+        columnSpacing: Commons.Appearance.spacing.s2
+        rowSpacing: Commons.Appearance.spacing.s2
 
         Repeater {
             model: root.apps
@@ -59,8 +59,8 @@ DashCard {
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 12; anchors.rightMargin: 12
-                    spacing: 8
+                    anchors.leftMargin: Commons.Appearance.spacing.s3; anchors.rightMargin: Commons.Appearance.spacing.s3
+                    spacing: Commons.Appearance.spacing.s2
 
                     Image {
                         source: tile.modelData.icon

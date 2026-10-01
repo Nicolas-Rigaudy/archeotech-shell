@@ -152,7 +152,7 @@ Item {
 
                 Image {
                     anchors.fill: parent
-                    anchors.margins: 14
+                    anchors.margins: Commons.Appearance.spacing.s4
                     source: cell._svgData
                     sourceSize.width: 128; sourceSize.height: 128
                     fillMode: Image.PreserveAspectFit
@@ -171,7 +171,7 @@ Item {
             }
 
             Text {
-                anchors { top: parent.bottom; topMargin: 4; horizontalCenter: parent.horizontalCenter }
+                anchors { top: parent.bottom; topMargin: Commons.Appearance.spacing.s1; horizontalCenter: parent.horizontalCenter }
                 visible: cell._current
                 text: cell.modelData.label
                 color: Commons.Appearance.colors.textSecondary

@@ -75,9 +75,9 @@ Item {
 
             ColumnLayout {
                 id: col
-                anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: 24; leftMargin: 24; rightMargin: 24 }
+                anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: Commons.Appearance.spacing.s6; leftMargin: Commons.Appearance.spacing.s6; rightMargin: Commons.Appearance.spacing.s6 }
                 width: root.width - 48
-                spacing: 6
+                spacing: Commons.Appearance.spacing.s2
 
                 // ── Edit layout (visual builder entry) ─────────────────────────
                 SectionLabel { text: "CUSTOMIZE" }
@@ -99,8 +99,8 @@ Item {
                         color: Commons.Appearance.colors.surfaceCard
 
                     RowLayout {
-                        anchors { fill: parent; leftMargin: 16; rightMargin: 16 }
-                        spacing: 14
+                        anchors { fill: parent; leftMargin: Commons.Appearance.spacing.s4; rightMargin: Commons.Appearance.spacing.s4 }
+                        spacing: Commons.Appearance.spacing.s4
 
                         Text {
                             text: "󰏬"
@@ -143,7 +143,7 @@ Item {
                     }
                 }
 
-                Item { implicitHeight: 10; Layout.fillWidth: true }
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
                 SectionLabel { text: "FRAME" }
 
                 SettingsCard {
@@ -173,7 +173,7 @@ Item {
                     }
                 }
 
-                Item { implicitHeight: 10; Layout.fillWidth: true }
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
                 SectionLabel { text: "SCROLLER" }
 
                 SettingsCard {
@@ -193,7 +193,7 @@ Item {
                         }
                         Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
 
-                        Item { implicitHeight: 8; Layout.fillWidth: true }
+                        Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 44
@@ -203,8 +203,8 @@ Item {
                             border.color: Commons.Appearance.colors.glassBorder
 
                             RowLayout {
-                                anchors { fill: parent; leftMargin: 14; rightMargin: 14 }
-                                spacing: 10
+                                anchors { fill: parent; leftMargin: Commons.Appearance.spacing.s4; rightMargin: Commons.Appearance.spacing.s4 }
+                                spacing: Commons.Appearance.spacing.s3
                                 Text {
                                     text: root._savedProp ? "󰄬" : "󰆓"
                                     color: Commons.Appearance.colors.accent
@@ -234,7 +234,7 @@ Item {
                         }
                 }
 
-                Item { implicitHeight: 10; Layout.fillWidth: true }
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
                 SectionLabel { text: "DASHBOARD · SYSTEM NOTES" }
 
                 // Which stats the dashboard's System Notes card shows. Bound to

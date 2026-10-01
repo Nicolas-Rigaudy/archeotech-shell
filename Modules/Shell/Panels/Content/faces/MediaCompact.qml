@@ -11,7 +11,7 @@ RowLayout {
     property var host
     Layout.fillWidth: true
     Layout.alignment: Qt.AlignVCenter
-    spacing: 12
+    spacing: Commons.Appearance.spacing.s3
 
     // Small album art / app-icon
     Rectangle {
@@ -70,7 +70,7 @@ RowLayout {
         font.pixelSize: Commons.Appearance.font.sizeXl; font.family: Commons.Appearance.font.family
         Layout.alignment: Qt.AlignVCenter
         Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-        MouseArea { id: cPrev; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; onClicked: MediaServices.MprisService.previous() }
+        MouseArea { id: cPrev; anchors.fill: parent; anchors.margins: -Commons.Appearance.spacing.s2; hoverEnabled: true; onClicked: MediaServices.MprisService.previous() }
     }
     Text {
         text: MediaServices.MprisService.playing ? "󰏤" : "󰐊"
@@ -78,7 +78,7 @@ RowLayout {
         font.pixelSize: Commons.Appearance.font.sizeHeadline; font.family: Commons.Appearance.font.family
         Layout.alignment: Qt.AlignVCenter
         Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-        MouseArea { id: cPlay; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: MediaServices.MprisService.togglePlay() }
+        MouseArea { id: cPlay; anchors.fill: parent; anchors.margins: -Commons.Appearance.spacing.s2; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: MediaServices.MprisService.togglePlay() }
     }
     Text {
         text: "󰒭"
@@ -86,6 +86,6 @@ RowLayout {
         font.pixelSize: Commons.Appearance.font.sizeXl; font.family: Commons.Appearance.font.family
         Layout.alignment: Qt.AlignVCenter
         Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
-        MouseArea { id: cNext; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; onClicked: MediaServices.MprisService.next() }
+        MouseArea { id: cNext; anchors.fill: parent; anchors.margins: -Commons.Appearance.spacing.s2; hoverEnabled: true; onClicked: MediaServices.MprisService.next() }
     }
 }

@@ -63,7 +63,7 @@ Item {
         GridLayout {
             Layout.fillWidth: true
             columns: Math.max(1, Math.floor(width / (root.compact ? 150 : 168)))
-            rowSpacing: 8; columnSpacing: 8
+            rowSpacing: Commons.Appearance.spacing.s2; columnSpacing: Commons.Appearance.spacing.s2
             Repeater {
                 model: root._cat.families
                 delegate: Item {
@@ -102,8 +102,8 @@ Item {
                         Behavior on border.width { NumberAnimation { duration: Commons.Appearance.anim.fast } }
 
                     ColumnLayout {
-                        anchors { fill: parent; margins: 10 }
-                        spacing: 6
+                        anchors { fill: parent; margins: Commons.Appearance.spacing.s3 }
+                        spacing: Commons.Appearance.spacing.s2
                         RowLayout {
                             Layout.fillWidth: true
                             Text {
@@ -117,7 +117,7 @@ Item {
                             }
                             Rectangle {
                                 visible: famCard._on
-                                width: 18; height: 18; radius: 9
+                                width: 18; height: 18; radius: width / 2
                                 color: Commons.Appearance.colors.accent
                                 Text {
                                     anchors.centerIn: parent; text: "✓"
@@ -128,7 +128,7 @@ Item {
                         }
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: 5
+                            spacing: Commons.Appearance.spacing.s1
                             Repeater {
                                 model: famCard.modelData.swatch
                                 delegate: Rectangle {
@@ -179,7 +179,7 @@ Item {
         Flow {
             Layout.fillWidth: true
             visible: root._accents.length > 0
-            spacing: 8
+            spacing: Commons.Appearance.spacing.s2
             Repeater {
                 model: root._accents
                 delegate: Item {
@@ -234,7 +234,7 @@ Item {
         RowLayout {
             Layout.fillWidth: true
             visible: root._cs.mode === "auto" && !root.compact
-            spacing: 12
+            spacing: Commons.Appearance.spacing.s3
             TimePick {
                 label: "󰖨  Light from"
                 value: root._cs.lightStart
@@ -251,7 +251,7 @@ Item {
     // ── Inline components ─────────────────────────────────────────────────────────
     component SLabel: Text {
         Layout.fillWidth: true
-        Layout.topMargin: 4
+        Layout.topMargin: Commons.Appearance.spacing.s1
         color: Commons.Appearance.colors.textMuted
         font.pixelSize: Commons.Appearance.font.size2xs
         font.family: Commons.Appearance.font.family
@@ -266,7 +266,7 @@ Item {
         property string current: ""
         signal pick(string id)
         Layout.fillWidth: true
-        spacing: 6
+        spacing: Commons.Appearance.spacing.s2
         SLabel { text: fr.label }
         SegmentedControl {
             Layout.fillWidth: true
@@ -282,7 +282,7 @@ Item {
         property string label: ""
         property string value: ""
         signal picked(string t)
-        spacing: 8
+        spacing: Commons.Appearance.spacing.s2
         Text {
             text: tp.label
             color: Commons.Appearance.colors.textSecondary
