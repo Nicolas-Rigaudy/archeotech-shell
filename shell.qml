@@ -292,6 +292,16 @@ ShellRoot {
         }
     }
 
+    // Display-change confirmation (item_135): one centred card per screen while
+    // Hardware.Displays awaits Keep / Revert after a risky change.
+    Variants {
+        model: Quickshell.screens
+        delegate: DisplayConfirm {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
     function _osdShow(type) {
         var items = osdVariants.instances
         for (var i = 0; i < items.length; i++)

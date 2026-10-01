@@ -22,10 +22,11 @@ Item {
 
     Process {
         id: nightLightReader
+        // Real state = the running wlsunset's own -t argument (pgrep -a prints the
+        // arguments space-separated; /proc/<pid>/cmdline is NUL-separated, which
+        // the old pid-file reader grepped for "-t " and so always read "off").
         command: ["bash", "-c",
-            "[ -f $HOME/.cache/wlsunset.pid ] && kill -0 $(cat $HOME/.cache/wlsunset.pid) 2>/dev/null " +
-            "&& grep -oP '(?<=-t )\\d+' /proc/$(cat $HOME/.cache/wlsunset.pid)/cmdline 2>/dev/null " +
-            "|| echo off"]
+            "pgrep -ax wlsunset | grep -oP '(?<=-t )\\d+' | head -1 | grep . || echo off"]
         running: false
         stdout: SplitParser {
             onRead: data => {
@@ -119,15 +120,26 @@ Item {
                           .map(m => ({ value: String(m.refresh), label: m.refresh.toFixed(2) + " Hz" }))
     }
 
+    // wlsunset is a day/night SCHEDULE (-T day, -t night): `-T 6500 -t 4500`
+    // changed nothing during the day. Pinning both ends (-T = -t + 1, it needs
+    // T > t) applies the temperature now, all day. setsid -f detaches it from
+    // the short-lived runner shell so it keeps running. Read back afterwards.
     function _applyNightLight(mode) {
         root.nightLightMode = mode
-        if (mode === "off") {
-            run("pkill -x wlsunset 2>/dev/null; rm -f $HOME/.cache/wlsunset.pid || true")
-        } else {
-            run("pkill -x wlsunset 2>/dev/null; rm -f $HOME/.cache/wlsunset.pid; " +
-                "wlsunset -T 6500 -t " + mode + " & echo $! > $HOME/.cache/wlsunset.pid")
-        }
+        if (mode === "off")
+            run("pkill -x wlsunset 2>/dev/null; true")
+        else
+            run("pkill -x wlsunset 2>/dev/null; sleep 0.2; setsid -f wlsunset -t " + mode + " -T " + (Number(mode) + 1) + " >/dev/null 2>&1")
+        _nightPending = true
     }
+    // Read back once the command has actually run (the runner queues), plus a
+    // beat for the new wlsunset to start.
+    property bool _nightPending: false
+    Connections {
+        target: cmdRunner
+        function onFinished(argv, code) { if (root._nightPending) { root._nightPending = false; _nightReadback.restart() } }
+    }
+    Timer { id: _nightReadback; interval: 400; onTriggered: nightLightReader.running = true }
 
     ColumnLayout {
         anchors.fill: parent
@@ -268,7 +280,7 @@ Item {
                     Text {
                         Layout.fillWidth: true
                         text: Hardware.Displays.pendingConfirm
-                              ? "Keep these display settings? Reverting in " + Hardware.Displays.confirmLeft + " s"
+                              ? "Confirm on screen: reverting in " + Hardware.Displays.confirmLeft + " s"
                               : Hardware.Displays.lastError !== "" && !root.dirty ? Hardware.Displays.lastError
                               : !root._anyOn ? "Turn at least one screen on to apply"
                               : root._overlap ? "Screens overlap: drag them apart to apply" : "Unsaved changes"
@@ -286,7 +298,10 @@ Item {
                         text: "Apply"
                         active: !root._overlap && root._anyOn
                         enabled: !root._overlap && root._anyOn
-                        onClicked: { if (Hardware.Displays.apply(root.staged)) root._edited = false }
+                        onClicked: {
+                            var confirm = Logic.risky(Hardware.Displays.outputs, root.staged)
+                            if (Hardware.Displays.apply(root.staged, confirm)) root._edited = false
+                        }
                     }
                     GlassButton {
                         visible: Hardware.Displays.pendingConfirm

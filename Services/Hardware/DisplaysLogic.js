@@ -134,3 +134,17 @@ function hasOverlap(list) {
             if (_overlaps(r[i], r[j])) return true
     return false
 }
+
+// True when going from `before` to `after` changes anything that can leave a
+// screen blank (mode, refresh, rotation, scale, or a screen turned on/off);
+// pure moves are safe and apply without the keep/revert countdown.
+function risky(before, after) {
+    var by = {}
+    before.forEach(function (o) { by[o.name] = o })
+    return after.some(function (o) {
+        var b = by[o.name]
+        if (!b) return true
+        return o.enabled !== b.enabled || (o.enabled && (o.width !== b.width || o.height !== b.height
+            || o.refresh !== b.refresh || o.transform !== b.transform || o.scale !== b.scale))
+    })
+}

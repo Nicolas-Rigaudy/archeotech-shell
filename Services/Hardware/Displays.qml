@@ -67,7 +67,8 @@ QtObject {
         function onFinished(argv, code) {
             // A failed apply changed nothing: drop the countdown instead of
             // "reverting" a layout that never took effect.
-            if (code !== 0 && root.pendingConfirm && argv === root._applyArgv) {
+            // Content compare: Process.command hands back a fresh array each read.
+            if (code !== 0 && JSON.stringify(argv) === JSON.stringify(root._applyArgv)) {
                 root._countdown.stop()
                 root.revertSnapshot = null
                 root.lastError = "The display settings could not be applied (wlr-randr exit " + code + ")."
@@ -88,15 +89,20 @@ QtObject {
     // Apply a staged layout and arm the auto-revert countdown. Refuses a layout
     // with no enabled output (nothing left to click "Revert" on) or overlapping
     // outputs.
-    function apply(staged) {
+    // `confirm`: arm the keep/revert countdown (risky changes: a mode, rotation,
+    // scale or a screen turned off can leave a screen blank). Moving screens
+    // around applies straight away.
+    function apply(staged, confirm) {
         if (root.pendingConfirm) return false   // never overwrite the revert snapshot
         var list = _connected(staged)
         if (!list.some(o => o.enabled) || Logic.hasOverlap(list)) return false
         root.lastError = ""
-        root.revertSnapshot = JSON.parse(JSON.stringify(root.outputs))
-        root.confirmLeft = root.confirmSeconds
-        _countdown.restart()
         root._applyArgv = _argv(list)
+        if (confirm) {
+            root.revertSnapshot = JSON.parse(JSON.stringify(root.outputs))
+            root.confirmLeft = root.confirmSeconds
+            _countdown.restart()
+        }
         _runner.run(root._applyArgv)
         return true
     }

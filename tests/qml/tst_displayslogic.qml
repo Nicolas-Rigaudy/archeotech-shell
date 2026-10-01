@@ -86,6 +86,21 @@ TestCase {
         var p = Logic.snap(l, "eDP-1", 500, 300)
         compare(p.x, 0); compare(p.y, 0)
     }
+    function test_risky() {
+        var before = _desk()
+        var moved = _desk(); moved[1].y = 0
+        verify(!Logic.risky(before, moved), "moving a screen is safe")
+        var rot = _desk(); rot[1].transform = "90"
+        verify(Logic.risky(before, rot), "rotation can blank a screen")
+        var off = _desk(); off[2].enabled = false
+        verify(Logic.risky(before, off), "turning a screen off")
+        var sc = _desk(); sc[0].scale = 1.5
+        verify(Logic.risky(before, sc), "scale")
+        var md = _desk(); md[1].width = 1280; md[1].height = 720
+        verify(Logic.risky(before, md), "resolution")
+        var added = _desk().concat([_out("DP-4", 5760, 0, 1920, 1080)])
+        verify(Logic.risky(before, added), "a new output")
+    }
     function test_normalize() {
         var l = [_out("a", 100, 50, 10, 10), _out("b", 110, 40, 10, 10), _out("c", -500, -500, 10, 10, "normal", false)]
         var n = Logic.normalize(l)
