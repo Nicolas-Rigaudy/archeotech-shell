@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Quickshell.Io
 import "../../../Commons" as Commons
 import "../../../Commons/Primitives"
 import "../Widgets"
@@ -12,29 +11,8 @@ Item {
     id: root
 
     // ── State ──────────────────────────────────────────────────────────────────
-    property string nightLightMode: "off"
 
-    Component.onCompleted: { nightLightReader.running = true; Hardware.Displays.refresh(); root._sync() }
-
-    // ── Process helpers ────────────────────────────────────────────────────────
-    Commons.CommandRunner { id: cmdRunner }
-    function run(cmd) { cmdRunner.runShell(cmd) }
-
-    Process {
-        id: nightLightReader
-        // Real state = the running wlsunset's own -t argument (pgrep -a prints the
-        // arguments space-separated; /proc/<pid>/cmdline is NUL-separated, which
-        // the old pid-file reader grepped for "-t " and so always read "off").
-        command: ["bash", "-c",
-            "pgrep -ax wlsunset | grep -oP '(?<=-t )\\d+' | head -1 | grep . || echo off"]
-        running: false
-        stdout: SplitParser {
-            onRead: data => {
-                var t = data.trim()
-                root.nightLightMode = (t === "4500" || t === "3500" || t === "2700") ? t : "off"
-            }
-        }
-    }
+    Component.onCompleted: { Hardware.Displays.refresh(); root._sync() }
 
     // ── Monitor layout editor (item_135 wave 1) ─────────────────────────────────
     // `staged` is a deep copy of the real outputs (Hardware.Displays) that the
@@ -120,28 +98,6 @@ Item {
                           .map(m => ({ value: String(m.refresh), label: m.refresh.toFixed(2) + " Hz" }))
     }
 
-    // wlsunset is a day/night SCHEDULE (-T day, -t night): `-T 6500 -t 4500`
-    // changed nothing during the day. Pinning both ends (-T = -t + 1, it needs
-    // T > t) applies the temperature now, all day. setsid -f detaches it from
-    // the short-lived runner shell so it keeps running. Read back afterwards.
-    function _applyNightLight(mode) {
-        root.nightLightMode = mode
-        if (mode === "off")
-            run("pkill -x wlsunset 2>/dev/null; true")
-        else
-            // Restart immediately (wlsunset owns the gamma ramp exclusively, so
-            // two cannot overlap): keeps the drop back to neutral as short as possible.
-            run("pkill -x wlsunset 2>/dev/null; setsid -f wlsunset -t " + mode + " -T " + (Number(mode) + 1) + " >/dev/null 2>&1")
-        _nightPending = true
-    }
-    // Read back once the command has actually run (the runner queues), plus a
-    // beat for the new wlsunset to start.
-    property bool _nightPending: false
-    Connections {
-        target: cmdRunner
-        function onFinished(argv, code) { if (root._nightPending) { root._nightPending = false; _nightReadback.restart() } }
-    }
-    Timer { id: _nightReadback; interval: 400; onTriggered: nightLightReader.running = true }
 
     ColumnLayout {
         anchors.fill: parent
@@ -150,7 +106,7 @@ Item {
         PaneHeader {
             icon: "󱄅"
             title: "Display"
-            description: "Arrange your screens, their resolution, rotation and scale, and color temperature"
+            description: "Arrange your screens, their resolution, rotation and scale, and night light"
         }
 
         Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
@@ -321,18 +277,31 @@ Item {
                 Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
                 SectionLabel { text: "NIGHT LIGHT" }
 
+                // Live, flash-free colour temperature (Hardware.NightLight:
+                // wl-gammarelay-rs on mango, hyprsunset on Hyprland).
                 SettingsCard {
-                    ButtonGroupRow {
-                        label: "Color temperature"
-                        description: "Reduce blue light during evening hours"
-                        options: [
-                            { value: "off",  label: "Off"   },
-                            { value: "4500", label: "4500K" },
-                            { value: "3500", label: "3500K" },
-                            { value: "2700", label: "2700K" }
-                        ]
-                        currentValue: root.nightLightMode
-                        onSelected: v => root._applyNightLight(v)
+                    ToggleRow {
+                        label: "Night light"
+                        description: Hardware.NightLight.available
+                            ? "Warm the screen colour to reduce blue light"
+                            : "Needs " + Hardware.NightLight.backend + " (install it to use night light)"
+                        enabled: Hardware.NightLight.available
+                        checked: Hardware.NightLight.enabled
+                        onToggled: v => Hardware.NightLight.setEnabled(v)
+                    }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: Hardware.NightLight.enabled }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0; visible: Hardware.NightLight.enabled }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: Hardware.NightLight.enabled }
+                    SliderRow {
+                        visible: Hardware.NightLight.enabled
+                        label: "Temperature"
+                        description: "Lower is warmer; applies as you drag"
+                        from: Hardware.NightLight.minTemp
+                        to: Hardware.NightLight.maxTemp - 500
+                        stepSize: 100
+                        value: Hardware.NightLight.temperature
+                        format: v => Math.round(v) + " K"
+                        onMoved: v => Hardware.NightLight.setTemperature(v)
                     }
                 }
             }
