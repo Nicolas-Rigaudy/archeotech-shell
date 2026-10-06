@@ -88,7 +88,7 @@ LOCAL_SCRIPTS=(
     theme-switch.sh wallpaper-set.sh
     hyprlock-launch.sh hyprlock-info.sh wlogout-launch.sh
     bt-agent.py battery-alert.sh wifi-scan.sh list-desktop-apps.sh
-    zen-opacity-toggle.sh
+    zen-opacity-toggle.sh display-profile.py
 )
 for s in "${LOCAL_SCRIPTS[@]}"; do
     link "$REPO_DIR/scripts/$s" "$BIN_DIR/$s"

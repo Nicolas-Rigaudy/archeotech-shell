@@ -64,3 +64,6 @@ jobs:
 
       - name: Typography from tokens only (no raw font size, weight or tracking)
         run: python3 scripts/token-lint.py
+
+      - name: Python unit tests (display profiles)
+        run: python3 -m unittest discover -s tests/py -v

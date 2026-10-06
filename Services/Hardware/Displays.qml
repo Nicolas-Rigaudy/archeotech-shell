@@ -49,6 +49,62 @@ QtObject {
         root.ready = true
     }
 
+    // ── Profiles (item_135 wave 2) ────────────────────────────────────────────
+    // Saved layouts per monitor SET, owned by scripts/display-profile.py (also
+    // run by the hotplug daemon, so profiles apply with or without the shell).
+    // This checkout's copy is used, so it works before install.sh links it.
+    readonly property string _profileTool: decodeURIComponent(Qt.resolvedUrl("../../scripts/display-profile.py").toString().replace("file://", ""))
+    property var    profiles: []          // [{ name, monitors: [connector…] }]
+    property string activeProfile: ""     // the profile matching the connected monitors
+    property bool   autoApply: true
+    // Set when the profile tool could not be read (shown instead of a false
+    // "No profiles yet"), e.g. a pinned checkout that predates the tool.
+    property string profileError: ""
+    property bool _profileAgain: false
+    property var _profileReader: Process {
+        command: ["python3", root._profileTool, "status", "--json"]
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    var d = JSON.parse(this.text)
+                    root.profiles = d.profiles || []
+                    root.activeProfile = d.active || ""
+                    root.autoApply = d.autoApply !== false
+                    root.profileError = ""
+                } catch (e) {
+                    root.profileError = "Could not read display profiles"
+                }
+            }
+        }
+        onExited: (code, status) => {
+            if (code !== 0) root.profileError = "Could not read display profiles (display-profile.py exit " + code + ")"
+            if (root._profileAgain) { root._profileAgain = false; running = true }
+        }
+    }
+    function refreshProfiles() { if (_profileReader.running) _profileAgain = true; else _profileReader.running = true }
+    property var _profileRunner: Commons.CommandRunner { label: "display-profile" }
+    property var _afterProfile: Connections {
+        target: root._profileRunner
+        function onFinished(argv, code) { root.refreshProfiles(); root.refresh() }
+    }
+    function saveProfile(name) {
+        name = (name || "").trim()
+        if (name) _profileRunner.run(["python3", root._profileTool, "save", name])
+    }
+    function deleteProfile(name) { _profileRunner.run(["python3", root._profileTool, "delete", name]) }
+    function setAutoApply(on) { _profileRunner.run(["python3", root._profileTool, "set-auto", on ? "on" : "off"]) }
+    // A different SET of screens (dock/undock, possibly with the hotplug daemon
+    // applying a profile) makes a pending revert snapshot stale: reverting would
+    // put a pre-dock layout back over the new one, so drop the countdown.
+    property string _outputSet: ""
+    onOutputsChanged: {
+        var set = root.outputs.map(o => o.name).sort().join(",")
+        if (root._outputSet !== "" && set !== root._outputSet && root.pendingConfirm) root.keep()
+        root._outputSet = set
+        refreshProfiles()
+    }
+
     // Debounced re-read on hotplug: the compositor settles the new output first.
     property var _hotplug: Timer { interval: 600; onTriggered: root.refresh() }
     property var _screensConn: Connections {

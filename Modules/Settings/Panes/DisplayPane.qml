@@ -12,7 +12,7 @@ Item {
 
     // ── State ──────────────────────────────────────────────────────────────────
 
-    Component.onCompleted: { Hardware.Displays.refresh(); root._sync() }
+    Component.onCompleted: { Hardware.Displays.refresh(); Hardware.Displays.refreshProfiles(); root._sync() }
 
     // ── Monitor layout editor (item_135 wave 1) ─────────────────────────────────
     // `staged` is a deep copy of the real outputs (Hardware.Displays) that the
@@ -272,6 +272,108 @@ Item {
                         active: true
                         onClicked: Hardware.Displays.keep()
                     }
+                }
+
+                // ── Profiles (item_135 wave 2) ────────────────────────────────
+                // A saved layout per set of monitors; the matching one applies
+                // by itself on dock/undock (scripts/display-profile.py).
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
+                SectionLabel { text: "PROFILES" }
+                SettingsCard {
+                    ToggleRow {
+                        label: "Apply profiles automatically"
+                        description: "When screens are plugged in or unplugged, use the saved layout for those screens"
+                        checked: Hardware.Displays.autoApply
+                        onToggled: v => Hardware.Displays.setAutoApply(v)
+                    }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+
+                    // Saved profiles; the one for the connected screens is marked.
+                    Repeater {
+                        model: Hardware.Displays.profiles
+                        delegate: RowLayout {
+                            id: profRow
+                            required property var modelData
+                            readonly property bool _cur: modelData.name === Hardware.Displays.activeProfile
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: Commons.Appearance.spacing.s10
+                            spacing: Commons.Appearance.spacing.s3
+                            Text {
+                                text: profRow._cur ? "󰄬" : "󰍹"
+                                color: profRow._cur ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textMuted
+                                font.family: Commons.Appearance.font.family
+                                font.pixelSize: Commons.Appearance.font.sizeLg
+                            }
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 2
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: profRow.modelData.name + (profRow._cur ? "  ·  current" : "")
+                                    color: profRow._cur ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textPrimary
+                                    font.family: Commons.Appearance.font.family
+                                    font.pixelSize: Commons.Appearance.font.sizeBase
+                                    font.weight: profRow._cur ? Commons.Appearance.font.weightMedium : Commons.Appearance.font.weightRegular
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: (profRow.modelData.monitors || []).join("  ·  ")
+                                    color: Commons.Appearance.colors.textMuted
+                                    font.family: Commons.Appearance.font.family
+                                    font.pixelSize: Commons.Appearance.font.sizeSm
+                                    elide: Text.ElideRight
+                                }
+                            }
+                            GlassButton {
+                                text: "Delete"
+                                onClicked: Hardware.Displays.deleteProfile(profRow.modelData.name)
+                            }
+                        }
+                    }
+                    Text {
+                        visible: Hardware.Displays.profiles.length === 0 || Hardware.Displays.profileError !== ""
+                        Layout.fillWidth: true
+                        text: Hardware.Displays.profileError !== "" ? Hardware.Displays.profileError
+                              : "No profiles yet. Arrange your screens above, then save the layout here."
+                        color: Commons.Appearance.colors.textMuted
+                        font.family: Commons.Appearance.font.family
+                        font.pixelSize: Commons.Appearance.font.sizeSm
+                        wrapMode: Text.WordWrap
+                    }
+
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+
+                    // Save the CURRENT (applied) layout. Saving for the same
+                    // screens replaces that profile, so prefill its name.
+                    TextFieldRow {
+                        id: profName
+                        label: Hardware.Displays.activeProfile !== "" ? "Update this layout" : "Save this layout as"
+                        description: root.dirty || Hardware.Displays.pendingConfirm
+                                     ? "Apply or discard your changes first"
+                                     : "One profile per set of screens, e.g. Work, Home, Laptop"
+                        placeholder: "Work"
+                        text: Hardware.Displays.activeProfile
+                        // Save always uses profName.value: exactly what the field shows.
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Item { Layout.fillWidth: true }
+                        GlassButton {
+                            readonly property bool _ok: profName.value.trim() !== "" && !root.dirty && !Hardware.Displays.pendingConfirm
+                            // Saving for screens that already have a profile replaces it.
+                            text: Hardware.Displays.activeProfile === "" ? "Save profile"
+                                  : profName.value.trim() === Hardware.Displays.activeProfile ? "Update profile"
+                                  : "Replace " + Hardware.Displays.activeProfile
+                            active: _ok
+                            enabled: _ok
+                            onClicked: Hardware.Displays.saveProfile(profName.value)
+                        }
+                    }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                 }
 
                 Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }

@@ -12,6 +12,8 @@ Item {
     property string text: ""
     property string placeholder: ""
     signal edited(string value)
+    // What the field shows right now (user edits included).
+    readonly property alias value: field.text
 
     implicitHeight: description ? 68 : 52
     Layout.fillWidth: true
