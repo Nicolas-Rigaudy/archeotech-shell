@@ -198,6 +198,10 @@ def mismatches(profile, outputs):
     return bad
 
 
+def set_key(outputs):
+    return ",".join(sorted(identity(o) for o in outputs))
+
+
 def in_place(profile, outputs):
     """True when the screens already show this profile (on/off, position,
     rotation, scale): applying would change nothing, so stay silent."""
@@ -248,19 +252,24 @@ def toast(summary, body=""):
         pass
 
 
-def toast_once(key, summary, body=""):
-    """Toast once per monitor set per session (not on every mango reload)."""
-    stamp = pathlib.Path(os.environ.get("XDG_RUNTIME_DIR") or "/tmp") / "display-profile.last-unknown"
+STAMP = pathlib.Path(os.environ.get("XDG_RUNTIME_DIR") or "/tmp") / "display-profile.last-set"
+
+
+def set_changed(key):
+    """True the first time this monitor SET is seen this session (a dock or
+    undock), False on repeats (a mango reload): announcements follow the set,
+    not whether anything had to move. mango's own monitor rules often restore a
+    known layout before we run, which used to make a re-dock silent."""
     try:
-        if stamp.read_text() == key:
-            return
+        if STAMP.read_text() == key:
+            return False
     except OSError:
         pass
     try:
-        stamp.write_text(key)
+        STAMP.write_text(key)
     except OSError:
         pass
-    toast(summary, body)
+    return True
 
 
 def main(args):
@@ -295,18 +304,19 @@ def main(args):
                 return 4
             p = match(profiles, outs)
             if p is None:
-                toast_once(",".join(sorted(identity(o) for o in outs)), "New display setup",
-                           "Arrange it in Settings → Display and save it as a profile.")
+                if set_changed(set_key(outs)):
+                    toast("New display setup", "Arrange it in Settings → Display and save it as a profile.")
                 return 3
-        if in_place(p, outs):
-            return 0     # already showing it (e.g. a mango reload): no change, no toast
-        try:
-            run_layout(p, outs)
-        except ApplyError as e:
-            print(f"display-profile: {e}", file=sys.stderr)
-            toast("Display profile not applied", str(e))
-            return 6
-        toast(f"Display profile: {p['name']}")
+        new_set = set_changed(set_key(outs)) or len(args) > 1   # a named apply always confirms
+        if not in_place(p, outs):
+            try:
+                run_layout(p, outs)
+            except ApplyError as e:
+                print(f"display-profile: {e}", file=sys.stderr)
+                toast("Display profile not applied", str(e))
+                return 6
+        if new_set:
+            toast(f"Display profile: {p['name']}")
         return 0
 
     if cmd in ("save", "delete", "set-auto") and len(args) > 1:

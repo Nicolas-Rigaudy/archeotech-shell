@@ -39,6 +39,16 @@ class DisplayProfile(unittest.TestCase):
         off = dp.save({}, "Off", [dict(EDP, enabled=False)])
         self.assertEqual(dp.why_not(off["profiles"][0], [EDP]), "would turn every screen off")
 
+    def test_set_changed_announces_once_per_set(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            dp.STAMP = pathlib.Path(d) / "last-set"
+            work, laptop = dp.set_key(WORK), dp.set_key([EDP])
+            self.assertTrue(dp.set_changed(work), "dock: first time this set is seen")
+            self.assertFalse(dp.set_changed(work), "reload with the same screens: silent")
+            self.assertTrue(dp.set_changed(laptop), "undock")
+            self.assertTrue(dp.set_changed(work), "re-dock announces again")
+
     def test_snapshot_uses_current_mode(self):
         e = dp.snapshot([EDP])[0]
         self.assertEqual(e["mode"], {"width": 1920, "height": 1200, "refresh": 60.0})
