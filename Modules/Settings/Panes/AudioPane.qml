@@ -4,7 +4,6 @@ import QtQuick.Layouts
 import "../../../Commons" as Commons
 import "../../../Commons/Primitives"
 import "../../../Services/Media" as MediaServices
-import "../../../Services/Persistence" as Persistence
 import "../Widgets"
 
 Item {
@@ -20,7 +19,7 @@ Item {
         PaneHeader {
             icon: "󰕾"
             title: "Audio"
-            description: "Select the default output device and configure audio behaviour"
+            description: "Choose the default output and input devices and their volume limits"
         }
 
         Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
@@ -292,17 +291,6 @@ Item {
 
                 }
 
-                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
-                SectionLabel { text: "BEHAVIOUR" }
-
-                SettingsCard {
-                    ToggleRow {
-                        label: "Remember volume on restart"
-                        description: "Restore last volume level on login"
-                        checked: Persistence.Config.get("audio.rememberVolume", true)
-                        onToggled: value => Persistence.Config.set("audio.rememberVolume", value)
-                    }
-                }
             }
         }
     }
