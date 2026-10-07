@@ -15,7 +15,7 @@ import "../Compositor" as Compositor
 // (after its own input keys, so these win); mango then reloads.
 //
 // Per-keyboard layouts use mango `devicerule`s, which give that keyboard its
-// OWN keymap: the external QWERTY always types QWERTY and the built-in AZERTY
+// OWN keymap once it (re)appears (replug; next login for a built-in keyboard): the external QWERTY always types QWERTY and the built-in AZERTY
 // always types AZERTY, both at once, nothing to switch on dock/undock. A rule
 // carries ONE layout (mango rejects "us,fr" in a rule: the comma splits it), so
 // French accents on a QWERTY come from the "US International" variant
@@ -81,9 +81,10 @@ QtObject {
     readonly property bool disableWhileTyping: Persistence.Config.get("input.disableWhileTyping", true)
     readonly property real pointerSpeed: Persistence.Config.get("input.pointerSpeed", 0)
     function _isSet(key) { return Persistence.Config.get("input." + key, null) !== null }
-    // After a reload has finished and the devices were re-read: a keyboard with a
-    // layout that is still not `matched` had its rule rejected (mango falls back
-    // to the global layout); the pane says so instead of "Applying…" forever.
+    // After a reload has finished and the devices were re-read. A keyboard whose
+    // rule is not yet `matched` is waiting to be reconnected: mango 0.17.5 applies
+    // device rules only when a device appears (reload_config re-applies pointer and
+    // touchpad settings, not device rules), so the pane says how to apply it.
     property bool settled: true
 
     function layoutFor(identifier) { return root.keyboardLayouts[identifier] || "default" }

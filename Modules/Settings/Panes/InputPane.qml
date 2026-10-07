@@ -18,14 +18,18 @@ Item {
         onTriggered: Hardware.Input.refresh()
     }
 
-    function _label(kb) {
-        return kb.identifier.indexOf("AT Translated Set 2 keyboard") >= 0 ? "Built-in keyboard" : kb.name
-    }
+    function _builtin(kb) { return kb.identifier.indexOf("AT Translated Set 2 keyboard") >= 0 }
+    function _label(kb) { return root._builtin(kb) ? "Built-in keyboard" : kb.name }
     function _status(kb) {
         if (!kb.usable) return "Its name contains a comma, which a mango device rule cannot match"
         var v = Hardware.Input.layoutFor(kb.identifier)
         if (v === "default") return "Uses the default layouts (Alt+Shift switches)"
-        if (!kb.matched) return Hardware.Input.settled ? "Not applied: mango rejected the rule (check its log)" : "Applying…"
+        // mango gives a keyboard its own keymap only when the device APPEARS
+        // (0.17.5: reload_config never re-applies device rules), so a new choice
+        // waits for a replug, or for the next login for a built-in keyboard.
+        if (!kb.matched) return !Hardware.Input.settled ? "Saving…"
+            : root._builtin(kb) ? "Saved: takes effect at your next login (the built-in keyboard cannot be reconnected)"
+            : "Saved: unplug and replug this keyboard (or log in again) to apply"
         return v === "us-intl" ? "Own layout · accents with AltGr (AltGr+e = é, AltGr+, = ç)" : "Own layout"
     }
 
