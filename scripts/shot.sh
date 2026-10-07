@@ -20,6 +20,9 @@
 #   shot.sh --notify --burst 6 -i 1 out.png  # fire a toast, capture 6 frames 1s
 #                                            #   apart → out-000.png … out-005.png
 #   shot.sh --outputs 2 out.png              # two headless outputs side by side
+#   shot.sh --mango-line 'devicerule=type:keyboard,repeat_rate:40' out.png
+#                                            # append a line to the nested mango config
+#                                            #   (repeatable; still passes the command guard)
 #   shot.sh --exec 'notify-send a; mmsg -d focusmon,right' out.png
 #                                            # run a command in the nested session
 #                                            #   before capture (after --notify*)
@@ -72,6 +75,7 @@ PACK="-"            # pack id, "base" for none, "-" = user's current
 FLAT="-"            # 0|1, "-" = user's current
 WALLPAPER=""        # image path (default: what the live awww shows, if anything)
 SHELL_CONFIG=""     # shell-config.json to render with (default: the user's copy)
+MANGO_LINES=()      # extra lines appended to the nested mango config (--mango-line)
 SETS=()             # config.json overrides, key.path=json-value (repeatable --set)
 NOTIFY_COUNT=0      # >0 → fire N notifications with no expiry (the shell's own timeout applies)
 KEEP=0              # 1 → keep the run dir (logs, fake HOME) even on success
@@ -94,6 +98,7 @@ while [ $# -gt 0 ]; do
     --wallpaper) WALLPAPER="$2"; shift 2 ;;
     --shell-config) SHELL_CONFIG="$(readlink -f "$2")"; shift 2 ;;
     --set)      SETS+=("$2"); shift 2 ;;
+    --mango-line) MANGO_LINES+=("$2"); shift 2 ;;
     --notify-count) NOTIFY_COUNT="$2"; shift 2 ;;
     --keep)     KEEP=1; shift ;;
     --fresh)    FRESH=1; shift ;;
@@ -246,6 +251,7 @@ if [ "$FRESH" != 1 ] && [ -f "$REAL_HOME/.config/mango/config.conf" ]; then
   grep -v -E '^[[:space:]]*(#|$)' "$REAL_HOME/.config/mango/config.conf" \
     | grep -v -i -E "^[[:space:]]*($OVERRIDE)[[:space:]]*=" >> "$RUN/mango.conf"
 fi
+for l in "${MANGO_LINES[@]}"; do printf '%s\n' "$l" >> "$RUN/mango.conf"; done
 # Guard: refuse to start if anything command-like survived the filter (a mango
 # keyword added after this list was written, or a spawn action inside a rule).
 if grep -n -i -E '^[[:space:]]*[a-z_-]*(exec|bind|source|spawn|env)[a-z_-]*[[:space:]]*=|spawn' "$RUN/mango.conf"; then

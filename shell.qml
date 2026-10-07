@@ -47,6 +47,9 @@ ShellRoot {
         // (Quickshell singletons are lazy — a bare reference never runs their
         // Component.onCompleted, so the day-night/boot apply would never arm).
         _colorScheme.effectiveMode
+        // Same for the input service: its boot sync re-writes mango's input conf
+        // from the saved choices if they diverged (item_136).
+        HardwareServices.Input.supported
     }
 
     // Drive the flat/glass aesthetic from the persisted setting. Commons can't
