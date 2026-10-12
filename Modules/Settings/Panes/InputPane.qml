@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import "../../../Commons" as Commons
 import "../../../Services/Hardware" as Hardware
+import "../../../Commons/Primitives"
 import "../Widgets"
 
 // Settings → Input (item_136): per-keyboard layouts, key repeat, touchpad.
@@ -86,14 +87,44 @@ Item {
                             Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: kbRow.index > 0 }
                             Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Commons.Appearance.colors.surface0; visible: kbRow.index > 0 }
                             Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
-                            ButtonGroupRow {
-                                enabled: kbRow.modelData.usable
-                                label: root._label(kbRow.modelData)
-                                description: root._status(kbRow.modelData)
-                                options: Hardware.Input.layouts.map(l => ({ value: l.value, label: l.label }))
-                                currentValue: Hardware.Input.layoutFor(kbRow.modelData.identifier)
-                                onSelected: v => Hardware.Input.setLayout(kbRow.modelData.identifier, v)
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Commons.Appearance.spacing.s3
+                                ButtonGroupRow {
+                                    Layout.fillWidth: true
+                                    enabled: kbRow.modelData.usable
+                                    label: root._label(kbRow.modelData)
+                                    description: root._status(kbRow.modelData)
+                                    options: Hardware.Input.layouts.map(l => ({ value: l.value, label: l.label }))
+                                    currentValue: Hardware.Input.layoutFor(kbRow.modelData.identifier)
+                                    onSelected: v => Hardware.Input.setLayout(kbRow.modelData.identifier, v)
+                                }
+                                // A mouse receiver can advertise a full keyboard: let
+                                // the user hide what is not one (restore below).
+                                GlassButton {
+                                    Layout.alignment: Qt.AlignTop
+                                    readonly property bool _hidden: Hardware.Input.hiddenKeyboards.indexOf(kbRow.modelData.identifier) >= 0
+                                    text: _hidden ? "Show" : "Not a keyboard"
+                                    onClicked: Hardware.Input.setHidden(kbRow.modelData.identifier, !_hidden)
+                                }
                             }
+                        }
+                    }
+                    // Hidden devices: count + a way back.
+                    RowLayout {
+                        Layout.fillWidth: true
+                        visible: Hardware.Input.hiddenCount > 0 || Hardware.Input.showHidden
+                        Text {
+                            Layout.fillWidth: true
+                            text: Hardware.Input.showHidden ? "Showing hidden devices"
+                                  : Hardware.Input.hiddenCount + " hidden device" + (Hardware.Input.hiddenCount > 1 ? "s" : "")
+                            color: Commons.Appearance.colors.textMuted
+                            font.family: Commons.Appearance.font.family
+                            font.pixelSize: Commons.Appearance.font.sizeSm
+                        }
+                        GlassButton {
+                            text: Hardware.Input.showHidden ? "Done" : "Show hidden"
+                            onClicked: Hardware.Input.showHidden = !Hardware.Input.showHidden
                         }
                     }
                     Text {

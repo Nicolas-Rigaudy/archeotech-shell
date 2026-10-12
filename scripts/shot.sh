@@ -23,6 +23,10 @@
 #   shot.sh --mango-line 'devicerule=type:keyboard,repeat_rate:40' out.png
 #                                            # append a line to the nested mango config
 #                                            #   (repeatable; still passes the command guard)
+#   shot.sh --mango-include f.conf out.png   # copy f.conf to the fake ~/.config/mango/ and
+#                                            #   source it like the real config does
+#                                            #   (source-optional=~/.config/mango/f.conf;
+#                                            #   contents guarded too)
 #   shot.sh --exec 'notify-send a; mmsg -d focusmon,right' out.png
 #                                            # run a command in the nested session
 #                                            #   before capture (after --notify*)
@@ -76,6 +80,7 @@ FLAT="-"            # 0|1, "-" = user's current
 WALLPAPER=""        # image path (default: what the live awww shows, if anything)
 SHELL_CONFIG=""     # shell-config.json to render with (default: the user's copy)
 MANGO_LINES=()      # extra lines appended to the nested mango config (--mango-line)
+MANGO_INCLUDES=()   # files sourced by the nested mango config (--mango-include)
 SETS=()             # config.json overrides, key.path=json-value (repeatable --set)
 NOTIFY_COUNT=0      # >0 → fire N notifications with no expiry (the shell's own timeout applies)
 KEEP=0              # 1 → keep the run dir (logs, fake HOME) even on success
@@ -99,6 +104,7 @@ while [ $# -gt 0 ]; do
     --shell-config) SHELL_CONFIG="$(readlink -f "$2")"; shift 2 ;;
     --set)      SETS+=("$2"); shift 2 ;;
     --mango-line) MANGO_LINES+=("$2"); shift 2 ;;
+    --mango-include) MANGO_INCLUDES+=("$2"); shift 2 ;;
     --notify-count) NOTIFY_COUNT="$2"; shift 2 ;;
     --keep)     KEEP=1; shift ;;
     --fresh)    FRESH=1; shift ;;
@@ -252,9 +258,27 @@ if [ "$FRESH" != 1 ] && [ -f "$REAL_HOME/.config/mango/config.conf" ]; then
     | grep -v -i -E "^[[:space:]]*($OVERRIDE)[[:space:]]*=" >> "$RUN/mango.conf"
 fi
 for l in "${MANGO_LINES[@]}"; do printf '%s\n' "$l" >> "$RUN/mango.conf"; done
+# --mango-include: the file goes into the FAKE home and is sourced through `~`,
+# exactly like the owner's `source-optional=~/.config/mango/archeotech-input.conf`
+# (mango 0.17.5 resolves a bare relative name against its working directory, not
+# the config dir; only `./` and `~` are config-dir / home relative).
+INCLUDE_LINES=()
+for f in "${MANGO_INCLUDES[@]}"; do
+  [ -f "$f" ] || { echo "shot.sh: no such --mango-include file: $f" >&2; rm -rf "$RUN"; exit 2; }
+  b=$(basename "$f")
+  mkdir -p "$FH/.config/mango"
+  cp "$f" "$FH/.config/mango/$b"
+  printf 'source-optional=~/.config/mango/%s\n' "$b" >> "$RUN/mango.conf"
+  INCLUDE_LINES+=("source-optional=~/.config/mango/$b")
+done
 # Guard: refuse to start if anything command-like survived the filter (a mango
 # keyword added after this list was written, or a spawn action inside a rule).
-if grep -n -i -E '^[[:space:]]*[a-z_-]*(exec|bind|source|spawn|env)[a-z_-]*[[:space:]]*=|spawn' "$RUN/mango.conf"; then
+# Exempt: only the exact source-optional lines added for --mango-include; the
+# included files themselves are scanned too.
+GUARDED=$(cat "$RUN/mango.conf")
+for l in "${INCLUDE_LINES[@]}"; do GUARDED=$(printf '%s\n' "$GUARDED" | grep -vxF "$l"); done
+for f in "${MANGO_INCLUDES[@]}"; do GUARDED=$(printf '%s\n%s\n' "$GUARDED" "$(cat "$f")"); done
+if printf '%s\n' "$GUARDED" | grep -n -i -E '^[[:space:]]*[a-z_-]*(exec|bind|source|spawn|env)[a-z_-]*[[:space:]]*=|spawn'; then
   echo "shot.sh: inherited mango config still has a command-like line (above); not starting" >&2
   rm -rf "$RUN"; exit 3
 fi
