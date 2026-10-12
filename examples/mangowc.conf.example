@@ -31,6 +31,9 @@ binds=SUPER,comma,spawn_shell,qs -c archeotech ipc call settings toggle
 binds=SUPER+SHIFT,e,spawn_shell,qs -c archeotech ipc call editmode toggle
 binds=SUPER,Home,spawn_shell,qs -c archeotech ipc call dashboard toggle
 binds=SUPER,w,spawn_shell,qs -c archeotech ipc call wallpaper toggle
+# Keyboard panel: your shortcuts (read from this file), and how to type é, €, « …
+binds=SUPER,k,spawn_shell,qs -c archeotech ipc call keybinds toggle
+binds=SUPER+SHIFT,k,spawn_shell,qs -c archeotech ipc call keybinds characters
 
 # On-screen display for volume/brightness (drive from your media keys)
 binds=NONE,XF86AudioRaiseVolume,spawn_shell,wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+ && qs -c archeotech ipc call osd volume

@@ -161,7 +161,8 @@ The shell's own IPC keybinds (open/toggle panels, OSD) are in
 - `Super + C` - Close window
 - `Super + Space` - Switch to scroller layout
 - `Super + L` - Lock screen
-- `Super + K` - Show keybinds
+- `Super + K` - Keyboard panel: your shortcuts, keys labelled for the keyboard you pick
+- `Super + Shift + K` - Keyboard panel: how to type é, €, « … (AltGr / dead-key combos)
 - `Super + ;` - Toggle swaync notification panel
 
 ### Switching Between Layouts
