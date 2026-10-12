@@ -3,6 +3,8 @@ import QtQuick
 import QtQuick.Layouts
 import "../../../../Commons" as Commons
 import "../../../Dashboard/panels"
+import "../../../../Services/Persistence" as Persistence
+import "../../../../Services/System/ClockLogic.js" as Clock
 
 // Dashboard UI — bottom-edge panel (PanelRegistry side="bottom"). Panel.qml
 // provides chrome + slide anim + Esc + click-outside; this file is the inner
@@ -71,7 +73,7 @@ Item {
             // Big clock
             Text {
                 anchors { right: closeBtn.left; rightMargin: Commons.Appearance.spacing.s4; verticalCenter: parent.verticalCenter }
-                text: Qt.formatDateTime(root._now, "HH:mm")
+                text: Qt.formatDateTime(root._now, Clock.timeFormat(Persistence.Config.get("clock.format", "24h"), false))
                 color: Commons.Appearance.colors.accent
                 font.family: Commons.Appearance.font.family
                 font.pixelSize: Commons.Appearance.font.sizeDisplay

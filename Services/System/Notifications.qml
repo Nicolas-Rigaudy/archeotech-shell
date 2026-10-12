@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell.Services.Notifications
 import "../Persistence" as Persistence
+import "ClockLogic.js" as Clock
 
 Item {
     id: root
@@ -47,7 +48,8 @@ Item {
                 summary:   notif.summary   || "",
                 body:      notif.body      || "",
                 urgency:   notif.urgency   || 0,
-                timestamp: Qt.formatTime(new Date(), "HH:mm"),
+                // Fixed at arrival in the current clock.format (not re-rendered later).
+                timestamp: Qt.formatTime(new Date(), Clock.timeFormat(Persistence.Config.get("clock.format", "24h"), false)),
                 _notif:    notif
             }])
             root.unreadCount++

@@ -1,7 +1,6 @@
 import QtQuick
 import "../../Commons" as Commons
 import "../../Services/Networking" as NetworkServices
-import "../../Services/Persistence" as Persistence
 
 // WiFi/ethernet status. Click opens the WiFi popup hosted by Bar.qml
 // (state in holderRoot._wifiPopupVisible / _wifiAnchorX). Icon-only (BarPill).
@@ -9,7 +8,6 @@ import "../../Services/Persistence" as Persistence
 // it would misposition; vertical popup anchoring is a later pass (S26-C note).
 BarPill {
     id: root
-    visible: Persistence.Config.get("bar.modules.wifi", true)
     icon: NetworkServices.Network.icon()
     iconColor: NetworkServices.Network.connected ? Commons.Appearance.colors.blue : Commons.Appearance.colors.textMuted
 

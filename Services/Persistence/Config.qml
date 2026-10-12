@@ -53,7 +53,7 @@ QtObject {
         // to config.json never reached the shell.
         onFileChanged: reload()
         onTextChanged: _parse()
-        onLoaded:      { _parse(); root.ready = true }
+        onLoaded:      { _parse(); root.ready = true; root._dropObsolete() }
         onLoadFailed:  root.ready = true    // no file yet: defaults are correct
     }
 
@@ -70,6 +70,14 @@ QtObject {
     Component.onCompleted: {
         _mkdir.running = true
         _file.preload = true
+    }
+
+    // Stale keys an older config.json may still carry (ConfigLogic.OBSOLETE_KEYS).
+    function _dropObsolete() {
+        var next = Logic.dropKeys(root._data, Logic.OBSOLETE_KEYS)
+        if (next === root._data) return
+        root._data = next
+        _debounce.restart()
     }
 
     // Returns the live (shared) subtree: copy before mutating, then set() the copy.

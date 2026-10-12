@@ -114,13 +114,13 @@ Prefer `holderRoot.dismissPopups()` to poking `_wifiPopupVisible`/`_btPopupVisib
 
 ## Per-instance config (`configSchema`)
 
-A widget can expose user-configurable fields. Each *placed* instance carries its own values, so two of the same widget can differ (two clocks, one 12-hour). The shell auto-generates the settings form — no UI to write.
+A widget can expose user-configurable fields. Each *placed* instance carries its own values, so two of the same widget can differ (e.g. two copies of `mywidget`, one 12-hour). The shell auto-generates the settings form — no UI to write.
 
 **1. Declare the schema.** Built-in widgets register it in `Services/Shell/WidgetRegistry.qml` under `_builtinSchemas`, keyed by id (plugins declare it in `module.json` — see [MODULE_API.md](MODULE_API.md)):
 
 ```qml
 readonly property var _builtinSchemas: ({
-    clock: {
+    mywidget: {
         format:      { type: "enum", label: "Time format", "default": "24h",
                        options: [{ value: "24h", label: "24-hour" }, { value: "12h", label: "12-hour" }] },
         showSeconds: { type: "bool", label: "Show seconds", "default": false }
@@ -141,7 +141,7 @@ Item {
 }
 ```
 
-`ClockWidget.qml` is the reference. Users edit an instance from the gear on its chip in **Edit Layout** (`Super+Shift+E`); the **Plugins** settings pane lists which widgets are configurable. There is no global-default layer — config is per-instance, stored on the entry in `shell-config.json`.
+No shipped widget or plugin declares a schema today: the clock's format became a global setting (Settings → Shell → Clock, item_137), so the example above is illustrative. Use per-instance config only for what genuinely differs per placement; a choice every copy should share belongs in Settings. Users edit an instance from the gear on its chip in **Edit Layout** (`Super+Shift+E`); the **Plugins** settings pane lists which widgets are configurable. There is no global-default layer — config is per-instance, stored on the entry in `shell-config.json`.
 
 ---
 
@@ -182,7 +182,7 @@ A side's layout is one ordered list:
   "type": "bar",
   "content": [
     { "id": "workspaces", "align": "left" },
-    { "id": "clock",  "config": { "format": "12h" }, "align": "center" },
+    { "id": "mywidget", "config": { "format": "12h" }, "align": "center" },
     { "id": "battery", "align": "right" }
   ]
 }

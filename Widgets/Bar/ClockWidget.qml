@@ -1,26 +1,22 @@
 import QtQuick
 import "../../Commons" as Commons
 import "../../Commons/Primitives" as Prim
+import "../../Services/Persistence" as Persistence
+import "../../Services/System/ClockLogic.js" as Clock
 
 // Time + date. Horizontal: single rich-text line, hover opens the calendar.
 // Vertical (thin side bar): HH over MM stacked (DMS pattern — never rotate
 // text), no date/calendar (the calendar popup anchors horizontally).
+// Format = the global clock setting (Settings → Shell → Clock, "clock.*").
 Item {
     id: root
     required property var holderRoot
     property string widgetId
-    // Sprint 26 — per-instance config (schema in WidgetRegistry._builtinSchemas):
-    //   format: "24h" | "12h"    showSeconds: bool
-    property var config: ({})
-
     readonly property bool _horizontal: holderRoot && holderRoot.horizontal
 
-    function _timeFmt() {
-        var h = (config && config.format === "12h") ? "h:mm" : "HH:mm"
-        if (config && config.showSeconds === true) h += ":ss"
-        return (config && config.format === "12h") ? h + " AP" : h
-    }
-    function _hourFmt() { return (config && config.format === "12h") ? "h" : "HH" }
+    readonly property string _format:  Persistence.Config.get("clock.format", "24h")
+    readonly property string _timeFmt: Clock.timeFormat(_format, Persistence.Config.get("clock.seconds", false))
+    readonly property string _dateFmt: Clock.dateFormat(Persistence.Config.get("clock.date", "short"))
 
     visible: holderRoot
     // Bolted console segment (steel pack, horizontal bar) — the centre gauge in its
@@ -39,23 +35,27 @@ Item {
         visible: root._horizontal
         anchors.centerIn: parent
         textFormat: Text.RichText
-        text: clockText()
+        property date now: new Date()
+        // Bound (never assigned), so a Settings change shows at once.
+        text: clockText(now, root._timeFmt, root._dateFmt)
         font.pixelSize: Commons.Appearance.font.sizeMd
         font.family: Commons.Appearance.font.family
 
-        function clockText() {
-            return "<span style='color:" + Commons.Appearance.colors.textPrimary + ";font-weight:600'>"
-                + Qt.formatDateTime(new Date(), root._timeFmt())
+        function clockText(now, timeFmt, dateFmt) {
+            var time = "<span style='color:" + Commons.Appearance.colors.textPrimary + ";font-weight:600'>"
+                + Qt.formatDateTime(now, timeFmt)
                 + "</span>"
+            if (!dateFmt) return time
+            return time
                 + "<span style='color:" + Commons.Appearance.colors.surface1 + "'> &nbsp;·&nbsp; </span>"
                 + "<span style='color:" + Commons.Appearance.colors.textSecondary
                 + ";font-family:\"" + Commons.Appearance.font.display + "\""
                 + ";font-size:" + (Commons.Appearance.font.sizeMd + 2) + "px'>"
-                + Qt.formatDateTime(new Date(), "ddd d MMM")
+                + Qt.formatDateTime(now, dateFmt)
                 + "</span>"
         }
         Timer { interval: 1000; running: root._horizontal; repeat: true
-                onTriggered: centerClock.text = centerClock.clockText() }
+                onTriggered: centerClock.now = new Date() }
     }
 
     // ── Vertical — HH / MM stacked ───────────────────────────────────────────────
@@ -69,7 +69,7 @@ Item {
                 onTriggered: vClock._now = new Date() }
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: Qt.formatDateTime(vClock._now, root._hourFmt())
+            text: Qt.formatDateTime(vClock._now, Clock.hourFormat(root._format))
             color: Commons.Appearance.colors.textPrimary
             font.pixelSize: Commons.Appearance.font.sizeMd; font.weight: Commons.Appearance.font.weightSemibold
             font.family: Commons.Appearance.font.family

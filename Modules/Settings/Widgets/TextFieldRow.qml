@@ -12,6 +12,8 @@ Item {
     property string text: ""
     property string placeholder: ""
     signal edited(string value)
+    signal accepted(string value)   // Enter pressed
+    function clear() { field.clear() }
     // What the field shows right now (user edits included).
     readonly property alias value: field.text
 
@@ -62,6 +64,7 @@ Item {
             }
 
             onTextEdited: root.edited(text)
+            onAccepted:   root.accepted(text)
         }
     }
 }

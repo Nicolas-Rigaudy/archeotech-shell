@@ -1,13 +1,12 @@
 import QtQuick
 import "../../Commons" as Commons
 import "../../Services/Hardware" as HardwareServices
-import "../../Services/Persistence" as Persistence
 
 // Battery percentage + charging state. Hidden when no battery present.
 // Not clickable — hover-only popup; icon keeps its state colour (no hover tint).
 BarPill {
     id: root
-    visible: HardwareServices.Battery.present && Persistence.Config.get("bar.modules.battery", true)
+    visible: HardwareServices.Battery.present
     interactive: false
     highlightOnHover: false
 

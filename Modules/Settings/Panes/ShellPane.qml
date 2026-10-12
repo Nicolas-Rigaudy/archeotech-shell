@@ -9,9 +9,10 @@ import "../../../Services/Shell" as ShellServices
 import "../../../Services/Compositor" as CompositorServices
 import "../Widgets"
 import "../../Dashboard/panels/SystemNotesLogic.js" as NotesLogic
+import "../../../Services/System/ClockLogic.js" as Clock
 
 // Shell pane (Sprint 24) — hub for shell-structure customization: the visual
-// builder (edit mode), bar layout, clock, module visibility. Renamed from the
+// builder (edit mode), frame, clock, scroller, dashboard cards. Renamed from the
 // old "Bar" pane; designed to absorb widget/strip controls as settings grow.
 Item {
     id: root
@@ -174,6 +175,61 @@ Item {
                 }
 
                 Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
+                SectionLabel { text: "CLOCK" }
+
+                // One global clock format ("clock.*"): the bar clock, the dashboard
+                // and notification times all read it, and apply it live.
+                SettingsCard {
+                    ButtonGroupRow {
+                        label: "Time format"
+                        options: [{ value: "24h", label: "24-hour" }, { value: "12h", label: "12-hour" }]
+                        currentValue: Persistence.Config.get("clock.format", "24h")
+                        onSelected: value => Persistence.Config.set("clock.format", value)
+                    }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Commons.Appearance.colors.surface0 }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                    ButtonGroupRow {
+                        label: "Seconds"
+                        description: "In the bar clock"
+                        options: [{ value: "hide", label: "Hide" }, { value: "show", label: "Show" }]
+                        currentValue: Persistence.Config.get("clock.seconds", false) ? "show" : "hide"
+                        onSelected: value => Persistence.Config.set("clock.seconds", value === "show")
+                    }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Commons.Appearance.colors.surface0 }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                    ButtonGroupRow {
+                        id: dateRow
+                        label: "Date"
+                        description: "Next to the time in the bar"
+                        // Labels are today's date in each format, so the choice reads as what it
+                        // shows. A date fixed at creation: a ticking one rebuilt the model every
+                        // second (resetting hover/press, swallowing clicks).
+                        readonly property date _labelDate: new Date()
+                        options: ["short", "numeric", "iso", "none"].map(function (k) {
+                            return { value: k, label: k === "none" ? "None"
+                                : Qt.formatDateTime(dateRow._labelDate, Clock.dateFormat(k)) }
+                        })
+                        currentValue: Persistence.Config.get("clock.date", "short")
+                        onSelected: value => Persistence.Config.set("clock.date", value)
+                    }
+                    Text {
+                        id: clockPreview
+                        property date now: new Date()
+                        Timer { interval: 1000; repeat: true; running: root.visible; onTriggered: clockPreview.now = new Date() }
+                        readonly property string _date: Clock.dateFormat(Persistence.Config.get("clock.date", "short"))
+                        text: "Preview: " + Qt.formatDateTime(now, Clock.timeFormat(
+                                  Persistence.Config.get("clock.format", "24h"), Persistence.Config.get("clock.seconds", false)))
+                              + (_date ? "  ·  " + Qt.formatDateTime(now, _date) : "")
+                        color: Commons.Appearance.colors.textMuted
+                        font.pixelSize: Commons.Appearance.font.sizeSm
+                        font.family: Commons.Appearance.font.family
+                        Layout.topMargin: Commons.Appearance.spacing.s2
+                    }
+                }
+
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
                 SectionLabel { text: "SCROLLER" }
 
                 SettingsCard {
@@ -263,6 +319,86 @@ Item {
                                     NotesLogic.toggle(Persistence.Config.get("dashboard.notes", null), statRow.modelData.id, value))
                             }
                         }
+                    }
+                }
+
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
+                SectionLabel { text: "DASHBOARD · PROJECT FOLDERS" }
+
+                // "dashboard.scanRoots": the folders whose git repositories the
+                // dashboard's Active Projects card lists (it rescans on change).
+                SettingsCard {
+                    id: rootsCard
+                    readonly property var roots: Persistence.Config.get("dashboard.scanRoots", ["~/Projects"])
+                    function remove(i) {
+                        var next = rootsCard.roots.slice()
+                        next.splice(i, 1)
+                        Persistence.Config.set("dashboard.scanRoots", next)
+                    }
+                    function add(path) {
+                        var p = String(path).trim().replace(/\/+$/, "")
+                        if (!p) return false
+                        if (rootsCard.roots.indexOf(p) === -1)
+                            Persistence.Config.set("dashboard.scanRoots", rootsCard.roots.concat([p]))
+                        return true
+                    }
+
+                    Repeater {
+                        model: rootsCard.roots
+                        delegate: ColumnLayout {
+                            id: rootRow
+                            required property var modelData
+                            required property int index
+                            Layout.fillWidth: true
+                            spacing: 0
+                            Rectangle {
+                                visible: rootRow.index > 0
+                                Layout.fillWidth: true; Layout.preferredHeight: 1
+                                color: Commons.Appearance.colors.surface0
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 40
+                                spacing: Commons.Appearance.spacing.s3
+                                Text {
+                                    text: "󰉋"
+                                    color: Commons.Appearance.colors.accent
+                                    font.pixelSize: Commons.Appearance.font.sizeXl; font.family: Commons.Appearance.font.family
+                                }
+                                Text {
+                                    text: String(rootRow.modelData)
+                                    color: Commons.Appearance.colors.textPrimary
+                                    font.pixelSize: Commons.Appearance.font.sizeBase
+                                    font.family: Commons.Appearance.font.family
+                                    elide: Text.ElideMiddle
+                                    Layout.fillWidth: true
+                                }
+                                Rectangle {
+                                    Layout.preferredWidth: 28; Layout.preferredHeight: 28
+                                    radius: Commons.Appearance.radius.base
+                                    color: "transparent"
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "󰅖"
+                                        color: removeLayer.hovered ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
+                                        font.pixelSize: Commons.Appearance.font.sizeLg; font.family: Commons.Appearance.font.family
+                                    }
+                                    StateLayer { id: removeLayer; anchors.fill: parent; onClicked: rootsCard.remove(rootRow.index) }
+                                }
+                            }
+                        }
+                    }
+                    Rectangle {
+                        visible: rootsCard.roots.length > 0
+                        Layout.fillWidth: true; Layout.preferredHeight: 1; color: Commons.Appearance.colors.surface0
+                    }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                    TextFieldRow {
+                        id: addRoot
+                        label: "Add folder"
+                        description: "Its git repositories show on the dashboard; press Enter"
+                        placeholder: "~/Code"
+                        onAccepted: value => { if (rootsCard.add(value)) addRoot.clear() }
                     }
                 }
 

@@ -72,15 +72,8 @@ QtObject {
     // ConfigForm.qml: bool→ToggleRow, int/real→SliderRow, enum→ButtonGroupRow /
     // DropdownRow, string→TextFieldRow. Add a widget's schema here to make it
     // per-instance configurable; widgets with no entry are config-less.
-    readonly property var _builtinSchemas: ({
-        clock: {
-            format: {
-                type: "enum", label: "Time format", "default": "24h",
-                options: [{ value: "24h", label: "24-hour" }, { value: "12h", label: "12-hour" }]
-            },
-            showSeconds: { type: "bool", label: "Show seconds", "default": false }
-        }
-    })
+    // (The clock's format is global, Settings → Shell → Clock, not per instance.)
+    readonly property var _builtinSchemas: ({})
 
     function configSchemaFor(id) {
         if (_isPlugin(id)) return {}   // plugin schema comes from ModuleRegistry

@@ -56,4 +56,13 @@ TestCase {
         verify(!("b" in n.a), "key deleted, not left undefined")
         compare(d.a.b, 1, "input not mutated")
     }
+    function test_dropKeys() {
+        var d = { bar: { clockFormat: "HH:mm", height: 36, modules: { wifi: true } },
+                  audio: { rememberVolume: true, aliases: {} }, clock: { format: "12h" } }
+        var n = Logic.dropKeys(d, Logic.OBSOLETE_KEYS)
+        compare(n.bar, undefined, "empty parent pruned")
+        compare(JSON.stringify(n.audio), JSON.stringify({ aliases: {} }), "siblings kept")
+        verify(n.clock === d.clock, "unrelated subtree keeps identity")
+        verify(Logic.dropKeys(n, Logic.OBSOLETE_KEYS) === n, "clean config is a no-op")
+    }
 }

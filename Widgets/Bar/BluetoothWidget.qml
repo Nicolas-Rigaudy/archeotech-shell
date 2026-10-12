@@ -1,13 +1,11 @@
 import QtQuick
 import "../../Commons" as Commons
 import "../../Services/Networking" as NetworkServices
-import "../../Services/Persistence" as Persistence
 
 // Bluetooth toggle + paired-device picker (popup hosted by Bar.qml). Icon-only.
 // ponytail: popup anchors on a horizontal X coord (see NetworkWidget note).
 BarPill {
     id: root
-    visible: Persistence.Config.get("bar.modules.bluetooth", true)
     icon: NetworkServices.Bluetooth.icon()
     iconColor: NetworkServices.Bluetooth.connected ? Commons.Appearance.colors.accent
              : NetworkServices.Bluetooth.enabled   ? Commons.Appearance.colors.textSecondary

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Io
 import "../../../Commons" as Commons
 import "../../../Commons/Primitives"
@@ -14,7 +15,12 @@ DashCard {
     property var projects: []
     readonly property int _rowH: 28
 
-    Component.onCompleted: _refresh()
+    // Scan once config.json has loaded (before that, get() gives the default roots).
+    Component.onCompleted: if (Persistence.Config.ready) _refresh()
+    Connections {
+        target: Persistence.Config
+        function onReadyChanged() { if (Persistence.Config.ready) root._refresh() }
+    }
 
     Connections {
         target: ShellServices.ShellState
@@ -23,20 +29,26 @@ DashCard {
         }
     }
 
-    // Scan roots are config-driven (Persistence.Config "dashboard.scanRoots").
+    // Scan roots are config-driven (Persistence.Config "dashboard.scanRoots",
+    // Settings → Shell → Dashboard); a change rescans at once.
+    readonly property var _roots: Persistence.Config.get("dashboard.scanRoots", ["~/Projects"])
+    on_RootsChanged: if (Persistence.Config.ready) _refresh()
+
+    // Roots go to bash as arguments ("$@"), never into the script text, so a
+    // folder name typed in Settings cannot run as shell code. "~/" expands here.
     function _refresh() {
         root.projects = []
-        var roots = Persistence.Config.get("dashboard.scanRoots", ["~/Projects"])
-        var scans = roots.map(function (r) {
-            return "scan \"" + String(r).replace(/^~\//, "$HOME/") + "\""
-        }).join("; ")
+        var roots = (root._roots || []).map(function (r) {
+            return String(r).replace(/^~(?=\/|$)/, Quickshell.env("HOME"))
+        })
         projectsProc.command = ["bash", "-c",
-            "scan(){ [ -d \"$1\" ] || return; for d in \"$1\"/*/; do [ -d \"$d/.git\" ] || continue; " +
+            "for r in \"$@\"; do [ -d \"$r\" ] || continue; for d in \"$r\"/*/; do [ -d \"$d/.git\" ] || continue; " +
             "n=$(basename \"$d\"); b=$(git -C \"$d\" branch --show-current 2>/dev/null||echo '?'); " +
             "x=$(git -C \"$d\" status --short 2>/dev/null|wc -l|tr -d ' '); " +
-            "echo \"$n|${b:-detached}|$x|$d\"; done; }; " + scans
-        ]
-        if (!projectsProc.running) projectsProc.running = true
+            "echo \"$n|${b:-detached}|$x|$d\"; done; done", "scan"].concat(roots)
+        // A scan already running finishes first, then this one runs.
+        if (projectsProc.running) projectsProc._again = true
+        else projectsProc.running = true
     }
 
     Process {
@@ -62,6 +74,7 @@ DashCard {
         command: ["bash", "-c", ""]
 
         property var _buf: []
+        property bool _again: false
         onRunningChanged: if (running) _buf = []
 
         stdout: SplitParser {
@@ -71,7 +84,11 @@ DashCard {
                     projectsProc._buf = projectsProc._buf.concat([{ name: p[0], branch: p[1], dirty: parseInt(p[2]) || 0, path: p[3] }])
             }
         }
-        onExited: root.projects = projectsProc._buf
+        onExited: {
+            // A queued rescan replaces this (stale) result instead of flashing it.
+            if (projectsProc._again) { projectsProc._again = false; projectsProc.running = true }
+            else root.projects = projectsProc._buf
+        }
     }
 
     Text {

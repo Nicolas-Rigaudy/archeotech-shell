@@ -43,3 +43,28 @@ function setPath(data, key, value) {
     else dst[leaf] = JSON.parse(JSON.stringify(value))
     return root
 }
+
+// Keys nothing reads any more. Config drops them once config.json has loaded, so
+// an old file does not keep stale settings around (2026-10-12, item_137).
+var OBSOLETE_KEYS = [
+    "bar.clockFormat",        // replaced by clock.format / clock.seconds / clock.date
+    "bar.height",             // bar height comes from theme tokens
+    "bar.modules",            // a widget shows when it is in the bar layout (Edit Layout)
+    "audio.rememberVolume"    // WirePlumber restores volumes; the toggle was removed
+]
+
+// `data` without `keys`, pruning parents left empty; `data` itself when none is set.
+function dropKeys(data, keys) {
+    var out = data
+    for (var i = 0; i < keys.length; i++) {
+        out = setPath(out, keys[i], undefined)
+        var parts = keys[i].split(".")
+        for (var n = parts.length - 1; n > 0; n--) {
+            var parent = parts.slice(0, n).join(".")
+            var v = getPath(out, parent, undefined)
+            if (!v || typeof v !== "object" || Array.isArray(v) || Object.keys(v).length) break
+            out = setPath(out, parent, undefined)
+        }
+    }
+    return out
+}

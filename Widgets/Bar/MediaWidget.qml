@@ -3,7 +3,6 @@ import QtQuick.Layouts
 import "../../Commons" as Commons
 import "../../Commons/Primitives" as Prim
 import "../../Services/Media" as MediaServices
-import "../../Services/Persistence" as Persistence
 import "../../Services/Shell" as ShellServices
 
 // MPRIS marquee — separator dot, play/pause toggle, scrolling title·artist.
@@ -14,8 +13,7 @@ Item {
     required property var holderRoot
     property string widgetId
 
-    visible: Persistence.Config.get("bar.modules.music", true)
-        && holderRoot && holderRoot.horizontal
+    visible: holderRoot && holderRoot.horizontal
 
     property bool active: MediaServices.MprisService.playing === true
     property string displayText: {
