@@ -14,14 +14,24 @@ Rectangle {
     property var lit: []
     property int maxKey: 60                 // largest key, px
     signal picked(string ch)
+    // Items for the card's header, left of the legend (the panel puts the
+    // keyboard picker here: the choice sits on the keyboard it changes).
+    default property alias header: headerSlot.data
 
-    implicitHeight: board.implicitHeight + Commons.Appearance.spacing.s4 * 2
+    implicitHeight: headerSlot.height + board.implicitHeight + Commons.Appearance.spacing.s3 * 3
     radius: Commons.Appearance.radius.md
     color: Commons.Appearance.colors.surfaceCard
 
+    Item {
+        id: headerSlot
+        anchors { left: parent.left; right: legendRow.left; top: parent.top
+                  leftMargin: Commons.Appearance.spacing.s3; topMargin: Commons.Appearance.spacing.s3 }
+        height: childrenRect.height
+    }
+
     Column {
         id: board
-        anchors.centerIn: parent
+        anchors { horizontalCenter: parent.horizontalCenter; top: headerSlot.bottom; topMargin: Commons.Appearance.spacing.s3 }
         spacing: Commons.Appearance.spacing.s2
         // 15 key units on the widest row (13-14 keys + the row offset).
         readonly property real unit: Math.min(root.maxKey, (root.width - Commons.Appearance.spacing.s4 * 2) / 15)
@@ -87,7 +97,8 @@ Rectangle {
 
     // Legend for the legends.
     Row {
-        anchors { right: parent.right; bottom: parent.bottom; margins: Commons.Appearance.spacing.s2 }
+        id: legendRow
+        anchors { right: parent.right; rightMargin: Commons.Appearance.spacing.s4; verticalCenter: headerSlot.verticalCenter }
         spacing: Commons.Appearance.spacing.s3
         Repeater {
             model: [{ t: "AltGr", c: "accent" }, { t: "dead key", c: "warning" }]

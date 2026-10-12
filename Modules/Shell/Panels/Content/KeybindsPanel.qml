@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import QtCore
 import Quickshell
 import Quickshell.Io
@@ -113,84 +114,55 @@ Item {
         anchors.topMargin: Commons.Appearance.spacing.s5;  anchors.bottomMargin: Commons.Appearance.spacing.s5
         spacing: Commons.Appearance.spacing.s3
 
-        // ── Header: title + status, tabs, search, close ─────────────────────
+        // ── One row: the tab switch, then the search (the primary action) ────
         RowLayout {
             Layout.fillWidth: true
-            spacing: Commons.Appearance.spacing.s4
+            spacing: Commons.Appearance.spacing.s3
 
-            // Its natural width, shrinking (status elided) only when the header is short of room.
-            Column {
-                Layout.preferredWidth: Math.max(titleText.implicitWidth, statusText.implicitWidth)
-                Layout.minimumWidth: titleText.implicitWidth
-                spacing: Commons.Appearance.spacing.s1
-                Text {
-                    id: titleText
-                    text: "Keyboard"
-                    color: Commons.Appearance.colors.textPrimary
-                    font.family: Commons.Appearance.font.display
-                    font.pixelSize: Commons.Appearance.font.sizeHeadline
-                    font.weight: Commons.Appearance.font.weightSemibold
-                }
-                Text {
-                    id: statusText
-                    text: root._copied ? "Copied " + root._copied
-                        : root._error ? root._error
-                        : root._chars ? (root._map ? root._map.label : "Reading layouts…")
-                        : !root._mango ? "Shortcuts: MangoWC only"
-                        : root.query ? shortcuts.count + " matching “" + root.query + "”"
-                        : shortcuts.count + " shortcuts · from your mango config"
-                    textFormat: Text.PlainText
-                    width: parent.width
-                    elide: Text.ElideRight
-                    color: root._copied ? Commons.Appearance.colors.accent
-                         : root._error ? Commons.Appearance.colors.warning : Commons.Appearance.colors.textSecondary
-                    font.family: Commons.Appearance.font.family
-                    font.pixelSize: Commons.Appearance.font.sizeBase
-                }
-            }
-
-            // Tabs
-            Row {
-                Layout.leftMargin: Commons.Appearance.spacing.s6
-                Layout.alignment: Qt.AlignVCenter
-                spacing: Commons.Appearance.spacing.s1
-                Repeater {
-                    model: [{ id: "shortcuts", t: "Shortcuts" }, { id: "characters", t: "Characters" }]
-                    delegate: Rectangle {
-                        id: tab
-                        required property var modelData
-                        readonly property bool selected: Commons.State.keyboardTab === modelData.id
-                        width: tabText.implicitWidth + Commons.Appearance.spacing.s8
-                        height: 36
-                        radius: Commons.Appearance.radius.sm
-                        color: selected ? Commons.Appearance.colors.accentAlpha
-                             : tabHov.hovered ? Commons.Appearance.colors.surface0Alpha : "transparent"
-                        border.width: selected ? 1 : 0
-                        border.color: Commons.Appearance.colors.accentBorder
-                        Behavior on color { Commons.ColorAnim {} }
-                        Text {
-                            id: tabText
-                            anchors.centerIn: parent
-                            text: tab.modelData.t
-                            color: tab.selected ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textSecondary
-                            font.family: Commons.Appearance.font.family
-                            font.pixelSize: Commons.Appearance.font.sizeMd
-                            font.weight: tab.selected ? Commons.Appearance.font.weightSemibold : Commons.Appearance.font.weightRegular
+            // Segmented switch: one track, the selected segment raised in it.
+            Rectangle {
+                Layout.preferredWidth: tabRow.implicitWidth + Commons.Appearance.spacing.s1 * 2
+                Layout.preferredHeight: 40
+                radius: Commons.Appearance.radius.md
+                color: Commons.Appearance.colors.surfaceCard
+                border.width: 1
+                border.color: Commons.Appearance.colors.glassBorder
+                Row {
+                    id: tabRow
+                    anchors.centerIn: parent
+                    spacing: Commons.Appearance.spacing.s1
+                    Repeater {
+                        model: [{ id: "shortcuts", t: "Shortcuts" }, { id: "characters", t: "Characters" }]
+                        delegate: Rectangle {
+                            id: tab
+                            required property var modelData
+                            readonly property bool selected: Commons.State.keyboardTab === modelData.id
+                            width: tabText.implicitWidth + Commons.Appearance.spacing.s8
+                            height: 32
+                            radius: Commons.Appearance.radius.sm
+                            color: selected ? Commons.Appearance.colors.accentAlpha
+                                 : tabHov.hovered ? Commons.Appearance.colors.surface0Alpha : "transparent"
+                            border.width: selected ? 1 : 0
+                            border.color: Commons.Appearance.colors.accentBorder
+                            Behavior on color { Commons.ColorAnim {} }
+                            Text {
+                                id: tabText
+                                anchors.centerIn: parent
+                                text: tab.modelData.t
+                                color: tab.selected ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textSecondary
+                                font.family: Commons.Appearance.font.family
+                                font.pixelSize: Commons.Appearance.font.sizeMd
+                                font.weight: tab.selected ? Commons.Appearance.font.weightSemibold : Commons.Appearance.font.weightRegular
+                            }
+                            HoverHandler { id: tabHov; cursorShape: Qt.PointingHandCursor }
+                            TapHandler { onTapped: root.setTab(tab.modelData.id) }
                         }
-                        HoverHandler { id: tabHov; cursorShape: Qt.PointingHandCursor }
-                        TapHandler { onTapped: root.setTab(tab.modelData.id) }
                     }
                 }
             }
 
-            Item { Layout.fillWidth: true }
-
-            // The search shrinks before anything else, so the header fits a narrow
-            // (vertical-strip) panel.
             Rectangle {
                 Layout.fillWidth: true
-                Layout.maximumWidth: 320
-                Layout.minimumWidth: 140
                 Layout.preferredHeight: 40
                 color: Commons.Appearance.colors.surfaceCard
                 border.color: searchInput.activeFocus ? Commons.Appearance.colors.accent
@@ -210,7 +182,7 @@ Item {
                     id: searchInput
                     anchors {
                         left: searchGlyph.right; leftMargin: Commons.Appearance.spacing.s3
-                        right: parent.right; rightMargin: Commons.Appearance.spacing.s3
+                        right: notice.left; rightMargin: Commons.Appearance.spacing.s3
                         verticalCenter: parent.verticalCenter
                     }
                     color: Commons.Appearance.colors.textPrimary
@@ -237,63 +209,30 @@ Item {
                         else if (event.key === Qt.Key_PageUp) { shortcuts.page(-1); event.accepted = true }
                     }
 
+                    // The hint carries the count, so no separate status line.
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width
+                        elide: Text.ElideRight
                         visible: searchInput.text.length === 0
-                        text: root._chars ? "Type a letter, é, € or a name…" : "Search shortcuts…"
+                        text: root._chars ? "Type a letter, é, € or a name…"
+                            : root._mango ? "Search " + shortcuts.count + " shortcuts…" : "Search…"
                         color: Commons.Appearance.colors.textMuted
                         font: searchInput.font
                     }
                 }
-            }
-
-            Rectangle {
-                Layout.preferredWidth: 28; Layout.preferredHeight: 28
-                Layout.alignment: Qt.AlignTop
-                radius: Commons.Appearance.radius.sm
-                color: closeHov.hovered ? Commons.Appearance.colors.accentAlpha : "transparent"
-                border.color: closeHov.hovered ? Commons.Appearance.colors.accentBorder : "transparent"
-                Behavior on color { Commons.ColorAnim {} }
+                // Right end of the field: "✓ é" after a copy, else the match count.
                 Text {
-                    anchors.centerIn: parent
-                    text: "✕"
-                    color: closeHov.hovered ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted
+                    id: notice
+                    anchors { right: parent.right; rightMargin: Commons.Appearance.spacing.s4; verticalCenter: parent.verticalCenter }
+                    text: root._copied ? "✓ copied " + root._copied
+                        : root.query && !root._chars ? shortcuts.count + " found"
+                        : root.query && root._chars ? characters.count + " found" : ""
+                    textFormat: Text.PlainText
+                    color: root._copied ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textMuted
                     font.family: Commons.Appearance.font.family
-                    font.pixelSize: Commons.Appearance.font.sizeMd
-                }
-                HoverHandler { id: closeHov }
-                TapHandler { onTapped: if (root.panelRoot) root.panelRoot.close() }
-            }
-        }
-
-        // ── Keyboard picker: one pill per keyboard / system layout ──────────
-        Flow {
-            Layout.fillWidth: true
-            spacing: Commons.Appearance.spacing.s1
-            Repeater {
-                model: root._keyboards
-                delegate: Rectangle {
-                    id: kbPill
-                    required property var modelData
-                    readonly property bool selected: root._kb && root._kb.id === modelData.id
-                    width: kbText.implicitWidth + Commons.Appearance.spacing.s6
-                    height: 30
-                    radius: Commons.Appearance.radius.sm
-                    color: selected ? Commons.Appearance.colors.accentAlpha
-                         : kbHov.hovered ? Commons.Appearance.colors.surface0Alpha : "transparent"
-                    border.width: 1
-                    border.color: selected ? Commons.Appearance.colors.accentBorder : Commons.Appearance.colors.glassBorder
-                    Text {
-                        id: kbText
-                        anchors.centerIn: parent
-                        text: "󰌌  " + kbPill.modelData.name
-                        textFormat: Text.PlainText
-                        color: kbPill.selected ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textSecondary
-                        font.family: Commons.Appearance.font.family
-                        font.pixelSize: Commons.Appearance.font.sizeBase
-                    }
-                    HoverHandler { id: kbHov; cursorShape: Qt.PointingHandCursor }
-                    TapHandler { onTapped: { root.kbId = kbPill.modelData.id; searchInput.forceActiveFocus() } }
+                    font.pixelSize: Commons.Appearance.font.sizeSm
+                    font.weight: root._copied ? Commons.Appearance.font.weightSemibold : Commons.Appearance.font.weightRegular
                 }
             }
         }
@@ -335,7 +274,8 @@ Item {
             }
         }
 
-        // ── The keyboard, lighting the hovered shortcut / character ─────────
+        // ── The keyboard, lighting the hovered shortcut / character; its
+        //    header holds the keyboard choice it shows ──────────────────────
         KeyDiagram {
             Layout.fillWidth: true
             Layout.preferredHeight: implicitHeight
@@ -345,6 +285,93 @@ Item {
             rows: root._map ? root._map.rows : []
             lit: root._chars ? characters.lit : shortcuts.lit
             onPicked: ch => root.copy(ch)
+
+            Row {
+                spacing: Commons.Appearance.spacing.s3
+                // Dropdown: the keyboards from Settings → Input, plus system layouts.
+                Rectangle {
+                    id: kbButton
+                    width: kbLabel.implicitWidth + Commons.Appearance.spacing.s6
+                    height: 30
+                    radius: Commons.Appearance.radius.sm
+                    color: kbHov.hovered || kbMenu.opened ? Commons.Appearance.colors.surface0Alpha : "transparent"
+                    border.width: 1
+                    border.color: kbMenu.opened ? Commons.Appearance.colors.accentBorder : Commons.Appearance.colors.glassBorder
+                    Text {
+                        id: kbLabel
+                        anchors.centerIn: parent
+                        text: "󰌌  " + (root._kb ? root._kb.name : "Keyboard") + "  " + (kbMenu.opened ? "󰅃" : "󰅀")
+                        textFormat: Text.PlainText
+                        color: Commons.Appearance.colors.textPrimary
+                        font.family: Commons.Appearance.font.family
+                        font.pixelSize: Commons.Appearance.font.sizeBase
+                    }
+                    HoverHandler { id: kbHov; cursorShape: Qt.PointingHandCursor }
+                    TapHandler { onTapped: kbMenu.opened ? kbMenu.close() : kbMenu.open() }
+
+                    Popup {
+                        id: kbMenu
+                        y: kbButton.height + Commons.Appearance.spacing.s1
+                        padding: Commons.Appearance.spacing.s1
+                        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+                        onClosed: searchInput.forceActiveFocus()
+                        background: Rectangle {
+                            radius: Commons.Appearance.radius.base
+                            color: Commons.Appearance.colors.glassBg
+                            border.width: 1
+                            border.color: Commons.Appearance.colors.glassBorder
+                        }
+                        contentItem: Column {
+                            spacing: Commons.Appearance.spacing.s1
+                            Repeater {
+                                model: root._keyboards
+                                delegate: Rectangle {
+                                    id: opt
+                                    required property var modelData
+                                    readonly property bool current: root._kb && root._kb.id === modelData.id
+                                    width: Math.max(optText.implicitWidth + Commons.Appearance.spacing.s6, kbButton.width)
+                                    height: 30
+                                    radius: Commons.Appearance.radius.sm
+                                    color: current ? Commons.Appearance.colors.accentAlpha
+                                         : optHov.hovered ? Commons.Appearance.colors.surface0Alpha : "transparent"
+                                    Text {
+                                        id: optText
+                                        anchors { left: parent.left; leftMargin: Commons.Appearance.spacing.s3; verticalCenter: parent.verticalCenter }
+                                        text: opt.modelData.name
+                                        textFormat: Text.PlainText
+                                        color: opt.current ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textSecondary
+                                        font.family: Commons.Appearance.font.family
+                                        font.pixelSize: Commons.Appearance.font.sizeBase
+                                    }
+                                    HoverHandler { id: optHov; cursorShape: Qt.PointingHandCursor }
+                                    TapHandler { onTapped: { root.kbId = opt.modelData.id; kbMenu.close() } }
+                                }
+                            }
+                        }
+                    }
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root._map ? root._map.label : ""
+                    textFormat: Text.PlainText
+                    color: Commons.Appearance.colors.textMuted
+                    font.family: Commons.Appearance.font.family
+                    font.pixelSize: Commons.Appearance.font.sizeSm
+                }
+            }
+        }
+
+        // ── Footer: the keys, or what went wrong ────────────────────────────
+        Text {
+            Layout.fillWidth: true
+            elide: Text.ElideRight
+            textFormat: Text.PlainText
+            text: root._error ? root._error
+                : root._chars ? "↑↓ move   ·   Enter copy   ·   Shift+Enter capital   ·   Tab shortcuts   ·   Esc close"
+                : "↑↓ categories   ·   PgUp/PgDn scroll   ·   Tab characters   ·   Esc close"
+            color: root._error ? Commons.Appearance.colors.warning : Commons.Appearance.colors.textMuted
+            font.family: Commons.Appearance.font.family
+            font.pixelSize: Commons.Appearance.font.size2xs
         }
     }
 }
