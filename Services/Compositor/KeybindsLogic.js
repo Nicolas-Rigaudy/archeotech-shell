@@ -33,8 +33,11 @@ var KEY_NAMES = {
 }
 var MOD_NAMES = { super: "Super", shift: "Shift", ctrl: "Ctrl", alt: "Alt", none: "" }
 
-function keyLabel(key) {
+// `labels` (optional): {keycode: label} for the keyboard being shown (from
+// scripts/keymap-data.py); without it a code: key shows its US / AZERTY labels.
+function keyLabel(key, labels) {
     var m = /^code:(\d+)$/.exec(key)
+    if (m && labels && labels[m[1]]) return labels[m[1]]
     if (m) {
         var us = CODE_US[m[1]], fr = CODE_FR[m[1]]
         if (!us) return "key " + m[1]
@@ -45,11 +48,11 @@ function keyLabel(key) {
     return key.length === 1 ? key.toUpperCase() : key
 }
 
-function chord(mods, key) {
+function chord(mods, key, labels) {
     var out = mods.split("+").map(x => MOD_NAMES[x.trim().toLowerCase()] !== undefined
                                        ? MOD_NAMES[x.trim().toLowerCase()] : x.trim())
                   .filter(x => x !== "")
-    out.push(keyLabel(key))
+    out.push(keyLabel(key, labels))
     return out
 }
 
@@ -138,7 +141,7 @@ function describe(fn, args) {
     return words.charAt(0).toUpperCase() + words.slice(1) + (args.length && args[0] ? " " + args.join(" ") : "")
 }
 
-function parse(text) {
+function parse(text, labels) {
     var lines = text.split("\n")
     var rows = [], block = []          // the comment block right above the current line
     for (var i = 0; i < lines.length; i++) {
@@ -161,7 +164,7 @@ function parse(text) {
             keys = [chord(mods, "x").slice(0, -1).concat([keys])]
         } else {
             mods = parts[0]; fn = (parts[2] || "").trim(); args = parts.slice(3); key = (parts[1] || "").trim()
-            keys = [chord(mods, key)]
+            keys = [chord(mods, key, labels)]
         }
         var desc = pickDesc(block)
         var prev = rows.length ? rows[rows.length - 1] : null
@@ -173,13 +176,14 @@ function parse(text) {
         if (prev && prev._commented && prev._mods === mods && prev.action === fn && prev.category === cat
                 && (desc === "" || desc === prev.desc)) {
             prev.keys.push(keys[0])
+            prev._raw.push(key)
         } else {
             rows.push({ category: cat, keys: keys, desc: desc || describe(fn, args),
-                        action: fn, line: i + 1, _mods: mods, _commented: desc !== "" })
+                        action: fn, line: i + 1, _mods: mods, _commented: desc !== "", _raw: [key] })
         }
         block = []
     }
-    rows.forEach(r => { delete r._mods; delete r._commented; r.chips = keyChips(r.keys) })
+    rows.forEach(r => { r.chips = keyChips(r.keys, r._raw); delete r._mods; delete r._commented; delete r._raw })
     return rows
 }
 
@@ -197,13 +201,17 @@ function group(rows, query) {
     return out
 }
 
-// A merged row as keycap chips: the shared modifiers once, then the keys; a long
-// digit run collapses to first … last ("…" is plain text, not a cap).
+// A merged row as keycap chips: the shared modifiers once, then the keys; a run
+// of more than three neighbouring keys (the number row, by keycode or digit)
+// collapses to first … last ("…" is plain text, not a cap).
 //   [["Super","1 / &"],…,["Super","9 / ç"]] → Super · 1 / & · … · 9 / ç
-function keyChips(keys) {
+function keyChips(keys, raw) {
     var out = keys[0].slice(0, -1).map(m => ({ text: m, cap: true }))
     var last = keys.map(k => k[k.length - 1])
-    if (last.length > 3 && last.every(x => /^\d( \/ .)?$/.test(x)))
+    var codes = (raw || []).map(k => { var m = /^code:(\d+)$/.exec(k); return m ? +m[1] : NaN })
+    // Number row only (keycodes 10-21: 1 … 0 - =), so a row of letters never collapses.
+    var run = codes.length === last.length && codes.every((c, i) => c >= 10 && c <= 21 && (i === 0 || c === codes[i - 1] + 1))
+    if (last.length > 3 && (run || last.every(x => /^\d( \/ .)?$/.test(x))))
         last = [last[0], "…", last[last.length - 1]]
     last.forEach(t => out.push({ text: t, cap: t !== "…" }))
     return out

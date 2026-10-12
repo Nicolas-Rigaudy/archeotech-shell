@@ -43,7 +43,7 @@ QtObject {
         { id: "launcher",      name: "Launcher",           icon: "󱓞", bar: true,  strip: true  },
         { id: "wallpaper",     name: "Appearance",         icon: "󰏘", bar: true,  strip: true  },
         { id: "layout",        name: "Tiling Layouts",     icon: "󰕰", bar: true,  strip: true  },
-        { id: "keybinds",      name: "Shortcuts",          icon: "󰌌", bar: true,  strip: true  },
+        { id: "keybinds",      name: "Keyboard",           icon: "󰌌", bar: true,  strip: true  },
         { id: "nc",            name: "Notification Center", icon: "󰂚", bar: false, strip: true  }
     ]
 

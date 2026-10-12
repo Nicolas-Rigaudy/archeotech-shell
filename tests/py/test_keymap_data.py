@@ -1,4 +1,4 @@
-"""Tests for modules/keymap/keymap-data.py (item_144). Run: python3 -m unittest discover tests/py
+"""Tests for scripts/keymap-data.py (items 144/145). Run: python3 -m unittest discover tests/py
 
 Fixtures are excerpts of real `xkbcli compile-keymap` output (us altgr-intl, fr)
 and of the en_US.UTF-8 Compose table, so no xkbcli / X11 files are needed."""
@@ -6,7 +6,7 @@ import importlib.util
 import pathlib
 import unittest
 
-_p = pathlib.Path(__file__).resolve().parents[2] / "modules" / "keymap" / "keymap-data.py"
+_p = pathlib.Path(__file__).resolve().parents[2] / "scripts" / "keymap-data.py"
 _spec = importlib.util.spec_from_file_location("keymap_data", _p)
 km = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(km)
@@ -170,6 +170,14 @@ class Keymap(unittest.TestCase):
 	};
 };""")
         self.assertEqual(keys["AD01"], ["q", "Q", "adiaeresis", "Adiaeresis"], "the type's [Group1] is not the symbols")
+
+    def test_key_labels_by_keycode(self):
+        """A `code:10` bind shows the key as printed on the selected keyboard."""
+        codes = km.parse_keycodes("xkb_keycodes \"evdev\" {\n\t<AE02> = 11;\n\t<AD11> = 34;\n\t<SPCE> = 65;\n\talias <LatQ> = <AD01>;\n};\nxkb_types {};")
+        self.assertEqual(codes, {"AE02": 11, "AD11": 34, "SPCE": 65})
+        keys, label = km.parse_keymap(FR)
+        labels = km.build_map(keys, label, km.parse_compose(COMPOSE), TABLE, "fr", codes)["labels"]
+        self.assertEqual(labels, {"11": "é", "34": "^", "65": "Space"})
 
     def test_no_config(self):
         self.assertEqual(km.global_layouts(""), [("us", "")])

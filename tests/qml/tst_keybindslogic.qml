@@ -23,7 +23,7 @@ TestCase {
         "bind=SUPER,code:10,view,1",
         "bind=SUPER,code:11,view,2",
         "bind=SUPER,code:12,view,3",
-        "bind=SUPER,code:18,view,9",
+        "bind=SUPER,code:13,view,4",
         "",
         "# Tag navigation (next/previous)",
         "bind=SUPER,Tab,viewtoright",
@@ -128,7 +128,7 @@ TestCase {
     function test_chips_and_sidebar() {
         var rows = _rows()
         var c = Logic.keyChips(_find(rows, "Tag switching").keys)
-        compare(c.map(x => x.text), ["Super", "1 / &", "…", "9 / ç"])
+        compare(c.map(x => x.text), ["Super", "1 / &", "…", "4 / '"])
         compare(c[2].cap, false, "the ellipsis is not a keycap")
         compare(Logic.keyChips(_find(rows, "Terminal").keys).length, 2)
         var side = Logic.sidebar(rows, "")
@@ -154,5 +154,17 @@ TestCase {
         compare(Logic.cleanDesc("# Focus movement (arrow keys)"), "Focus movement")
         compare(Logic.cleanDesc("# Settings panel (alternate binding)"), "Settings panel (alternate binding)")
         compare(Logic.cleanDesc("# Git TUI (Lazygit)"), "Git TUI (Lazygit)")
+    }
+
+    function test_labels_for_a_keyboard() {
+        var fr = { "10": "&", "11": "é", "12": "\"", "13": "'", "49": "²" }
+        var rows = Logic.parse(conf, fr)
+        var tags = _find(rows, "Tag switching")
+        compare(tags.keys[0], ["Super", "&"], "code:10 as printed on the AZERTY")
+        compare(tags.chips.map(c => c.text), ["Super", "&", "…", "'"], "keycode run still collapses")
+        compare(_find(rows, "Scratchpad (floating overlay terminal)").keys[0], ["Super", "²"])
+        compare(_find(rows, "Terminal").keys[0], ["Super", "Q"], "keysym binds unchanged")
+        compare(Logic.keyLabel("code:10", { "10": "1" }), "1")
+        compare(Logic.keyLabel("code:10", {}), "1 / &", "no label: both")
     }
 }

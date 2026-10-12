@@ -34,7 +34,7 @@
 # STATE-DRIVING (--state <name>): before capture, calls the shell's own IPC
 # handler to open a panel — launcher | settings[:pane] | dashboard | wallpaper |
 # media | layout | keybinds | notifications | editmode | theme(reload) |
-# panel:<id> (any panel by id, e.g. panel:plugin:keymap).
+# panel:<id> (any panel by id, e.g. panel:plugin:notes).
 #
 # LOOK (--theme/--pack/--flat): --theme takes a variant dir under <root>/themes
 # (dark/light mode comes from that theme.json); --pack takes a pack id or "base";

@@ -67,10 +67,10 @@ QtObject {
         keybinds: {
             content:  _keybindsComp,
             side:     "bottom",
-            // Shortcuts sheet (Super+K): category rail + one scrolling list, so
-            // the height is a comfortable cap, not a fit.
-            size:     820,
-            axisSize: 1100
+            // Keyboard panel (Super+K shortcuts / Super+Shift+K characters): a
+            // scrolling list over the keyboard diagram, so the height is a cap.
+            size:     900,
+            axisSize: 1180
         }
     })
 

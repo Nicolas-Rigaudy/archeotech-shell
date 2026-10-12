@@ -208,7 +208,14 @@ ShellRoot {
         function close()  { ShellServices.ShellState.closeAllAcross()         }
     }
 
-    // Any panel by id, plugins included: `ipc call panel toggle plugin:keymap`.
+    // Keyboard panel tab toggle (kept outside the IpcHandler: every function
+    // there is parsed as an IPC call, and untyped arguments are refused).
+    function _keyboardTab(t) {
+        if (Commons.State.keyboardTab === t) ShellServices.ShellState.toggleGlobal("keybinds")
+        else { Commons.State.keyboardTab = t; ShellServices.ShellState.openGlobal("keybinds") }
+    }
+
+    // Any panel by id, plugins included: `ipc call panel toggle plugin:notes`.
     IpcHandler {
         target: "panel"
         function toggle(id: string) { ShellServices.ShellState.toggleGlobal(id) }
@@ -217,10 +224,13 @@ ShellRoot {
     }
 
     IpcHandler {
+        // The Keyboard panel. toggle() / characters() open it on the Shortcuts /
+        // Characters tab; on the other tab they switch, on the same tab they close.
         target: "keybinds"
-        function toggle() { ShellServices.ShellState.toggleGlobal("keybinds") }
-        function open()   { ShellServices.ShellState.openGlobal("keybinds")  }
-        function close()  { ShellServices.ShellState.closeAllAcross()        }
+        function toggle()     { shell._keyboardTab("shortcuts") }
+        function characters() { shell._keyboardTab("characters") }
+        function open()       { ShellServices.ShellState.openGlobal("keybinds") }
+        function close()      { ShellServices.ShellState.closeAllAcross() }
     }
 
     IpcHandler {

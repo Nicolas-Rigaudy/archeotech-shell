@@ -4,6 +4,10 @@ import QtQuick
 QtObject {
     property string settingsOpenPane:         ""
 
+    // Keyboard panel (Super+K): which tab is shown, "shortcuts" or "characters".
+    // Set by the `keybinds` IPC (Super+Shift+K opens Characters) and the tabs.
+    property string keyboardTab:              "shortcuts"
+
     // Sprint 21 — visual builder. When true, every ShellSurface shows the
     // EditOverlay (click-to-assign editor). Toggled via `editmode` IPC /
     // Super+Shift+E.

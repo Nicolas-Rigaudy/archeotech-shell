@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""keymap-data.py: data for the Keymap helper module (item_144). Prints JSON.
+"""keymap-data.py: keyboard data for the Keyboard panel (items 144/145). Prints JSON.
 
 "How do I type X on this keyboard": for every layout in use it compiles the real
 keymap (`xkbcli compile-keymap`), reads each key's four levels (base, Shift,
@@ -13,7 +13,10 @@ global xkb layouts (mango `xkb_rules_layout`), so the module shows the layout
 each keyboard really types.
 
 Output: {"keyboards": [{id, name, map}], "default": <keyboard id>,
-         "maps": {map_id: {label, rows: [[{code, levels}]], chars: [{ch, name, base, combos}]}}}
+         "maps": {map_id: {label, rows: [[{code, levels}]], chars: [{ch, name, base, combos}],
+                           labels: {keycode: label}}}}
+  labels  what each main-block key is labelled on that layout, by xkb keycode (the
+          number in a mango `code:N` bind), so shortcuts show the keyboard's own keys
   levels  four entries (or null): {"ch": shown text, "dead": bool}
   combos  list of sequences; a sequence is a list of chords; a chord a list of keys
 """
@@ -84,6 +87,12 @@ def parse_keymap(text):
         if lv:
             keys[m.group(1)] = [s.strip() for s in lv.group(1).split(",") if s.strip()]
     return keys, (name.group(1) if name else "")
+
+
+def parse_keycodes(text):
+    """{key name: keycode} from xkb_keycodes (`<AE01> = 10;`)."""
+    sec = text[text.find("xkb_keycodes"):text.find("xkb_types")] if "xkb_types" in text else text
+    return {m.group(1): int(m.group(2)) for m in re.finditer(r"^\s*<(\w+)>\s*=\s*(\d+);", sec, re.M)}
 
 
 def compile_keymap(layout, variant):
@@ -163,7 +172,7 @@ def base_letter(ch):
 ANSI_LAYOUTS = {"us", "th", "kr", "il"}
 
 
-def build_map(keys, label, compose, table, layout=""):
+def build_map(keys, label, compose, table, layout="", keycodes=None):
     iso = "LSGT" in keys and layout not in ANSI_LAYOUTS
     rows_codes = ROWS_ISO if iso else ROWS_ANSI
     dead_text = {seq[0]: res for seq, res in compose if len(seq) == 2 and seq[1] == "space"}
@@ -241,7 +250,12 @@ def build_map(keys, label, compose, table, layout=""):
         out.append({"ch": ch, "name": name, "base": base_letter(ch), "combos": combos[:2]})
     # Grouped by letter (symbols last), lower case first, the easiest to type first.
     out.sort(key=lambda c: (c["base"] or "~", c["ch"].lower() != c["ch"], cost(c["combos"][0]), c["ch"]))
-    return {"label": label, "rows": rows, "chars": out}
+    labels = {}
+    for code, syms in keys.items():
+        lab = key_label(syms, table, dead_text)
+        if lab and keycodes and code in keycodes:
+            labels[str(keycodes[code])] = lab
+    return {"label": label, "rows": rows, "chars": out, "labels": labels}
 
 
 # ── which keyboards ──────────────────────────────────────────────────────────
@@ -326,8 +340,9 @@ def main():
         if k["map"] in maps:
             continue
         try:
-            keys, label = parse_keymap(compile_keymap(k["layout"], k["variant"]))
-            maps[k["map"]] = build_map(keys, label or k["map"], compose, table, k["layout"])
+            text = compile_keymap(k["layout"], k["variant"])
+            keys, label = parse_keymap(text)
+            maps[k["map"]] = build_map(keys, label or k["map"], compose, table, k["layout"], parse_keycodes(text))
         except (OSError, subprocess.SubprocessError) as e:
             errors.append("%s: %s" % (k["map"], e))
     kbs = [k for k in kbs if k["map"] in maps]
