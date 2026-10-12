@@ -162,6 +162,13 @@ ln -s "$ROOT/scripts/assets" "$FH/.config/archeotech/assets"
 if [ "$FRESH" = 0 ]; then
   [ -d "$REAL_HOME/.local/share/archeotech" ] && cp -a "$REAL_HOME/.local/share/archeotech/." "$FH/.local/share/archeotech/"
   [ -d "$REAL_HOME/.cache/archeotech" ] && cp -a "$REAL_HOME/.cache/archeotech" "$FH/.cache/"
+  # A COPY of the owner's mango config, as data for the shell (the shortcuts
+  # sheet parses its binds). The nested mango never reads it: it runs on the
+  # generated $RUN/mango.conf (-c), which sources only --mango-include files.
+  if [ -f "$REAL_HOME/.config/mango/config.conf" ]; then
+    mkdir -p "$FH/.config/mango"
+    cp "$REAL_HOME/.config/mango/config.conf" "$FH/.config/mango/config.conf"
+  fi
 fi
 # ~/.local/bin is an ALLOWLIST, not a symlink to the real dir: some user scripts
 # act on the live session by process name (theme-switch sends SIGUSR1 to every
@@ -289,7 +296,7 @@ if [ -n "$STATE" ]; then
     settings:*) DRIVE="qs ipc --pid \$QSPID call settings openPane \"${STATE#settings:}\"" ;;
     theme)      DRIVE="qs ipc --pid \$QSPID call theme reload" ;;
     nc|notifications) DRIVE="qs ipc --pid \$QSPID call notifications open" ;;
-    launcher|settings|dashboard|wallpaper|media|layout|editmode)
+    launcher|settings|dashboard|wallpaper|media|layout|keybinds|editmode)
                 DRIVE="qs ipc --pid \$QSPID call $STATE open" ;;
     *) echo "unknown --state: $STATE" >&2; rm -rf "$RUN"; exit 2 ;;
   esac

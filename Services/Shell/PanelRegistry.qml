@@ -63,6 +63,14 @@ QtObject {
             side:     "bottom",
             size:     580,      // fits all 3 rows of the 14 layout cards + header
             axisSize: "auto"    // follows LayoutPicker.implicitAxis per side
+        },
+        keybinds: {
+            content:  _keybindsComp,
+            side:     "bottom",
+            // Shortcuts sheet (Super+K): three columns of category cards; the
+            // card area scrolls, so the height is a comfortable cap, not a fit.
+            size:     820,
+            axisSize: 1280
         }
     })
 
@@ -95,4 +103,5 @@ QtObject {
     property Component _wallpaperComp: Component { Content.WallpaperPicker     {} }
     property Component _settingsComp:  Component { Content.SettingsPanel       {} }
     property Component _layoutComp:    Component { Content.LayoutPicker        {} }
+    property Component _keybindsComp:  Component { Content.KeybindsPanel       {} }
 }

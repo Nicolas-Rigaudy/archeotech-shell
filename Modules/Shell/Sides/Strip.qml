@@ -80,16 +80,23 @@ Item {
     // A wildcard open (side "" — bar gear / shortcut / IPC) must show on exactly
     // ONE strip, not every strip that lists the panel. Pick the primary host:
     // the first side in priority order whose config hosts this panel.
+    // A panel no strip lists (shortcut-only, e.g. the Super+K keybinds sheet)
+    // opens on the strip at its PanelRegistry side, else the first strip.
     function _isPrimaryHost(id) {
         var order = ["right", "bottom", "left", "top"]
         for (var i = 0; i < order.length; i++) {
             if (ShellServices.ShellConfig.stripIcons(order[i], _screenName).indexOf(id) !== -1)
                 return order[i] === side
         }
-        return false
+        var strips = order.filter(s => ShellServices.ShellConfig.side(s, _screenName).type === "strip")
+        var meta = ShellServices.PanelRegistry.panelFor(id)
+        if (meta && strips.indexOf(meta.side) !== -1) return meta.side === side
+        return strips.length > 0 && strips[0] === side
     }
     function _showsPanel(id) {
-        if (!id || _icons.indexOf(id) === -1) return false
+        if (!id) return false
+        if (_icons.indexOf(id) === -1)
+            return _activeSide === "" && !!ShellServices.PanelRegistry.panelFor(id) && _isPrimaryHost(id)
         return _activeSide === side || (_activeSide === "" && _isPrimaryHost(id))
     }
     readonly property bool   _panelOpen:   _activePanel !== "" && _showsPanel(_activePanel)

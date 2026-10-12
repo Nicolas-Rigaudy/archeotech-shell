@@ -209,6 +209,13 @@ ShellRoot {
     }
 
     IpcHandler {
+        target: "keybinds"
+        function toggle() { ShellServices.ShellState.toggleGlobal("keybinds") }
+        function open()   { ShellServices.ShellState.openGlobal("keybinds")  }
+        function close()  { ShellServices.ShellState.closeAllAcross()        }
+    }
+
+    IpcHandler {
         target: "media"
         function toggle() { ShellServices.ShellState.toggleGlobal("media") }
         function open()   { ShellServices.ShellState.openGlobal("media")  }

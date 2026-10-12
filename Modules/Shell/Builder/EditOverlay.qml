@@ -241,7 +241,7 @@ Item {
         if (id.indexOf("plugin:") === 0) return "Plugins"
         var sys    = ["volume", "mic", "brightness", "network", "bluetooth", "battery", "notifications", "tray"]
         var info   = ["clock", "media", "workspaces", "title"]
-        var panels = ["dashboard", "launcher", "settings", "wallpaper", "layout", "nc", "power"]
+        var panels = ["dashboard", "launcher", "settings", "wallpaper", "layout", "keybinds", "nc", "power"]
         if (sys.indexOf(id) !== -1)    return "System"
         if (info.indexOf(id) !== -1)   return "Info"
         if (panels.indexOf(id) !== -1) return "Panels & launchers"

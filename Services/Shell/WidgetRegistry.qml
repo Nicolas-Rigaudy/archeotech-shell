@@ -43,6 +43,7 @@ QtObject {
         { id: "launcher",      name: "Launcher",           icon: "󱓞", bar: true,  strip: true  },
         { id: "wallpaper",     name: "Appearance",         icon: "󰏘", bar: true,  strip: true  },
         { id: "layout",        name: "Tiling Layouts",     icon: "󰕰", bar: true,  strip: true  },
+        { id: "keybinds",      name: "Shortcuts",          icon: "󰌌", bar: true,  strip: true  },
         { id: "nc",            name: "Notification Center", icon: "󰂚", bar: false, strip: true  }
     ]
 
@@ -53,7 +54,7 @@ QtObject {
     // (the panel is the id itself). Keeps them out of the *Widget.qml filename
     // convention. "nc"/"settings" already have dedicated bar widgets; "media" is
     // the marquee, which opens the media panel itself.
-    readonly property var _panelOpenerIds: ["dashboard", "launcher", "wallpaper", "layout"]
+    readonly property var _panelOpenerIds: ["dashboard", "launcher", "wallpaper", "layout", "keybinds"]
 
     function _metaFor(list, id) {
         for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]
