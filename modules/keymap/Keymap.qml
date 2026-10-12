@@ -22,11 +22,11 @@ Item {
 
     // Sizes with no theme token (keycap height, tile and search widths).
     readonly property int _capH: 24
-    readonly property int _tileMinW: 300
-    readonly property int _charW: 44
+    readonly property int _rowMinW: 500    // results: one column per 500px
+    readonly property int _rowH: 34
+    readonly property int _charW: 28
     readonly property int _searchW: 280
     readonly property int _keyMax: 60      // keyboard diagram: largest key, px
-    readonly property int _maxTiles: 120   // more would only slow the panel down
 
     // ── data ────────────────────────────────────────────────────────────────
     property var _data: null
@@ -34,12 +34,24 @@ Item {
     property string kbId: ""
     property string query: ""
     property string _copied: ""
-    property var _hoverKeys: []          // key labels of the hovered result, for the diagram
+    property int sel: 0                  // selected result (keyboard), -1 none
+    property int hov: -1                 // hovered result
+    onQueryChanged: sel = 0
+    onKbIdChanged: sel = 0
+    // Key labels the diagram lights: the hovered result's easiest combo, else the selected one's.
+    readonly property var _litKeys: {
+        var r = _results[hov >= 0 ? hov : sel]
+        return r ? r.combos[0].reduce((l, chord) => l.concat(chord), []) : []
+    }
+    // "Latin Small Letter E With Acute" → "acute"; other names as they are.
+    function _short(n) {
+        var m = /^Latin (?:Small|Capital) (?:Letter|Ligature) \S+(?: With (.*))?$/.exec(n)
+        return m ? (m[1] ? m[1].toLowerCase() : "") : n.toLowerCase()
+    }
 
     readonly property var _keyboards: _data ? _data.keyboards : []
     readonly property var _kb: _keyboards.find(k => k.id === kbId) || _keyboards[0] || null
     readonly property var _map: _kb && _data ? _data.maps[_kb.map] : null
-    readonly property var _shownResults: _results.slice(0, _maxTiles)
     readonly property var _results: {
         if (!_map) return []
         var q = query.trim()
@@ -192,9 +204,13 @@ Item {
                             if (text.length) text = ""
                             else if (root.panelRoot) root.panelRoot.close()
                         }
-                        // Enter copies the first result (the most direct form).
-                        Keys.onReturnPressed: if (root._results.length) root.copy(root._results[0].ch)
-                        Keys.onEnterPressed: if (root._results.length) root.copy(root._results[0].ch)
+                        // ↑/↓ by row, Tab/Shift+Tab by item, Enter copies the selection.
+                        Keys.onUpPressed: root.sel = Math.max(0, root.sel - grid.cols)
+                        Keys.onDownPressed: root.sel = Math.min(root._results.length - 1, root.sel + grid.cols)
+                        Keys.onTabPressed: root.sel = Math.min(root._results.length - 1, root.sel + 1)
+                        Keys.onBacktabPressed: root.sel = Math.max(0, root.sel - 1)
+                        Keys.onReturnPressed: if (root._results[root.sel]) root.copy(root._results[root.sel].ch)
+                        Keys.onEnterPressed: if (root._results[root.sel]) root.copy(root._results[root.sel].ch)
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             visible: searchInput.text.length === 0
@@ -254,19 +270,23 @@ Item {
                 }
             }
 
-            // ── Results: one tile per character ─────────────────────────────────
-            Flickable {
-                id: results
+            // ── Results: one line per character, in columns ────────────────────
+            GridView {
+                id: grid
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
-                contentWidth: width
-                contentHeight: tiles.implicitHeight + (more.visible ? more.implicitHeight : 0)
                 boundsBehavior: Flickable.StopAtBounds
+                model: root._results
+                currentIndex: root.sel
+                readonly property int cols: Math.max(1, Math.floor(width / root._rowMinW))
+                cellWidth: Math.floor(width / cols)
+                cellHeight: root._rowH
+                onCurrentIndexChanged: positionViewAtIndex(currentIndex, GridView.Contain)
 
                 Text {
                     visible: root._map !== null && root._results.length === 0
-                    width: results.width
+                    width: grid.width
                     topPadding: root._a.spacing.s8
                     horizontalAlignment: Text.AlignHCenter
                     textFormat: Text.PlainText
@@ -277,112 +297,100 @@ Item {
                     font.pixelSize: root._a.font.sizeMd
                 }
 
-                Text {
-                    id: more
-                    visible: root._results.length > root._maxTiles
-                    y: tiles.implicitHeight
-                    width: results.width
-                    topPadding: root._a.spacing.s3
-                    horizontalAlignment: Text.AlignHCenter
-                    text: "Showing " + root._maxTiles + " of " + root._results.length + ": type more to narrow it down"
-                    color: root._a.colors.textMuted
-                    font.family: root._a.font.family
-                    font.pixelSize: root._a.font.sizeSm
-                }
+                delegate: Rectangle {
+                    id: row
+                    required property var modelData
+                    required property int index
+                    readonly property bool current: index === root.sel
+                    width: grid.cellWidth - root._a.spacing.s2
+                    height: grid.cellHeight - root._a.spacing.s1
+                    radius: root._a.radius.sm
+                    color: current ? root._a.colors.accentAlpha
+                         : rowHov.hovered ? root._a.colors.surface0Alpha : "transparent"
+                    border.width: current ? 1 : 0
+                    border.color: root._a.colors.accentBorder
+                    HoverHandler {
+                        id: rowHov
+                        cursorShape: Qt.PointingHandCursor
+                        onHoveredChanged: root.hov = hovered ? row.index : (root.hov === row.index ? -1 : root.hov)
+                    }
+                    TapHandler { onTapped: { root.sel = row.index; root.copy(row.modelData.ch) } }
 
-                Flow {
-                    id: tiles
-                    width: results.width
-                    spacing: root._a.spacing.s2
-                    readonly property int cols: Math.max(1, Math.floor((width + spacing) / (root._tileMinW + spacing)))
-                    readonly property real tileW: (width - (cols - 1) * spacing) / cols
+                    Text {
+                        id: glyph
+                        anchors { left: parent.left; leftMargin: root._a.spacing.s2; verticalCenter: parent.verticalCenter }
+                        width: root._charW
+                        horizontalAlignment: Text.AlignHCenter
+                        text: row.modelData.ch
+                        textFormat: Text.PlainText
+                        color: root._a.colors.textPrimary
+                        font.family: root._a.font.family
+                        font.pixelSize: root._a.font.sizeXl
+                    }
 
-                    Repeater {
-                        // Cap the unfiltered list: the empty query shows the accented
-                        // letters, a few hundred tiles would only slow the panel.
-                        model: root._shownResults
-                        delegate: Rectangle {
-                            id: tile
-                            required property var modelData
-                            width: tiles.tileW
-                            // Room for two ways to type it, so the grid rows line up.
-                            height: root._capH * 2 + root._a.font.size2xs + root._a.spacing.s1 * 2 + root._a.spacing.s3 * 2
-                            radius: root._a.radius.md
-                            color: tileHov.hovered ? root._a.colors.surface0Alpha : root._a.colors.surfaceCard
-                            border.width: 1
-                            border.color: tileHov.hovered ? root._a.colors.accentBorder : "transparent"
-                            HoverHandler {
-                                id: tileHov
-                                cursorShape: Qt.PointingHandCursor
-                                onHoveredChanged: root._hoverKeys = hovered
-                                    ? tile.modelData.combos[0].reduce((l, chord) => l.concat(chord), []) : []
-                            }
-                            TapHandler { onTapped: root.copy(tile.modelData.ch) }
-
-                            Text {
-                                id: big
-                                anchors { left: parent.left; leftMargin: root._a.spacing.s3; verticalCenter: parent.verticalCenter }
-                                width: root._charW
-                                horizontalAlignment: Text.AlignHCenter
-                                text: tile.modelData.ch
-                                textFormat: Text.PlainText
-                                color: root._a.colors.textPrimary
-                                font.family: root._a.font.family
-                                font.pixelSize: root._a.font.sizeHeadline
-                            }
-                            Column {
-                                id: tileCol
-                                anchors {
-                                    left: big.right; leftMargin: root._a.spacing.s3
-                                    right: parent.right; rightMargin: root._a.spacing.s3
-                                    verticalCenter: parent.verticalCenter
-                                }
+                    // The easiest combo as keycaps (→ between steps), then a muted
+                    // "or …" for the second way when there is room.
+                    Row {
+                        id: combos
+                        anchors { left: glyph.right; leftMargin: root._a.spacing.s2; right: name.left; rightMargin: root._a.spacing.s2
+                                  verticalCenter: parent.verticalCenter }
+                        spacing: root._a.spacing.s1
+                        clip: true
+                        Repeater {
+                            model: row.modelData.combos
+                            delegate: Row {
+                                id: combo
+                                required property var modelData
+                                required property int index
                                 spacing: root._a.spacing.s1
+                                opacity: index === 0 ? 1 : 0.55
                                 Text {
-                                    width: parent.width
-                                    text: tile.modelData.name
-                                    textFormat: Text.PlainText
-                                    elide: Text.ElideRight
+                                    visible: combo.index > 0
+                                    height: root._capH
+                                    leftPadding: root._a.spacing.s2
+                                    verticalAlignment: Text.AlignVCenter
+                                    text: "or"
                                     color: root._a.colors.textMuted
                                     font.family: root._a.font.family
                                     font.pixelSize: root._a.font.size2xs
                                 }
-                                // Each way to type it: chords as keycaps, "then" between steps.
                                 Repeater {
-                                    model: tile.modelData.combos
-                                    delegate: Flow {
-                                        id: combo
+                                    model: combo.modelData
+                                    delegate: Row {
+                                        id: step
                                         required property var modelData
                                         required property int index
-                                        width: tileCol.width
                                         spacing: root._a.spacing.s1
-                                        opacity: index === 0 ? 1 : 0.7
+                                        Text {
+                                            visible: step.index > 0
+                                            height: root._capH
+                                            verticalAlignment: Text.AlignVCenter
+                                            text: "→"
+                                            color: root._a.colors.textMuted
+                                            font.family: root._a.font.family
+                                            font.pixelSize: root._a.font.sizeSm
+                                        }
                                         Repeater {
-                                            model: combo.modelData
-                                            delegate: Row {
-                                                id: step
-                                                required property var modelData
-                                                required property int index
-                                                spacing: root._a.spacing.s1
-                                                Text {
-                                                    visible: step.index > 0
-                                                    height: root._capH
-                                                    verticalAlignment: Text.AlignVCenter
-                                                    text: "then"
-                                                    color: root._a.colors.textMuted
-                                                    font.family: root._a.font.family
-                                                    font.pixelSize: root._a.font.size2xs
-                                                }
-                                                Repeater {
-                                                    model: step.modelData
-                                                    delegate: Cap { required property var modelData; text: modelData }
-                                                }
-                                            }
+                                            model: step.modelData
+                                            delegate: Cap { required property var modelData; text: modelData }
                                         }
                                     }
                                 }
                             }
                         }
+                    }
+
+                    Text {
+                        id: name
+                        anchors { right: parent.right; rightMargin: root._a.spacing.s3; verticalCenter: parent.verticalCenter }
+                        width: Math.min(implicitWidth, parent.width * 0.3)
+                        horizontalAlignment: Text.AlignRight
+                        elide: Text.ElideRight
+                        text: root._short(row.modelData.name)
+                        textFormat: Text.PlainText
+                        color: root._a.colors.textMuted
+                        font.family: root._a.font.family
+                        font.pixelSize: root._a.font.sizeSm
                     }
                 }
             }
@@ -420,7 +428,7 @@ Item {
                                     readonly property var lv: modelData.levels
                                     // Same label the combos use: ASCII letters upper-case.
                                     readonly property string label: lv[0] ? (/^[a-z]$/.test(lv[0].ch) ? lv[0].ch.toUpperCase() : lv[0].ch) : ""
-                                    readonly property bool lit: root._hoverKeys.indexOf(label) >= 0
+                                    readonly property bool lit: root._litKeys.indexOf(label) >= 0
                                     width: board.unit - root._a.spacing.s2
                                     height: board.unit * 0.85
                                     radius: root._a.radius.sm
