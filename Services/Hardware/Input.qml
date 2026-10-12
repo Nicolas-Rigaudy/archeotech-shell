@@ -38,7 +38,11 @@ QtObject {
     ]
 
     // ── Devices ───────────────────────────────────────────────────────────────
-    property var keyboards: []      // [{ identifier, name, matched, usable }] (shown)
+    // One entry per PHYSICAL keyboard: identifier = "vendor:product" (a dongle can
+    // expose several keyboard interfaces whose names, and their order, vary:
+    // "2.4G Dongle" / "2.4G Dongle Keyboard"); nodes = its interfaces with letter
+    // keys, each of which gets the same devicerule.
+    property var keyboards: []      // [{ identifier: vp, name, nodes, matched, usable }] (shown)
     property int hiddenCount: 0     // real keyboards the user marked "not a keyboard"
     // Identifiers ("vendor:product:name", decimal) of input nodes that have letter
     // keys (KEY_A/KEY_Q/KEY_Z in /proc/bus/input/devices): media-key devices such
@@ -80,17 +84,26 @@ QtObject {
                     // event nodes: keep the first per vendor:product). Names with a
                     // comma cannot go in a devicerule (it splits the rule): listed
                     // but not configurable.
-                    var seen = {}, next = [], hidden = 0
+                    var byVp = {}, order = []
                     list.forEach(x => {
                         if ((x.types || []).indexOf("keyboard") < 0 || x.vendor === 0) return
                         if (!root._letterIds[x.identifier]) return       // no letter keys
-                        if (root.hiddenKeyboards.indexOf(x.identifier) >= 0 && !root.showHidden) { hidden++; return }
                         var vp = x.vendor + ":" + x.product
-                        if (seen[vp]) return
-                        seen[vp] = true
-                        next.push({ identifier: x.identifier, name: x.name, matched: !!x.matched,
-                                    usable: x.identifier.indexOf(",") < 0 })
+                        if (!byVp[vp]) { byVp[vp] = { identifier: vp, name: x.name, nodes: [], matched: false, usable: true }; order.push(vp) }
+                        var k = byVp[vp]
+                        k.nodes.push(x.identifier)
+                        k.matched = k.matched || !!x.matched
+                        k.usable = k.usable && x.identifier.indexOf(",") < 0
+                        if (x.name.length < k.name.length) k.name = x.name      // the plain base name
                     })
+                    var next = [], hidden = 0
+                    order.forEach(vp => {
+                        var k = byVp[vp]
+                        k.nodes.sort()
+                        if (root.isHidden(vp) && !root.showHidden) { hidden++; return }
+                        next.push(k)
+                    })
+                    root._rememberNodes(next)
                     // Same content → keep the array: no delegate rebuild per poll.
                     if (JSON.stringify(next) !== JSON.stringify(root.keyboards)) root.keyboards = next
                     root.hiddenCount = hidden
@@ -116,12 +129,13 @@ QtObject {
     // Devices the user marked "not a keyboard" (e.g. a mouse receiver that also
     // advertises a keyboard interface): hidden from the list, any rule kept.
     readonly property var hiddenKeyboards: Persistence.Config.get("input.hiddenKeyboards", [])
+    function isHidden(vp) { return root.hiddenKeyboards.some(h => h === vp || root._vpOf(h) === vp) }
     property bool showHidden: false
     onShowHiddenChanged: refresh()
     onHiddenKeyboardsChanged: refresh()
-    function setHidden(identifier, hide) {
-        var l = root.hiddenKeyboards.filter(x => x !== identifier)
-        if (hide) l.push(identifier)
+    function setHidden(vp, hide) {
+        var l = root.hiddenKeyboards.filter(x => x !== vp && root._vpOf(x) !== vp)
+        if (hide) l.push(vp)
         Persistence.Config.set("input.hiddenKeyboards", l)
     }
     // After a reload has finished and the devices were re-read. A keyboard whose
@@ -130,12 +144,33 @@ QtObject {
     // touchpad settings, not device rules), so the pane says how to apply it.
     property bool settled: true
 
-    function layoutFor(identifier) { return root.keyboardLayouts[identifier] || "default" }
-    function setLayout(identifier, value) {
-        var m = Object.assign({}, root.keyboardLayouts)
-        if (value === "default") delete m[identifier]; else m[identifier] = value
+    // Choices are keyed by "vendor:product". Older configs keyed them by the full
+    // "vendor:product:name" of one interface: still read (and replaced on change).
+    function _vpOf(key) { return key.split(":").slice(0, 2).join(":") }
+    function layoutFor(vp) {
+        var m = root.keyboardLayouts
+        if (m[vp]) return m[vp]
+        var old = Object.keys(m).find(k => k !== vp && root._vpOf(k) === vp)
+        return old ? m[old] : "default"
+    }
+    function setLayout(vp, value) {
+        var m = {}
+        Object.keys(root.keyboardLayouts).forEach(k => { if (root._vpOf(k) !== vp) m[k] = root.keyboardLayouts[k] })
+        if (value !== "default") m[vp] = value
         Persistence.Config.set("input.keyboardLayouts", m)
         _schedule()
+    }
+    // Interface names per keyboard, remembered so its rules stay in the conf
+    // while it is unplugged (the conf is rewritten on any Input change).
+    readonly property var keyboardNodes: Persistence.Config.get("input.keyboardNodes", ({}))
+    function _rememberNodes(kbs) {
+        var m = Object.assign({}, root.keyboardNodes), changed = false
+        kbs.forEach(k => {
+            var known = m[k.identifier] || []
+            var merged = known.concat(k.nodes.filter(n => known.indexOf(n) < 0)).sort()
+            if (JSON.stringify(merged) !== JSON.stringify(known)) { m[k.identifier] = merged; changed = true }
+        })
+        if (changed) { Persistence.Config.set("input.keyboardNodes", m); _schedule() }
     }
     function set(key, value) { Persistence.Config.set("input." + key, value); _schedule() }
 
@@ -193,15 +228,25 @@ QtObject {
         if (root._isSet("naturalScroll")) lines.push("trackpad_natural_scrolling=" + (root.naturalScroll ? 1 : 0))
         if (root._isSet("disableWhileTyping")) lines.push("trackpad_disable_while_typing=" + (root.disableWhileTyping ? 1 : 0))
         if (root._isSet("pointerSpeed")) lines.push("trackpad_accel_speed=" + Number(root.pointerSpeed).toFixed(2))
-        var ids = Object.keys(root.keyboardLayouts).sort()
-        for (var i = 0; i < ids.length; i++) {
-            var l = root.layouts.find(x => x.value === root.keyboardLayouts[ids[i]])
-            // A comma would split the rule (mango separates rule fields by commas).
-            if (!l || !l.rule || ids[i].indexOf(",") >= 0) continue
-            // A rule's keyboard gets its own keymap AND its own repeat settings.
-            lines.push("devicerule=name:" + ids[i] + "," + l.rule +
-                       ",repeat_delay:" + root.repeatDelay + ",repeat_rate:" + root.repeatRate)
-        }
+        // One devicerule per interface of each configured keyboard (interfaces
+        // remembered in keyboardNodes; a legacy full-identifier key is its own node).
+        var done = {}
+        Object.keys(root.keyboardLayouts).sort().forEach(key => {
+            var vp = root._vpOf(key)
+            if (done[vp]) return
+            done[vp] = true
+            var l = root.layouts.find(x => x.value === root.layoutFor(vp))
+            if (!l || !l.rule) return
+            var nodes = (root.keyboardNodes[vp] || []).slice()
+            Object.keys(root.keyboardLayouts).forEach(k => { if (k !== vp && root._vpOf(k) === vp && nodes.indexOf(k) < 0) nodes.push(k) })
+            nodes.sort().forEach(n => {
+                // A comma would split the rule (mango separates rule fields by commas).
+                if (n.indexOf(",") >= 0) return
+                // A rule's keyboard gets its own keymap AND its own repeat settings.
+                lines.push("devicerule=name:" + n + "," + l.rule +
+                           ",repeat_delay:" + root.repeatDelay + ",repeat_rate:" + root.repeatRate)
+            })
+        })
         return lines.join("\n")
     }
 }

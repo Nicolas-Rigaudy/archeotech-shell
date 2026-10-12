@@ -19,7 +19,7 @@ Item {
         onTriggered: Hardware.Input.refresh()
     }
 
-    function _builtin(kb) { return kb.identifier.indexOf("AT Translated Set 2 keyboard") >= 0 }
+    function _builtin(kb) { return kb.name.indexOf("AT Translated Set 2 keyboard") >= 0 }
     function _label(kb) { return root._builtin(kb) ? "Built-in keyboard" : kb.name }
     function _status(kb) {
         if (!kb.usable) return "Its name contains a comma, which a mango device rule cannot match"
@@ -103,7 +103,7 @@ Item {
                                 // the user hide what is not one (restore below).
                                 GlassButton {
                                     Layout.alignment: Qt.AlignTop
-                                    readonly property bool _hidden: Hardware.Input.hiddenKeyboards.indexOf(kbRow.modelData.identifier) >= 0
+                                    readonly property bool _hidden: Hardware.Input.isHidden(kbRow.modelData.identifier)
                                     text: _hidden ? "Show" : "Not a keyboard"
                                     onClicked: Hardware.Input.setHidden(kbRow.modelData.identifier, !_hidden)
                                 }
