@@ -63,7 +63,7 @@ TestCase {
         verify(_find(rows, "Scratchpad (floating overlay terminal)"), "api notes (lowercase fn: lines) skipped")
         verify(_find(rows, "Swipe left to focus window on the right"), "Natural direction: prefix and long aside dropped")
         verify(_find(rows, "Tag switching"), "parenthetical of more than three words dropped")
-        verify(_find(rows, "Focus movement (arrow keys)"), "short parenthetical kept")
+        verify(_find(rows, "Focus movement"), "keycap-repeating aside dropped")
     }
 
     function test_fallback_descriptions() {
@@ -74,10 +74,10 @@ TestCase {
 
     function test_runs_merge() {
         var rows = _rows()
-        compare(_find(rows, "Focus movement (arrow keys)").keys.length, 2)
+        compare(_find(rows, "Focus movement").keys.length, 2)
         compare(_find(rows, "Tag switching").keys.length, 4)
         compare(_find(rows, "Tag navigation (next/previous)").keys.length, 1, "different modifiers don't merge")
-        compare(_find(rows, "Audio controls (media keys)").keys.length, 2)
+        compare(_find(rows, "Audio controls").keys.length, 2)
     }
 
     function test_categories() {
@@ -86,7 +86,7 @@ TestCase {
         compare(_find(rows, "Toggle launcher").category, "Shell")
         compare(_find(rows, "Tag switching").category, "Tags")
         compare(_find(rows, "Reload config").category, "System")
-        compare(_find(rows, "Audio controls (media keys)").category, "Media & hardware", "XF86 before the qs ipc rule")
+        compare(_find(rows, "Audio controls").category, "Media & hardware", "XF86 before the qs ipc rule")
         compare(rows.filter(r => r.action === "moveresize")[0].category, "Mouse & gestures")
         compare(rows.length, 12, "border_color and comments are not binds")
     }
@@ -125,15 +125,20 @@ TestCase {
         compare(Logic.group(rows, "zzz").length, 0)
     }
 
-    function test_chips_and_columns() {
+    function test_chips_and_sidebar() {
         var rows = _rows()
         var c = Logic.keyChips(_find(rows, "Tag switching").keys)
         compare(c.map(x => x.text), ["Super", "1 / &", "…", "9 / ç"])
         compare(c[2].cap, false, "the ellipsis is not a keycap")
         compare(Logic.keyChips(_find(rows, "Terminal").keys).length, 2)
-        var cols = Logic.columns(Logic.group(rows, ""), 3)
-        compare(cols.length, 3)
-        compare(cols.reduce((n, col) => n + col.length, 0), Logic.group(rows, "").length, "every category placed once")
+        var side = Logic.sidebar(rows, "")
+        compare(side[0].category, "All")
+        compare(side[0].count, rows.reduce((n, r) => n + r.keys.length, 0), "All counts key combos")
+        compare(side.length, 1 + Logic.group(rows, "").length, "one entry per category present")
+        var t = Logic.sidebar(rows, "terminal")
+        compare(t.length, side.length, "searching keeps every category listed")
+        compare(t.filter(e => e.category === "Apps")[0].count, 1)
+        compare(t.filter(e => e.category === "Tags")[0].count, 0)
     }
 
     function test_styled_desc() {
@@ -141,5 +146,13 @@ TestCase {
                 "Settings panel <font color=\"#888\">(alternate binding)</font>")
         compare(Logic.styledDesc("Terminal", "#888"), "Terminal")
         compare(Logic.styledDesc("Media & <keys>", "#888"), "Media &amp; &lt;keys&gt;")
+    }
+
+    function test_noise_asides_dropped() {
+        compare(Logic.cleanDesc("# App launcher (Quickshell)"), "App launcher")
+        compare(Logic.cleanDesc("# Overview jump mode (mangowm 0.15)"), "Overview jump mode")
+        compare(Logic.cleanDesc("# Focus movement (arrow keys)"), "Focus movement")
+        compare(Logic.cleanDesc("# Settings panel (alternate binding)"), "Settings panel (alternate binding)")
+        compare(Logic.cleanDesc("# Git TUI (Lazygit)"), "Git TUI (Lazygit)")
     }
 }

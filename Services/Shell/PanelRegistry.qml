@@ -67,10 +67,10 @@ QtObject {
         keybinds: {
             content:  _keybindsComp,
             side:     "bottom",
-            // Shortcuts sheet (Super+K): three columns of category cards; the
-            // card area scrolls, so the height is a comfortable cap, not a fit.
+            // Shortcuts sheet (Super+K): category rail + one scrolling list, so
+            // the height is a comfortable cap, not a fit.
             size:     820,
-            axisSize: 1280
+            axisSize: 1100
         }
     })
 

@@ -53,6 +53,10 @@ function chord(mods, key) {
     return out
 }
 
+// Asides that say how a bind is implemented, or repeat the keycaps beside it,
+// not what it does: "(Quickshell)", "(mangowm 0.15)", "(arrow keys)".
+var NOISE = /quickshell|mango|wayland|rofi|native|\bvia\b|\d+\.\d+|^(arrow|media) keys$/i
+
 // A comment line, minus its technical aside: a short "Label:" prefix gives way
 // to the text after it; cut at " — ", " - ", ";" or a sentence end (outside
 // parentheses); drop parentheticals longer than three words and an unbalanced "(".
@@ -70,7 +74,7 @@ function cleanDesc(text) {
             t = t.substr(0, i); break
         }
     }
-    t = t.replace(/\s*\(([^()]*)\)/g, (all, inner) => inner.trim().split(/\s+/).length > 3 ? "" : all).trim()
+    t = t.replace(/\s*\(([^()]*)\)/g, (all, inner) => inner.trim().split(/\s+/).length > 3 || NOISE.test(inner) ? "" : all).trim()
     var open = t.lastIndexOf("("), close = t.lastIndexOf(")")
     if (open > close) t = t.substr(0, open).trim()
     t = t.replace(/:$/, "").trim()
@@ -205,16 +209,14 @@ function keyChips(keys) {
     return out
 }
 
-// Rows split into `n` columns for a masonry layout: whole categories, each to
-// the currently shortest column (a card costs its rows plus a header).
-function columns(groups, n) {
-    var cols = [], h = []
-    for (var i = 0; i < n; i++) { cols.push([]); h.push(0) }
-    groups.forEach(g => {
-        var k = h.indexOf(Math.min.apply(null, h))
-        cols[k].push(g); h[k] += g.rows.length + 2
-    })
-    return cols
+// The sidebar: "All" then each category the config has, with how many
+// shortcuts (key combos, not rows) match the query in it.
+function sidebar(rows, query) {
+    var hits = group(rows, query)
+    var n = c => { var g = hits.filter(h => h.category === c)[0]; return g ? g.rows.reduce((k, r) => k + r.keys.length, 0) : 0 }
+    var out = [{ category: "All", count: CATEGORY_ORDER.reduce((k, c) => k + n(c), 0) }]
+    CATEGORY_ORDER.forEach(c => { if (rows.some(r => r.category === c)) out.push({ category: c, count: n(c) }) })
+    return out
 }
 
 // A description as styled text: the trailing "(aside)" in the muted colour, so
