@@ -22,7 +22,7 @@ Item {
 
     // Sizes with no theme token (keycap height, tile and search widths).
     readonly property int _capH: 24
-    readonly property int _rowMinW: 500    // results: one column per 500px
+    readonly property int _formW: 400     // one form (é + its combos) on a result line
     readonly property int _rowH: 34
     readonly property int _charW: 28
     readonly property int _searchW: 280
@@ -34,13 +34,30 @@ Item {
     property string kbId: ""
     property string query: ""
     property string _copied: ""
-    property int sel: 0                  // selected result (keyboard), -1 none
-    property int hov: -1                 // hovered result
+    property int sel: 0                  // selected line (keyboard)
+    property var hov: null               // hovered form: a result object
     onQueryChanged: sel = 0
     onKbIdChanged: sel = 0
-    // Key labels the diagram lights: the hovered result's easiest combo, else the selected one's.
+    // Lines: a lower-case form and its capital side by side (é | É), grouped by
+    // letter; symbols and unpaired forms take a line of their own.
+    readonly property var _lines: {
+        var by = {}, used = {}, out = []
+        _results.forEach(c => by[c.ch] = c)
+        _results.forEach(c => {
+            if (used[c.ch]) return
+            var up = c.ch.toUpperCase(), low = c.ch.toLowerCase()
+            if (up !== c.ch && by[up]) { out.push({ a: c, b: by[up] }); used[up] = true }
+            else if (low !== c.ch && by[low]) return            // its lower form pairs it
+            else out.push({ a: c, b: null })
+            used[c.ch] = true
+        })
+        out.forEach(l => l.group = l.a.base ? l.a.base.toUpperCase() : "Symbols")
+        return out
+    }
+    // Key labels the diagram lights: the hovered form's easiest combo, else the
+    // selected line's first form.
     readonly property var _litKeys: {
-        var r = _results[hov >= 0 ? hov : sel]
+        var r = hov || (_lines[sel] ? _lines[sel].a : null)
         return r ? r.combos[0].reduce((l, chord) => l.concat(chord), []) : []
     }
     // "Latin Small Letter E With Acute" → "acute"; other names as they are.
@@ -83,6 +100,11 @@ Item {
         }
     }
 
+    function _copyLine(event) {
+        var l = _lines[sel]
+        if (!l) return
+        root.copy((event.modifiers & Qt.ShiftModifier) && l.b ? l.b.ch : l.a.ch)
+    }
     function copy(ch) {
         Quickshell.execDetached(["wl-copy", "--", ch])
         _copied = ch
@@ -117,6 +139,85 @@ Item {
             font.family: root._a.font.family
             font.pixelSize: root._a.font.sizeSm
             font.weight: root._a.font.weightMedium
+        }
+    }
+
+    // One way to write a character on a result line: the glyph, its easiest combo
+    // as keycaps (→ between steps) and a muted "or …" second way. Click copies.
+    component Form: Item {
+        id: form
+        property var item: null
+        signal picked()
+        height: root._rowH
+        HoverHandler {
+            id: formHov
+            cursorShape: Qt.PointingHandCursor
+            onHoveredChanged: root.hov = hovered ? form.item : (root.hov === form.item ? null : root.hov)
+        }
+        TapHandler { onTapped: { form.picked(); if (form.item) root.copy(form.item.ch) } }
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: root._a.spacing.s1 / 2
+            radius: root._a.radius.sm
+            color: formHov.hovered ? root._a.colors.surface0Alpha : "transparent"
+        }
+        Text {
+            id: glyph
+            anchors { left: parent.left; verticalCenter: parent.verticalCenter }
+            width: root._charW
+            horizontalAlignment: Text.AlignHCenter
+            text: form.item ? form.item.ch : ""
+            textFormat: Text.PlainText
+            color: root._a.colors.textPrimary
+            font.family: root._a.font.family
+            font.pixelSize: root._a.font.sizeXl
+        }
+        Row {
+            anchors { left: glyph.right; leftMargin: root._a.spacing.s2; right: parent.right; verticalCenter: parent.verticalCenter }
+            spacing: root._a.spacing.s1
+            clip: true
+            Repeater {
+                model: form.item ? form.item.combos : []
+                delegate: Row {
+                    id: combo
+                    required property var modelData
+                    required property int index
+                    spacing: root._a.spacing.s1
+                    opacity: index === 0 ? 1 : 0.55
+                    Text {
+                        visible: combo.index > 0
+                        height: root._capH
+                        leftPadding: root._a.spacing.s2
+                        verticalAlignment: Text.AlignVCenter
+                        text: "or"
+                        color: root._a.colors.textMuted
+                        font.family: root._a.font.family
+                        font.pixelSize: root._a.font.size2xs
+                    }
+                    Repeater {
+                        model: combo.modelData
+                        delegate: Row {
+                            id: step
+                            required property var modelData
+                            required property int index
+                            spacing: root._a.spacing.s1
+                            Text {
+                                visible: step.index > 0
+                                height: root._capH
+                                verticalAlignment: Text.AlignVCenter
+                                text: "→"
+                                color: root._a.colors.textMuted
+                                font.family: root._a.font.family
+                                font.pixelSize: root._a.font.sizeSm
+                            }
+                            Repeater {
+                                model: step.modelData
+                                delegate: Cap { required property var modelData; text: modelData }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -205,12 +306,11 @@ Item {
                             else if (root.panelRoot) root.panelRoot.close()
                         }
                         // ↑/↓ by row, Tab/Shift+Tab by item, Enter copies the selection.
-                        Keys.onUpPressed: root.sel = Math.max(0, root.sel - grid.cols)
-                        Keys.onDownPressed: root.sel = Math.min(root._results.length - 1, root.sel + grid.cols)
-                        Keys.onTabPressed: root.sel = Math.min(root._results.length - 1, root.sel + 1)
-                        Keys.onBacktabPressed: root.sel = Math.max(0, root.sel - 1)
-                        Keys.onReturnPressed: if (root._results[root.sel]) root.copy(root._results[root.sel].ch)
-                        Keys.onEnterPressed: if (root._results[root.sel]) root.copy(root._results[root.sel].ch)
+                        // ↑/↓ move the selection; Enter copies its first form, Shift+Enter its capital.
+                        Keys.onUpPressed: root.sel = Math.max(0, root.sel - 1)
+                        Keys.onDownPressed: root.sel = Math.min(root._lines.length - 1, root.sel + 1)
+                        Keys.onReturnPressed: event => root._copyLine(event)
+                        Keys.onEnterPressed: event => root._copyLine(event)
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             visible: searchInput.text.length === 0
@@ -270,23 +370,41 @@ Item {
                 }
             }
 
-            // ── Results: one line per character, in columns ────────────────────
-            GridView {
-                id: grid
+            // ── Results: one line per letter form (é | É), grouped by letter ─────
+            ListView {
+                id: list
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
-                model: root._results
+                model: root._lines
                 currentIndex: root.sel
-                readonly property int cols: Math.max(1, Math.floor(width / root._rowMinW))
-                cellWidth: Math.floor(width / cols)
-                cellHeight: root._rowH
-                onCurrentIndexChanged: positionViewAtIndex(currentIndex, GridView.Contain)
+                onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
+                section.property: "group"
+                section.delegate: Item {
+                    id: sec
+                    required property string section
+                    width: list.width
+                    height: root._rowH
+                    Text {
+                        id: secName
+                        anchors { left: parent.left; leftMargin: root._a.spacing.s2; bottom: parent.bottom; bottomMargin: root._a.spacing.s1 }
+                        text: sec.section
+                        color: root._a.colors.accent
+                        font.family: root._a.font.display
+                        font.pixelSize: root._a.font.sizeSm
+                        font.letterSpacing: root._a.font.trackingLabel
+                    }
+                    Rectangle {
+                        anchors { left: secName.right; leftMargin: root._a.spacing.s3; right: parent.right; verticalCenter: secName.verticalCenter }
+                        height: 1
+                        color: root._a.colors.surface0
+                    }
+                }
 
                 Text {
-                    visible: root._map !== null && root._results.length === 0
-                    width: grid.width
+                    visible: root._map !== null && root._lines.length === 0
+                    width: list.width
                     topPadding: root._a.spacing.s8
                     horizontalAlignment: Text.AlignHCenter
                     textFormat: Text.PlainText
@@ -298,95 +416,28 @@ Item {
                 }
 
                 delegate: Rectangle {
-                    id: row
+                    id: line
                     required property var modelData
                     required property int index
                     readonly property bool current: index === root.sel
-                    width: grid.cellWidth - root._a.spacing.s2
-                    height: grid.cellHeight - root._a.spacing.s1
+                    width: list.width
+                    height: root._rowH
                     radius: root._a.radius.sm
                     color: current ? root._a.colors.accentAlpha
-                         : rowHov.hovered ? root._a.colors.surface0Alpha : "transparent"
+                         : index % 2 === 1 ? Qt.alpha(root._a.colors.surface0, 0.25) : "transparent"
                     border.width: current ? 1 : 0
                     border.color: root._a.colors.accentBorder
-                    HoverHandler {
-                        id: rowHov
-                        cursorShape: Qt.PointingHandCursor
-                        onHoveredChanged: root.hov = hovered ? row.index : (root.hov === row.index ? -1 : root.hov)
-                    }
-                    TapHandler { onTapped: { root.sel = row.index; root.copy(row.modelData.ch) } }
 
-                    Text {
-                        id: glyph
-                        anchors { left: parent.left; leftMargin: root._a.spacing.s2; verticalCenter: parent.verticalCenter }
-                        width: root._charW
-                        horizontalAlignment: Text.AlignHCenter
-                        text: row.modelData.ch
-                        textFormat: Text.PlainText
-                        color: root._a.colors.textPrimary
-                        font.family: root._a.font.family
-                        font.pixelSize: root._a.font.sizeXl
-                    }
-
-                    // The easiest combo as keycaps (→ between steps), then a muted
-                    // "or …" for the second way when there is room.
                     Row {
-                        id: combos
-                        anchors { left: glyph.right; leftMargin: root._a.spacing.s2; right: name.left; rightMargin: root._a.spacing.s2
-                                  verticalCenter: parent.verticalCenter }
-                        spacing: root._a.spacing.s1
-                        clip: true
-                        Repeater {
-                            model: row.modelData.combos
-                            delegate: Row {
-                                id: combo
-                                required property var modelData
-                                required property int index
-                                spacing: root._a.spacing.s1
-                                opacity: index === 0 ? 1 : 0.55
-                                Text {
-                                    visible: combo.index > 0
-                                    height: root._capH
-                                    leftPadding: root._a.spacing.s2
-                                    verticalAlignment: Text.AlignVCenter
-                                    text: "or"
-                                    color: root._a.colors.textMuted
-                                    font.family: root._a.font.family
-                                    font.pixelSize: root._a.font.size2xs
-                                }
-                                Repeater {
-                                    model: combo.modelData
-                                    delegate: Row {
-                                        id: step
-                                        required property var modelData
-                                        required property int index
-                                        spacing: root._a.spacing.s1
-                                        Text {
-                                            visible: step.index > 0
-                                            height: root._capH
-                                            verticalAlignment: Text.AlignVCenter
-                                            text: "→"
-                                            color: root._a.colors.textMuted
-                                            font.family: root._a.font.family
-                                            font.pixelSize: root._a.font.sizeSm
-                                        }
-                                        Repeater {
-                                            model: step.modelData
-                                            delegate: Cap { required property var modelData; text: modelData }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        anchors { left: parent.left; leftMargin: root._a.spacing.s2; verticalCenter: parent.verticalCenter }
+                        spacing: root._a.spacing.s4
+                        Form { width: root._formW; item: line.modelData.a; onPicked: root.sel = line.index }
+                        Form { width: root._formW; item: line.modelData.b; visible: !!line.modelData.b; onPicked: root.sel = line.index }
                     }
 
                     Text {
-                        id: name
                         anchors { right: parent.right; rightMargin: root._a.spacing.s3; verticalCenter: parent.verticalCenter }
-                        width: Math.min(implicitWidth, parent.width * 0.3)
-                        horizontalAlignment: Text.AlignRight
-                        elide: Text.ElideRight
-                        text: root._short(row.modelData.name)
+                        text: root._short(line.modelData.a.name)
                         textFormat: Text.PlainText
                         color: root._a.colors.textMuted
                         font.family: root._a.font.family
