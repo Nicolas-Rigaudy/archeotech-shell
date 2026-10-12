@@ -80,8 +80,15 @@ Item {
     // A wildcard open (side "" — bar gear / shortcut / IPC) must show on exactly
     // ONE strip, not every strip that lists the panel. Pick the primary host:
     // the first side in priority order whose config hosts this panel.
-    // A panel no strip lists (shortcut-only, e.g. the Super+K keybinds sheet)
-    // opens on the strip at its PanelRegistry side, else the first strip.
+    // A panel no strip lists (shortcut-only: the Super+K keybinds sheet, a plugin
+    // panel opened by `ipc call panel toggle plugin:<id>`) opens on the strip at
+    // its PanelRegistry side, else the first strip.
+    function _isPanel(id) {
+        if (ShellServices.PanelRegistry.panelFor(id)) return true
+        if (!ShellServices.WidgetRegistry.isPlugin(id) || !ShellServices.ModuleRegistry.isEnabled(id)) return false
+        var mod = ShellServices.ModuleRegistry.moduleFor(id)
+        return !!mod && (mod.canLiveIn || []).indexOf("panel-content") !== -1
+    }
     function _isPrimaryHost(id) {
         var order = ["right", "bottom", "left", "top"]
         for (var i = 0; i < order.length; i++) {
@@ -89,14 +96,21 @@ Item {
                 return order[i] === side
         }
         var strips = order.filter(s => ShellServices.ShellConfig.side(s, _screenName).type === "strip")
-        var meta = ShellServices.PanelRegistry.panelFor(id)
-        if (meta && strips.indexOf(meta.side) !== -1) return meta.side === side
+        var pref = _preferredSide(id)
+        if (strips.indexOf(pref) !== -1) return pref === side
         return strips.length > 0 && strips[0] === side
+    }
+    // PanelRegistry `side`, or a plugin manifest's optional `panel.side`.
+    function _preferredSide(id) {
+        var meta = ShellServices.PanelRegistry.panelFor(id)
+        if (meta) return meta.side || ""
+        var mod = ShellServices.WidgetRegistry.isPlugin(id) ? ShellServices.ModuleRegistry.moduleFor(id) : null
+        return mod && mod.panel ? (mod.panel.side || "") : ""
     }
     function _showsPanel(id) {
         if (!id) return false
         if (_icons.indexOf(id) === -1)
-            return _activeSide === "" && !!ShellServices.PanelRegistry.panelFor(id) && _isPrimaryHost(id)
+            return _activeSide === "" && _isPanel(id) && _isPrimaryHost(id)
         return _activeSide === side || (_activeSide === "" && _isPrimaryHost(id))
     }
     readonly property bool   _panelOpen:   _activePanel !== "" && _showsPanel(_activePanel)

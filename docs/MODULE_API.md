@@ -47,7 +47,7 @@ folder appears in the palette immediately.
 | `icon` | rec. | Nerd-font glyph; used for the palette tile and the auto-generated panel opener. |
 | `author`, `version` | rec. | Metadata. |
 | `defaultSize` | opt. | `{ width, height }` hint. `width` is the panel fallback `size` if `panel` is absent. |
-| `panel` | opt. | `{ size, axisSize }` for `panel-content` modules — see Panel sizing. |
+| `panel` | opt. | `{ size, axisSize, side }` for `panel-content` modules — see Panel sizing. `side` (`"bottom"`, `"left"`, …) is where the panel opens when no strip has its icon, e.g. from a keybind (`qs -c archeotech ipc call panel toggle plugin:<id>`); default: the first strip. |
 | `configSchema` | opt. | Per-instance config fields → auto-generated settings form. See [Per-instance config](#per-instance-config-configschema). |
 | `official` | opt. | `true` shows an "Official" badge (first-party) in the Plugins pane — the highest trust tier. |
 | `verified` | opt. | `true` shows a "Verified" badge (community-verified) in the Plugins pane. Honored, not cryptographically checked (signing is a later sprint). |

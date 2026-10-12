@@ -1,0 +1,24 @@
+{
+  "id": "keymap",
+  "name": "Keymap",
+  "author": "archeotech",
+  "version": "1.0.0",
+  "description": "How to type any character on your keyboards: search by letter (e → é è ê ë), see the AltGr and dead-key layers, click to copy.",
+  "canLiveIn": [
+    "panel-content"
+  ],
+  "entry": "Keymap.qml",
+  "icon": "󰗊",
+  "panel": {
+    "side": "bottom",
+    "size": 840,
+    "axisSize": 1180
+  },
+  "dependencies": [
+    "xkbcli",
+    "python3",
+    "wl-copy"
+  ],
+  "configSchema": {},
+  "official": true
+}

@@ -208,6 +208,14 @@ ShellRoot {
         function close()  { ShellServices.ShellState.closeAllAcross()         }
     }
 
+    // Any panel by id, plugins included: `ipc call panel toggle plugin:keymap`.
+    IpcHandler {
+        target: "panel"
+        function toggle(id: string) { ShellServices.ShellState.toggleGlobal(id) }
+        function open(id: string)   { ShellServices.ShellState.openGlobal(id)  }
+        function close()            { ShellServices.ShellState.closeAllAcross() }
+    }
+
     IpcHandler {
         target: "keybinds"
         function toggle() { ShellServices.ShellState.toggleGlobal("keybinds") }
