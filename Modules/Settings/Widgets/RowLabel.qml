@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
 import "../../../Commons" as Commons
 import "../../../Commons/Primitives"
 
@@ -42,10 +41,11 @@ RowLayout {
             font.family: Commons.Appearance.font.family
         }
         StateLayer { id: resetLayer; anchors.fill: parent; onClicked: root.reset() }
-        // Attached ToolTip: one shared popup per window, not one per row.
-        ToolTip.visible: resetLayer.hovered
-        ToolTip.delay: Commons.Appearance.anim.panel
-        ToolTip.text: root.resetHint
+        // Built only while hovered: no tooltip object per row otherwise.
+        Loader {
+            active: resetLayer.hovered
+            sourceComponent: Tooltip { parent: resetBtn; visible: true; text: root.resetHint }
+        }
     }
 
     // Keeps the ↺ next to the text, not pushed to the far edge.

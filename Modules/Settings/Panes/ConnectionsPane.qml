@@ -548,7 +548,7 @@ Item {
                         font.pixelSize: Commons.Appearance.font.size2xs; font.family: Commons.Appearance.font.family
                     }
                 }
-                ToolTip { visible: autoBtn.hovered; delay: 400; text: modelData.autoconnect ? "Auto-join: on" : "Auto-join: off" }
+                Tooltip { visible: autoBtn.hovered; text: modelData.autoconnect ? "Auto-join: on" : "Auto-join: off" }
             }
 
             // Forget a saved network (deletes the stored profile).

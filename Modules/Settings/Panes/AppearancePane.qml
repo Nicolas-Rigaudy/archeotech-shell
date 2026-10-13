@@ -118,7 +118,10 @@ Item {
                     ButtonGroupRow {
                         label: "Opacity"
                         configKey: "appearance.glass"
-                        resetHint: "Reset to the " + (Commons.Appearance.isLight ? "light" : "dark") + " default"
+                        // "" and an explicit "glass" are both the default preset:
+                        // compare what is applied, not the stored string.
+                        modified: Commons.Appearance.effectiveGlassPreset !== Commons.Appearance.glassDefault
+                        resetHint: "Reset to " + _optionLabel(Commons.Appearance.glassDefault, "default")
                         description: "How much wallpaper shows through panels, cards and kitty"
                         options: Commons.Appearance.glassPresets
                         currentValue: Commons.Appearance.effectiveGlassPreset
