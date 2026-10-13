@@ -3,9 +3,9 @@ import QtQuick.Controls
 import QtQuick.Effects
 import ".." as Commons
 
-// The shell's tooltip: a small glass card (same surface, border and shadow
-// language as the dropdown list) with one line of text, fading in after a short
-// delay. Use this instead of a stock QtQuick.Controls ToolTip, whose platform
+// The shell's tooltip: a small lit glass card (the same MetalSurface material,
+// glass rim and raised shadow as the settings and dashboard cards) with one line
+// of text, fading in after a short delay. Use this instead of a stock QtQuick.Controls ToolTip, whose platform
 // look does not belong in the shell (tests/py/test_tooltips.py enforces it).
 //
 //   Prim.Tooltip { visible: someLayer.hovered; text: "Reset to 5.0s" }
@@ -25,20 +25,29 @@ ToolTip {
         font.family: Commons.Appearance.font.family
     }
 
+    // The cards' material (MetalSurface: top-lit sheen on the translucent card
+    // fill, the steel plate under a chamfer pack) with a raised e3 shadow and the
+    // glass rim, so a tooltip reads as one more lit glass card, not a flat slab.
     background: Item {
         RectangularShadow {
-            anchors.fill: card
-            radius: card.radius
-            blur:   Commons.Appearance.elevation.e2.blur
-            offset: Qt.vector2d(0, Commons.Appearance.elevation.e2.y)
-            spread: Commons.Appearance.elevation.e2.spread
-            color:  Commons.Appearance.elevation.e2.color
+            anchors.fill: surface
+            radius: surface.radius
+            blur:   Commons.Appearance.elevation.e3.blur
+            offset: Qt.vector2d(0, Commons.Appearance.elevation.e3.y)
+            spread: Commons.Appearance.elevation.e3.spread
+            color:  Commons.Appearance.elevation.e3.color
         }
-        Rectangle {
-            id: card
+        MetalSurface {
+            id: surface
             anchors.fill: parent
             radius: Commons.Appearance.radius.base
-            color: Commons.Appearance.colors.glassBg
+            chamfer: 4
+        }
+        Rectangle {               // glass rim (the steel plate draws its own seat)
+            anchors.fill: parent
+            visible: !Commons.Appearance.frameChamfer
+            radius: surface.radius
+            color: "transparent"
             border.width: 1
             border.color: Commons.Appearance.colors.glassBorder
         }
