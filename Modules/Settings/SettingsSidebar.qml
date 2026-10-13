@@ -10,13 +10,17 @@ Item {
     property int activeIndex: 0
     signal paneSelected(int index)
 
-    // Settings search (Sprint 24) — non-empty query swaps the nav list for a
-    // ranked results list; picking a result jumps to that pane.
+    // Settings search (item_138) — a non-empty query swaps the nav list for one
+    // result per setting (label, pane › section); ↑/↓ move, Enter or a click opens
+    // the pane and reveals the row (PaneRegistry.focusSetting → SearchTarget).
     property string query: ""
     readonly property var _results: query !== "" ? PaneRegistry.search(query) : []
+    property int _sel: 0
+    onQueryChanged: _sel = 0
 
-    function _go(paneId) {
-        var idx = PaneRegistry.indexFor(paneId)
+    function _go(entry) {
+        PaneRegistry.focusSetting(entry.key)
+        var idx = PaneRegistry.indexFor(entry.pane)
         root.activeIndex = idx
         root.paneSelected(idx)
         root.query = ""
@@ -70,7 +74,9 @@ Item {
                             font.family: Commons.Appearance.font.family
                             background: null
                             Keys.onEscapePressed: root.query = ""
-                            onAccepted: if (root._results.length > 0) root._go(root._results[0].pane)
+                            Keys.onDownPressed: root._sel = Math.min(root._sel + 1, root._results.length - 1)
+                            Keys.onUpPressed:   root._sel = Math.max(root._sel - 1, 0)
+                            onAccepted: if (root._results.length > 0) root._go(root._results[root._sel])
                         }
                         Text {
                             visible: root.query !== ""
@@ -104,19 +110,21 @@ Item {
                 delegate: Item {
                     id: resItem
                     required property var modelData
+                    required property int index
                     Layout.fillWidth: true
-                    implicitHeight: 40
+                    implicitHeight: 44
 
                     Rectangle {
                         id: resBg
                         anchors { fill: parent; leftMargin: Commons.Appearance.spacing.s2; rightMargin: Commons.Appearance.spacing.s2 }
                         radius: Commons.Appearance.radius.base
-                        color: "transparent"
+                        // Keyboard selection (↑/↓, Enter opens it).
+                        color: resItem.index === root._sel ? Commons.Appearance.colors.stateHover : "transparent"
 
                         StateLayer {
                             anchors.fill: parent
                             pressScale: 1.0
-                            onClicked: root._go(resItem.modelData.pane)
+                            onClicked: root._go(resItem.modelData)
                         }
                     }
 
@@ -141,10 +149,12 @@ Item {
                                 Layout.fillWidth: true
                             }
                             Text {
-                                text: resItem.modelData.paneLabel
+                                text: resItem.modelData.paneLabel + " › " + resItem.modelData.section
                                 color: Commons.Appearance.colors.textMuted
                                 font.pixelSize: Commons.Appearance.font.size2xs
                                 font.family: Commons.Appearance.font.family
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
                             }
                         }
                     }

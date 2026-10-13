@@ -73,7 +73,7 @@ Item {
             // Big clock
             Text {
                 anchors { right: closeBtn.left; rightMargin: Commons.Appearance.spacing.s4; verticalCenter: parent.verticalCenter }
-                text: Qt.formatDateTime(root._now, Clock.timeFormat(Persistence.Config.get("clock.format", "24h"), false))
+                text: Qt.formatDateTime(root._now, Clock.timeFormat(Persistence.Config.get("clock.format"), false))
                 color: Commons.Appearance.colors.accent
                 font.family: Commons.Appearance.font.family
                 font.pixelSize: Commons.Appearance.font.sizeDisplay

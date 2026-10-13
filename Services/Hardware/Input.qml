@@ -119,12 +119,12 @@ QtObject {
     // Only keys the user has CHANGED are written; untouched ones stay with the
     // mango config's own values (the defaults shown here are mango's/ours until then).
     readonly property var keyboardLayouts: Persistence.Config.get("input.keyboardLayouts", ({}))
-    readonly property int  repeatDelay: Persistence.Config.get("input.repeatDelay", 600)
-    readonly property int  repeatRate: Persistence.Config.get("input.repeatRate", 25)
-    readonly property bool tapToClick: Persistence.Config.get("input.tapToClick", true)
-    readonly property bool naturalScroll: Persistence.Config.get("input.naturalScroll", true)
-    readonly property bool disableWhileTyping: Persistence.Config.get("input.disableWhileTyping", true)
-    readonly property real pointerSpeed: Persistence.Config.get("input.pointerSpeed", 0)
+    readonly property int  repeatDelay: Persistence.Config.get("input.repeatDelay")
+    readonly property int  repeatRate: Persistence.Config.get("input.repeatRate")
+    readonly property bool tapToClick: Persistence.Config.get("input.tapToClick")
+    readonly property bool naturalScroll: Persistence.Config.get("input.naturalScroll")
+    readonly property bool disableWhileTyping: Persistence.Config.get("input.disableWhileTyping")
+    readonly property real pointerSpeed: Persistence.Config.get("input.pointerSpeed")
     function _isSet(key) { return Persistence.Config.get("input." + key, null) !== null }
     // Devices the user marked "not a keyboard" (e.g. a mouse receiver that also
     // advertises a keyboard interface): hidden from the list, any rule kept.

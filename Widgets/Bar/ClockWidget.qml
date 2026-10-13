@@ -14,9 +14,9 @@ Item {
     property string widgetId
     readonly property bool _horizontal: holderRoot && holderRoot.horizontal
 
-    readonly property string _format:  Persistence.Config.get("clock.format", "24h")
-    readonly property string _timeFmt: Clock.timeFormat(_format, Persistence.Config.get("clock.seconds", false))
-    readonly property string _dateFmt: Clock.dateFormat(Persistence.Config.get("clock.date", "short"))
+    readonly property string _format:  Persistence.Config.get("clock.format")
+    readonly property string _timeFmt: Clock.timeFormat(_format, Persistence.Config.get("clock.seconds"))
+    readonly property string _dateFmt: Clock.dateFormat(Persistence.Config.get("clock.date"))
 
     visible: holderRoot
     // Bolted console segment (steel pack, horizontal bar) — the centre gauge in its

@@ -3,6 +3,7 @@ import QtQuick
 import QtCore
 import Quickshell.Io
 import "ConfigLogic.js" as Logic
+import "ConfigDefaults.js" as Defaults
 
 QtObject {
     id: root
@@ -81,7 +82,16 @@ QtObject {
     }
 
     // Returns the live (shared) subtree: copy before mutating, then set() the copy.
-    function get(key, defaultValue) { return Logic.getPath(root._data, key, defaultValue) }
+    // With no defaultValue, a key declared in ConfigDefaults.js falls back to it.
+    function get(key, defaultValue) {
+        return Logic.getPath(root._data, key, arguments.length > 1 ? defaultValue : Defaults.value(key))
+    }
+
+    // Reset to default (item_138): a key from ConfigDefaults.js is "modified" when
+    // config.json holds a different value; reset() removes it, so get() falls back.
+    function defaultFor(key) { return Defaults.value(key) }
+    function isModified(key) { return Defaults.isModified(key, Logic.getPath(root._data, key, undefined)) }
+    function reset(key) { set(key, undefined) }
 
     // Copies only the path to `key`, so bindings on other object-valued keys keep
     // their object and stay quiet; an unchanged value neither notifies nor writes.

@@ -42,6 +42,7 @@ Item {
 
                 // ── Wi-Fi | Bluetooth tabs — shared SegmentedControl ──────────
                 SegmentedControl {
+                    id: connTabs
                     Layout.preferredWidth: 260
                     Layout.preferredHeight: 30
                     Layout.bottomMargin: Commons.Appearance.spacing.s1
@@ -51,6 +52,9 @@ Item {
                     ]
                     currentIndex: root._tab
                     onActivated: index => root._tab = index
+                    // Search picks switch to their tab, then light the tabs.
+                    SearchTarget { key: "connections.wifi"; target: connTabs; onRevealing: root._tab = 0 }
+                    SearchTarget { key: "connections.bluetooth"; target: connTabs; onRevealing: root._tab = 1 }
                 }
 
                 // ── WiFi ──────────────────────────────────────────────────────

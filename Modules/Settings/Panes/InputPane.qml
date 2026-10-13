@@ -73,8 +73,9 @@ Item {
                 }
 
                 // ── Keyboards ─────────────────────────────────────────────────
-                SectionLabel { text: "KEYBOARDS"; visible: Hardware.Input.supported }
+                SectionLabel { text: "KEYBOARDS"; visible: Hardware.Input.supported; SearchTarget { key: "input.keyboardLayouts"; target: kbCard } }
                 SettingsCard {
+                    id: kbCard
                     visible: Hardware.Input.supported
                     Repeater {
                         model: Hardware.Input.keyboards
@@ -154,6 +155,9 @@ Item {
                     visible: Hardware.Input.supported
                     SliderRow {
                         label: "Delay"
+                        configKey: "input.repeatDelay"
+                        autoReset: false
+                        onReset: Hardware.Input.set("repeatDelay", undefined)
                         description: "How long a key is held before it repeats"
                         from: 150; to: 1000; stepSize: 25
                         value: Hardware.Input.repeatDelay
@@ -163,6 +167,9 @@ Item {
                     Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Commons.Appearance.colors.surface0 }
                     SliderRow {
                         label: "Rate"
+                        configKey: "input.repeatRate"
+                        autoReset: false
+                        onReset: Hardware.Input.set("repeatRate", undefined)
                         description: "Characters per second while a key is held"
                         from: 10; to: 60; stepSize: 1
                         value: Hardware.Input.repeatRate
@@ -178,6 +185,9 @@ Item {
                     visible: Hardware.Input.supported && Hardware.Input.hasTouchpad
                     ToggleRow {
                         label: "Tap to click"
+                        configKey: "input.tapToClick"
+                        autoReset: false
+                        onReset: Hardware.Input.set("tapToClick", undefined)
                         description: "A light tap counts as a click"
                         checked: Hardware.Input.tapToClick
                         onToggled: v => Hardware.Input.set("tapToClick", v)
@@ -185,6 +195,9 @@ Item {
                     Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Commons.Appearance.colors.surface0 }
                     ToggleRow {
                         label: "Natural scrolling"
+                        configKey: "input.naturalScroll"
+                        autoReset: false
+                        onReset: Hardware.Input.set("naturalScroll", undefined)
                         description: "Content follows your fingers"
                         checked: Hardware.Input.naturalScroll
                         onToggled: v => Hardware.Input.set("naturalScroll", v)
@@ -192,6 +205,9 @@ Item {
                     Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Commons.Appearance.colors.surface0 }
                     ToggleRow {
                         label: "Disable while typing"
+                        configKey: "input.disableWhileTyping"
+                        autoReset: false
+                        onReset: Hardware.Input.set("disableWhileTyping", undefined)
                         description: "Ignore the touchpad for a moment after a key press"
                         checked: Hardware.Input.disableWhileTyping
                         onToggled: v => Hardware.Input.set("disableWhileTyping", v)
@@ -199,6 +215,9 @@ Item {
                     Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Commons.Appearance.colors.surface0 }
                     SliderRow {
                         label: "Pointer speed"
+                        configKey: "input.pointerSpeed"
+                        autoReset: false
+                        onReset: Hardware.Input.set("pointerSpeed", undefined)
                         description: "Touchpad acceleration"
                         from: -1; to: 1; stepSize: 0.1
                         value: Hardware.Input.pointerSpeed

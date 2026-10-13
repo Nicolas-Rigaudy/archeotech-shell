@@ -58,8 +58,9 @@ Item {
                 // At the top — it drives the whole look. Same SegmentedControl
                 // language as the Mode/Theme pickers — no native dropdown popup
                 // (which mispositions in a layer-shell window).
-                SectionLabel { text: "THEME PACK" }
+                SectionLabel { text: "THEME PACK"; SearchTarget { key: "appearance.pack"; target: packPicker } }
                 SegmentedControl {
+                    id: packPicker
                     Layout.fillWidth: true
                     Layout.preferredHeight: 32
                     model: root._packModel
@@ -98,7 +99,9 @@ Item {
                 // Hidden when the active pack owns its palette (e.g. Grimdark) —
                 // the Catppuccin pickers don't apply; the pack's register does.
                 Appearance.ColorSchemeBody {
+                    id: schemeBody
                     Layout.fillWidth: true
+                    SearchTarget { key: "appearance.theme"; target: schemeBody }
                     visible: !Commons.Appearance.packOwnsPalette
                 }
 
@@ -114,6 +117,8 @@ Item {
                     // from themes/glass-presets.json (the same table Appearance reads).
                     ButtonGroupRow {
                         label: "Opacity"
+                        configKey: "appearance.glass"
+                        resetHint: "Reset to the " + (Commons.Appearance.isLight ? "light" : "dark") + " default"
                         description: "How much wallpaper shows through panels, cards and kitty"
                         options: Commons.Appearance.glassPresets
                         currentValue: Commons.Appearance.effectiveGlassPreset
@@ -125,6 +130,7 @@ Item {
                     // Text size (item_110 wave 2): multiplies every step of the type scale.
                     ButtonGroupRow {
                         label: "Text size"
+                        configKey: "appearance.fontScale"
                         description: "Scales all text and icons in the shell"
                         options: [
                             { value: "0.9", label: "Small" },
@@ -142,12 +148,14 @@ Item {
                     // (was a Flat mode toggle); still the appearance.flatMode bool.
                     ButtonGroupRow {
                         label: "Depth"
+                        configKey: "appearance.flatMode"
+                        resetHint: "Reset to 3D"
                         description: "Flat drops the glass sheen and card shadows"
                         options: [
                             { value: "3d",   label: "3D" },
                             { value: "flat", label: "Flat" }
                         ]
-                        currentValue: Persistence.Config.get("appearance.flatMode", false) ? "flat" : "3d"
+                        currentValue: Persistence.Config.get("appearance.flatMode") ? "flat" : "3d"
                         onSelected: v => Persistence.Config.set("appearance.flatMode", v === "flat")
                     }
                 }
@@ -157,9 +165,10 @@ Item {
                 // ── Wallpaper ─────────────────────────────────────────────────
                 // Shares the exact WallpaperPickerBody the quick-switcher tab
                 // uses (Sprint 24/26). Settings stacks; the quick panel tabs.
-                SectionLabel { text: "WALLPAPER" }
+                SectionLabel { text: "WALLPAPER"; SearchTarget { key: "appearance.wallpaper"; target: wallBody } }
 
                 Appearance.WallpaperPickerBody {
+                    id: wallBody
                     Layout.fillWidth: true
                     Layout.preferredHeight: 200
                     embedded: true
@@ -169,9 +178,10 @@ Item {
                 Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
 
                 // ── Logo ──────────────────────────────────────────────────────
-                SectionLabel { text: "LOGO" }
+                SectionLabel { text: "LOGO"; SearchTarget { key: "appearance.logo"; target: logoBody } }
 
                 Appearance.LogoCarousel {
+                    id: logoBody
                     Layout.fillWidth: true
                     Layout.preferredHeight: 120
                 }

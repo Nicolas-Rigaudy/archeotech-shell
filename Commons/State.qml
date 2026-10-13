@@ -3,6 +3,11 @@ import QtQuick
 
 QtObject {
     property string settingsOpenPane:         ""
+    // Settings search (item_138): the row to reveal once its pane is shown. The
+    // SearchTarget whose key matches scrolls to its row, pulses it and clears this;
+    // the serial re-fires a pick of the same key twice.
+    property string settingsFocusKey:         ""
+    property int    settingsFocusSerial:      0
 
     // Keyboard panel (Super+K): which tab is shown, "shortcuts" or "characters".
     // Set by the `keybinds` IPC (Super+Shift+K opens Characters) and the tabs.

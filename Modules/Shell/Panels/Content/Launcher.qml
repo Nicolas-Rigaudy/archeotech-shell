@@ -230,7 +230,7 @@ Item {
     }
 
     // Settings deep-links — search PaneRegistry.searchIndex (label + keywords);
-    // activating jumps the Settings panel to the owning pane. Covers the
+    // activating opens the owning pane and reveals the row (item_138). Covers the
     // wallpaper/theme entries too (they live under the appearance pane).
     function _provSettings(q) {
         var out = [], idx = Stg.PaneRegistry.searchIndex
@@ -240,12 +240,12 @@ Item {
                               root._fuzzyScore(it.keywords || "", q) * 0.55)
             if (sc <= 0) continue
             var meta = Stg.PaneRegistry._paneMeta(it.pane)
-            out.push({ name: it.label, comment: "Settings › " + meta.label, icon: "",
+            out.push({ name: it.label, comment: "Settings › " + meta.label + " › " + it.section, icon: "",
                        __kind: "settings", __glyph: meta.icon || "󰒓", __score: sc,
-                       __run: (function(pane) { return function() {
-                           Commons.State.settingsOpenPane = pane
+                       __run: (function(key) { return function() {
+                           Stg.PaneRegistry.focusSetting(key)
                            ShellServices.ShellState.openGlobal("settings")
-                       } })(it.pane) })
+                       } })(it.key) })
         }
         return out
     }

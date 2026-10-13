@@ -40,9 +40,10 @@ Item {
                 width: root.width - 48
                 spacing: Commons.Appearance.spacing.s2
 
-                SectionLabel { text: "OUTPUT DEVICE" }
+                SectionLabel { text: "OUTPUT DEVICE"; SearchTarget { key: "audio.output"; target: outCard } }
 
                 SettingsCard {
+                    id: outCard
                         Text {
                             visible: MediaServices.Audio.sinks.length === 0
                             text: "No audio output devices found."
@@ -196,6 +197,10 @@ Item {
 
                                         SliderRow {
                                             label: "Max volume"
+                                            searchKey: "audio.maxVolume"   // the first output takes the jump
+                                            modified: MediaServices.Audio.volumeLimitFor(sinkDelegate.modelData.name) !== 100
+                                            resetHint: "Reset to 100%"
+                                            onReset: MediaServices.Audio.setVolumeLimit(sinkDelegate.modelData.name, 100)
                                             from: 20; to: 100; stepSize: 5
                                             value: MediaServices.Audio.volumeLimitFor(sinkDelegate.modelData.name)
                                             format: v => Math.round(v) + "%"
@@ -209,9 +214,10 @@ Item {
                 }
 
                 Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
-                SectionLabel { text: "INPUT DEVICE" }
+                SectionLabel { text: "INPUT DEVICE"; SearchTarget { key: "audio.input"; target: inCard } }
 
                 SettingsCard {
+                    id: inCard
                         Text {
                             visible: MediaServices.Audio.sources.length === 0
                             text: "No audio input devices found."

@@ -17,6 +17,7 @@ import "Services/Shell" as ShellServices
 import "Services/Theming" as ThemeServices
 import "Modules/OSD"
 import "Modules/Shell" as Shell
+import "Modules/Settings" as Stg
 import "Modules/NotificationCenter"
 
 ShellRoot {
@@ -61,7 +62,7 @@ ShellRoot {
         // The active pack's material can force flat/matte (drops glass) — adr_027;
         // else the persisted user toggle. (flatMode → base-pack setting is a later
         // refactor; the OR keeps the user toggle working until then.)
-        value: Persistence.Config.get("appearance.flatMode", false) || Commons.Appearance.packMaterialFlat
+        value: Persistence.Config.get("appearance.flatMode") || Commons.Appearance.packMaterialFlat
     }
 
     // Text size multiplier (item_110 wave 2), same wiring.
@@ -69,14 +70,14 @@ ShellRoot {
         target: Commons.Appearance
         property: "fontScale"
         // Clamped: a hand-edited config.json must not blow the layout apart.
-        value: Math.max(0.8, Math.min(1.4, Number(Persistence.Config.get("appearance.fontScale", 1.0)) || 1.0))
+        value: Math.max(0.8, Math.min(1.4, Number(Persistence.Config.get("appearance.fontScale")) || 1.0))
     }
 
     // Glass opacity preset (item_139), same wiring.
     Binding {
         target: Commons.Appearance
         property: "glassPreset"
-        value: Persistence.Config.get("appearance.glass", "")   // "" = table default
+        value: Persistence.Config.get("appearance.glass")   // "" = table default
     }
 
     // Drive the active theme pack (adr_027 Layer A) from the persisted setting,
@@ -180,6 +181,12 @@ ShellRoot {
         function open()                 { ShellServices.ShellState.openGlobal("settings")  }
         function close()                { ShellServices.ShellState.closeAllAcross()         }
         function openPane(pane: string) { Commons.State.settingsOpenPane = pane; ShellServices.ShellState.openGlobal("settings") }
+        // Open Settings on one setting and reveal it (search index key, e.g. "clock.format").
+        function focus(key: string): bool {
+            if (!Stg.PaneRegistry.focusSetting(key)) return false
+            ShellServices.ShellState.openGlobal("settings")
+            return true
+        }
     }
 
     IpcHandler {
@@ -286,7 +293,7 @@ ShellRoot {
             // notifications always show.
             var comp = CompositorServices.CompositorService
             if (urgency !== 2
-                    && !Persistence.Config.get("notifications.showOnFullscreen", false)
+                    && !Persistence.Config.get("notifications.showOnFullscreen")
                     && comp.isFullscreen(comp.focusedOutput))
                 return
             var wins = toastVariants.instances
@@ -304,7 +311,7 @@ ShellRoot {
                 expireTimeout: notification.expireTimeout || -1
             })
             // "Max Visible Toasts" (per screen): drop the oldest beyond the limit.
-            var max = Math.max(1, Math.round(Persistence.Config.get("notifications.maxToasts", 5)))
+            var max = Math.max(1, Math.round(Persistence.Config.get("notifications.maxToasts")))
             while (win.toasts.count > max) win.toasts.remove(0)
         }
     }

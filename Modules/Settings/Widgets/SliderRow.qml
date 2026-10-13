@@ -2,11 +2,24 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import "../../../Commons" as Commons
+import "../../../Services/Persistence" as Persistence
 
 Item {
     id: root
     property string label: ""
     property string description: ""
+    // item_138: search anchor + reset to default (see RowLabel / SearchTarget).
+    // A config.json-backed row just sets configKey (a key with a default in
+    // ConfigDefaults.js): search key, ↺ state and the reset all follow from it.
+    // autoReset: false keeps the ↺ but leaves the reset to the onReset handler
+    // (for a service that must apply the change itself).
+    property string configKey: ""
+    property bool autoReset: true
+    property string searchKey: configKey
+    property bool modified: configKey !== "" && Persistence.Config.isModified(configKey)
+    property string resetHint: "Reset to " + (configKey !== "" ? format(Persistence.Config.defaultFor(configKey)) : "default")
+    signal reset()
+    onReset: if (configKey !== "" && autoReset) Persistence.Config.reset(configKey)
     property real value: 0
     property real from: 0
     property real to: 1
@@ -26,13 +39,12 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
-
-            Text {
-                text: root.label
-                color: Commons.Appearance.colors.textPrimary
-                font.pixelSize: Commons.Appearance.font.sizeBase
-                font.family: Commons.Appearance.font.family
+            RowLabel {
                 Layout.fillWidth: true
+                text: root.label
+                modified: root.modified
+                resetHint: root.resetHint
+                onReset: root.reset()
             }
 
             Text {
@@ -111,4 +123,6 @@ Item {
             onMoved: root.moved(value)
         }
     }
+
+    SearchTarget { key: root.searchKey; target: root }
 }

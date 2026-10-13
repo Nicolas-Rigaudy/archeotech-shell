@@ -81,9 +81,10 @@ Item {
                 spacing: Commons.Appearance.spacing.s2
 
                 // ── Edit layout (visual builder entry) ─────────────────────────
-                SectionLabel { text: "CUSTOMIZE" }
+                SectionLabel { text: "CUSTOMIZE"; SearchTarget { key: "shell.editLayout"; target: editCard } }
 
                 Item {
+                    id: editCard
                     Layout.fillWidth: true
                     Layout.preferredHeight: 64
 
@@ -150,6 +151,9 @@ Item {
                 SettingsCard {
                     ToggleRow {
                         label: "Pill frame"
+                        searchKey: "shell.pillMode"
+                        modified: ShellServices.ShellConfig.userFrame("pillMode") !== ShellServices.ShellConfig.frameDefault("pillMode")
+                        onReset: ShellServices.ShellConfig.setPillMode(ShellServices.ShellConfig.frameDefault("pillMode"))
                         description: "Float the whole frame off the screen edges with rounded outer corners"
                         checked: ShellServices.ShellConfig.pillMode()
                         onToggled: value => ShellServices.ShellConfig.setPillMode(value)
@@ -157,6 +161,10 @@ Item {
                     Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
                     SliderRow {
                         label: "Corner Radius"
+                        searchKey: "shell.cornerRadius"
+                        modified: ShellServices.ShellConfig.userFrame("cornerRadius") !== ShellServices.ShellConfig.frameDefault("cornerRadius")
+                        resetHint: "Reset to " + ShellServices.ShellConfig.frameDefault("cornerRadius") + "px"
+                        onReset: ShellServices.ShellConfig.setCornerRadius(ShellServices.ShellConfig.frameDefault("cornerRadius"))
                         description: "Roundness of the frame's inner corners"
                         from: 0; to: 24; stepSize: 1
                         value: ShellServices.ShellConfig.cornerRadius()
@@ -166,6 +174,10 @@ Item {
                     Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
                     SliderRow {
                         label: "Outer Gap"
+                        searchKey: "shell.outerGap"
+                        modified: ShellServices.ShellConfig.userFrame("outerGap") !== ShellServices.ShellConfig.frameDefault("outerGap")
+                        resetHint: "Reset to " + ShellServices.ShellConfig.frameDefault("outerGap") + "px"
+                        onReset: ShellServices.ShellConfig.setOuterGap(ShellServices.ShellConfig.frameDefault("outerGap"))
                         description: "Breathing space between the shell and tiled windows"
                         from: 0; to: 20; stepSize: 1
                         value: ShellServices.ShellConfig.outerGap()
@@ -182,8 +194,9 @@ Item {
                 SettingsCard {
                     ButtonGroupRow {
                         label: "Time format"
+                        configKey: "clock.format"
                         options: [{ value: "24h", label: "24-hour" }, { value: "12h", label: "12-hour" }]
-                        currentValue: Persistence.Config.get("clock.format", "24h")
+                        currentValue: Persistence.Config.get("clock.format")
                         onSelected: value => Persistence.Config.set("clock.format", value)
                     }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
@@ -191,9 +204,11 @@ Item {
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                     ButtonGroupRow {
                         label: "Seconds"
+                        configKey: "clock.seconds"
+                        resetHint: "Reset to Hide"
                         description: "In the bar clock"
                         options: [{ value: "hide", label: "Hide" }, { value: "show", label: "Show" }]
-                        currentValue: Persistence.Config.get("clock.seconds", false) ? "show" : "hide"
+                        currentValue: Persistence.Config.get("clock.seconds") ? "show" : "hide"
                         onSelected: value => Persistence.Config.set("clock.seconds", value === "show")
                     }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
@@ -202,6 +217,7 @@ Item {
                     ButtonGroupRow {
                         id: dateRow
                         label: "Date"
+                        configKey: "clock.date"
                         description: "Next to the time in the bar"
                         // Labels are today's date in each format, so the choice reads as what it
                         // shows. A date fixed at creation: a ticking one rebuilt the model every
@@ -211,16 +227,16 @@ Item {
                             return { value: k, label: k === "none" ? "None"
                                 : Qt.formatDateTime(dateRow._labelDate, Clock.dateFormat(k)) }
                         })
-                        currentValue: Persistence.Config.get("clock.date", "short")
+                        currentValue: Persistence.Config.get("clock.date")
                         onSelected: value => Persistence.Config.set("clock.date", value)
                     }
                     Text {
                         id: clockPreview
                         property date now: new Date()
                         Timer { interval: 1000; repeat: true; running: root.visible; onTriggered: clockPreview.now = new Date() }
-                        readonly property string _date: Clock.dateFormat(Persistence.Config.get("clock.date", "short"))
+                        readonly property string _date: Clock.dateFormat(Persistence.Config.get("clock.date"))
                         text: "Preview: " + Qt.formatDateTime(now, Clock.timeFormat(
-                                  Persistence.Config.get("clock.format", "24h"), Persistence.Config.get("clock.seconds", false)))
+                                  Persistence.Config.get("clock.format"), Persistence.Config.get("clock.seconds")))
                               + (_date ? "  ·  " + Qt.formatDateTime(now, _date) : "")
                         color: Commons.Appearance.colors.textMuted
                         font.pixelSize: Commons.Appearance.font.sizeSm
@@ -236,9 +252,19 @@ Item {
                         SliderRow {
                             id: propSlider
                             label: "Window width"
+                            configKey: "scroller.proportion"
+                            autoReset: false
+                            // The config key only remembers the width; the timer pushes
+                            // the (default) value to the compositor, like a drag does.
+                            onReset: {
+                                Persistence.Config.reset("scroller.proportion")
+                                root._pendingProp = Persistence.Config.get("scroller.proportion")
+                                root._savedProp = false
+                                _propTimer.restart()
+                            }
                             description: "Focused window's width; the rest is the side peek"
                             from: 0.8; to: 1.0; stepSize: 0.01
-                            value: Persistence.Config.get("scroller.proportion", 0.98)
+                            value: Persistence.Config.get("scroller.proportion")
                             format: v => Math.round(v * 100) + "%"
                             onMoved: (v) => {
                                 root._pendingProp = v
@@ -291,12 +317,13 @@ Item {
                 }
 
                 Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
-                SectionLabel { text: "DASHBOARD · SYSTEM NOTES" }
+                SectionLabel { text: "DASHBOARD · SYSTEM NOTES"; SearchTarget { key: "dashboard.notes"; target: notesCard } }
 
                 // Which stats the dashboard's System Notes card shows. Bound to
                 // the real "dashboard.notes" list (unset = all); a stat whose
                 // source is missing on this machine is hidden on the card anyway.
                 SettingsCard {
+                    id: notesCard
                     Repeater {
                         model: NotesLogic.STATS
                         delegate: ColumnLayout {
@@ -323,13 +350,13 @@ Item {
                 }
 
                 Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
-                SectionLabel { text: "DASHBOARD · PROJECT FOLDERS" }
+                SectionLabel { text: "DASHBOARD · PROJECT FOLDERS"; SearchTarget { key: "dashboard.scanRoots"; target: rootsCard } }
 
                 // "dashboard.scanRoots": the folders whose git repositories the
                 // dashboard's Active Projects card lists (it rescans on change).
                 SettingsCard {
                     id: rootsCard
-                    readonly property var roots: Persistence.Config.get("dashboard.scanRoots", ["~/Projects"])
+                    readonly property var roots: Persistence.Config.get("dashboard.scanRoots")
                     function remove(i) {
                         var next = rootsCard.roots.slice()
                         next.splice(i, 1)

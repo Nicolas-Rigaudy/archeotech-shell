@@ -42,18 +42,20 @@ Item {
                 SettingsCard {
                     SliderRow {
                         label: "Toast Duration"
+                        configKey: "notifications.toastTimeout"
                         description: "How long notifications stay on screen"
                         from: 2000; to: 15000; stepSize: 500
-                        value: Persistence.Config.get("notifications.toastTimeout", 5000)
+                        value: Persistence.Config.get("notifications.toastTimeout")
                         format: v => (v / 1000).toFixed(1) + "s"
                         onMoved: Persistence.Config.set("notifications.toastTimeout", Math.round(value))
                     }
                     Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
                     SliderRow {
                         label: "Max Visible Toasts"
+                        configKey: "notifications.maxToasts"
                         description: "How many toasts can stack at once"
                         from: 1; to: 10; stepSize: 1
-                        value: Persistence.Config.get("notifications.maxToasts", 5)
+                        value: Persistence.Config.get("notifications.maxToasts")
                         format: v => Math.round(v) + ""
                         onMoved: Persistence.Config.set("notifications.maxToasts", Math.round(value))
                     }
@@ -65,15 +67,17 @@ Item {
                 SettingsCard {
                     ToggleRow {
                         label: "Show when fullscreen"
+                        configKey: "notifications.showOnFullscreen"
                         description: "Display toasts over fullscreen applications"
-                        checked: Persistence.Config.get("notifications.showOnFullscreen", false)
+                        checked: Persistence.Config.get("notifications.showOnFullscreen")
                         onToggled: value => Persistence.Config.set("notifications.showOnFullscreen", value)
                     }
                     Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
                     ToggleRow {
                         label: "Persist Do Not Disturb"
+                        configKey: "notifications.persistDnd"
                         description: "Remember DND state between sessions"
-                        checked: Persistence.Config.get("notifications.persistDnd", false)
+                        checked: Persistence.Config.get("notifications.persistDnd")
                         onToggled: value => {
                             Persistence.Config.set("notifications.persistDnd", value)
                             // Save the current state now, so turning this on while DND

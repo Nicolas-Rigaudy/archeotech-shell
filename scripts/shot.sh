@@ -13,6 +13,7 @@
 #   shot.sh -w 10 out.png                    # longer settle wait (default 8s)
 #   shot.sh --state launcher out.png         # open the launcher, then capture
 #   shot.sh --state settings:appearance out  # open settings on a named pane
+#   shot.sh --state setting:clock.format out # open settings on one setting (search key)
 #   shot.sh --theme archeotech-latte --pack grimdark --flat 1 out.png
 #   shot.sh --shell-config fixtures/bar.json out.png  # render a fixed layout
 #   shot.sh --set notifications.maxToasts=2 --notify-count 4 out.png
@@ -32,7 +33,7 @@
 #                                            #   before capture (after --notify*)
 #
 # STATE-DRIVING (--state <name>): before capture, calls the shell's own IPC
-# handler to open a panel — launcher | settings[:pane] | dashboard | wallpaper |
+# handler to open a panel — launcher | settings[:pane] | setting:<key> | dashboard | wallpaper |
 # media | layout | keybinds | notifications | editmode | theme(reload) |
 # panel:<id> (any panel by id, e.g. panel:plugin:notes).
 #
@@ -295,6 +296,7 @@ DRIVE=":"   # no-op by default
 if [ -n "$STATE" ]; then
   case "$STATE" in
     settings:*) DRIVE="qs ipc --pid \$QSPID call settings openPane \"${STATE#settings:}\"" ;;
+    setting:*)  DRIVE="qs ipc --pid \$QSPID call settings focus \"${STATE#setting:}\"" ;;
     panel:*)    DRIVE="qs ipc --pid \$QSPID call panel open \"${STATE#panel:}\"" ;;
     theme)      DRIVE="qs ipc --pid \$QSPID call theme reload" ;;
     nc|notifications) DRIVE="qs ipc --pid \$QSPID call notifications open" ;;

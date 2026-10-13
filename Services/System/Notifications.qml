@@ -22,7 +22,7 @@ Item {
         if (_dndRestored || !Persistence.Config.ready) return
         // Assign before marking restored, so onDndEnabledChanged doesn't write the
         // value it was just read from straight back to disk.
-        if (Persistence.Config.get("notifications.persistDnd", false))
+        if (Persistence.Config.get("notifications.persistDnd"))
             dndEnabled = Persistence.Config.get("notifications.dnd", false)
         _dndRestored = true
     }
@@ -32,7 +32,7 @@ Item {
         function onReadyChanged() { root._restoreDnd() }
     }
     onDndEnabledChanged: {
-        if (_dndRestored && Persistence.Config.get("notifications.persistDnd", false))
+        if (_dndRestored && Persistence.Config.get("notifications.persistDnd"))
             Persistence.Config.set("notifications.dnd", dndEnabled)
     }
 
@@ -49,7 +49,7 @@ Item {
                 body:      notif.body      || "",
                 urgency:   notif.urgency   || 0,
                 // Fixed at arrival in the current clock.format (not re-rendered later).
-                timestamp: Qt.formatTime(new Date(), Clock.timeFormat(Persistence.Config.get("clock.format", "24h"), false)),
+                timestamp: Qt.formatTime(new Date(), Clock.timeFormat(Persistence.Config.get("clock.format"), false)),
                 _notif:    notif
             }])
             root.unreadCount++

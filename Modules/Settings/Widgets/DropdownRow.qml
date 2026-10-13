@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Effects
 import "../../../Commons" as Commons
+import "../../../Services/Persistence" as Persistence
 import "../../../Commons/Primitives"
 
 // Settings row with a pick-one-of-many list (for choices too long for a
@@ -14,6 +15,22 @@ Item {
     id: root
     property string label: ""
     property string description: ""
+    // item_138: search anchor + reset to default (see RowLabel / SearchTarget).
+    // A config.json-backed row just sets configKey (a key with a default in
+    // ConfigDefaults.js): search key, ↺ state and the reset all follow from it.
+    // autoReset: false keeps the ↺ but leaves the reset to the onReset handler
+    // (for a service that must apply the change itself).
+    property string configKey: ""
+    property bool autoReset: true
+    property string searchKey: configKey
+    property bool modified: configKey !== "" && Persistence.Config.isModified(configKey)
+    property string resetHint: "Reset to " + _optionLabel(configKey !== "" ? String(Persistence.Config.defaultFor(configKey)) : "", "default")
+    signal reset()
+    function _optionLabel(value, fallback) {
+        for (var i = 0; i < options.length; i++) if (options[i].value === value) return options[i].label
+        return fallback
+    }
+    onReset: if (configKey !== "" && autoReset) Persistence.Config.reset(configKey)
     property var options: []    // list of { value: string, label: string }
     property string currentValue: ""
     property real fieldWidth: 220
@@ -56,15 +73,12 @@ Item {
             // ToggleRow's switch, aligned across rows whatever the label length.
             Layout.preferredWidth: 0
             spacing: 2
-            Text {
-                // fillWidth here too: a ColumnLayout cannot grow past its
-                // children's maximum width, so without it the slack went to the
-                // right of the field and fields misaligned across rows.
+            RowLabel {
                 Layout.fillWidth: true
                 text: root.label
-                color: Commons.Appearance.colors.textPrimary
-                font.pixelSize: Commons.Appearance.font.sizeBase
-                font.family: Commons.Appearance.font.family
+                modified: root.modified
+                resetHint: root.resetHint
+                onReset: root.reset()
             }
             Text {
                 visible: root.description !== ""
@@ -203,4 +217,6 @@ Item {
             }
         }
     }
+
+    SearchTarget { key: root.searchKey; target: root }
 }

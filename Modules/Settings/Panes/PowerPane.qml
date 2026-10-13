@@ -11,12 +11,33 @@ Item {
     // ── State ──────────────────────────────────────────────────────────────────
     property string powerProfile: "balanced"
 
-    property bool dimEnabled:   true
-    property int  dimTimeout:   600
-    property bool lockEnabled:  true
-    property int  lockTimeout:  1200
-    property bool sleepEnabled: true
-    property int  sleepTimeout: 1800
+    // Idle defaults, declared once: the state until ~/.cache/swayidle.conf is
+    // read (or when it does not exist) and each row's reset to default (item_138).
+    readonly property var idleDefaults: ({
+        dim:   { enabled: true, timeout: 600  },
+        lock:  { enabled: true, timeout: 1200 },
+        sleep: { enabled: true, timeout: 1800 }
+    })
+    property bool dimEnabled:   idleDefaults.dim.enabled
+    property int  dimTimeout:   idleDefaults.dim.timeout
+    property bool lockEnabled:  idleDefaults.lock.enabled
+    property int  lockTimeout:  idleDefaults.lock.timeout
+    property bool sleepEnabled: idleDefaults.sleep.enabled
+    property int  sleepTimeout: idleDefaults.sleep.timeout
+
+    function _idleModified(kind) {
+        var d = idleDefaults[kind]
+        return root[kind + "Enabled"] !== d.enabled || root[kind + "Timeout"] !== d.timeout
+    }
+    function _idleReset(kind) {
+        root[kind + "Enabled"] = idleDefaults[kind].enabled
+        root[kind + "Timeout"] = idleDefaults[kind].timeout
+        root.applyIdleConfig()
+    }
+    function _idleHint(kind) {
+        var t = idleDefaults[kind].timeout
+        return "Reset to on, " + (t >= 3600 ? (t / 3600) + " hr" : (t / 60) + " min")
+    }
 
     // Backends these controls drive. A control whose backend is missing is shown
     // disabled with the reason, rather than silently doing nothing (design rule 6).
@@ -64,9 +85,8 @@ Item {
     Process {
         id: idleConfigReader
         command: ["bash", "-c",
-            "f=$HOME/.cache/swayidle.conf; " +
-            "[ -f \"$f\" ] && cat \"$f\" || " +
-            "echo 'DIM_ENABLED=true\nDIM_TIMEOUT=600\nLOCK_ENABLED=true\nLOCK_TIMEOUT=1200\nSLEEP_ENABLED=true\nSLEEP_TIMEOUT=1800'"]
+            // No saved conf: the properties keep idleDefaults.
+            "f=$HOME/.cache/swayidle.conf; [ -f \"$f\" ] && cat \"$f\"; true"]
         running: false
         stdout: SplitParser {
             onRead: data => {
@@ -127,13 +147,14 @@ Item {
                 width: root.width - 48
                 spacing: Commons.Appearance.spacing.s2
 
-                SectionLabel { text: "POWER PROFILE" }
+                SectionLabel { text: "POWER PROFILE"; SearchTarget { key: "power.profile"; target: profileCard } }
                 UnavailableNote {
                     visible: !root.ppdAvailable
                     text: "power-profiles-daemon (powerprofilesctl) is not installed."
                 }
 
                 SettingsCard {
+                    id: profileCard
                     enabled: root.ppdAvailable
                     opacity: enabled ? 1.0 : 0.45
                     ButtonGroupRow {
@@ -161,6 +182,10 @@ Item {
                     opacity: enabled ? 1.0 : 0.45
                     ToggleRow {
                         label: "Dim screen on idle"
+                        searchKey: "power.dim"
+                        modified: root._idleModified("dim")
+                        resetHint: root._idleHint("dim")
+                        onReset: root._idleReset("dim")
                         description: "Reduce brightness when inactive"
                         checked: root.dimEnabled
                         onToggled: v => { root.dimEnabled = v; root.applyIdleConfig() }
@@ -185,6 +210,10 @@ Item {
 
                     ToggleRow {
                         label: "Lock screen"
+                        searchKey: "power.lock"
+                        modified: root._idleModified("lock")
+                        resetHint: root._idleHint("lock")
+                        onReset: root._idleReset("lock")
                         description: "Lock after inactivity"
                         checked: root.lockEnabled
                         onToggled: v => { root.lockEnabled = v; root.applyIdleConfig() }
@@ -209,6 +238,10 @@ Item {
 
                     ToggleRow {
                         label: "Sleep displays"
+                        searchKey: "power.sleep"
+                        modified: root._idleModified("sleep")
+                        resetHint: root._idleHint("sleep")
+                        onReset: root._idleReset("sleep")
                         description: "Turn off displays after extended idle"
                         checked: root.sleepEnabled
                         onToggled: v => { root.sleepEnabled = v; root.applyIdleConfig() }

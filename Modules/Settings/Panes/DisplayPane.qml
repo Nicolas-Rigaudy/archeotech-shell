@@ -5,6 +5,7 @@ import "../../../Commons" as Commons
 import "../../../Commons/Primitives"
 import "../Widgets"
 import "../../../Services/Hardware" as Hardware
+import "../../../Services/Persistence" as Persistence
 import "../../../Services/Hardware/DisplaysLogic.js" as Logic
 
 Item {
@@ -127,9 +128,10 @@ Item {
                 width: root.width - 48
                 spacing: Commons.Appearance.spacing.s2
 
-                SectionLabel { text: "MONITOR LAYOUT" }
+                SectionLabel { text: "MONITOR LAYOUT"; SearchTarget { key: "display.layout"; target: layoutCard } }
 
                 SettingsCard {
+                    id: layoutCard
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                     DisplayArrangement {
                         Layout.fillWidth: true
@@ -278,10 +280,12 @@ Item {
                 // A saved layout per set of monitors; the matching one applies
                 // by itself on dock/undock (scripts/display-profile.py).
                 Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
-                SectionLabel { text: "PROFILES" }
+                SectionLabel { text: "PROFILES"; SearchTarget { key: "display.profiles"; target: profilesCard } }
                 SettingsCard {
+                    id: profilesCard
                     ToggleRow {
                         label: "Apply profiles automatically"
+                        searchKey: "display.autoApply"
                         description: "When screens are plugged in or unplugged, use the saved layout for those screens"
                         checked: Hardware.Displays.autoApply
                         onToggled: v => Hardware.Displays.setAutoApply(v)
@@ -384,6 +388,7 @@ Item {
                 SettingsCard {
                     ToggleRow {
                         label: "Night light"
+                        searchKey: "nightLight.enabled"
                         description: Hardware.NightLight.available
                             ? "Warm the screen colour to reduce blue light"
                             : "Needs " + Hardware.NightLight.backend + " (install it to use night light)"
@@ -397,6 +402,9 @@ Item {
                     SliderRow {
                         visible: Hardware.NightLight.enabled
                         label: "Temperature"
+                        configKey: "nightLight.temperature"
+                        autoReset: false   // applied live through the service
+                        onReset: Hardware.NightLight.setTemperature(Persistence.Config.defaultFor("nightLight.temperature"))
                         description: "Lower is warmer; applies as you drag"
                         from: Hardware.NightLight.minTemp
                         to: Hardware.NightLight.maxTemp - 500

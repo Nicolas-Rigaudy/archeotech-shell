@@ -31,7 +31,7 @@ DashCard {
 
     // Scan roots are config-driven (Persistence.Config "dashboard.scanRoots",
     // Settings → Shell → Dashboard); a change rescans at once.
-    readonly property var _roots: Persistence.Config.get("dashboard.scanRoots", ["~/Projects"])
+    readonly property var _roots: Persistence.Config.get("dashboard.scanRoots")
     on_RootsChanged: if (Persistence.Config.ready) _refresh()
 
     // Roots go to bash as arguments ("$@"), never into the script text, so a

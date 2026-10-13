@@ -73,9 +73,10 @@ Item {
                 }
 
                 Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
-                SectionLabel { text: "ENVIRONMENT" }
+                SectionLabel { text: "ENVIRONMENT"; SearchTarget { key: "about.environment"; target: envCard } }
 
                 SettingsCard {
+                    id: envCard
                         Repeater {
                             model: [
                                 { label: "Shell",      value: "Quickshell 0.2.1"    },

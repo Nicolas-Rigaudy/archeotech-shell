@@ -65,7 +65,7 @@ Item {
                 // ── Installed modules ────────────────────────────────────────────
                 RowLayout {
                     Layout.fillWidth: true
-                    SectionLabel { text: "INSTALLED MODULES"; Layout.fillWidth: true }
+                    SectionLabel { text: "INSTALLED MODULES"; Layout.fillWidth: true; SearchTarget { key: "plugins.modules" } }
                     Text {
                         text: "󰑐  Rescan"
                         color: _rescanMa.containsMouse ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textSecondary

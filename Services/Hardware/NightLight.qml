@@ -25,7 +25,7 @@ QtObject {
     readonly property string backend: hyprland ? "hyprsunset" : "wl-gammarelay-rs"
 
     readonly property bool enabled: Persistence.Config.get("nightLight.enabled", false)
-    readonly property int  temperature: Persistence.Config.get("nightLight.temperature", 4000)
+    readonly property int  temperature: Persistence.Config.get("nightLight.temperature")
     // Whether the backend binary is installed (checked once at start).
     property bool available: false
 

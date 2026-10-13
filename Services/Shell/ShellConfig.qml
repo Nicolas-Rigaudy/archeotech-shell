@@ -120,6 +120,19 @@ QtObject {
     // setting (adr_027 Wave 2: the corner connections are always-visible chrome,
     // so the theme owns them); the user's Settings→Shell value is the fallback
     // when no pack (or a pack without a frame radius) is active.
+    // The user's own frame values (no pack override) and their defaults, for
+    // Settings → Shell's reset to default (item_138).
+    function userFrame(field) {
+        var c = data.corners || {}
+        if (field === "pillMode")     return c.pillMode !== undefined ? c.pillMode : _defaults.corners.pillMode
+        if (field === "cornerRadius") return c.radius !== undefined ? c.radius : _defaults.corners.radius
+        return outerGap()
+    }
+    function frameDefault(field) {
+        return field === "pillMode" ? _defaults.corners.pillMode
+             : field === "cornerRadius" ? _defaults.corners.radius : _defaults.outerGap
+    }
+
     function cornerRadius() {
         var pr = Commons.Appearance.packFrameRadius()
         if (pr >= 0) return pr

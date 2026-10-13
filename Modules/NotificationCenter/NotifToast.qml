@@ -60,7 +60,7 @@ Item {
             // An app-requested timeout wins; otherwise Settings → "Toast Duration".
             var t = root.notification.expireTimeout
             return (t > 0) ? Math.max(t, 3000)
-                           : Persistence.Config.get("notifications.toastTimeout", 5000)
+                           : Persistence.Config.get("notifications.toastTimeout")
         }
         interval: ms
         running: ms > 0
