@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Effects
 import Qt5Compat.GraphicalEffects
-import Quickshell.Io
 import "../../Commons" as Commons
 import "../../Services/Shell" as ShellServices
 import "../../Services/Theming" as Theming
@@ -38,44 +37,22 @@ Item {
     // Wallpaper list comes from the persistent Wallpapers service — scanned once
     // at startup and held, so opening the picker is instant (no re-scan/rebuild).
     readonly property var wallpapers: Theming.Wallpapers.list
-    property string currentPath: ""
+    // Which per-mode slot a pick fills ("light" | "dark"); "" = the current
+    // mode's, which also applies it. Settings passes the selected slot card.
+    property string slot: ""
+    // The wallpaper this picker marks: the slot's, or the applied one.
+    readonly property string currentPath: Theming.Wallpapers.slotPath(root.slot)
+    readonly property bool applying: Theming.Wallpapers.applying
 
-    Component.onCompleted: _refresh()
     Connections {
         target: root.panelRoot
         ignoreUnknownSignals: true
         function onPanelOpenChanged() {
-            if (root.panelRoot && root.panelRoot.panelOpen) root._refresh()
+            if (root.panelRoot && root.panelRoot.panelOpen) Theming.Wallpapers.readCurrent()
         }
     }
 
-    // The wallpaper list + thumbnail cache live in the Wallpapers service now.
-    // On open we only refresh the cheap selection state (current wallpaper) —
-    // the grid is already populated, so it stays instant.
-    function _refresh() {
-        if (!currentReader.running) currentReader.running = true
-    }
-
-    readonly property bool applying: applyProc.running
-
-    function _apply(path) {
-        if (applying) return
-        root.currentPath = path
-        applyProc.command = [Commons.Paths.wallpaperSet, path]
-        applyProc.running = true
-    }
-
-    Process { id: applyProc; running: false }
-
-    Process {
-        id: currentReader
-        running: false
-        command: ["bash", "-c",
-            "cat \"$HOME/.cache/wallpaper/last-wallpaper\" 2>/dev/null || true"]
-        stdout: SplitParser {
-            onRead: line => { var t = line.trim(); if (t) root.currentPath = t }
-        }
-    }
+    function _apply(path) { Theming.Wallpapers.choose(path, root.slot) }
 
     // ── UI ────────────────────────────────────────────────────────────────
     ColumnLayout {
@@ -181,7 +158,7 @@ Item {
                 : Math.floor(_tileCross * 3 / 2 * 0.95)
 
             // Start centred on the applied wallpaper. The current path is read
-            // asynchronously (currentReader), so it usually lands AFTER these two
+            // asynchronously (Wallpapers.readCurrent), so it usually lands AFTER these two
             // fire — re-centre when it does, else the picker opens on item 0
             // instead of the active wallpaper. (Theme/Logo carousels do the same.)
             onModelChanged: _syncCurrent()

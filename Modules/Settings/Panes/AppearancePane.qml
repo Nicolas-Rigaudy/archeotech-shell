@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import "../../../Commons" as Commons
 import "../../../Services/Persistence" as Persistence
 import "../../../Services/Shell" as ShellServices
+import "../../../Services/Theming" as Theming
 import "../../../Commons/Primitives"
 import "../../../Widgets/Appearance" as Appearance
 import "../Widgets"
@@ -170,12 +171,41 @@ Item {
                 // uses (Sprint 24/26). Settings stacks; the quick panel tabs.
                 SectionLabel { text: "WALLPAPER"; SearchTarget { key: "appearance.wallpaper"; target: wallBody } }
 
+                // Per-mode wallpapers (item_140): the slot cards pick which mode's
+                // wallpaper the carousel below sets.
+                SettingsCard {
+                    ButtonGroupRow {
+                        label: "Wallpapers"
+                        configKey: "wallpaper.perMode"
+                        resetHint: "Reset to One for both"
+                        description: "Per mode switches the wallpaper with the light or dark theme"
+                        options: [
+                            { value: "one",  label: "One for both" },
+                            { value: "mode", label: "Per mode" }
+                        ]
+                        currentValue: Theming.Wallpapers.perMode ? "mode" : "one"
+                        onSelected: v => Theming.Wallpapers.setPerMode(v === "mode")
+                    }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: Theming.Wallpapers.perMode }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0; visible: Theming.Wallpapers.perMode }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: Theming.Wallpapers.perMode }
+                    Appearance.WallpaperSlots {
+                        id: wallSlots
+                        Layout.fillWidth: true
+                        visible: Theming.Wallpapers.perMode
+                    }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: Theming.Wallpapers.perMode }
+                }
+
+                Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+
                 Appearance.WallpaperPickerBody {
                     id: wallBody
                     Layout.fillWidth: true
                     Layout.preferredHeight: 200
                     embedded: true
                     carouselHeight: 200
+                    slot: Theming.Wallpapers.perMode ? wallSlots.selected : ""
                 }
 
                 Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }

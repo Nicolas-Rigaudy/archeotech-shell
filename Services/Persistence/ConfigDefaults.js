@@ -23,7 +23,10 @@ var DEFAULTS = {
     "input.naturalScroll":            true,
     "input.disableWhileTyping":       true,
     "input.pointerSpeed":             0,
-    "nightLight.temperature":         4000
+    "nightLight.temperature":         4000,
+    "wallpaper.perMode":              false,     // item_140: one wallpaper for both modes
+    "wallpaper.light":                "",
+    "wallpaper.dark":                 ""
 }
 
 function has(key) { return DEFAULTS.hasOwnProperty(key) }
