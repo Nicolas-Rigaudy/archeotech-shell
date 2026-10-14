@@ -72,14 +72,15 @@ QtObject {
     }
 
     // ── Per-mode wallpapers (item_140) ────────────────────────────────────────
-    // Off by default: one wallpaper for both modes, exactly as before. On, the
-    // light and dark slots each hold a wallpaper and the one for the theme's mode
-    // is applied whenever the mode flips (a theme pick, the day/night schedule, or
-    // theme-switch from a terminal: all of them rewrite theme.json, which drives
-    // Appearance.isLight). A pack that owns its palette counts as dark. A wallpaper
-    // set outside the pickers (wallpaper-picker.sh, a script) fills no slot: the
-    // next mode flip puts the mode's slot back.
-    readonly property bool perMode: Persistence.Config.get("wallpaper.perMode")
+    // Each mode remembers its own wallpaper: a pick fills the slot of the mode
+    // it was made in (or the slot a Settings card targets), and the slot for the
+    // theme's mode is applied whenever the mode flips (a theme pick, the day/night
+    // schedule, or theme-switch from a terminal: all of them rewrite theme.json,
+    // which drives Appearance.isLight). An empty slot keeps whatever is on screen,
+    // so nothing changes until a wallpaper is picked in that mode. A pack that
+    // owns its palette counts as dark. A wallpaper set outside the pickers
+    // (wallpaper-picker.sh, a script) fills no slot: the next flip puts the
+    // mode's slot back.
     readonly property string mode: Commons.Appearance.isLight ? "light" : "dark"
     readonly property string lightPath: Persistence.Config.get("wallpaper.light")
     readonly property string darkPath: Persistence.Config.get("wallpaper.dark")
@@ -90,33 +91,43 @@ QtObject {
     readonly property bool _paletteReady: !!(Commons.Appearance._data && Commons.Appearance._data.mode)
         && (Persistence.Config.get("appearance.activePack", "") === "" || Commons.Appearance.activePackDir !== "")
 
-    // The wallpaper a slot holds: "light" | "dark", or "" for the one a pick
-    // without a slot changes (the current mode's slot with per-mode on).
+    // The wallpaper a slot holds ("light" | "dark"; "" = the current mode's).
     function slotPath(slot) {
-        if (slot === "light") return root.lightPath
-        if (slot === "dark") return root.darkPath
-        return root.perMode ? root.slotPath(root.mode) : root.currentPath
+        var s = slot || root.mode
+        return s === "light" ? root.lightPath : root.darkPath
+    }
+    // What a picker marks for a slot: the slot's wallpaper, or (an empty slot of
+    // the current mode) the one on screen.
+    function markedPath(slot) {
+        var s = slot || root.mode
+        return root.slotPath(s) || (s === root.mode ? root.currentPath : "")
     }
 
-    // A pick from a picker. With per-mode on it fills `slot` (default: the
-    // current mode's) and is applied only when that slot is the current mode's.
+    // A pick from a picker: fills `slot` (default: the current mode's) and is
+    // applied only when that slot is the current mode's.
     function choose(path, slot) {
-        if (root.perMode) {
-            var s = slot || root.mode
-            Persistence.Config.set("wallpaper." + s, path)
-            if (s !== root.mode) return
-        }
-        apply(path)
+        var s = slot || root.mode
+        Persistence.Config.set("wallpaper." + s, path)
+        if (s === root.mode) apply(path)
     }
 
-    // Turning per-mode on fills empty slots with the applied wallpaper, so nothing
-    // changes until a slot gets a different one. Turning it off keeps the slots.
-    function setPerMode(on) {
-        if (on) {
-            if (!root.lightPath && root.currentPath) Persistence.Config.set("wallpaper.light", root.currentPath)
-            if (!root.darkPath && root.currentPath) Persistence.Config.set("wallpaper.dark", root.currentPath)
-        }
-        Persistence.Config.set("wallpaper.perMode", on)
+    // ── Brightness (which mode a wallpaper suits) ───────────────────────────
+    // Measured once per wallpaper from its thumbnail and cached beside it
+    // (<thumb>.lum, mean grey 0..1). Dark ones are offered in dark mode, light
+    // ones in light mode, the middle band in both; `showAll` lifts the filter for
+    // the session (shared by every picker).
+    readonly property real darkMax: 0.35
+    readonly property real lightMin: 0.60
+    property var _lum: ({})
+    property bool showAll: false
+    function toneOf(path) {
+        var l = root._lum[path]
+        if (l === undefined) return "both"
+        return l < root.darkMax ? "dark" : (l > root.lightMin ? "light" : "both")
+    }
+    function suits(path, mode) {
+        var t = root.toneOf(path)
+        return t === "both" || t === (mode || root.mode)
     }
 
     // Settled, so a theme switch (palette file rewritten, pack resolved at boot)
@@ -126,10 +137,10 @@ QtObject {
     function _followMode() { _follow.restart() }
     property Timer _follow: Timer {
         interval: 800
-        onTriggered: if (root.perMode) root.readCurrent()
+        onTriggered: root.readCurrent()
     }
     function _applyModeSlot() {
-        if (!root.perMode || !Persistence.Config.ready || !root._currentRead || !root._scanned || !root._paletteReady) return
+        if (!Persistence.Config.ready || !root._currentRead || !root._scanned || !root._paletteReady) return
         var want = root.slotPath(root.mode)
         // Only a wallpaper still in the catalogue: a deleted file would leave
         // the screen on the old one while the picker marks the missing one.
@@ -138,7 +149,6 @@ QtObject {
         root.apply(want)
     }
     onModeChanged: _followMode()
-    onPerModeChanged: _followMode()
     onLightPathChanged: _followMode()
     onDarkPathChanged: _followMode()
     on_PaletteReadyChanged: _followMode()
@@ -182,14 +192,29 @@ QtObject {
 
     property Process _thumbs: Process {
         running: false
+        // Thumbnail, then its brightness (cached as <thumb>.lum); prints
+        // "<wallpaper>\t<lum>" per wallpaper.
         command: ["bash", "-c",
             "export TH=\"$HOME/.cache/archeotech/wallpaper-thumbs\"; mkdir -p \"$TH\"; " +
             "find -L \"$HOME/.config/archeotech/wallpapers\" -maxdepth 1 -type f " +
             "-regextype posix-extended -iregex '.*\\.(jpe?g|png|webp)$' -print0 | " +
             "xargs -0 -r -P4 -I{} bash -c '" +
-            "t=\"$TH/$(basename \"$1\").jpg\"; " +
+            "t=\"$TH/$(basename \"$1\").jpg\"; l=\"$t.lum\"; " +
             "{ [ -f \"$t\" ] && [ ! \"$1\" -nt \"$t\" ]; } || " +
-            "magick \"$1\" -thumbnail 640x480 -strip -quality 82 \"$t\"' _ {}"]
-        onExited: root.thumbGen++
+            "magick \"$1\" -thumbnail 640x480 -strip -quality 82 \"$t\"; " +
+            "{ [ -s \"$l\" ] && [ ! \"$t\" -nt \"$l\" ]; } || " +
+            "magick \"$t\" -alpha off -resize 1x1! -colorspace Gray -format \"%[fx:mean]\" info: > \"$l\"; " +
+            "printf \"%s\\t%s\\n\" \"$1\" \"$(cat \"$l\")\"' _ {}"]
+        property var _buf: ({})
+        onRunningChanged: if (running) _buf = ({})
+        stdout: SplitParser {
+            onRead: line => {
+                var tab = line.indexOf("\t")
+                if (tab < 0) return
+                var v = parseFloat(line.substring(tab + 1))
+                if (!isNaN(v)) root._thumbs._buf[line.substring(0, tab)] = v
+            }
+        }
+        onExited: { root._lum = root._thumbs._buf; root.thumbGen++ }
     }
 }

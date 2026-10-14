@@ -13,7 +13,7 @@ var INDEX = [
     { pane: "appearance", key: "appearance.fontScale", section: "Style",     label: "Text size",        keywords: "typography font size scale larger smaller" },
     { pane: "appearance", key: "appearance.flatMode", section: "Style",      label: "Depth",            keywords: "flat 3d shadows sheen" },
     { pane: "appearance", key: "appearance.wallpaper", section: "Wallpaper", label: "Wallpaper",        keywords: "background image picker" },
-    { pane: "appearance", key: "wallpaper.perMode",   section: "Wallpaper",  label: "Wallpapers",       keywords: "light dark per mode separate day night background theme" },
+    { pane: "appearance", key: "wallpaper.modes",     section: "Wallpaper",  label: "Light and dark wallpapers", keywords: "per mode separate day night background theme" },
     { pane: "appearance", key: "appearance.logo",     section: "Logo",       label: "Logo overlay",     keywords: "arch rebel imperial emblem sigil wallpaper" },
     // Shell
     { pane: "shell", key: "shell.editLayout",    section: "Customize", label: "Edit layout",         keywords: "visual builder edit mode bar strips widgets arrange add remove hide" },

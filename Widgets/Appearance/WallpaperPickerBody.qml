@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import Qt5Compat.GraphicalEffects
 import "../../Commons" as Commons
+import "../../Commons/Primitives" as Prim
 import "../../Services/Shell" as ShellServices
 import "../../Services/Theming" as Theming
 
@@ -34,14 +35,34 @@ Item {
     // switcher passes !panelRoot._horizontal). Settings leaves it horizontal.
     property bool vertical: false
 
-    // Wallpaper list comes from the persistent Wallpapers service — scanned once
-    // at startup and held, so opening the picker is instant (no re-scan/rebuild).
-    readonly property var wallpapers: Theming.Wallpapers.list
-    // Which per-mode slot a pick fills ("light" | "dark"); "" = the current
+    // Which mode's wallpaper a pick sets ("light" | "dark"); "" = the current
     // mode's, which also applies it. Settings passes the selected slot card.
     property string slot: ""
-    // The wallpaper this picker marks: the slot's, or the applied one.
-    readonly property string currentPath: Theming.Wallpapers.slotPath(root.slot)
+    readonly property string filterMode: root.slot || Theming.Wallpapers.mode
+    // The wallpaper this picker marks: the slot's, or the one on screen.
+    readonly property string currentPath: Theming.Wallpapers.markedPath(root.slot)
+    // Wallpaper list comes from the persistent Wallpapers service — scanned once
+    // at startup and held, so opening the picker is instant (no re-scan/rebuild).
+    // Only those that suit the mode (by brightness) unless Show all is on; the
+    // marked one always stays so the carousel can centre on it.
+    readonly property var wallpapers: {
+        var all = Theming.Wallpapers.list
+        var lum = Theming.Wallpapers._lum   // re-filter once brightness is measured
+        if (Theming.Wallpapers.showAll) return all
+        var mode = root.filterMode, keep = root._kept
+        return all.filter(w => w.path === keep || Theming.Wallpapers.suits(w.path, mode))
+    }
+    // The marked wallpaper kept in a filtered list, latched when the filter's
+    // mode changes (not on every pick): a pick must not rebuild the list and
+    // jump the carousel under the pointer.
+    property string _kept: ""
+    function _latchKept() { root._kept = root.currentPath }
+    onFilterModeChanged: _latchKept()
+    Component.onCompleted: _latchKept()
+    Connections {
+        target: Theming.Wallpapers
+        function onCurrentPathChanged() { if (root._kept === "") root._latchKept() }
+    }
     readonly property bool applying: Theming.Wallpapers.applying
 
     Connections {
@@ -130,6 +151,45 @@ Item {
             Layout.preferredHeight: root.embedded ? 0 : 1
             color: Commons.Appearance.colors.surface0
             opacity: Commons.Appearance.opacity.divider
+        }
+
+        // Filter row: which mode's wallpapers are offered, and Show all.
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Commons.Appearance.spacing.s2
+            Text {
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+                text: Theming.Wallpapers.showAll
+                    ? "All wallpapers · " + root.wallpapers.length
+                    : (root.filterMode === "light" ? "For light mode · " : "For dark mode · ") + root.wallpapers.length
+                color: Commons.Appearance.colors.textMuted
+                font.pixelSize: Commons.Appearance.font.sizeSm
+                font.family: Commons.Appearance.font.family
+            }
+            Rectangle {
+                id: allChip
+                readonly property bool _on: Theming.Wallpapers.showAll
+                implicitWidth: allText.implicitWidth + Commons.Appearance.spacing.s4 * 2
+                implicitHeight: allText.implicitHeight + Commons.Appearance.spacing.s2
+                radius: height / 2
+                color: _on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.surface0Alpha
+                border.width: 1
+                border.color: _on ? Commons.Appearance.colors.accent : Commons.Appearance.colors.glassBorder
+                Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
+                Text {
+                    id: allText
+                    anchors.centerIn: parent
+                    text: "Show all"
+                    color: allChip._on ? Commons.Appearance.colors.textOnAccent : Commons.Appearance.colors.textSecondary
+                    font.pixelSize: Commons.Appearance.font.sizeSm
+                    font.family: Commons.Appearance.font.family
+                }
+                Prim.StateLayer {
+                    anchors.fill: parent
+                    onClicked: Theming.Wallpapers.showAll = !Theming.Wallpapers.showAll
+                }
+            }
         }
 
         // Wallpaper carousel — snap-to-centre; the centred item is the large

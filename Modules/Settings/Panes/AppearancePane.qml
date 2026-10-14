@@ -171,30 +171,26 @@ Item {
                 // uses (Sprint 24/26). Settings stacks; the quick panel tabs.
                 SectionLabel { text: "WALLPAPER"; SearchTarget { key: "appearance.wallpaper"; target: wallBody } }
 
-                // Per-mode wallpapers (item_140): the slot cards pick which mode's
-                // wallpaper the carousel below sets.
+                // Per-mode wallpapers (item_140): each mode remembers its own; the
+                // selected card is the one the carousel below sets.
                 SettingsCard {
-                    ButtonGroupRow {
-                        label: "Wallpapers"
-                        configKey: "wallpaper.perMode"
-                        resetHint: "Reset to One for both"
-                        description: "Per mode switches the wallpaper with the light or dark theme"
-                        options: [
-                            { value: "one",  label: "One for both" },
-                            { value: "mode", label: "Per mode" }
-                        ]
-                        currentValue: Theming.Wallpapers.perMode ? "mode" : "one"
-                        onSelected: v => Theming.Wallpapers.setPerMode(v === "mode")
+                    id: wallModes
+                    SearchTarget { key: "wallpaper.modes"; target: wallModes }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                    Text {
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        text: "Each mode keeps its own wallpaper and switches with the theme. Pick a card, then a wallpaper."
+                        color: Commons.Appearance.colors.textMuted
+                        font.pixelSize: Commons.Appearance.font.sizeSm
+                        font.family: Commons.Appearance.font.family
                     }
-                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: Theming.Wallpapers.perMode }
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0; visible: Theming.Wallpapers.perMode }
-                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: Theming.Wallpapers.perMode }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                     Appearance.WallpaperSlots {
                         id: wallSlots
                         Layout.fillWidth: true
-                        visible: Theming.Wallpapers.perMode
                     }
-                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: Theming.Wallpapers.perMode }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                 }
 
                 Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
@@ -205,7 +201,7 @@ Item {
                     Layout.preferredHeight: 200
                     embedded: true
                     carouselHeight: 200
-                    slot: Theming.Wallpapers.perMode ? wallSlots.selected : ""
+                    slot: wallSlots.selected
                 }
 
                 Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }

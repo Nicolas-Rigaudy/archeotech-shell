@@ -38,7 +38,9 @@ RowLayout {
             required property var modelData
             readonly property bool _selected: root.selected === slot.modelData.id
             readonly property bool _now: Theming.Wallpapers.mode === slot.modelData.id
-            readonly property string _path: Theming.Wallpapers.slotPath(slot.modelData.id)
+            // An empty slot of the current mode shows what is on screen (it keeps it).
+            readonly property string _path: Theming.Wallpapers.markedPath(slot.modelData.id)
+            readonly property bool _unset: Theming.Wallpapers.slotPath(slot.modelData.id) === ""
             spacing: Commons.Appearance.spacing.s2
             // The label row fills its width; keep that from widening the card.
             Layout.fillWidth: false
@@ -128,8 +130,8 @@ RowLayout {
                 }
                 // The mode the theme is in now: its card is the one on screen.
                 Text {
-                    visible: slot._now
-                    text: "· Now"
+                    visible: slot._now || slot._unset
+                    text: [slot._now ? "· Now" : "", slot._unset ? "· not set" : ""].filter(t => t).join(" ")
                     color: Commons.Appearance.colors.textMuted
                     font.pixelSize: Commons.Appearance.font.sizeSm
                     font.family: Commons.Appearance.font.family
