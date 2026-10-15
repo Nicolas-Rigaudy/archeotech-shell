@@ -59,7 +59,13 @@ QtObject {
         if (root.packMaterialFlat) return 1.0
         var t = root._glassTable && root._glassTable.presets
         var p = t && (t[root.effectiveGlassPreset] || t[root.glassDefault])
-        var m = p && p[root.isLight ? "light" : "dark"]
+        var mode = root.isLight ? "light" : "dark"
+        // Blur mode (blur over windows) may carry its own alphas: the blurred
+        // window reads darker than the X-ray wallpaper, so the panel can let
+        // more of it through (owner, 2026-10-15). Falls back to the base alphas.
+        var w = p && root.layerBlur && root.glassBlur === "windows" && p[mode + "Windows"]
+        if (w && w[role] !== undefined) return w[role]
+        var m = p && p[mode]
         return (m && m[role] !== undefined) ? m[role] : 1.0
     }
 
