@@ -116,6 +116,12 @@ QtObject {
         target: Commons.Appearance
         function onEffectiveGlassPresetChanged() { root._applyGlass() }
         function onEffectiveGlassBlurChanged() { root._applyGlass() }
+        function onLayerBlurChanged() { root._latchBlur() }
+    }
+    // mango never un-blurs a layer (Appearance.surfaceBlurred): once blur has been
+    // on after boot, the shell keeps its blur-safe rendering until it restarts.
+    function _latchBlur() {
+        if (root._booted && Commons.Appearance.layerBlur) Commons.Appearance._blurSeen = true
     }
     // The blur source (item_116) rides along: "<preset>/<blur>" is what was applied,
     // so changing either re-runs theme-switch (mango blur_layer + blur_optimized).
@@ -157,6 +163,7 @@ QtObject {
         }
         _packWait.stop()
         root._booted = true
+        root._latchBlur()
         var applied = Persistence.Config.get("theme.variant", "archeotech-macchiato")
         if (Persistence.Config.get("colorScheme.family", "") === "") {
             Persistence.Config.set("colorScheme.family", ThemeCatalog.familyOfVariant(applied))

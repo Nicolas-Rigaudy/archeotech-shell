@@ -75,22 +75,30 @@ QtObject {
         var p = t && t[root.effectiveGlassPreset]
         return root.activePack === "" && !!(p && p.blur)
     }
+    // mango (0.17) turns a layer's blur on when the layer commits but never turns
+    // it off: after Glass -> Solid the shell's surfaces stay blurred until the
+    // shell restarts. So the blur-safe rendering below sticks for the session
+    // once blur has been on (otherwise Solid's shadows show as a hard halo).
+    // ColorScheme latches _blurSeen after boot: before config and pack load,
+    // layerBlur is briefly true for every start.
+    property bool _blurSeen: false
+    readonly property bool surfaceBlurred: root.layerBlur || root._blurSeen
     // mango blurs every shell pixel that is not fully transparent, so a soft
     // shadow outside a floating surface turns into a hard-edged blurred band.
     // Under layer blur, shadows that fall outside their surface are dropped
     // (a clean edge, adr_035). Shadows inside a panel stay.
-    readonly property bool outerShadows: !root.layerBlur
+    readonly property bool outerShadows: !root.surfaceBlurred
     function outerShadowColor(tier) { return root.outerShadows ? tier.color : "transparent" }
     // The blur under a surface is all-or-nothing, so a glass shape fading in shows
     // its full blurred patch while the glass is still faint (a ghost that "flows
     // out" around popups). Under layer blur, floating glass shapes appear and
     // disappear at full opacity; their slide/scale motion stays, only the fade goes.
-    readonly property bool glassFades: !root.layerBlur
+    readonly property bool glassFades: !root.surfaceBlurred
     // The faintest anti-aliased pixel on a curve is blurred at full strength too:
     // over a dark window, X-ray shows it as a bright speck. Under layer blur the
     // OUTER edges of floating surfaces (frame, panels, popups, toasts, OSD,
     // tooltips) render crisp; edges inside a panel stay smooth (owner pick 2026-10-15).
-    readonly property bool crispEdges: root.layerBlur
+    readonly property bool crispEdges: root.surfaceBlurred
 
     // Light UIs use soft shadows: the dark-tuned alphas read as grime on pale glass.
     readonly property real shadowStrength: depthFlat ? 0.0 : (isLight ? 0.4 : 1.0)
