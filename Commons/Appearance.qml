@@ -93,16 +93,19 @@ QtObject {
     // the surface's alpha, so a faint pixel blurs only faintly: no ring on
     // anti-aliased curves, no band under soft shadows, no ghost while fading. The
     // blur-safe workarounds below are then not needed. The package installs a
-    // marker file; appearance.coverageBlur "on"/"off" overrides it (set from
-    // shell.qml; headless renders run stock scenefx unless --mango-libs).
+    // marker file, but a running mango keeps the scenefx it started with (an
+    // install shows the old lib as "(deleted)" in its maps until mango restarts;
+    // 2026-10-15 the marker alone switched the shell to soft shadows over a stock
+    // blur: a halo on every panel). So: marker AND the running mango maps a
+    // current libscenefx. Checked once; a mango restart restarts the shell too.
+    // appearance.coverageBlur "on"/"off" overrides it (set from shell.qml).
     property string coverageBlurMode: "auto"
     property bool _coverageMarker: false
-    property FileView _coverageFile: FileView {
-        path: "/usr/share/scenefx/coverage-blur"
-        blockLoading: true
-        printErrors: false
-        onLoaded: root._coverageMarker = true
-        onLoadFailed: root._coverageMarker = false
+    property Process _coverageProbe: Process {
+        running: true
+        // every running mango must map it (a headless test session runs its own)
+        command: ["sh", "-c", "test -e /usr/share/scenefx/coverage-blur && ps=$(pidof mango) && for p in $ps; do grep -q 'libscenefx[^ ]*\\.so$' /proc/$p/maps || exit 1; done"]
+        onExited: (code, status) => root._coverageMarker = (code === 0)
     }
     readonly property bool coverageBlur: root.coverageBlurMode === "on"
         || (root.coverageBlurMode !== "off" && root._coverageMarker)
