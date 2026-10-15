@@ -42,17 +42,19 @@ ToolTip {
             anchors.fill: parent
             radius: Commons.Appearance.radius.base
             chamfer: 4
+            crisp: Commons.Appearance.crispEdges
         }
         Rectangle {               // glass rim (the steel plate draws its own seat)
             anchors.fill: parent
             visible: !Commons.Appearance.frameChamfer
             radius: surface.radius
+            antialiasing: !Commons.Appearance.crispEdges
             color: "transparent"
             border.width: 1
             border.color: Commons.Appearance.colors.glassBorder
         }
     }
 
-    enter: Transition { NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Commons.Appearance.anim.fast } }
-    exit:  Transition { NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Commons.Appearance.anim.fast } }
+    enter: Transition { NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Commons.Appearance.glassFades ? Commons.Appearance.anim.fast : 0 } }
+    exit:  Transition { NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Commons.Appearance.glassFades ? Commons.Appearance.anim.fast : 0 } }
 }

@@ -21,7 +21,7 @@ import "../../Services/Shell" as ShellServices
 Shape {
     id: frame
     anchors.fill: parent
-    preferredRendererType: Shape.CurveRenderer
+    preferredRendererType: Commons.Appearance.crispEdges ? Shape.GeometryRenderer : Shape.CurveRenderer
 
     required property string screenName
 

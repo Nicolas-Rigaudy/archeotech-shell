@@ -24,7 +24,8 @@ Item {
     property real _progress: 0
     property bool _closing: false
     property bool _timedOut: false
-    opacity: _progress
+    // Under layer blur the card never goes half-transparent (glassFades); it still slides.
+    opacity: Commons.Appearance.glassFades ? _progress : (_progress > 0.01 ? 1 : 0)
     transform: Translate { y: (1 - root._progress) * 10 }
 
     Behavior on _progress { Commons.Anim { exit: root._closing } }
@@ -81,7 +82,7 @@ Item {
         anchors { left: parent.left; right: parent.right; top: parent.top }
         height: cardContent.implicitHeight + 20
         radius: Commons.Appearance.radius.md
-        antialiasing: true
+        antialiasing: !Commons.Appearance.crispEdges
         // Liquid-glass sheen — top-lit gradient (same tokens as the chrome),
         // sampled at this toast's screen position (see root._fTop/_fBot).
         gradient: Gradient {

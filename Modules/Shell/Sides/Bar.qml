@@ -106,6 +106,21 @@ Item {
         return any ? Qt.rect(l, t, r - l, b - t) : Qt.rect(0, 0, 0, 0)
     }
 
+    // `ipc call popup open <name>` (Commons.State.popupProbe): open a bar popup
+    // with no pointer, for headless renders. Top bar only, like the popups.
+    property var _probeConn: Connections {
+        target: Commons.State
+        function onPopupProbeChanged() {
+            var n = Commons.State.popupProbe
+            if (bar.side !== "top") return
+            bar._wifiPopupVisible = n === "wifi"
+            bar._btPopupVisible   = n === "bt"
+            bar._calendarVisible  = n === "calendar"
+            if (n === "hover") bar.showPopup(bar, "Probe", "Hover card", "headless render")
+            else bar._popupVisible = false
+        }
+    }
+
     // ── holderRoot API surface ─────────────────────────────────────────────────────
     function showPopup(item, label, primary, secondary, hint) {
         // A pinned control popup (WiFi/BT) owns the screen — never raise a hover

@@ -114,7 +114,7 @@ Item {
         return _activeSide === side || (_activeSide === "" && _isPrimaryHost(id))
     }
     readonly property bool   _panelOpen:   _activePanel !== "" && _showsPanel(_activePanel)
-    readonly property bool   _showCard:    _hov || _panelOpen
+    readonly property bool   _showCard:    _hovShown || _panelOpen
 
     // Window-space rect of the actual panel card (which is narrower than the
     // full edge — centred on the axis). ShellSurface's click-outside test uses
@@ -141,6 +141,8 @@ Item {
     readonly property real   _contentImplicitPerp: host.contentImplicitPerp
 
     property bool _hov: false
+    // Hovered, or opened by `ipc call popup open strip` (headless renders).
+    readonly property bool _hovShown: _hov || Commons.State.popupProbe === "strip"
     // Defensive: child MouseAreas can shadow the strip-level MA's hover in Qt 6.
     // OR'ing an explicit icon-hover counter keeps the popup alive even when
     // the strip MA momentarily loses its containsMouse to an icon's MouseArea.
@@ -171,7 +173,9 @@ Item {
     readonly property int _bodyDepth:   _iconSize + 2 * _padShort
 
     readonly property int _r:  Commons.Appearance.radius.md  // neck arc radius (smaller = popup less tall)
-    readonly property int _rb: Commons.Appearance.radius.md
+    // Far (body) corners of the popup/panel card: xl reads as a curve at scale 1
+    // (owner pick 2026-10-15; md looked cut). The neck keeps _r.
+    readonly property int _rb: Commons.Appearance.radius.xl
     // Perpendicular clearance around the icon cell — a fixed minimum so it does NOT
     // collapse with a pack's tiny corner radius (the Grimdark radius.md=2 made
     // the hover popup ~8px thinner than base and clipped the icon highlight). Used
@@ -188,7 +192,7 @@ Item {
     // A panel may drive the open depth from content via `implicitPerp` (numeric > 0);
     // EVERY other panel keeps the exact original `_panelSize` (no behaviour change).
     readonly property real _perpTarget: (_panelOpen && _ready) ? (_contentImplicitPerp > 0 ? _contentImplicitPerp : _panelSize)
-                                       : (_hov || _panelOpen)  ? _popupExtra
+                                       : (_hovShown || _panelOpen)  ? _popupExtra
                                        :                          0
 
     // Animated values — bound to targets so they animate on state changes.
@@ -321,7 +325,7 @@ Item {
         // card size → a feedback loop that made the popup jitter. CurveRenderer
         // antialiases the shape natively (no offscreen layer), so edges stay
         // smooth without blocking hover. (See DECISIONS 2026-07-02.)
-        preferredRendererType: Shape.CurveRenderer
+        preferredRendererType: Commons.Appearance.crispEdges ? Shape.GeometryRenderer : Shape.CurveRenderer
 
         transformOrigin: strip.side === "right"  ? Item.Right
                        : strip.side === "left"   ? Item.Left
@@ -329,7 +333,7 @@ Item {
 
         opacity: strip._showCard ? 1.0 : 0.0
         visible: opacity > 0.01
-        Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+        Behavior on opacity { enabled: Commons.Appearance.glassFades; NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
         // Card top in WINDOW coords. A horizontal (top/bottom) strip Item is only
         // content-tall (strip.height ≠ screen height), so a strip-relative gradient

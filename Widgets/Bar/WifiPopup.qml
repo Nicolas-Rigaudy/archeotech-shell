@@ -37,7 +37,7 @@ Item {
     opacity: (holderRoot && holderRoot._wifiPopupVisible) ? 1.0 : 0.0
     visible: holderRoot && holderRoot.side === "top" && opacity > 0.01
     Behavior on scale   { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-    Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+    Behavior on opacity { enabled: Commons.Appearance.glassFades; NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
     // Soft downward lift — shared neck-panel shadow (cuts the top/attach seam,
     // one light from above). Top-attached.
@@ -47,7 +47,7 @@ Item {
         id: cardShape
         anchors.fill: parent
         layer.enabled: true
-        layer.samples: 8
+        layer.samples: Commons.Appearance.crispEdges ? 0 : 8
 
         ShapePath {
             fillGradient: LinearGradient {

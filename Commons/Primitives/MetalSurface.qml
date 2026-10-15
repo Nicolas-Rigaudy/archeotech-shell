@@ -27,6 +27,9 @@ Item {
     // Top-lit highlight — a raised specular band at the top of the plate. Right
     // for cards; off for a small housing that must blend with the bar face.
     property bool  topLit: true
+    // Crisp (non-anti-aliased) outline, for a surface whose edge meets nothing
+    // under layer blur (Appearance.crispEdges; the tooltip). Cards keep false.
+    property bool  crisp: false
 
     readonly property string _plate: Commons.Appearance.panelPlate
     readonly property bool   _steel: Commons.Appearance.frameChamfer
@@ -36,7 +39,7 @@ Item {
         anchors.fill: parent
         visible: surf._plate === "" && !surf._steel
         radius: surf.radius
-        antialiasing: true
+        antialiasing: !surf.crisp
         // item_050: top-lit sheen on the card's OWN fill (same colour, lighter top →
         // darker bottom) so nested cards read as lit glass like the panels behind
         // them; collapses to a flat slab in depthFlat via sheenHi/Lo.
@@ -61,7 +64,7 @@ Item {
         id: plate
         anchors.fill: parent
         visible: surf._steel
-        preferredRendererType: Shape.CurveRenderer
+        preferredRendererType: surf.crisp ? Shape.GeometryRenderer : Shape.CurveRenderer
         asynchronous: false
 
         readonly property int  w: surf.width

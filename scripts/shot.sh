@@ -39,7 +39,8 @@
 # STATE-DRIVING (--state <name>): before capture, calls the shell's own IPC
 # handler to open a panel — launcher | settings[:pane] | setting:<key> | dashboard | wallpaper |
 # media | layout | keybinds | notifications | editmode | theme(reload) |
-# panel:<id> (any panel by id, e.g. panel:plugin:notes).
+# panel:<id> (any panel by id, e.g. panel:plugin:notes) | popup:<wifi|bt|calendar|hover|strip>
+# (a hover/click popup, no pointer needed).
 #
 # LOOK (--theme/--pack/--flat): --theme takes a variant dir under <root>/themes
 # (dark/light mode comes from that theme.json); --pack takes a pack id or "base";
@@ -306,6 +307,7 @@ if [ -n "$STATE" ]; then
     settings:*) DRIVE="qs ipc --pid \$QSPID call settings openPane \"${STATE#settings:}\"" ;;
     setting:*)  DRIVE="qs ipc --pid \$QSPID call settings focus \"${STATE#setting:}\"" ;;
     panel:*)    DRIVE="qs ipc --pid \$QSPID call panel open \"${STATE#panel:}\"" ;;
+    popup:*)    DRIVE="qs ipc --pid \$QSPID call popup open \"${STATE#popup:}\"" ;;
     theme)      DRIVE="qs ipc --pid \$QSPID call theme reload" ;;
     nc|notifications) DRIVE="qs ipc --pid \$QSPID call notifications open" ;;
     launcher|settings|dashboard|wallpaper|media|layout|keybinds|editmode)

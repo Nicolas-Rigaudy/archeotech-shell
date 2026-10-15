@@ -35,7 +35,7 @@ Item {
     visible: holderRoot && holderRoot.side === "top" && opacity > 0.01
 
     Behavior on scale   { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-    Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+    Behavior on opacity { enabled: Commons.Appearance.glassFades; NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
     function _monthName(m) {
         return ["January","February","March","April","May","June",
@@ -57,7 +57,7 @@ Item {
         id: cardShape
         anchors.fill: parent
         layer.enabled: true
-        layer.samples: 8
+        layer.samples: Commons.Appearance.crispEdges ? 0 : 8
 
         ShapePath {
             fillGradient: LinearGradient {

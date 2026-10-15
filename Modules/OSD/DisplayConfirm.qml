@@ -46,6 +46,7 @@ PanelWindow {
             id: bg
             anchors.fill: parent
             radius: Commons.Appearance.radius.lg
+            antialiasing: !Commons.Appearance.crispEdges
             color: Commons.Appearance.colors.glassBg
             border.width: 1
             border.color: Commons.Appearance.colors.accentBorder

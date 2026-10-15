@@ -81,6 +81,16 @@ QtObject {
     // (a clean edge, adr_035). Shadows inside a panel stay.
     readonly property bool outerShadows: !root.layerBlur
     function outerShadowColor(tier) { return root.outerShadows ? tier.color : "transparent" }
+    // The blur under a surface is all-or-nothing, so a glass shape fading in shows
+    // its full blurred patch while the glass is still faint (a ghost that "flows
+    // out" around popups). Under layer blur, floating glass shapes appear and
+    // disappear at full opacity; their slide/scale motion stays, only the fade goes.
+    readonly property bool glassFades: !root.layerBlur
+    // The faintest anti-aliased pixel on a curve is blurred at full strength too:
+    // over a dark window, X-ray shows it as a bright speck. Under layer blur the
+    // OUTER edges of floating surfaces (frame, panels, popups, toasts, OSD,
+    // tooltips) render crisp; edges inside a panel stay smooth (owner pick 2026-10-15).
+    readonly property bool crispEdges: root.layerBlur
 
     // Light UIs use soft shadows: the dark-tuned alphas read as grime on pale glass.
     readonly property real shadowStrength: depthFlat ? 0.0 : (isLight ? 0.4 : 1.0)

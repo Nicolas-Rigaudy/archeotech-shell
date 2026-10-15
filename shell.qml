@@ -236,6 +236,13 @@ ShellRoot {
         function close()            { ShellServices.ShellState.closeAllAcross() }
     }
 
+    // Hover/click popups without a pointer (headless renders, item_116).
+    IpcHandler {
+        target: "popup"
+        function open(name: string) { Commons.State.popupProbe = name }
+        function close()            { Commons.State.popupProbe = "" }
+    }
+
     IpcHandler {
         // The Keyboard panel. toggle() / characters() open it on the Shortcuts /
         // Characters tab; on the other tab they switch, on the same tab they close.
@@ -387,21 +394,21 @@ ShellRoot {
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
             anchors { top: true; right: true }
-            // +48 (24 each side) so the toast cards' drop shadow can bleed instead
-            // of being clipped hard by the layer-surface edge.
-            implicitWidth:  316 + 48
-            implicitHeight: toastStack.implicitHeight
-                          + Commons.Appearance.bar.marginTop
-                          + Commons.Appearance.bar.height
-                          + 48
+            // _pad of room on each side so the toast cards' drop shadow can bleed
+            // instead of being clipped hard by the layer-surface edge. Under layer
+            // blur there is no shadow, and the window hugs the toasts: mango blurs
+            // the whole window when it loses the transparency mask on a re-map (adr_035).
+            readonly property int _pad: Commons.Appearance.outerShadows ? 24 : 0
+            margins.top:   Commons.Appearance.bar.marginTop + Commons.Appearance.bar.height + 16 - _pad
+            margins.right: Commons.Appearance.spacing.s6 - _pad
+            implicitWidth:  316 + 2 * _pad
+            implicitHeight: toastStack.implicitHeight + 2 * _pad
             color: "transparent"
 
             Column {
                 id: toastStack
-                anchors.right:      parent.right
-                anchors.rightMargin: Commons.Appearance.spacing.s6
-                anchors.top:        parent.top
-                anchors.topMargin:  Commons.Appearance.bar.marginTop + Commons.Appearance.bar.height + 16
+                x: toastWindow._pad
+                y: toastWindow._pad
                 width: 316
                 spacing: Commons.Appearance.spacing.s2
 

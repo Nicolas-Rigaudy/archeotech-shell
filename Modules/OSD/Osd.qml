@@ -21,8 +21,13 @@ PanelWindow {
     WlrLayershell.namespace: "quickshell:osd"
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
-    anchors { bottom: true; left: true; right: true }
-    implicitHeight: 80
+    // Under layer blur the window hugs the pill (no shadow room): mango blurs the
+    // whole window when it loses the transparency mask on a re-map (adr_035).
+    readonly property bool _tight: !Commons.Appearance.outerShadows
+    anchors { bottom: true; left: !_tight; right: !_tight }
+    margins.bottom: _tight ? Commons.Appearance.spacing.s5 : 0
+    implicitWidth:  220
+    implicitHeight: _tight ? 46 : 80
     color: "transparent"
 
     // ── Public API ─────────────────────────────────────────────────────────────
@@ -63,7 +68,7 @@ PanelWindow {
     Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: Commons.Appearance.spacing.s5
+        anchors.bottomMargin: osdWindow._tight ? 0 : Commons.Appearance.spacing.s5
         width: 220
         height: 46
 
@@ -81,14 +86,14 @@ PanelWindow {
             id: pill
             anchors.fill: parent
             radius: Commons.Appearance.radius.xl
-            antialiasing: true
+            antialiasing: !Commons.Appearance.crispEdges
             // Liquid-glass sheen — top-lit gradient (same tokens as the chrome).
             gradient: Gradient {
                 GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
                 GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
             }
             opacity: osdWindow.shown ? 1.0 : 0.0
-            Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+            Behavior on opacity { enabled: Commons.Appearance.glassFades; NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
 
             RowLayout {
                 anchors.fill: parent

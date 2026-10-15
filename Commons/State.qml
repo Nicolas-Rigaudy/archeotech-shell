@@ -13,6 +13,11 @@ QtObject {
     // Set by the `keybinds` IPC (Super+Shift+K opens Characters) and the tabs.
     property string keyboardTab:              "shortcuts"
 
+    // Hover/click popups opened without a pointer (`ipc call popup open <name>`,
+    // `shot.sh --state popup:<name>`): "wifi" | "bt" | "calendar" | "hover" | "strip"
+    // | "". Lets headless renders check popups that otherwise need a mouse (item_116).
+    property string popupProbe:               ""
+
     // Sprint 21 — visual builder. When true, every ShellSurface shows the
     // EditOverlay (click-to-assign editor). Toggled via `editmode` IPC /
     // Super+Shift+E.

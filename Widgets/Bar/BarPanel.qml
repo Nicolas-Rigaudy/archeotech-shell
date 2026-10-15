@@ -77,7 +77,7 @@ Item {
 
     visible: opacity > 0.01
     opacity: (_open && host.ready) ? 1 : 0
-    Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+    Behavior on opacity { enabled: Commons.Appearance.glassFades; NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
 
     // Slide in from the bar edge (perpendicular) for the "drop" feel.
     transform: Translate {
@@ -103,7 +103,7 @@ Item {
     Shape {
         id: card
         anchors.fill: parent
-        preferredRendererType: Shape.CurveRenderer
+        preferredRendererType: Commons.Appearance.crispEdges ? Shape.GeometryRenderer : Shape.CurveRenderer
 
         readonly property real _r: root._r
         readonly property var _p: {
