@@ -44,7 +44,7 @@ Item {
             description: "Keyboard layouts per keyboard, key repeat and touchpad"
         }
 
-        Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Commons.Appearance.colors.surface0 }
+        Divider { }   // frame separator under the pane header
 
         Flickable {
             Layout.fillWidth: true
@@ -86,7 +86,7 @@ Item {
                             Layout.fillWidth: true
                             spacing: 0
                             Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: kbRow.index > 0 }
-                            Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Commons.Appearance.colors.surface0; visible: kbRow.index > 0 }
+                            Divider { visible: kbRow.index > 0 }
                             Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                             RowLayout {
                                 Layout.fillWidth: true
@@ -137,7 +137,7 @@ Item {
                         font.pixelSize: Commons.Appearance.font.sizeSm
                     }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
-                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Commons.Appearance.colors.surface0 }
+                    Divider { }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                     // Scratch field to try the layout of whichever keyboard you type on.
                     TextFieldRow {
@@ -164,7 +164,7 @@ Item {
                         format: v => Math.round(v) + " ms"
                         onMoved: v => Hardware.Input.set("repeatDelay", Math.round(v))
                     }
-                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Commons.Appearance.colors.surface0 }
+                    Divider { }
                     SliderRow {
                         label: "Rate"
                         configKey: "input.repeatRate"
@@ -192,7 +192,7 @@ Item {
                         checked: Hardware.Input.tapToClick
                         onToggled: v => Hardware.Input.set("tapToClick", v)
                     }
-                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Commons.Appearance.colors.surface0 }
+                    Divider { }
                     ToggleRow {
                         label: "Natural scrolling"
                         configKey: "input.naturalScroll"
@@ -202,7 +202,7 @@ Item {
                         checked: Hardware.Input.naturalScroll
                         onToggled: v => Hardware.Input.set("naturalScroll", v)
                     }
-                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Commons.Appearance.colors.surface0 }
+                    Divider { }
                     ToggleRow {
                         label: "Disable while typing"
                         configKey: "input.disableWhileTyping"
@@ -212,7 +212,7 @@ Item {
                         checked: Hardware.Input.disableWhileTyping
                         onToggled: v => Hardware.Input.set("disableWhileTyping", v)
                     }
-                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Commons.Appearance.colors.surface0 }
+                    Divider { }
                     SliderRow {
                         label: "Pointer speed"
                         configKey: "input.pointerSpeed"

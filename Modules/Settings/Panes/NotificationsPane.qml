@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../../../Commons" as Commons
+import "../../../Commons/Primitives"
 import "../../../Services/Persistence" as Persistence
 import "../../../Services/System" as SystemServices
 import "../Widgets"
@@ -19,7 +20,7 @@ Item {
             description: "Configure toast appearance, timing, and do-not-disturb behaviour"
         }
 
-        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+        Divider { }   // frame separator under the pane header
 
         Flickable {
             Layout.fillWidth: true
@@ -49,7 +50,7 @@ Item {
                         format: v => (v / 1000).toFixed(1) + "s"
                         onMoved: Persistence.Config.set("notifications.toastTimeout", Math.round(value))
                     }
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                    Divider { }
                     SliderRow {
                         label: "Max Visible Toasts"
                         configKey: "notifications.maxToasts"
@@ -72,7 +73,7 @@ Item {
                         checked: Persistence.Config.get("notifications.showOnFullscreen")
                         onToggled: value => Persistence.Config.set("notifications.showOnFullscreen", value)
                     }
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                    Divider { }
                     ToggleRow {
                         label: "Persist Do Not Disturb"
                         configKey: "notifications.persistDnd"

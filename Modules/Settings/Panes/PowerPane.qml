@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell.Io
 import "../../../Commons" as Commons
+import "../../../Commons/Primitives"
 import "../Widgets"
 
 Item {
@@ -129,7 +130,7 @@ Item {
             description: "Power profile, idle behaviour, and lock timeouts"
         }
 
-        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+        Divider { }   // frame separator under the pane header
 
         Flickable {
             Layout.fillWidth: true
@@ -205,7 +206,7 @@ Item {
                     }
 
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                    Divider { }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
 
                     ToggleRow {
@@ -233,7 +234,7 @@ Item {
                     }
 
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                    Divider { }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
 
                     ToggleRow {

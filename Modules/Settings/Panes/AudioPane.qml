@@ -22,7 +22,7 @@ Item {
             description: "Choose the default output and input devices and their volume limits"
         }
 
-        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+        Divider { }   // frame separator under the pane header
 
         Flickable {
             Layout.fillWidth: true
@@ -70,10 +70,9 @@ Item {
 
                                 Behavior on implicitHeight { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
-                                Rectangle {
+                                Divider {
                                     visible: index > 0
                                     anchors { left: parent.left; right: parent.right; top: parent.top }
-                                    height: 1; color: Commons.Appearance.colors.surface0
                                 }
 
                                 // ── Main row ──────────────────────────────────
@@ -239,10 +238,9 @@ Item {
 
                                 readonly property bool isDefault: modelData.name === MediaServices.Audio.defaultSource
 
-                                Rectangle {
+                                Divider {
                                     visible: index > 0
                                     anchors { left: parent.left; right: parent.right; top: parent.top }
-                                    height: 1; color: Commons.Appearance.colors.surface0
                                 }
 
                                 Rectangle {

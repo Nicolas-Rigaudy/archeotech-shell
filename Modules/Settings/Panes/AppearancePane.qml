@@ -37,7 +37,7 @@ Item {
             description: "Customize the visual style and typography of the shell"
         }
 
-        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+        Divider { }   // frame separator under the pane header
 
         Flickable {
             Layout.fillWidth: true
@@ -130,7 +130,7 @@ Item {
                     }
                     // Layer blur source (item_116): only while the preset blurs.
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: Commons.Appearance.layerBlur }
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0; visible: Commons.Appearance.layerBlur }
+                    Divider { visible: Commons.Appearance.layerBlur }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: Commons.Appearance.layerBlur }
                     ButtonGroupRow {
                         visible: Commons.Appearance.layerBlur
@@ -145,7 +145,7 @@ Item {
                         onSelected: v => Persistence.Config.set("appearance.glassBlur", v)
                     }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                    Divider { }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                     // Text size (item_110 wave 2): multiplies every step of the type scale.
                     ButtonGroupRow {
@@ -162,7 +162,7 @@ Item {
                         onSelected: v => Persistence.Config.set("appearance.fontScale", Number(v))
                     }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                    Divider { }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                     // Depth: the same pick-one-of-N selector as Opacity / Text size
                     // (was a Flat mode toggle); still the appearance.flatMode bool.

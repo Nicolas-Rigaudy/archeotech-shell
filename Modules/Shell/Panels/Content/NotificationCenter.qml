@@ -137,7 +137,7 @@ Item {
                     }
                 }
 
-                Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                Divider { }
 
                 // ── Empty state ───────────────────────────────────────────────
                 EmptyState {

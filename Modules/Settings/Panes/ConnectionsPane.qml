@@ -22,7 +22,7 @@ Item {
             description: "Manage WiFi networks and paired Bluetooth devices"
         }
 
-        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+        Divider { }   // frame separator under the pane header
 
         Flickable {
             Layout.fillWidth: true
@@ -224,10 +224,9 @@ Item {
                                 Layout.fillWidth: true
                                 implicitHeight: 40
 
-                                Rectangle {
+                                Divider {
                                     visible: index > 0
                                     anchors { left: parent.left; right: parent.right; top: parent.top }
-                                    height: 1; color: Commons.Appearance.colors.surface0
                                 }
 
                                 RowLayout {
@@ -353,11 +352,10 @@ Item {
                         }
 
                         // ── Discovered (unpaired) devices — appear during a scan ───
-                        Rectangle {
+                        Divider {
                             visible: NetworkServices.Bluetooth.discovering
                                   || NetworkServices.Bluetooth.devices.filter(function(d){ return !d.paired }).length > 0
                             Layout.fillWidth: true; Layout.topMargin: Commons.Appearance.spacing.s2
-                            height: 1; color: Commons.Appearance.colors.surface0
                         }
                         Text {
                             visible: NetworkServices.Bluetooth.discovering

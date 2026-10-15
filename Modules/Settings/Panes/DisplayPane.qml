@@ -110,7 +110,7 @@ Item {
             description: "Arrange your screens, their resolution, rotation and scale, and night light"
         }
 
-        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+        Divider { }   // frame separator under the pane header
 
         Flickable {
             Layout.fillWidth: true
@@ -183,7 +183,7 @@ Item {
                         onToggled: v => root._edit(root.selected, o => { o.enabled = v; if (v) root._parkRight(o) })
                     }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: root._selOn }
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0; visible: root._selOn }
+                    Divider { visible: root._selOn }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: root._selOn }
                     DropdownRow {
                         visible: root._selOn
@@ -291,7 +291,7 @@ Item {
                         onToggled: v => Hardware.Displays.setAutoApply(v)
                     }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                    Divider { }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
 
                     // Saved profiles; the one for the connected screens is marked.
@@ -348,7 +348,7 @@ Item {
                     }
 
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                    Divider { }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
 
                     // Save the CURRENT (applied) layout. Saving for the same
@@ -397,7 +397,7 @@ Item {
                         onToggled: v => Hardware.NightLight.setEnabled(v)
                     }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: Hardware.NightLight.enabled }
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0; visible: Hardware.NightLight.enabled }
+                    Divider { visible: Hardware.NightLight.enabled }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: Hardware.NightLight.enabled }
                     SliderRow {
                         visible: Hardware.NightLight.enabled

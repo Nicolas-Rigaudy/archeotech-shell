@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import "../../../../Commons" as Commons
 import "../../../../Services/Persistence" as Persistence
 import "../../../Settings" as Stg
+import "../../../../Commons/Primitives" as Prim
 
 // Sprint 24 — Settings as a unified shell panel (replaces the standalone
 // FloatingWindow). Mounted inside the bottom-strip card via PanelRegistry,
@@ -53,11 +54,7 @@ Item {
             onActiveIndexChanged: Persistence.Persistent.settingsActivePaneIndex = activeIndex
         }
 
-        Rectangle {
-            Layout.preferredWidth: 1
-            Layout.fillHeight: true
-            color: Commons.Appearance.colors.surface0
-        }
+        Prim.Divider { vertical: true }   // frame separator: sidebar | content
 
         Stg.SettingsContent {
             Layout.fillWidth: true

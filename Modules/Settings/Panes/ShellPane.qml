@@ -62,7 +62,7 @@ Item {
             description: "Customize the bar, edge strips and widgets — and open the visual builder"
         }
 
-        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+        Divider { }   // frame separator under the pane header
 
         Flickable {
             Layout.fillWidth: true
@@ -158,7 +158,7 @@ Item {
                         checked: ShellServices.ShellConfig.pillMode()
                         onToggled: value => ShellServices.ShellConfig.setPillMode(value)
                     }
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                    Divider { }
                     SliderRow {
                         label: "Corner Radius"
                         searchKey: "shell.cornerRadius"
@@ -171,7 +171,7 @@ Item {
                         format: v => Math.round(v) + "px"
                         onMoved: (v) => { root._pendingRadius = Math.round(v); _radiusTimer.restart() }
                     }
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                    Divider { }
                     SliderRow {
                         label: "Outer Gap"
                         searchKey: "shell.outerGap"
@@ -200,7 +200,7 @@ Item {
                         onSelected: value => Persistence.Config.set("clock.format", value)
                     }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
-                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Commons.Appearance.colors.surface0 }
+                    Divider { }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                     ButtonGroupRow {
                         label: "Seconds"
@@ -212,7 +212,7 @@ Item {
                         onSelected: value => Persistence.Config.set("clock.seconds", value === "show")
                     }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
-                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Commons.Appearance.colors.surface0 }
+                    Divider { }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                     ButtonGroupRow {
                         id: dateRow
@@ -273,7 +273,7 @@ Item {
                                 _propTimer.restart()
                             }
                         }
-                        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+                        Divider { }
 
                         Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                         Rectangle {
@@ -415,9 +415,9 @@ Item {
                             }
                         }
                     }
-                    Rectangle {
+                    Divider {
                         visible: rootsCard.roots.length > 0
-                        Layout.fillWidth: true; Layout.preferredHeight: 1; color: Commons.Appearance.colors.surface0
+                        Layout.fillWidth: true
                     }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                     TextFieldRow {

@@ -19,7 +19,7 @@ Item {
             description: "Shell version, compositor info, and quick links"
         }
 
-        Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
+        Divider { }   // frame separator under the pane header
 
         Flickable {
             Layout.fillWidth: true
@@ -90,10 +90,9 @@ Item {
                                 Layout.fillWidth: true
                                 implicitHeight: 32
 
-                                Rectangle {
+                                Divider {
                                     visible: index > 0
                                     anchors { left: parent.left; right: parent.right; top: parent.top }
-                                    height: 1; color: Commons.Appearance.colors.surface0
                                 }
 
                                 RowLayout {
@@ -136,10 +135,9 @@ Item {
                                 Layout.fillWidth: true
                                 implicitHeight: 40
 
-                                Rectangle {
+                                Divider {
                                     visible: index > 0
                                     anchors { left: parent.left; right: parent.right; top: parent.top }
-                                    height: 1; color: Commons.Appearance.colors.surface0
                                 }
 
                                 Rectangle {

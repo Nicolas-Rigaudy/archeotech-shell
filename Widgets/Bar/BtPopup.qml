@@ -132,7 +132,7 @@ Item {
             }
         }
 
-        Rectangle { width: parent.width; height: 1; color: Commons.Appearance.colors.surface0 }
+        Divider { width: parent.width  }
 
         Item {
             width: parent.width; height: 32
