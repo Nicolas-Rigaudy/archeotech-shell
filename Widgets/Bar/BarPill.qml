@@ -86,8 +86,8 @@ Item {
             // Under layer blur the e2 shadow would bleed past the strip's edge, and
             // mango blurs every faint pixel at full strength (a hard band, adr_035):
             // a tight 2 px shadow keeps the key's lift inside the strip.
-            blur:   Commons.Appearance.surfaceBlurred ? 2 : Commons.Appearance.elevation.e2.blur
-            offset: Qt.vector2d(0, Commons.Appearance.surfaceBlurred ? 1 : Commons.Appearance.elevation.e2.y)
+            blur:   Commons.Appearance.blurSafe ? 2 : Commons.Appearance.elevation.e2.blur
+            offset: Qt.vector2d(0, Commons.Appearance.blurSafe ? 1 : Commons.Appearance.elevation.e2.y)
             spread: Commons.Appearance.elevation.e2.spread
             color:  Commons.Appearance.elevation.e2.color
         }

@@ -9,6 +9,7 @@ var DEFAULTS = {
     "appearance.flatMode":            false,
     "appearance.glass":               "",        // "" = the mode's preset (glass-presets.json)
     "appearance.glassBlur":           "xray",    // layer blur over windows: xray (wallpaper) | windows
+    "appearance.coverageBlur":        "auto",    // patched scenefx (coverage-weighted blur): auto (marker file) | on | off
     "clock.format":                   "24h",
     "clock.seconds":                  false,
     "clock.date":                     "short",

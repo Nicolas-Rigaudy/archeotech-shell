@@ -79,6 +79,13 @@ ShellRoot {
         property: "glassPreset"
         value: Persistence.Config.get("appearance.glass")   // "" = table default
     }
+    // Coverage-weighted blur (patched scenefx): "auto" follows the package's
+    // marker file; "on"/"off" force it (headless renders, a manual install).
+    Binding {
+        target: Commons.Appearance
+        property: "coverageBlurMode"
+        value: Persistence.Config.get("appearance.coverageBlur", "auto")
+    }
     // What layer blur shows over a window (item_116), same wiring.
     Binding {
         target: Commons.Appearance
