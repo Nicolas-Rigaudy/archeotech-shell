@@ -109,9 +109,9 @@ Item {
                         }
 
                         // Divider before available
-                        Rectangle {
-                            height: 1; Layout.fillWidth: true
-                            color: Commons.Appearance.colors.surface0
+                        Divider {
+                            thin: true
+                            Layout.fillWidth: true
                             visible: NetworkServices.Network.displayNetworks.filter(function(n){ return !n.saved && !n.active }).length > 0
                                   && (NetworkServices.Network.displayNetworks.filter(function(n){ return n.active }).length > 0
                                    || NetworkServices.Network.displayNetworks.filter(function(n){ return n.saved && !n.active }).length > 0)
@@ -225,6 +225,7 @@ Item {
                                 implicitHeight: 40
 
                                 Divider {
+                                    thin: true
                                     visible: index > 0
                                     anchors { left: parent.left; right: parent.right; top: parent.top }
                                 }

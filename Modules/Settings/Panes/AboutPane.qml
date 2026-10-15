@@ -91,6 +91,7 @@ Item {
                                 implicitHeight: 32
 
                                 Divider {
+                                    thin: true
                                     visible: index > 0
                                     anchors { left: parent.left; right: parent.right; top: parent.top }
                                 }
@@ -136,6 +137,7 @@ Item {
                                 implicitHeight: 40
 
                                 Divider {
+                                    thin: true
                                     visible: index > 0
                                     anchors { left: parent.left; right: parent.right; top: parent.top }
                                 }

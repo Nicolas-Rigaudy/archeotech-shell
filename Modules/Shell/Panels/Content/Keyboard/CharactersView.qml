@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import "../../../../../Commons" as Commons
+import "../../../../../Commons/Primitives" as Prim
 
 // Characters tab of the Keyboard panel (item_144): how to type each character on
 // the selected keyboard. One line per letter form, lower-case and capital side by
@@ -203,10 +204,9 @@ Item {
                 font.pixelSize: Commons.Appearance.font.sizeSm
                 font.letterSpacing: Commons.Appearance.font.trackingLabel
             }
-            Rectangle {
+            Prim.Divider {
+                thin: true
                 anchors { left: secName.right; leftMargin: Commons.Appearance.spacing.s3; right: parent.right; verticalCenter: secName.verticalCenter }
-                height: 1
-                color: Commons.Appearance.colors.surface0
             }
         }
 

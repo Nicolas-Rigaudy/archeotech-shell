@@ -69,11 +69,9 @@ Item {
                 font.pixelSize: Commons.Appearance.font.sizeMd
                 font.letterSpacing: Commons.Appearance.font.trackingLabel
             }
-            Rectangle {
+            Prim.Divider {
                 visible: card.title.length > 0
                 Layout.fillWidth: true
-                height: 1
-                color: Commons.Appearance.colors.surface0
             }
 
             ColumnLayout {

@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import "../../../../../Commons" as Commons
+import "../../../../../Commons/Primitives" as Prim
 import "../../../../../Services/Compositor/KeybindsLogic.js" as Logic
 
 // Shortcuts tab of the Keyboard panel (item_145): the mango binds, a category
@@ -121,10 +122,9 @@ Item {
             }
         }
 
-        Rectangle {
+        Prim.Divider {
+            vertical: true
             Layout.fillHeight: true
-            Layout.preferredWidth: 1
-            color: Commons.Appearance.colors.surface0
         }
 
         Flickable {
@@ -179,10 +179,9 @@ Item {
                                 font.pixelSize: Commons.Appearance.font.sizeSm
                                 font.letterSpacing: Commons.Appearance.font.trackingLabel
                             }
-                            Rectangle {
+                            Prim.Divider {
+                                thin: true
                                 anchors { left: secName.right; leftMargin: Commons.Appearance.spacing.s3; right: parent.right; verticalCenter: secName.verticalCenter }
-                                height: 1
-                                color: Commons.Appearance.colors.surface0
                             }
                         }
 

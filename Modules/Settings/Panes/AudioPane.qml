@@ -71,6 +71,7 @@ Item {
                                 Behavior on implicitHeight { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
                                 Divider {
+                                    thin: true
                                     visible: index > 0
                                     anchors { left: parent.left; right: parent.right; top: parent.top }
                                 }
@@ -239,6 +240,7 @@ Item {
                                 readonly property bool isDefault: modelData.name === MediaServices.Audio.defaultSource
 
                                 Divider {
+                                    thin: true
                                     visible: index > 0
                                     anchors { left: parent.left; right: parent.right; top: parent.top }
                                 }

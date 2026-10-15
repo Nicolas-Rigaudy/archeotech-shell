@@ -332,10 +332,10 @@ Item {
                             required property int index
                             Layout.fillWidth: true
                             spacing: 0
-                            Rectangle {
+                            Divider {
+                                thin: true
                                 visible: statRow.index > 0
-                                Layout.fillWidth: true; Layout.preferredHeight: 1
-                                color: Commons.Appearance.colors.surface0
+                                Layout.fillWidth: true
                             }
                             ToggleRow {
                                 Layout.fillWidth: true
@@ -378,10 +378,10 @@ Item {
                             required property int index
                             Layout.fillWidth: true
                             spacing: 0
-                            Rectangle {
+                            Divider {
+                                thin: true
                                 visible: rootRow.index > 0
-                                Layout.fillWidth: true; Layout.preferredHeight: 1
-                                color: Commons.Appearance.colors.surface0
+                                Layout.fillWidth: true
                             }
                             RowLayout {
                                 Layout.fillWidth: true
