@@ -124,7 +124,10 @@ def main():
              f"blur_layer={0 if args.blur == 'off' else 1}",
              f"blur_optimized={0 if args.blur == 'windows' else 1}"] + args.mango_line
     cmd = [str(root / "scripts" / "shot.sh"), "--root", str(root), "--renderer", "gles2",
-           "--set", f"appearance.glass={json.dumps(args.glass)}", "-w", "6"] + extra
+           "--set", f"appearance.glass={json.dumps(args.glass)}",
+           # the shell's own Behind windows setting follows --blur (panel alphas differ)
+           "--set", f"appearance.glassBlur={json.dumps('windows' if args.blur == 'windows' else 'xray')}",
+           "-w", "6"] + extra
     for line in mango:
         cmd += ["--mango-line", line]
     if script:
