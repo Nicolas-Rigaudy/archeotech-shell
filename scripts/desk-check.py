@@ -94,6 +94,7 @@ def main():
     ap.add_argument("--zoom", action="append", default=[], help="X,Y,W,H region to upscale")
     ap.add_argument("--scale", type=int, default=6)
     ap.add_argument("--mango-line", action="append", default=[], help="extra mango config line")
+    ap.add_argument("--set", action="append", default=[], help="config key=json, passed to shot.sh --set")
     ap.add_argument("--mango-libs", default="", help="dir of locally built libs (patched scenefx) for the nested mango")
     ap.add_argument("--keep", action="store_true")
     ap.add_argument("--out", required=True)
@@ -132,6 +133,8 @@ def main():
         cmd += ["--mango-line", line]
     if script:
         cmd += ["--exec", "\n".join(script)]
+    for kv in args.set:
+        cmd += ["--set", kv]
     if args.mango_libs:
         cmd += ["--mango-libs", args.mango_libs]
     if args.keep:
