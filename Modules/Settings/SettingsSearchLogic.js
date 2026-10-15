@@ -10,6 +10,7 @@ var INDEX = [
     { pane: "appearance", key: "appearance.pack",     section: "Theme pack", label: "Theme pack",       keywords: "grimdark steel pack look" },
     { pane: "appearance", key: "appearance.theme",    section: "Theme",      label: "Theme",            keywords: "color colour scheme palette family flavor accent catppuccin macchiato mocha latte dracula nord gruvbox tokyo monochrome light dark mode schedule" },
     { pane: "appearance", key: "appearance.glass",    section: "Style",      label: "Opacity",          keywords: "glass solid transparency transparent see-through kitty" },
+    { pane: "appearance", key: "appearance.glassBlur", section: "Style",     label: "Behind windows",   keywords: "blur frosted x-ray xray glass windows wallpaper see-through" },
     { pane: "appearance", key: "appearance.fontScale", section: "Style",     label: "Text size",        keywords: "typography font size scale larger smaller" },
     { pane: "appearance", key: "appearance.flatMode", section: "Style",      label: "Depth",            keywords: "flat 3d shadows sheen" },
     { pane: "appearance", key: "appearance.wallpaper", section: "Wallpaper", label: "Wallpaper",        keywords: "background image picker" },

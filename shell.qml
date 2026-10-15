@@ -79,6 +79,12 @@ ShellRoot {
         property: "glassPreset"
         value: Persistence.Config.get("appearance.glass")   // "" = table default
     }
+    // What layer blur shows over a window (item_116), same wiring.
+    Binding {
+        target: Commons.Appearance
+        property: "glassBlur"
+        value: Persistence.Config.get("appearance.glassBlur")
+    }
 
     // Drive the active theme pack (adr_027 Layer A) from the persisted setting,
     // same reason/wiring as flatMode. Empty string = base look (no token overlay).

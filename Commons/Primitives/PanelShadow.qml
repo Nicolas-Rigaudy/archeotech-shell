@@ -49,5 +49,5 @@ RectangularShadow {
     blur:   Commons.Appearance.elevation.e3.blur
     spread: Commons.Appearance.elevation.e3.spread
     offset: Qt.vector2d(0, Commons.Appearance.elevation.e3.y)
-    color:  Commons.Appearance.elevation.e3.color
+    color:  Commons.Appearance.outerShadowColor(Commons.Appearance.elevation.e3)   // none under layer blur
 }

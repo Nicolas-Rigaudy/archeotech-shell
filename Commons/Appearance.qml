@@ -63,6 +63,25 @@ QtObject {
         return (m && m[role] !== undefined) ? m[role] : 1.0
     }
 
+    // Compositor blur behind the shell's surfaces (item_116, adr_035): on for a
+    // preset with "blur": true and no pack (a pack owns material). theme-switch
+    // writes the matching mango blur_layer. glassBlur picks what the blur shows
+    // over a window: "xray" (the wallpaper, mango blur_optimized=1, cheap) or
+    // "windows" (what is really behind, blur_optimized=0); set from shell.qml.
+    property string glassBlur: ""
+    readonly property string effectiveGlassBlur: root.glassBlur === "windows" ? "windows" : "xray"
+    readonly property bool layerBlur: {
+        var t = root._glassTable && root._glassTable.presets
+        var p = t && t[root.effectiveGlassPreset]
+        return root.activePack === "" && !!(p && p.blur)
+    }
+    // mango blurs every shell pixel that is not fully transparent, so a soft
+    // shadow outside a floating surface turns into a hard-edged blurred band.
+    // Under layer blur, shadows that fall outside their surface are dropped
+    // (a clean edge, adr_035). Shadows inside a panel stay.
+    readonly property bool outerShadows: !root.layerBlur
+    function outerShadowColor(tier) { return root.outerShadows ? tier.color : "transparent" }
+
     // Light UIs use soft shadows: the dark-tuned alphas read as grime on pale glass.
     readonly property real shadowStrength: depthFlat ? 0.0 : (isLight ? 0.4 : 1.0)
 

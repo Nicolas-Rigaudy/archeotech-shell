@@ -115,13 +115,17 @@ QtObject {
     property var _glassConn: Connections {
         target: Commons.Appearance
         function onEffectiveGlassPresetChanged() { root._applyGlass() }
+        function onEffectiveGlassBlurChanged() { root._applyGlass() }
     }
+    // The blur source (item_116) rides along: "<preset>/<blur>" is what was applied,
+    // so changing either re-runs theme-switch (mango blur_layer + blur_optimized).
     function _applyGlass() {
         if (!Persistence.Config.ready) return
         var g = Commons.Appearance.effectiveGlassPreset
-        if (g === Persistence.Config.get("theme.appliedGlass", Commons.Appearance.glassDefault)) return
-        Persistence.Config.set("theme.appliedGlass", g)
-        _applyRunner.run([Commons.Paths.themeSwitch, "--glass", g])
+        var b = Commons.Appearance.effectiveGlassBlur
+        if (g + "/" + b === Persistence.Config.get("theme.appliedGlass", Commons.Appearance.glassDefault + "/xray")) return
+        Persistence.Config.set("theme.appliedGlass", g + "/" + b)
+        _applyRunner.run([Commons.Paths.themeSwitch, "--glass", g, "--blur", b])
     }
 
     // Auto-mode clock — re-resolve every minute; applies on day↔night crossing.

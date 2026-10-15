@@ -40,7 +40,7 @@ PanelWindow {
             blur:   Commons.Appearance.elevation.e4.blur
             offset: Qt.vector2d(0, Commons.Appearance.elevation.e4.y)
             spread: Commons.Appearance.elevation.e4.spread
-            color:  Commons.Appearance.elevation.e4.color
+            color:  Commons.Appearance.outerShadowColor(Commons.Appearance.elevation.e4)
         }
         Rectangle {
             id: bg

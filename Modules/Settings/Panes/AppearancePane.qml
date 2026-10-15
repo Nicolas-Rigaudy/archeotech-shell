@@ -128,6 +128,22 @@ Item {
                         currentValue: Commons.Appearance.effectiveGlassPreset
                         onSelected: v => Persistence.Config.set("appearance.glass", v)
                     }
+                    // Layer blur source (item_116): only while the preset blurs.
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: Commons.Appearance.layerBlur }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0; visible: Commons.Appearance.layerBlur }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: Commons.Appearance.layerBlur }
+                    ButtonGroupRow {
+                        visible: Commons.Appearance.layerBlur
+                        label: "Behind windows"
+                        configKey: "appearance.glassBlur"
+                        description: "What frosted panels show over a window"
+                        options: [
+                            { value: "xray",    label: "X-ray" },
+                            { value: "windows", label: "Blur" }
+                        ]
+                        currentValue: Commons.Appearance.effectiveGlassBlur
+                        onSelected: v => Persistence.Config.set("appearance.glassBlur", v)
+                    }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                     Rectangle { Layout.fillWidth: true; height: 1; color: Commons.Appearance.colors.surface0 }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }

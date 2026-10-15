@@ -73,7 +73,7 @@ PanelWindow {
             anchors.fill: pill
             radius: pill.radius
             blur:   Commons.Appearance.elevation.e2.blur; offset: Qt.vector2d(0, Commons.Appearance.elevation.e2.y); spread: Commons.Appearance.elevation.e2.spread
-            color:  Commons.Appearance.elevation.e2.color
+            color:  Commons.Appearance.outerShadowColor(Commons.Appearance.elevation.e2)
             opacity: pill.opacity
         }
 

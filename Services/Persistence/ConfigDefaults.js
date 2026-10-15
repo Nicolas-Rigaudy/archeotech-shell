@@ -8,6 +8,7 @@ var DEFAULTS = {
     "appearance.fontScale":           1,
     "appearance.flatMode":            false,
     "appearance.glass":               "",        // "" = the mode's preset (glass-presets.json)
+    "appearance.glassBlur":           "xray",    // layer blur over windows: xray (wallpaper) | windows
     "clock.format":                   "24h",
     "clock.seconds":                  false,
     "clock.date":                     "short",

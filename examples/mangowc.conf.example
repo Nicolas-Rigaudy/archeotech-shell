@@ -6,11 +6,14 @@
 # shell to render/behave correctly; the rest are the reference setup's look.
 ################################################################################
 
-# ── [REQUIRED] Layer blur off ────────────────────────────────────────────────
-# SceneFX layer blur throws a white-fringe halo around the shell's rounded layer
-# surfaces on some GPUs (Intel Xe). The shell fakes glass with high-opacity
-# translucent panels instead, so disable layer blur globally.
-blur_layer=0
+# ── [REQUIRED] Blur keys (written by theme-switch) ───────────────────────────
+# The Glass preset blurs what is behind the shell (adr_035): theme-switch sets
+# blur_layer (1 for Glass, 0 for Solid or a theme pack) and blur_optimized
+# (Settings > Appearance > Behind windows: 1 = blurred wallpaper "x-ray",
+# 0 = the windows behind). Keep both lines; blur=1 is needed for either.
+blur=1
+blur_layer=1
+blur_optimized=1
 
 # ── [REQUIRED] Launch the shell ──────────────────────────────────────────────
 # The shell is a NAMED Quickshell config at ~/.config/quickshell/archeotech

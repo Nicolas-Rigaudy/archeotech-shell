@@ -184,6 +184,24 @@ def glass_preset() -> str:
         return ""
 
 
+def glass_blur() -> str:
+    """What layer blur shows over a window (config.json appearance.glassBlur,
+    item_116): "windows" or the default "xray"."""
+    try:
+        v = json.loads(CONFIG_FILE.read_text()).get("appearance", {}).get("glassBlur", "")
+    except (OSError, ValueError, AttributeError):
+        v = ""
+    return "windows" if v == "windows" else "xray"
+
+
+def preset_blurs(preset: str = "") -> bool:
+    """Whether a glass preset turns on compositor blur behind the shell (item_116);
+    an unset or unknown preset uses the table default."""
+    table = json.loads(GLASS_PRESETS_FILE.read_text())
+    presets = table["presets"]
+    return bool((presets.get(preset) or presets[table["default"]]).get("blur"))
+
+
 def glass_values(mode: str, preset: str = "") -> Dict[str, Any]:
     """One preset's values for a mode from glass-presets.json; an unset or
     unknown preset uses the table default (the shell does the same)."""
@@ -193,17 +211,29 @@ def glass_values(mode: str, preset: str = "") -> Dict[str, Any]:
     return p["light" if mode == "light" else "dark"]
 
 
-def mango_opacity_lines(text: str, mode: str, preset: str = "") -> str:
+def mango_opacity_lines(text: str, mode: str, preset: str = "", pack: bool = False,
+                        blur: str = "xray") -> str:
     """Set mango's global focused/unfocused window opacity for the preset, so
-    Solid really makes every window opaque (per-app windowrules still win)."""
+    Solid really makes every window opaque (per-app windowrules still win), and
+    the layer blur behind the shell (item_116, adr_035): blur_layer follows the
+    preset (off under a pack, which owns material), blur_optimized the blur
+    source ("xray" = 1, the cached wallpaper; "windows" = 0, what is behind)."""
     try:
         v = glass_values(mode, preset)
+        layer = preset_blurs(preset) and not pack
     except (OSError, ValueError, KeyError) as e:
         warn(f"glass presets unreadable ({e}); mango opacity unchanged")
         return text
-    for key, val in (("focused_opacity", v.get("winFocused")), ("unfocused_opacity", v.get("winUnfocused"))):
-        if val is not None:
+    for key, val in (("focused_opacity", v.get("winFocused")), ("unfocused_opacity", v.get("winUnfocused")),
+                     ("blur_layer", 1 if layer else 0),
+                     ("blur_optimized", 0 if blur == "windows" else 1)):
+        if val is None:
+            continue
+        if re.search(rf"^{key}=", text, flags=re.M):
             text = re.sub(rf"^{key}=.*$", f"{key}={val}", text, flags=re.M)
+        elif key.startswith("blur_"):
+            # A config without the blur keys would silently ignore the preset.
+            text = text.rstrip("\n") + f"\n{key}={val}\n"
     return text
 
 
@@ -237,13 +267,14 @@ def kitty_set_opacity(opacity: str) -> None:
             warn(f"kitty {sock.name}: {e}")
 
 
-def apply_glass_only(preset: str) -> None:
+def apply_glass_only(preset: str, blur: str = "xray") -> None:
     """`--glass <preset>`: re-set kitty's opacity for the applied theme's mode
     without a full theme switch (the shell changes panel/card alpha itself)."""
     try:
-        mode = json.loads(ACTIVE_THEME_FILE.read_text()).get("mode", "dark")
+        active = json.loads(ACTIVE_THEME_FILE.read_text())
     except (OSError, ValueError):
-        mode = "dark"
+        active = {}
+    mode = active.get("mode", "dark")
     if not KITTY_THEME_FILE.exists():
         warn(f"kitty theme missing: {KITTY_THEME_FILE}")
         return
@@ -260,11 +291,11 @@ def apply_glass_only(preset: str) -> None:
     mango = HOME / ".config" / "mango" / "config.conf"
     if mango.exists():
         before = mango.read_text()
-        after = mango_opacity_lines(before, mode, preset)
+        after = mango_opacity_lines(before, mode, preset, pack=bool(active.get("_pack")), blur=blur)
         if after != before:
             atomic_write(mango, after)
             mango_reload_preserving_kb()
-    info(f"glass {preset}: kitty background_opacity {opacity}, mango windows ({mode})")
+    info(f"glass {preset} ({blur}): kitty background_opacity {opacity}, mango windows + layer blur ({mode})")
 
 
 def apply_mango(theme: dict, vars: Dict[str, str]) -> None:
@@ -313,7 +344,8 @@ def apply_mango(theme: dict, vars: Dict[str, str]) -> None:
         if val:
             text = re.sub(rf"^{key}=.*$", f"{key}={val}", text, flags=re.M)
     # Window opacity follows the glass preset (item_139); a pack owns material.
-    text = mango_opacity_lines(text, theme.get("mode", "dark"), "" if theme.get("_pack") else glass_preset())
+    text = mango_opacity_lines(text, theme.get("mode", "dark"), "" if theme.get("_pack") else glass_preset(),
+                               pack=bool(theme.get("_pack")), blur=glass_blur())
     atomic_write(path, text)
     mango_reload_preserving_kb()
 
@@ -654,6 +686,12 @@ def main() -> None:
     if "--glass" in args:
         i = args.index("--glass")
         preset = args[i + 1] if i + 1 < len(args) else ""
+        blur = glass_blur()
+        if "--blur" in args:
+            j = args.index("--blur")
+            blur = args[j + 1] if j + 1 < len(args) else ""
+            if blur not in ("xray", "windows"):
+                fail(f"unknown blur source '{blur}' (known: xray, windows)")
         try:
             known = json.loads(GLASS_PRESETS_FILE.read_text())["presets"]
         except (OSError, ValueError, KeyError) as e:
@@ -664,10 +702,10 @@ def main() -> None:
         LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
         with open(LOCK_FILE, "w") as lock_fd:
             fcntl.flock(lock_fd, fcntl.LOCK_EX)
-            apply_glass_only(preset)
+            apply_glass_only(preset, blur)
         return
     if not args:
-        fail("usage: theme-switch.py <variant> [accent] [--pack <dir>] | --glass <preset>")
+        fail("usage: theme-switch.py <variant> [accent] [--pack <dir>] | --glass <preset> [--blur xray|windows]")
     variant = args[0]
 
     src = THEMES_DIR / variant / "theme.json"

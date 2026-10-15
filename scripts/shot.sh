@@ -31,6 +31,10 @@
 #   shot.sh --exec 'notify-send a; mmsg -d focusmon,right' out.png
 #                                            # run a command in the nested session
 #                                            #   before capture (after --notify*)
+#   shot.sh --renderer gles2 out.png         # render on the GPU (scenefx blur, shadows
+#                                            #   and corner effects draw; pixman, the
+#                                            #   default, skips them). Needs a readable
+#                                            #   /dev/dri render node; goldens stay pixman
 #
 # STATE-DRIVING (--state <name>): before capture, calls the shell's own IPC
 # handler to open a panel — launcher | settings[:pane] | setting:<key> | dashboard | wallpaper |
@@ -89,6 +93,7 @@ KEEP=0              # 1 → keep the run dir (logs, fake HOME) even on success
 FRESH=0             # 1 → copy none of the user's config/state/cache (a stranger's first boot)
 OUTPUTS=1           # headless outputs (multi-monitor cases); grim captures them all
 EXEC=""             # shell command run inside the nested session before capture
+RENDERER=pixman     # wlroots renderer: pixman (default, goldens) | gles2 (GPU, scenefx effects)
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -112,10 +117,13 @@ while [ $# -gt 0 ]; do
     --fresh)    FRESH=1; shift ;;
     --outputs)  OUTPUTS="$2"; shift 2 ;;
     --exec)     EXEC="$2"; shift 2 ;;
+    --renderer) RENDERER="$2"; shift 2 ;;
     -*)         echo "unknown flag: $1" >&2; exit 2 ;;
     *)          OUT="$1"; shift ;;
   esac
 done
+
+case "$RENDERER" in pixman|gles2) ;; *) echo "bad --renderer: $RENDERER (pixman|gles2)" >&2; exit 2 ;; esac
 
 ROOT="$(cd "${ROOT:-$(dirname "$(readlink -f "$0")")/..}" && pwd)" || { echo "bad --root" >&2; exit 2; }
 [ -f "$ROOT/shell.qml" ] || { echo "no shell.qml in $ROOT" >&2; exit 2; }
@@ -375,7 +383,7 @@ ENVV=(env -i
   XDG_RUNTIME_DIR="$RT" XDG_CONFIG_HOME="$FH/.config" XDG_DATA_HOME="$FH/.local/share"
   XDG_CACHE_HOME="$FH/.cache" XDG_STATE_HOME="$FH/.local/state"
   XDG_DATA_DIRS="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
-  WLR_BACKENDS=headless WLR_HEADLESS_OUTPUTS="$OUTPUTS" WLR_RENDERER=pixman WLR_LIBINPUT_NO_DEVICES=1
+  WLR_BACKENDS=headless WLR_HEADLESS_OUTPUTS="$OUTPUTS" WLR_RENDERER="$RENDERER" WLR_LIBINPUT_NO_DEVICES=1
   QT_WAYLAND_DECORATION=none)
 
 # Launch the nested headless compositor in its own session/process group.

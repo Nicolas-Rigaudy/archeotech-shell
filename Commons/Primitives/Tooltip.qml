@@ -35,7 +35,7 @@ ToolTip {
             blur:   Commons.Appearance.elevation.e3.blur
             offset: Qt.vector2d(0, Commons.Appearance.elevation.e3.y)
             spread: Commons.Appearance.elevation.e3.spread
-            color:  Commons.Appearance.elevation.e3.color
+            color:  Commons.Appearance.outerShadowColor(Commons.Appearance.elevation.e3)
         }
         MetalSurface {
             id: surface
