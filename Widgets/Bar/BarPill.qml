@@ -83,8 +83,11 @@ Item {
             // popup's console trim (reads as clipping) and is a "modern" tell.
             visible: !(pill.showActiveBg && Commons.Appearance.frameChamfer)
             radius: keyBg.radius
-            blur:   Commons.Appearance.elevation.e2.blur
-            offset: Qt.vector2d(0, Commons.Appearance.elevation.e2.y)
+            // Under layer blur the e2 shadow would bleed past the strip's edge, and
+            // mango blurs every faint pixel at full strength (a hard band, adr_035):
+            // a tight 2 px shadow keeps the key's lift inside the strip.
+            blur:   Commons.Appearance.layerBlur ? 2 : Commons.Appearance.elevation.e2.blur
+            offset: Qt.vector2d(0, Commons.Appearance.layerBlur ? 1 : Commons.Appearance.elevation.e2.y)
             spread: Commons.Appearance.elevation.e2.spread
             color:  Commons.Appearance.elevation.e2.color
         }
