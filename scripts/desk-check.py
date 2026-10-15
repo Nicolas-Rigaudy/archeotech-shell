@@ -94,6 +94,7 @@ def main():
     ap.add_argument("--zoom", action="append", default=[], help="X,Y,W,H region to upscale")
     ap.add_argument("--scale", type=int, default=6)
     ap.add_argument("--mango-line", action="append", default=[], help="extra mango config line")
+    ap.add_argument("--mango-libs", default="", help="dir of locally built libs (patched scenefx) for the nested mango")
     ap.add_argument("--keep", action="store_true")
     ap.add_argument("--out", required=True)
     ap.add_argument("steps", nargs="*")
@@ -111,7 +112,12 @@ def main():
 
     script = []
     if args.app != "none":
-        script.append(APP[args.app] + ' sh -c "ls -la --color=always /usr/bin | head -400; sleep 120" >/dev/null 2>&1 & sleep 3')
+        # Wide, bright, varied lines so a panel anywhere on screen has window text
+        # behind it (what blur strength and edge checks need to show).
+        fill = ("for i in $(seq 400); do printf '\\033[3%dm%s \\033[0m' $((i%6+1)) "
+                "'archeotech -rwxr-xr-x root 14432 Sep 1 10:07 convertfilestopdf dbus-cleanup-sockets'; "
+                "printf '\\033[1;37m%s\\033[0m\\n' ' ### WINDOW TEXT ### the quick brown fox jumps over the lazy dog'; done; sleep 120")
+        script.append(APP[args.app] + f" sh -c {shlex.quote(fill)} >/dev/null 2>&1 & sleep 3")
     script += [step_cmd(s) for s in args.steps]
 
     mango = [f"monitorrule=name:HEADLESS-1,width:{w},height:{h},refresh:60,x:0,y:0,scale:1,rr:0",
@@ -123,6 +129,8 @@ def main():
         cmd += ["--mango-line", line]
     if script:
         cmd += ["--exec", "\n".join(script)]
+    if args.mango_libs:
+        cmd += ["--mango-libs", args.mango_libs]
     if args.keep:
         cmd.append("--keep")
     res = subprocess.run(cmd + [str(out)], capture_output=True, text=True)

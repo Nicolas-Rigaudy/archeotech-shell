@@ -95,6 +95,7 @@ FRESH=0             # 1 → copy none of the user's config/state/cache (a strang
 OUTPUTS=1           # headless outputs (multi-monitor cases); grim captures them all
 EXEC=""             # shell command run inside the nested session before capture
 RENDERER=pixman     # wlroots renderer: pixman (default, goldens) | gles2 (GPU, scenefx effects)
+MANGO_LIBS=""        # dir of locally built libs (e.g. a patched scenefx) for the nested session
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -119,12 +120,14 @@ while [ $# -gt 0 ]; do
     --outputs)  OUTPUTS="$2"; shift 2 ;;
     --exec)     EXEC="$2"; shift 2 ;;
     --renderer) RENDERER="$2"; shift 2 ;;
+    --mango-libs) MANGO_LIBS="$(readlink -f "$2")"; shift 2 ;;
     -*)         echo "unknown flag: $1" >&2; exit 2 ;;
     *)          OUT="$1"; shift ;;
   esac
 done
 
 case "$RENDERER" in pixman|gles2) ;; *) echo "bad --renderer: $RENDERER (pixman|gles2)" >&2; exit 2 ;; esac
+if [ -n "$MANGO_LIBS" ] && [ ! -d "$MANGO_LIBS" ]; then echo "bad --mango-libs: not a directory" >&2; exit 2; fi
 
 ROOT="$(cd "${ROOT:-$(dirname "$(readlink -f "$0")")/..}" && pwd)" || { echo "bad --root" >&2; exit 2; }
 [ -f "$ROOT/shell.qml" ] || { echo "no shell.qml in $ROOT" >&2; exit 2; }
@@ -387,6 +390,8 @@ ENVV=(env -i
   XDG_DATA_DIRS="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
   WLR_BACKENDS=headless WLR_HEADLESS_OUTPUTS="$OUTPUTS" WLR_RENDERER="$RENDERER" WLR_LIBINPUT_NO_DEVICES=1
   QT_WAYLAND_DECORATION=none)
+# --mango-libs: the nested session loads these libs first (a patched scenefx).
+[ -n "$MANGO_LIBS" ] && ENVV+=(LD_LIBRARY_PATH="$MANGO_LIBS")
 
 # Launch the nested headless compositor in its own session/process group.
 setsid "${ENVV[@]}" timeout $((WAIT + CAP_SECS + 20)) "${BUS[@]}" \
