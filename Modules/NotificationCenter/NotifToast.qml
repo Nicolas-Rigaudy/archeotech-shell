@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Effects
 import "../../Commons" as Commons
 import "../../Commons/Primitives"
 import "../../Services/System" as SystemServices
@@ -68,7 +67,7 @@ Item {
         onTriggered: root._close(true)
     }
 
-    RectangularShadow {
+    GlassShadow {
         anchors.fill: card
         radius: card.radius
         blur:   Commons.Appearance.elevation.e3.blur

@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import "../../Commons" as Commons
@@ -34,7 +33,7 @@ PanelWindow {
         Keys.onReturnPressed: win._d.keep()
         Keys.onEscapePressed: win._d.revert()
 
-        RectangularShadow {
+        GlassShadow {
             anchors.fill: bg
             radius: bg.radius
             blur:   Commons.Appearance.elevation.e4.blur

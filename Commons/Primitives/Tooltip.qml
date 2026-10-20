@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Effects
 import ".." as Commons
 
 // The shell's tooltip: a small lit glass card (the same MetalSurface material,
@@ -29,7 +28,7 @@ ToolTip {
     // fill, the steel plate under a chamfer pack) with a raised e3 shadow and the
     // glass rim, so a tooltip reads as one more lit glass card, not a flat slab.
     background: Item {
-        RectangularShadow {
+        GlassShadow {
             anchors.fill: surface
             radius: surface.radius
             blur:   Commons.Appearance.elevation.e3.blur

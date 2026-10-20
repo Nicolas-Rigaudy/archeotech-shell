@@ -1,9 +1,9 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import "../../Commons" as Commons
+import "../../Commons/Primitives"
 import "../../Services/Media" as MediaServices
 import "../../Services/Hardware" as HardwareServices
 import "../../Services/Compositor" as CompositorServices
@@ -74,7 +74,7 @@ PanelWindow {
 
         // Drop shadow so the pill lifts off the wallpaper (depth-gated — flat
         // mode drops it). Behind the pill; fades with it via the shared opacity.
-        RectangularShadow {
+        GlassShadow {
             anchors.fill: pill
             radius: pill.radius
             blur:   Commons.Appearance.elevation.e2.blur; offset: Qt.vector2d(0, Commons.Appearance.elevation.e2.y); spread: Commons.Appearance.elevation.e2.spread
