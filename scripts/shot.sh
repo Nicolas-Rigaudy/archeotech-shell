@@ -28,6 +28,10 @@
 #                                            #   source it like the real config does
 #                                            #   (source-optional=~/.config/mango/f.conf;
 #                                            #   contents guarded too)
+#   shot.sh --mango-config f.conf out.png    # start from f.conf instead of the real
+#                                            #   ~/.config/mango/config.conf (same filter
+#                                            #   and guard), e.g. a config migrated to a
+#                                            #   newer mango than the running one
 #   shot.sh --exec 'notify-send a; mmsg -d focusmon,right' out.png
 #                                            # run a command in the nested session
 #                                            #   before capture (after --notify*)
@@ -96,6 +100,7 @@ OUTPUTS=1           # headless outputs (multi-monitor cases); grim captures them
 EXEC=""             # shell command run inside the nested session before capture
 RENDERER=pixman     # wlroots renderer: pixman (default, goldens) | gles2 (GPU, scenefx effects)
 MANGO_LIBS=""        # dir of locally built libs (e.g. a patched scenefx) for the nested session
+MANGO_CONFIG=""      # base mango config instead of the real one (--mango-config)
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -114,6 +119,7 @@ while [ $# -gt 0 ]; do
     --set)      SETS+=("$2"); shift 2 ;;
     --mango-line) MANGO_LINES+=("$2"); shift 2 ;;
     --mango-include) MANGO_INCLUDES+=("$2"); shift 2 ;;
+    --mango-config) MANGO_CONFIG="$(readlink -f "$2")"; shift 2 ;;
     --notify-count) NOTIFY_COUNT="$2"; shift 2 ;;
     --keep)     KEEP=1; shift ;;
     --fresh)    FRESH=1; shift ;;
@@ -128,6 +134,7 @@ done
 
 case "$RENDERER" in pixman|gles2) ;; *) echo "bad --renderer: $RENDERER (pixman|gles2)" >&2; exit 2 ;; esac
 if [ -n "$MANGO_LIBS" ] && [ ! -d "$MANGO_LIBS" ]; then echo "bad --mango-libs: not a directory" >&2; exit 2; fi
+if [ -n "$MANGO_CONFIG" ] && [ ! -f "$MANGO_CONFIG" ]; then echo "bad --mango-config: no such file" >&2; exit 2; fi
 
 ROOT="$(cd "${ROOT:-$(dirname "$(readlink -f "$0")")/..}" && pwd)" || { echo "bad --root" >&2; exit 2; }
 [ -f "$ROOT/shell.qml" ] || { echo "no shell.qml in $ROOT" >&2; exit 2; }
@@ -264,18 +271,24 @@ if [ -n "$WALLPAPER" ] && [ -f "$WALLPAPER" ] && command -v awww-daemon >/dev/nu
   printf '%s' "$WALLPAPER" > "$RUN/wallpaper.path"   # read back in-session: no quoting of the path
   WP_CMD="(awww-daemon >$LOG/awww.log 2>&1 &) ; sleep 1; awww img \"\$(cat $RUN/wallpaper.path)\" >>$LOG/awww.log 2>&1"
 fi
-OVERRIDE="exec|exec-once|bind|binds|gesturebind|mousebind|axisbind|switchbind|touchbind|keymode|monitorrule|env|source|source-optional|spawn_on_empty"
+OVERRIDE="exec|exec-once|bind|binds|gesturebind|mousebind|axisbind|switchbind|touchbind|keymode|monitorrule|monitor_rule|env|source|source-optional|spawn_on_empty"
+# mango 0.18 renamed the colour keys (bordercolor -> border_color, ...) and draws
+# an error overlay over the output for an unknown key, so the theme's colours
+# (stored under the 0.17 names) are written under the nested mango's names.
+MANGO_VER="$(mango -v 2>&1 | sed -n 's/^mango \([0-9]*\.[0-9]*\).*/\1/p' | head -1)"
 if [ -n "$THEME" ] && [ -f "$ROOT/themes/$THEME/theme.json" ]; then
-  python3 - "$ROOT/themes/$THEME/theme.json" >> "$RUN/mango.conf" <<'PY'
+  python3 - "$ROOT/themes/$THEME/theme.json" "${MANGO_VER:-0.0}" >> "$RUN/mango.conf" <<'PY'
 import json, sys
 m = json.load(open(sys.argv[1])).get("mango", {})
+new = tuple(int(x) for x in sys.argv[2].split(".")) >= (0, 18)
 for k in ("bordercolor", "focuscolor", "urgentcolor", "shadowscolor"):
-    if k in m: print(f"{k}={m[k]}")
+    if k in m: print(f"{k[:-5] + '_color' if new else k}={m[k]}")
 PY
-  OVERRIDE="$OVERRIDE|bordercolor|focuscolor|urgentcolor|shadowscolor"
+  OVERRIDE="$OVERRIDE|bordercolor|focuscolor|urgentcolor|shadowscolor|border_color|focus_color|urgent_color|shadows_color"
 fi
-if [ "$FRESH" != 1 ] && [ -f "$REAL_HOME/.config/mango/config.conf" ]; then
-  grep -v -E '^[[:space:]]*(#|$)' "$REAL_HOME/.config/mango/config.conf" \
+MANGO_BASE="${MANGO_CONFIG:-$REAL_HOME/.config/mango/config.conf}"
+if [ "$FRESH" != 1 ] && [ -f "$MANGO_BASE" ]; then
+  grep -v -E '^[[:space:]]*(#|$)' "$MANGO_BASE" \
     | grep -v -i -E "^[[:space:]]*($OVERRIDE)[[:space:]]*=" >> "$RUN/mango.conf"
 fi
 for l in "${MANGO_LINES[@]}"; do printf '%s\n' "$l" >> "$RUN/mango.conf"; done

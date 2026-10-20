@@ -167,3 +167,11 @@ spawn_on_empty). A guard aborts the run if anything command-like survives. With
 `--theme`, that theme's mango colours (border, focus, urgent, shadow) come first.
 `--fresh` keeps mango's defaults. The wallpaper (`--wallpaper`, default: the live
 one) is started from the in-session startup script.
+
+The nested mango is the INSTALLED one, which can be newer than the running one
+until the owner logs out and back in. mango 0.18 renamed many keys (bordercolor ->
+border_color, monitorrule -> monitor_rule, ...), rejects others the 0.17 config
+uses (windowrule, gappih, ...) and draws an error overlay over the whole output
+for an unknown key. The theme colours follow the
+installed version on their own; for the owner's config, pass a migrated copy with
+`--mango-config f.conf` (same filter and guard as the real one).
