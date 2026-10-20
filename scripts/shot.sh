@@ -186,9 +186,11 @@ if [ "$FRESH" = 0 ]; then
   # A COPY of the owner's mango config, as data for the shell (the shortcuts
   # sheet parses its binds). The nested mango never reads it: it runs on the
   # generated $RUN/mango.conf (-c), which sources only --mango-include files.
-  if [ -f "$REAL_HOME/.config/mango/config.conf" ]; then
+  # With --mango-config, that file instead (the shell's mango writers follow its
+  # key names, e.g. the Input service's device rules).
+  if [ -f "${MANGO_CONFIG:-$REAL_HOME/.config/mango/config.conf}" ]; then
     mkdir -p "$FH/.config/mango"
-    cp "$REAL_HOME/.config/mango/config.conf" "$FH/.config/mango/config.conf"
+    cp "${MANGO_CONFIG:-$REAL_HOME/.config/mango/config.conf}" "$FH/.config/mango/config.conf"
   fi
 fi
 # ~/.local/bin is an ALLOWLIST, not a symlink to the real dir: some user scripts
