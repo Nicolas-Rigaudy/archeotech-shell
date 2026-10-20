@@ -323,11 +323,11 @@ def apply_mango(theme: dict, vars: Dict[str, str]) -> None:
 
     text = path.read_text()
     for key, val in (
-        ("shadowscolor", m.get("shadowscolor")),
+        ("shadows_color", m.get("shadowscolor")),
         ("shadows_size", str(m.get("shadows_size", ""))),
-        ("bordercolor",  m.get("bordercolor")),
-        ("focuscolor",   m.get("focuscolor")),
-        ("urgentcolor",  m.get("urgentcolor")),
+        ("border_color", m.get("bordercolor")),
+        ("focus_color",  m.get("focuscolor")),
+        ("urgent_color", m.get("urgentcolor")),
         ("jump_label_decorate_bg_color",       base),
         ("jump_label_decorate_fg_color",       txt),
         ("jump_label_decorate_border_color",   accent),

@@ -202,20 +202,20 @@ The wallpaper system supports per-output routing — landscape images go to land
 
 ### Named Rules
 
-MangoWC uses `monitorrule` with PCRE2 regex name matching. The first matching rule wins:
+MangoWC uses `monitor_rule` with PCRE2 regex name matching. The first matching rule wins:
 
 ```
 # Work desk (3 monitors)
-monitorrule=name:eDP-1,width:1920,height:1200,refresh:60,x:0,y:0,scale:1,rr:0
-monitorrule=name:HDMI-A-1,width:1920,height:1080,refresh:60,x:1920,y:60,scale:1,rr:0
-monitorrule=name:DP-3,width:1920,height:1080,refresh:60,x:3840,y:0,scale:1,rr:3
+monitor_rule=name:eDP-1,width:1920,height:1200,refresh:60,x:0,y:0,scale:1,rr:0
+monitor_rule=name:HDMI-A-1,width:1920,height:1080,refresh:60,x:1920,y:60,scale:1,rr:0
+monitor_rule=name:DP-3,width:1920,height:1080,refresh:60,x:3840,y:0,scale:1,rr:3
 
 # Fallback: any other display (TV, home monitor, meeting room)
-monitorrule=name:HDMI.*,x:1920,y:60,scale:1,rr:0
-monitorrule=name:DP-.*,x:1920,y:60,scale:1,rr:0
+monitor_rule=name:HDMI.*,x:1920,y:60,scale:1,rr:0
+monitor_rule=name:DP-.*,x:1920,y:60,scale:1,rr:0
 ```
 
-**Important:** `mmsg reload` does NOT reliably reapply `monitorrule` entries. Log out and back in for monitor config changes to take effect.
+**Important:** `mmsg reload` does NOT reliably reapply `monitor_rule` entries. Log out and back in for monitor config changes to take effect.
 
 ---
 

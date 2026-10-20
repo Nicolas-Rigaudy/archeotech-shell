@@ -21,12 +21,12 @@
 #   shot.sh --notify --burst 6 -i 1 out.png  # fire a toast, capture 6 frames 1s
 #                                            #   apart → out-000.png … out-005.png
 #   shot.sh --outputs 2 out.png              # two headless outputs side by side
-#   shot.sh --mango-line 'devicerule=type:keyboard,repeat_rate:40' out.png
+#   shot.sh --mango-line 'device_rule=type:keyboard,repeat_rate:40' out.png
 #                                            # append a line to the nested mango config
 #                                            #   (repeatable; still passes the command guard)
 #   shot.sh --mango-include f.conf out.png   # copy f.conf to the fake ~/.config/mango/ and
 #                                            #   source it like the real config does
-#                                            #   (source-optional=~/.config/mango/f.conf;
+#                                            #   (source_optional=~/.config/mango/f.conf;
 #                                            #   contents guarded too)
 #   shot.sh --exec 'notify-send a; mmsg -d focusmon,right' out.png
 #                                            # run a command in the nested session
@@ -250,29 +250,30 @@ if [ -z "$WALLPAPER" ] && command -v awww >/dev/null 2>&1; then
 fi
 # Start from the owner's REAL mango config so renders look like the real session
 # (borders, gaps, radius, shadows, blur, layout, window/layer rules), minus every
-# line that could reach outside the nested session: autostart (exec/exec-once),
+# line that could reach outside the nested session: autostart (exec/exec_once),
 # key/mouse/gesture binds (they call the owner's scripts) and monitor rules for the
 # physical outputs. --fresh renders a stranger's first boot, so it keeps mango's
 # defaults.
 : > "$RUN/mango.conf"
 # Our own lines go FIRST: the wallpaper autostart, then (with --theme) that theme's
 # window colours. The owner's config follows, minus the keys set here.
-# The wallpaper starts from STARTUP below (inside the session), not exec-once:
-# with the owner's full config loaded, mango's exec-once did not fire here.
+# The wallpaper starts from STARTUP below (inside the session), not exec_once:
+# with the owner's full config loaded, mango's exec_once did not fire here.
 WP_CMD=":"
 if [ -n "$WALLPAPER" ] && [ -f "$WALLPAPER" ] && command -v awww-daemon >/dev/null 2>&1; then
   printf '%s' "$WALLPAPER" > "$RUN/wallpaper.path"   # read back in-session: no quoting of the path
   WP_CMD="(awww-daemon >$LOG/awww.log 2>&1 &) ; sleep 1; awww img \"\$(cat $RUN/wallpaper.path)\" >>$LOG/awww.log 2>&1"
 fi
-OVERRIDE="exec|exec-once|bind|binds|gesturebind|mousebind|axisbind|switchbind|touchbind|keymode|monitorrule|env|source|source-optional|spawn_on_empty"
+OVERRIDE="exec|exec_once|bind|binds|gesturebind|mousebind|axisbind|switchbind|touchbind|keymode|monitor_rule|env|source|source_optional|spawn_on_empty"
 if [ -n "$THEME" ] && [ -f "$ROOT/themes/$THEME/theme.json" ]; then
   python3 - "$ROOT/themes/$THEME/theme.json" >> "$RUN/mango.conf" <<'PY'
 import json, sys
 m = json.load(open(sys.argv[1])).get("mango", {})
-for k in ("bordercolor", "focuscolor", "urgentcolor", "shadowscolor"):
-    if k in m: print(f"{k}={m[k]}")
+for k, v in (("border_color", "bordercolor"), ("focus_color", "focuscolor"),
+             ("urgent_color", "urgentcolor"), ("shadows_color", "shadowscolor")):
+    if v in m: print(f"{k}={m[v]}")
 PY
-  OVERRIDE="$OVERRIDE|bordercolor|focuscolor|urgentcolor|shadowscolor"
+  OVERRIDE="$OVERRIDE|border_color|focus_color|urgent_color|shadows_color"
 fi
 if [ "$FRESH" != 1 ] && [ -f "$REAL_HOME/.config/mango/config.conf" ]; then
   grep -v -E '^[[:space:]]*(#|$)' "$REAL_HOME/.config/mango/config.conf" \
@@ -280,7 +281,7 @@ if [ "$FRESH" != 1 ] && [ -f "$REAL_HOME/.config/mango/config.conf" ]; then
 fi
 for l in "${MANGO_LINES[@]}"; do printf '%s\n' "$l" >> "$RUN/mango.conf"; done
 # --mango-include: the file goes into the FAKE home and is sourced through `~`,
-# exactly like the owner's `source-optional=~/.config/mango/archeotech-input.conf`
+# exactly like the owner's `source_optional=~/.config/mango/archeotech-input.conf`
 # (mango 0.17.5 resolves a bare relative name against its working directory, not
 # the config dir; only `./` and `~` are config-dir / home relative).
 INCLUDE_LINES=()
@@ -289,12 +290,12 @@ for f in "${MANGO_INCLUDES[@]}"; do
   b=$(basename "$f")
   mkdir -p "$FH/.config/mango"
   cp "$f" "$FH/.config/mango/$b"
-  printf 'source-optional=~/.config/mango/%s\n' "$b" >> "$RUN/mango.conf"
-  INCLUDE_LINES+=("source-optional=~/.config/mango/$b")
+  printf 'source_optional=~/.config/mango/%s\n' "$b" >> "$RUN/mango.conf"
+  INCLUDE_LINES+=("source_optional=~/.config/mango/$b")
 done
 # Guard: refuse to start if anything command-like survived the filter (a mango
 # keyword added after this list was written, or a spawn action inside a rule).
-# Exempt: only the exact source-optional lines added for --mango-include; the
+# Exempt: only the exact source_optional lines added for --mango-include; the
 # included files themselves are scanned too.
 GUARDED=$(cat "$RUN/mango.conf")
 for l in "${INCLUDE_LINES[@]}"; do GUARDED=$(printf '%s\n' "$GUARDED" | grep -vxF "$l"); done
