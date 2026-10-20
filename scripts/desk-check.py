@@ -26,6 +26,7 @@ upscaled with nearest-neighbour and stacked next to each other in <out>-zoom.png
 import argparse
 import json
 import pathlib
+import re
 import shlex
 import shutil
 import subprocess
@@ -50,6 +51,17 @@ def live_wallpaper():
         if "image: " in line:
             return line.split("image: ", 1)[1].strip()
     return ""
+
+
+def monitor_rule_key():
+    """The nested mango's monitor rule key: shot.sh starts the INSTALLED mango,
+    and 0.18 renamed monitorrule -> monitor_rule (the old name is an error)."""
+    try:
+        out = subprocess.run(["mango", "-v"], capture_output=True, text=True, timeout=5).stdout
+    except (OSError, subprocess.SubprocessError):
+        out = ""
+    m = re.search(r"mango (\d+)\.(\d+)", out)
+    return "monitor_rule" if m and (int(m[1]), int(m[2])) >= (0, 18) else "monitorrule"
 
 
 def step_cmd(step):
@@ -122,7 +134,7 @@ def main():
         script.append(APP[args.app] + f" sh -c {shlex.quote(fill)} >/dev/null 2>&1 & sleep 3")
     script += [step_cmd(s) for s in args.steps]
 
-    mango = [f"monitorrule=name:HEADLESS-1,width:{w},height:{h},refresh:60,x:0,y:0,scale:1,rr:0",
+    mango = [f"{monitor_rule_key()}=name:HEADLESS-1,width:{w},height:{h},refresh:60,x:0,y:0,scale:1,rr:0",
              f"blur_layer={0 if args.blur == 'off' else 1}",
              f"blur_optimized={0 if args.blur == 'windows' else 1}"] + args.mango_line
     cmd = [str(root / "scripts" / "shot.sh"), "--root", str(root), "--renderer", "gles2",
