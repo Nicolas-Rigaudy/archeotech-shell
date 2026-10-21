@@ -11,6 +11,13 @@ Item {
     implicitWidth: 40
     implicitHeight: 22
 
+    // Keyboard: Tab focuses (ring below), Space/Enter request the toggle.
+    // `enabled: false` dims the switch and ignores input.
+    activeFocusOnTab: enabled
+    opacity: enabled ? 1.0 : Commons.Appearance.disabledOpacity
+    Keys.onSpacePressed:  if (enabled) root.toggled(!root.checked)
+    Keys.onReturnPressed: if (enabled) root.toggled(!root.checked)
+
     Rectangle {
         id: track
         anchors.fill: parent
@@ -80,4 +87,6 @@ Item {
         // would stop following external changes after one click (design rule 6).
         onClicked: root.toggled(!root.checked)
     }
+
+    FocusRing { shown: root.activeFocus; cornerRadius: height / 2 }
 }

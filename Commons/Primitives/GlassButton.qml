@@ -27,6 +27,14 @@ Item {
     readonly property alias pressed: layer.pressed
     signal clicked()
 
+    // Keyboard: Tab focuses (ring below), Space/Enter click. `enabled: false`
+    // dims the button and drops it from hover, click and the Tab chain.
+    activeFocusOnTab: enabled
+    opacity: enabled ? 1.0 : Commons.Appearance.disabledOpacity
+    Keys.onSpacePressed:  if (enabled) clicked()
+    Keys.onReturnPressed: if (enabled) clicked()
+    Keys.onEnterPressed:  if (enabled) clicked()
+
     implicitWidth:  (label.visible ? label.implicitWidth : contentSlot.implicitWidth) + hpad * 2
     implicitHeight: 30
 
@@ -119,6 +127,9 @@ Item {
         radius: Commons.Appearance.radius.base   // match the button corners (parent is an Item, no radius)
         pressScale: 0.96
         scaleTarget: btn
+        interactive: btn.enabled
         onClicked: btn.clicked()
     }
+
+    FocusRing { shown: btn.activeFocus; cornerRadius: Commons.Appearance.radius.base }
 }

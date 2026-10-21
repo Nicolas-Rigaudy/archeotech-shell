@@ -25,6 +25,20 @@ Item {
     signal activated(int index)
 
     readonly property bool _v: root.vertical
+
+    // Keyboard: Tab focuses (ring below); Left/Right (Up/Down when vertical) step the
+    // selection. The control is stateless, so stepping only emits `activated`.
+    // `enabled: false` dims it and ignores input.
+    activeFocusOnTab: enabled
+    opacity: enabled ? 1.0 : Commons.Appearance.disabledOpacity
+    function _step(d) {
+        var n = root.currentIndex + d
+        if (n >= 0 && n < root.model.length) root.activated(n)
+    }
+    Keys.onLeftPressed:  if (enabled && !_v) _step(-1)
+    Keys.onRightPressed: if (enabled && !_v) _step(1)
+    Keys.onUpPressed:    if (enabled && _v)  _step(-1)
+    Keys.onDownPressed:  if (enabled && _v)  _step(1)
     implicitHeight: _v ? 30 * Math.max(1, model.length) : 30
 
     // Steel pack (Grimdark): the selected pill is a raised machined-steel key
@@ -144,4 +158,6 @@ Item {
             }
         }
     }
+
+    FocusRing { shown: root.activeFocus; cornerRadius: track.radius }
 }

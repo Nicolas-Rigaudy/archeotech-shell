@@ -786,6 +786,14 @@ QtObject {
         readonly property int spin: root._tok("anim", "spin", 900)
     }
 
+    // Keyboard focus ring (FocusRing primitive) and the dim of a disabled control.
+    readonly property QtObject focusRing: QtObject {
+        readonly property int   width: root._tok("focusRing", "width", 2)
+        readonly property int   gap:   root._tok("focusRing", "gap",   2)
+        readonly property color color: root.colors.accent
+    }
+    readonly property real disabledOpacity: root._tok("state", "disabledOpacity", 0.4)
+
     // Linear easing for constant-speed scrolls (marquee); a named token so call sites
     // carry no Easing literal.
     readonly property int easingLinear: Easing.Linear
