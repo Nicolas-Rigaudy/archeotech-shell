@@ -84,7 +84,7 @@ ShellRoot {
     Binding {
         target: Commons.Appearance
         property: "coverageBlurMode"
-        value: Persistence.Config.get("appearance.coverageBlur", "auto")
+        value: Persistence.Config.get("appearance.coverageBlur")
     }
     // What layer blur shows over a window (item_116), same wiring.
     Binding {
