@@ -7,6 +7,8 @@
 var DEFAULTS = {
     "appearance.fontScale":           1,
     "appearance.flatMode":            false,
+    "appearance.animScale":           1,         // 0 = off, 0.5 quick, 1 normal, 1.5 slow
+    "appearance.reducedMotion":       false,     // spatial motion instant, no decorative loops
     "appearance.glass":               "",        // "" = the mode's preset (glass-presets.json)
     "appearance.glassBlur":           "xray",    // layer blur over windows: xray (wallpaper) | windows
     "appearance.coverageBlur":        "auto",    // patched scenefx (coverage-weighted blur): auto (marker file) | on | off

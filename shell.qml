@@ -73,6 +73,19 @@ ShellRoot {
         value: Math.max(0.8, Math.min(1.4, Number(Persistence.Config.get("appearance.fontScale")) || 1.0))
     }
 
+    // Animation speed and reduced motion (item_114), same wiring; MotionLogic
+    // clamps the scale, so a hand-edited config.json cannot stall the shell.
+    Binding {
+        target: Commons.Appearance
+        property: "animScale"
+        value: Number(Persistence.Config.get("appearance.animScale"))
+    }
+    Binding {
+        target: Commons.Appearance
+        property: "reducedMotion"
+        value: !!Persistence.Config.get("appearance.reducedMotion")
+    }
+
     // Glass opacity preset (item_139), same wiring.
     Binding {
         target: Commons.Appearance

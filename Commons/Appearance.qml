@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import QtCore
 import Quickshell.Io
+import "MotionLogic.js" as Motion
 
 QtObject {
     id: root
@@ -750,24 +751,44 @@ QtObject {
     // longer, and the enter/exit split ("enter gently, leave briskly").
     // Durations route through _tok so a pack's `anim` group can retune the whole
     // shell's motion (adr_027 Wave 2) — components already read these tokens.
+    // Motion settings (item_114), driven from shell.qml like fontScale. animScale
+    // multiplies every duration below (0 = off); reducedMotion makes spatial
+    // durations instant and stops decorative loops (see MotionLogic.js).
+    property real animScale: 1.0
+    property bool reducedMotion: false
+    function _fx(key, ms)  { return Motion.effects(root._tok("anim", key, ms), root.animScale) }
+    function _sp(key, ms)  { return Motion.spatial(root._tok("anim", key, ms), root.animScale, root.reducedMotion) }
+
     readonly property QtObject anim: QtObject {
-        readonly property int fast:   root._tok("anim", "fast",   100)
-        readonly property int base:   root._tok("anim", "base",   200)
+        readonly property int fast:   root._fx("fast",   100)
+        readonly property int base:   root._fx("base",   200)
         // Strip popup → panel transitions (perp + axis growth).
-        readonly property int panel:  root._tok("anim", "panel",  240)
+        readonly property int panel:  root._sp("panel",  240)
 
         // Effects — opacity / colour crossfades.
-        readonly property int effectsFast: root._tok("anim", "effectsFast", 150)
-        readonly property int effectsMed:  root._tok("anim", "effectsMed",  200)
-        readonly property int effectsSlow: root._tok("anim", "effectsSlow", 300)
+        readonly property int effectsFast: root._fx("effectsFast", 150)
+        readonly property int effectsMed:  root._fx("effectsMed",  200)
+        readonly property int effectsSlow: root._fx("effectsSlow", 300)
         // Spatial — position / size moves.
-        readonly property int spatialFast:    root._tok("anim", "spatialFast",    350)
-        readonly property int spatialDefault: root._tok("anim", "spatialDefault", 500)
-        readonly property int spatialSlow:    root._tok("anim", "spatialSlow",    650)
+        readonly property int spatialFast:    root._sp("spatialFast",    350)
+        readonly property int spatialDefault: root._sp("spatialDefault", 500)
+        readonly property int spatialSlow:    root._sp("spatialSlow",    650)
         // Enter/exit asymmetry defaults.
-        readonly property int enter: root._tok("anim", "enter", 400)
-        readonly property int exit:  root._tok("anim", "exit",  200)
+        readonly property int enter: root._sp("enter", 400)
+        readonly property int exit:  root._sp("exit",  200)
+        // Once-a-second progress smoothing (media position): spatial, just under
+        // the tick so each step lands as the next arrives.
+        readonly property int tick: root._sp("tick", 950)
+        // Dwell before a looping scroll restarts (media title marquee).
+        readonly property int hold: root._fx("hold", 600)
+        // Busy-spinner revolution. Unscaled: a spinner is a state indicator, and a
+        // zero duration on an infinite loop would freeze it.
+        readonly property int spin: root._tok("anim", "spin", 900)
     }
+
+    // Linear easing for constant-speed scrolls (marquee); a named token so call sites
+    // carry no Easing literal.
+    readonly property int easingLinear: Easing.Linear
 
     // ── Motion curves (§18.2) ────────────────────────────────────────────────
     // M3 bezier control-point lists for `easing.bezierCurve` (with

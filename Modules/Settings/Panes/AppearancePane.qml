@@ -178,6 +178,35 @@ Item {
                         currentValue: Persistence.Config.get("appearance.flatMode") ? "flat" : "3d"
                         onSelected: v => Persistence.Config.set("appearance.flatMode", v === "flat")
                     }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                    Divider { }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                    // Motion (item_114): one speed multiplier, one accessibility switch.
+                    ButtonGroupRow {
+                        label: "Animation speed"
+                        configKey: "appearance.animScale"
+                        description: "How long panels, fades and slides take; Off makes everything instant"
+                        options: [
+                            { value: "0",   label: "Off" },
+                            { value: "0.5", label: "Quick" },
+                            { value: "1",   label: "Normal" },
+                            { value: "1.5", label: "Slow" }
+                        ]
+                        currentValue: String(Commons.Appearance.animScale)
+                        onSelected: v => Persistence.Config.set("appearance.animScale", Number(v))
+                    }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                    Divider { }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                    ButtonGroupRow {
+                        label: "Reduce motion"
+                        configKey: "appearance.reducedMotion"
+                        resetHint: "Reset to Off"
+                        description: "Slides and pops become instant and scrolling text stops; fades stay"
+                        options: [{ value: "off", label: "Off" }, { value: "on", label: "On" }]
+                        currentValue: Persistence.Config.get("appearance.reducedMotion") ? "on" : "off"
+                        onSelected: v => Persistence.Config.set("appearance.reducedMotion", v === "on")
+                    }
                 }
 
                 Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true; visible: root._activePack === "" }
