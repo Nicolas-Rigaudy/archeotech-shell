@@ -3,6 +3,7 @@ import QtQuick
 import QtCore
 import Quickshell.Io
 import "MotionLogic.js" as Motion
+import "PaletteLogic.js" as Palette
 
 QtObject {
     id: root
@@ -201,8 +202,53 @@ QtObject {
         onTextChanged: {
             var content = text()
             if (!content || !content.trim()) return
-            try { root._data = JSON.parse(content) } catch (_) {}
+            try { root._applyTheme(JSON.parse(content)) } catch (_) {}
         }
+    }
+
+    // ── Palette crossfade (item_009) ─────────────────────────────────────────
+    // A theme switch rewrites theme.json; instead of snapping, every base palette
+    // colour eases from what is on screen to the new value. `_c` is the single
+    // colour source, so it does the mixing: while `_mix` < 1 it returns
+    // blend(_prevData, _data, _mix). The snapshot is taken from `_c` itself, so a
+    // switch landing mid-fade starts from the blended colours (no jump). The accent
+    // follows the accent ROLE, not its palette name, so picking a different accent
+    // fades too. Pack colours and the first load snap; animation scale 0 and
+    // reduced motion are honoured by the duration token (0 = snap).
+    property var    _prevData: null
+    property real   _mix: 1.0
+    property NumberAnimation _fade: NumberAnimation {
+        target: root; property: "_mix"; from: 0; to: 1
+        duration: Motion.effects(root._tok("anim", "effectsSlow", 300), root.animScale)
+        easing.type: Easing.OutCubic
+    }
+
+    function _applyTheme(next) {
+        var first = !(root._data && root._data.colors)
+        if (first || root.animScale <= 0 || !Palette.differs(root._data, next)) {
+            root._fade.stop(); root._prevData = null; root._mix = 1
+            root._data = next
+            return
+        }
+        var snap = { colors: {}, accent: root._baseColor(root._accentName, "") }
+        var keys = Object.keys((root._data && root._data.colors) || {})
+        for (var i = 0; i < keys.length; i++)
+            snap.colors[keys[i]] = root._baseColor(keys[i], "")
+        root._fade.stop()
+        root._prevData = snap
+        root._mix = 0
+        root._data = next
+        root._fade.start()
+    }
+
+    // Base theme colour for a key (no pack overlay), mid-fade aware.
+    function _baseColor(key, fallback) {
+        var d = root._data
+        var to = (d && d.colors && d.colors[key]) || fallback
+        var pd = root._prevData
+        if (!pd || root._mix >= 1) return to
+        var from = (key === root._accentName) ? pd.accent : pd.colors[key]
+        return from ? Palette.blend(from, to, root._mix) : to
     }
 
     // Colour lookup with pack overlay (adr_027 Layer A): the active pack's tokens
@@ -211,8 +257,7 @@ QtObject {
         var p = root._mergedPack
         if (p && p.colors && p.colors[key] !== undefined && p.colors[key] !== null)
             return p.colors[key]
-        var d = root._data
-        return (d && d.colors && d.colors[key]) || fallback
+        return root._baseColor(key, fallback)
     }
 
     // Slot a semantic role maps to: the active pack's roles win, then the theme's
