@@ -357,10 +357,19 @@ Item {
     //    A binding to `panelRoot.panelOpen` tracks the change at runtime.
     readonly property bool _panelOpen: root.panelRoot ? root.panelRoot.panelOpen : false
     on_PanelOpenChanged: if (_panelOpen) _resetOnOpen()
+    // `launcher search` while already open: take the new text at once.
+    Connections {
+        target: Commons.State
+        function onLauncherQueryChanged() {
+            if (root._panelOpen && Commons.State.launcherQuery !== "") root._resetOnOpen()
+        }
+    }
 
     function _resetOnOpen() {
-        root.query = ""
-        searchInput.text = ""
+        var q = Commons.State.launcherQuery
+        Commons.State.launcherQuery = ""
+        root.query = q
+        searchInput.text = q
         root._filter()
         root._refreshRecents()
         searchInput.forceActiveFocus()

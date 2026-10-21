@@ -187,6 +187,11 @@ ShellRoot {
         function toggle() { ShellServices.ShellState.toggleGlobal("launcher") }
         function open()   { ShellServices.ShellState.openGlobal("launcher")  }
         function close()  { ShellServices.ShellState.closeAllAcross()        }
+        // Open with the search box pre-filled: `ipc call launcher search "fire"`.
+        function search(text: string) {
+            Commons.State.launcherQuery = text
+            ShellServices.ShellState.openGlobal("launcher")
+        }
     }
 
     IpcHandler {
