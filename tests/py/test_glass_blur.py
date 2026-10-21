@@ -41,6 +41,27 @@ class GlassBlur(unittest.TestCase):
     def test_window_blur_untouched(self):
         self.assertEqual(val(ts.mango_opacity_lines(CONF, "dark", "glass"), "blur"), "1")
 
+    def test_brightness_tune_is_blur_mode_only(self):
+        c = CONF + "blur_params_brightness=0.9\n"
+        self.assertEqual(val(ts.mango_opacity_lines(c, "dark", "glass", blur="windows", tune="brightness"),
+                             "blur_params_brightness"), "1.0")
+        for blur in ("xray", "windows"):
+            self.assertEqual(val(ts.mango_opacity_lines(c, "dark", "glass", blur=blur), "blur_params_brightness"), "0.9")
+        self.assertEqual(val(ts.mango_opacity_lines(c, "dark", "glass", blur="xray", tune="brightness"),
+                             "blur_params_brightness"), "0.9")
+
+    def test_dropping_the_tune_restores_only_the_tuned_value(self):
+        tuned = CONF + "blur_params_brightness=1.0\n"
+        self.assertEqual(val(ts.mango_opacity_lines(tuned, "dark", "glass", blur="windows"),
+                             "blur_params_brightness"), "0.9")
+        hand = CONF + "blur_params_brightness=0.7\n"
+        self.assertEqual(val(ts.mango_opacity_lines(hand, "dark", "glass", blur="windows"),
+                             "blur_params_brightness"), "0.7")
+
+    def test_brightness_tune_without_the_key_adds_nothing(self):
+        self.assertNotIn("blur_params_brightness",
+                         ts.mango_opacity_lines(CONF, "dark", "glass", blur="windows", tune="brightness"))
+
 
 if __name__ == "__main__":
     unittest.main()

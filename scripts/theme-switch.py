@@ -194,6 +194,16 @@ def glass_blur() -> str:
     return "windows" if v == "windows" else "xray"
 
 
+def glass_tune() -> str:
+    """Blur-mode compensation preset (config.json appearance.blurTune); "" = none.
+    Only "brightness" reaches mango (the others are drawn by the shell)."""
+    try:
+        v = json.loads(CONFIG_FILE.read_text()).get("appearance", {}).get("blurTune", "")
+    except (OSError, ValueError, AttributeError):
+        v = ""
+    return v if v == "brightness" else ""
+
+
 def preset_blurs(preset: str = "") -> bool:
     """Whether a glass preset turns on compositor blur behind the shell (item_116);
     an unset or unknown preset uses the table default."""
@@ -212,12 +222,15 @@ def glass_values(mode: str, preset: str = "") -> Dict[str, Any]:
 
 
 def mango_opacity_lines(text: str, mode: str, preset: str = "", pack: bool = False,
-                        blur: str = "xray") -> str:
+                        blur: str = "xray", tune: str = "") -> str:
     """Set mango's global focused/unfocused window opacity for the preset, so
     Solid really makes every window opaque (per-app windowrules still win), and
     the layer blur behind the shell (item_116, adr_035): blur_layer follows the
     preset (off under a pack, which owns material), blur_optimized the blur
-    source ("xray" = 1, the cached wallpaper; "windows" = 0, what is behind)."""
+    source ("xray" = 1, the cached wallpaper; "windows" = 0, what is behind).
+    tune "brightness" (Blur mode only) raises blur_params_brightness to the
+    glass-presets.json blurTunes value; dropping it puts the base value back, but
+    only over a line still holding the tuned value (a hand-set one is left alone)."""
     try:
         v = glass_values(mode, preset)
         layer = preset_blurs(preset) and not pack
@@ -234,7 +247,27 @@ def mango_opacity_lines(text: str, mode: str, preset: str = "", pack: bool = Fal
         elif key.startswith("blur_"):
             # A config without the blur keys would silently ignore the preset.
             text = text.rstrip("\n") + f"\n{key}={val}\n"
-    return text
+    return mango_blur_brightness(text, tune if blur == "windows" and layer else "")
+
+
+def mango_blur_brightness(text: str, tune: str) -> str:
+    """blur_params_brightness for a Blur-mode tune (see mango_opacity_lines)."""
+    try:
+        t = json.loads(GLASS_PRESETS_FILE.read_text())["blurTunes"]["brightness"]
+        tuned, base = str(t["mangoBrightness"]), str(t["mangoBrightnessBase"])
+    except (OSError, ValueError, KeyError):
+        return text
+    m = re.search(r"^blur_params_brightness=(.*)$", text, flags=re.M)
+    if not m:
+        return text
+    cur = m.group(1).strip()
+    if tune == "brightness":
+        new = tuned
+    elif float(cur or 0) == float(tuned):
+        new = base
+    else:
+        return text
+    return re.sub(r"^blur_params_brightness=.*$", f"blur_params_brightness={new}", text, flags=re.M)
 
 
 def kitty_opacity(mode: str, preset: str = "") -> str:
@@ -267,7 +300,7 @@ def kitty_set_opacity(opacity: str) -> None:
             warn(f"kitty {sock.name}: {e}")
 
 
-def apply_glass_only(preset: str, blur: str = "xray") -> None:
+def apply_glass_only(preset: str, blur: str = "xray", tune: str = "") -> None:
     """`--glass <preset>`: re-set kitty's opacity for the applied theme's mode
     without a full theme switch (the shell changes panel/card alpha itself)."""
     try:
@@ -291,7 +324,7 @@ def apply_glass_only(preset: str, blur: str = "xray") -> None:
     mango = HOME / ".config" / "mango" / "config.conf"
     if mango.exists():
         before = mango.read_text()
-        after = mango_opacity_lines(before, mode, preset, pack=bool(active.get("_pack")), blur=blur)
+        after = mango_opacity_lines(before, mode, preset, pack=bool(active.get("_pack")), blur=blur, tune=tune)
         if after != before:
             atomic_write(mango, after)
             mango_reload_preserving_kb()
@@ -345,7 +378,7 @@ def apply_mango(theme: dict, vars: Dict[str, str]) -> None:
             text = re.sub(rf"^{key}=.*$", f"{key}={val}", text, flags=re.M)
     # Window opacity follows the glass preset (item_139); a pack owns material.
     text = mango_opacity_lines(text, theme.get("mode", "dark"), "" if theme.get("_pack") else glass_preset(),
-                               pack=bool(theme.get("_pack")), blur=glass_blur())
+                               pack=bool(theme.get("_pack")), blur=glass_blur(), tune=glass_tune())
     atomic_write(path, text)
     mango_reload_preserving_kb()
 
@@ -692,6 +725,12 @@ def main() -> None:
             blur = args[j + 1] if j + 1 < len(args) else ""
             if blur not in ("xray", "windows"):
                 fail(f"unknown blur source '{blur}' (known: xray, windows)")
+        tune = ""
+        if "--tune" in args:
+            j = args.index("--tune")
+            tune = args[j + 1] if j + 1 < len(args) else ""
+            if tune not in ("brightness",):
+                fail(f"unknown blur tune '{tune}' (known: brightness)")
         try:
             known = json.loads(GLASS_PRESETS_FILE.read_text())["presets"]
         except (OSError, ValueError, KeyError) as e:
@@ -702,10 +741,10 @@ def main() -> None:
         LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
         with open(LOCK_FILE, "w") as lock_fd:
             fcntl.flock(lock_fd, fcntl.LOCK_EX)
-            apply_glass_only(preset, blur)
+            apply_glass_only(preset, blur, tune)
         return
     if not args:
-        fail("usage: theme-switch.py <variant> [accent] [--pack <dir>] | --glass <preset> [--blur xray|windows]")
+        fail("usage: theme-switch.py <variant> [accent] [--pack <dir>] | --glass <preset> [--blur xray|windows] [--tune brightness]")
     variant = args[0]
 
     src = THEMES_DIR / variant / "theme.json"
