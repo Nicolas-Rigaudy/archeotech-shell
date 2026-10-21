@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import "../../Commons" as Commons
 import "../../Commons/Primitives" as Prim
 import "../../Services/Persistence" as Persistence
@@ -18,6 +19,14 @@ Item {
     readonly property string _timeFmt: Clock.timeFormat(_format, Persistence.Config.get("clock.seconds"))
     readonly property string _dateFmt: Clock.dateFormat(Persistence.Config.get("clock.date"))
 
+    // Ticks on the wall-clock boundary (a free-running 1 s Timer showed the new
+    // minute up to a second late), per second only when seconds are shown.
+    SystemClock {
+        id: sysClock
+        precision: root._horizontal && Persistence.Config.get("clock.seconds")
+            ? SystemClock.Seconds : SystemClock.Minutes
+    }
+
     visible: holderRoot
     // Bolted console segment (steel pack, horizontal bar) — the centre gauge in its
     // own panel; pad the readout balanced inside, clear of the end rivets.
@@ -35,9 +44,8 @@ Item {
         visible: root._horizontal
         anchors.centerIn: parent
         textFormat: Text.RichText
-        property date now: new Date()
         // Bound (never assigned), so a Settings change shows at once.
-        text: clockText(now, root._timeFmt, root._dateFmt)
+        text: clockText(sysClock.date, root._timeFmt, root._dateFmt)
         font.pixelSize: Commons.Appearance.font.sizeMd
         font.family: Commons.Appearance.font.family
 
@@ -54,8 +62,6 @@ Item {
                 + Qt.formatDateTime(now, dateFmt)
                 + "</span>"
         }
-        Timer { interval: 1000; running: root._horizontal; repeat: true
-                onTriggered: centerClock.now = new Date() }
     }
 
     // ── Vertical — HH / MM stacked ───────────────────────────────────────────────
@@ -64,19 +70,16 @@ Item {
         visible: !root._horizontal
         anchors.centerIn: parent
         spacing: 0
-        property var _now: new Date()
-        Timer { interval: 1000; running: !root._horizontal; repeat: true
-                onTriggered: vClock._now = new Date() }
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: Qt.formatDateTime(vClock._now, Clock.hourFormat(root._format))
+            text: Qt.formatDateTime(sysClock.date, Clock.hourFormat(root._format))
             color: Commons.Appearance.colors.textPrimary
             font.pixelSize: Commons.Appearance.font.sizeMd; font.weight: Commons.Appearance.font.weightSemibold
             font.family: Commons.Appearance.font.family
         }
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: Qt.formatDateTime(vClock._now, "mm")
+            text: Qt.formatDateTime(sysClock.date, "mm")
             color: Commons.Appearance.colors.textSecondary
             font.pixelSize: Commons.Appearance.font.sizeMd
             font.family: Commons.Appearance.font.family

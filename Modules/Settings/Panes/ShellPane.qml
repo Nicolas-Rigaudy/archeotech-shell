@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import Quickshell
 import QtQuick.Layouts
 import QtQuick.Effects
 import "../../../Commons" as Commons
@@ -232,8 +233,8 @@ Item {
                     }
                     Text {
                         id: clockPreview
-                        property date now: new Date()
-                        Timer { interval: 1000; repeat: true; running: root.visible; onTriggered: clockPreview.now = new Date() }
+                        readonly property date now: _previewClock.date
+                        SystemClock { id: _previewClock; enabled: root.visible; precision: SystemClock.Seconds }
                         readonly property string _date: Clock.dateFormat(Persistence.Config.get("clock.date"))
                         text: "Preview: " + Qt.formatDateTime(now, Clock.timeFormat(
                                   Persistence.Config.get("clock.format"), Persistence.Config.get("clock.seconds")))
