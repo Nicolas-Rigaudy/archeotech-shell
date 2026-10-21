@@ -7,6 +7,8 @@
 #   wallpaper-set.sh --toggle-logo          Turn off active logo (legacy toggle for keybind)
 #   wallpaper-set.sh --restore              Reapply last wallpaper (used at startup)
 #   wallpaper-set.sh --status              Show current wallpaper and logo state
+#   wallpaper-set.sh --print-color <image>  Print the accent extracted from <image>; applies nothing,
+#                                           writes no state (shell picker preview)
 #   wallpaper-set.sh --warm-all [DIR]       Pre-render all (wallpaper × logo) composites
 #
 # Logo names (defined in LOGOS array below):
@@ -76,15 +78,10 @@ active_logo() {
 }
 
 # ── Helper: extract accent color from image, with caching ────────────────────
-get_wallpaper_color() {
+# Pure extraction: prints the accent for <image>, touches no state. The cached
+# wrapper below and `--print-color` (shell picker preview) both call it.
+extract_wallpaper_color() {
     local img="$1"
-
-    if [ -f "$LAST_COLOR" ] && [ -f "$LAST_COLOR_FOR" ]; then
-        if [ "$(cat "$LAST_COLOR_FOR")" = "$img" ]; then
-            cat "$LAST_COLOR"
-            return
-        fi
-    fi
 
     # Use the cached thumbnail when present (faster magick analysis on a
     # smaller image), otherwise fall back to the original wallpaper. The
@@ -130,6 +127,21 @@ get_wallpaper_color() {
         END { print (best1 != "" ? best1 : best2) }
         ')
 
+    echo "$color"
+}
+
+get_wallpaper_color() {
+    local img="$1"
+
+    if [ -f "$LAST_COLOR" ] && [ -f "$LAST_COLOR_FOR" ]; then
+        if [ "$(cat "$LAST_COLOR_FOR")" = "$img" ]; then
+            cat "$LAST_COLOR"
+            return
+        fi
+    fi
+
+    local color
+    color="$(extract_wallpaper_color "$img")"
     echo "$color" > "$LAST_COLOR"
     echo "$img" > "$LAST_COLOR_FOR"
     echo "$color"
@@ -504,6 +516,15 @@ case "${1:-}" in
         echo "Cache: $(du -sh "$COMPOSED_DIR" 2>/dev/null | cut -f1)"
         ;;
 
+    --print-color)
+        [ -f "${2:-}" ] || { echo "usage: wallpaper-set.sh --print-color <image>" >&2; exit 2; }
+        # The applied wallpaper's cached colour, else extract without caching.
+        if [ -f "$LAST_COLOR" ] && [ -f "$LAST_COLOR_FOR" ] && [ "$(cat "$LAST_COLOR_FOR")" = "$2" ]; then
+            cat "$LAST_COLOR"
+        else
+            extract_wallpaper_color "$2"
+        fi
+        ;;
     --status)
         CURRENT="$(active_logo)"
         if [ -n "$CURRENT" ]; then
