@@ -26,7 +26,7 @@ ColumnLayout {
             id: lbl
             text: label
             color: Commons.Appearance.colors.textSecondary
-            font.family: Commons.Appearance.font.family
+            font.family: Commons.Appearance.font.mono
             font.pixelSize: Commons.Appearance.font.sizeBase
             width: 42
             anchors.verticalCenter: parent.verticalCenter
@@ -54,7 +54,7 @@ ColumnLayout {
             id: valLbl
             text: value + "%"
             color: Commons.Appearance.colors.textPrimary
-            font.family: Commons.Appearance.font.family
+            font.family: Commons.Appearance.font.mono
             font.pixelSize: Commons.Appearance.font.sizeBase
             width: 32
             horizontalAlignment: Text.AlignRight

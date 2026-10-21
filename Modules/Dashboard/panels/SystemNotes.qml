@@ -118,7 +118,7 @@ DashCard {
         Text {
             text: noteRow.value
             color: noteRow.valueColor
-            font.family: Commons.Appearance.font.family
+            font.family: Commons.Appearance.font.mono
             font.pixelSize: Commons.Appearance.font.sizeBase
             anchors { left: noteLbl.right; leftMargin: Commons.Appearance.spacing.s2; right: parent.right; verticalCenter: parent.verticalCenter }
             horizontalAlignment: Text.AlignRight

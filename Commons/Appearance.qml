@@ -646,7 +646,11 @@ QtObject {
     }
 
     readonly property QtObject font: QtObject {
-        readonly property string family: root._tok("font", "family", "FiraCode Nerd Font")
+        // UI face (labels, titles, body): proportional. Mono is reserved for data
+        // (clock, readouts, branch names, values) via `mono`. Corvus Dataslate
+        // identity (item_115, adr_032); a pack may set either in tokens.json font.
+        readonly property string family: root._tok("font", "family", "Noto Sans")
+        readonly property string mono:   root._tok("font", "mono",   "FiraCode Nerd Font")
         // Display/header face — falls back to the body family when the pack ships none.
         readonly property string display:
             (root._displayFont.status === FontLoader.Ready && root._displayFont.name)

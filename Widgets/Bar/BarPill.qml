@@ -142,7 +142,7 @@ Item {
             text: pill.text
             color: pill.textColor
             font.pixelSize: Commons.Appearance.font.sizeSm
-            font.family: Commons.Appearance.font.family
+            font.family: Commons.Appearance.font.mono
             anchors.verticalCenter: parent.verticalCenter
         }
     }
