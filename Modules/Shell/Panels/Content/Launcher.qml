@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 import "../../../../Commons" as Commons
 import "../../../../Commons/Primitives"
 import "../../../../Services/Persistence" as Persistence
@@ -218,7 +219,7 @@ Item {
     // .desktop icon), `__score` (ranked against app fuzzy scores on the same 0–1
     // scale), and `__run` (activation closure). Apps stay raw DesktopEntry objects;
     // providers only ADD non-app results. Register a provider by listing it here.
-    readonly property var _providers: [_provSettings, _provPower, _provCalc]
+    readonly property var _providers: [_provSettings, _provPower, _provCalc, _provWindows]
 
     function _gather(q) {
         var out = []
@@ -285,6 +286,24 @@ Item {
         return [{ name: out, comment: s + " = " + out + "  · Enter to copy", icon: "",
                   __kind: "calc", __glyph: "󰃬", __score: 1.5,
                   __run: (function(v) { return function() { Quickshell.execDetached(["wl-copy", v]) } })(out) }]
+    }
+
+    // Open windows — focus one by title or app id (item_118). Wayland
+    // foreign-toplevel, so it works on any compositor that exposes it. Weighted
+    // under apps: typing an app's name keeps its launcher entry first, its open
+    // windows right after.
+    function _provWindows(q) {
+        var out = [], tops = ToplevelManager.toplevels.values
+        for (var i = 0; i < tops.length; i++) {
+            var t = tops[i]
+            if (!t) continue
+            var sc = Math.max(root._fuzzyScore(t.title || "", q), root._fuzzyScore(t.appId || "", q)) * 0.65
+            if (sc <= 0) continue
+            out.push({ name: t.title || t.appId, comment: "Window › " + (t.appId || "unknown app"), icon: "",
+                       __kind: "window", __glyph: "󰖯", __score: sc,
+                       __run: (function(w) { return function() { w.activate() } })(t) })
+        }
+        return out
     }
 
     // ── Filter + sort ──────────────────────────────────────────────────────────
