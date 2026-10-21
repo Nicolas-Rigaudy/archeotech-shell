@@ -353,7 +353,13 @@ Item {
             if (!raw) return
             cmd = ["bash", "-c", raw]
         }
-        if (entry.runInTerminal) cmd = ["kitty", "-e"].concat(cmd)
+        // Terminal apps: kitty when installed (the themed terminal), else the
+        // user's $TERMINAL, else the xdg-terminal-exec standard launcher.
+        if (entry.runInTerminal)
+            cmd = ["bash", "-c",
+                   'if command -v kitty >/dev/null; then exec kitty -e "$@"; '
+                 + 'elif [ -n "$TERMINAL" ]; then exec "$TERMINAL" -e "$@"; '
+                 + 'else exec xdg-terminal-exec "$@"; fi', "term"].concat(cmd)
         Quickshell.execDetached(cmd)
         if (root.panelRoot) root.panelRoot.close()
     }
