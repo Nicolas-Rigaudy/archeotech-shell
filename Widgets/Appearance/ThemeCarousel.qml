@@ -107,7 +107,7 @@ Item {
             onActivated: index => root._pickFlavor(root._flavors[index].id)
         }
 
-        // Accent dots (accent-capable families only — currently Catppuccin).
+        // Accent dots (every family but Monochrome).
         // Fixed-size dots (selection grows the border inward), so the centred row
         // never shifts either.
         Flow {

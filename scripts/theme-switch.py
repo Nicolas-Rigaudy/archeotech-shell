@@ -9,9 +9,10 @@
 #
 # Usage: theme-switch.py <variant> [accent]
 #   accent (optional) = a palette color name (e.g. "blue") that overrides the
-#   variant's built-in accent across QML/mango/rofi/GTK/VSCode/Obsidian. Only
-#   accent-capable families (those shipping per-accent GTK packages, i.e.
-#   Catppuccin) honor it; others ignore the arg.
+#   variant's built-in accent across QML/kitty/mango/rofi/Obsidian (any family:
+#   every palette carries the same 14 names). GTK, the cursor and the VSCode
+#   extension accent follow only where per-accent packages exist (Catppuccin);
+#   elsewhere they keep the variant's own, so a missing package never breaks.
 
 from __future__ import annotations
 
@@ -557,10 +558,11 @@ def apply_accent(theme: dict, vars: Dict[str, str], accent: str) -> None:
     accent-bearing fields across every target. Called before the registry runs,
     so the appliers just consume the already-overridden values.
 
-    Only meaningful for Catppuccin (the family with per-accent GTK packages +
-    14 named palette accents). For other families the accent name won't be in
-    the palette and we bail. The QML side reads `theme.accent` (a color name);
-    everything else gets the resolved hex."""
+    Works for every family whose palette has the name (all of them carry the 14
+    Catppuccin-style names); a name missing from the palette is ignored with a
+    warning. GTK/cursor/VSCode accents need per-accent packages, which only
+    Catppuccin ships, so other families keep their variant's own there. The QML
+    side reads `theme.accent` (a color name); everything else gets the resolved hex."""
     colors = theme.get("colors", {})
     if accent not in colors:
         warn(f"accent '{accent}' not in palette — ignoring")

@@ -21,7 +21,7 @@ Item {
     readonly property var _darkFlavors:  _cat.flavorsForMode(_cs.family, "dark")
     readonly property var _lightFlavors: _cat.flavorsForMode(_cs.family, "light")
 
-    // Accent picker state (accent-capable families only — currently Catppuccin).
+    // Accent picker state (every family but Monochrome).
     readonly property var _accents: _cat.accentsFor(_cs.family)
     // Active accent: the explicit choice, else the family's default (mauve).
     readonly property string _activeAccent: _cs.accent || "mauve"
@@ -174,7 +174,7 @@ Item {
             visible: (root._cs.mode === "light" || root._cs.mode === "auto") && root._lightFlavors.length === 0
         }
 
-        // ── Accent (accent-capable families only — currently Catppuccin) ──────────
+        // ── Accent (every family but Monochrome) ──────────
         SLabel { text: "ACCENT"; visible: root._accents.length > 0 }
         Flow {
             Layout.fillWidth: true
