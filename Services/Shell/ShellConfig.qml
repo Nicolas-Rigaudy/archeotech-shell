@@ -208,6 +208,10 @@ QtObject {
             return (e.config && e.config.panelId) ? { id: e.config.panelId, config: {}, align: "" } : null
         if (_barToStripPanel[e.id]) return { id: _barToStripPanel[e.id], config: {}, align: "" }
         if (_stripCapable[e.id])    return { id: e.id, config: e.config || {}, align: "" }
+        if (typeof e.id === "string" && e.id.indexOf("plugin:") === 0) {
+            var m = ModuleRegistry.moduleFor(e.id)
+            if (m && Logic.canLiveOnStrip(m.canLiveIn)) return { id: e.id, config: e.config || {}, align: "" }
+        }
         return null
     }
     function _compact(list) { return list.filter(function(x) { return !!x }) }
