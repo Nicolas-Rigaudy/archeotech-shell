@@ -155,7 +155,9 @@ reference configuration.
 ### Keybinds
 
 The shell's own IPC keybinds (open/toggle panels, OSD) are in
-[`examples/mangowc.conf.example`](../examples/mangowc.conf.example). A quick reference:
+[`examples/mangowc.conf.example`](../examples/mangowc.conf.example). The OSD also
+follows state: a volume, mute or brightness change from any app or key shows it, so
+the `ipc call osd …` suffix on the media keys is optional. A quick reference:
 - `Super + Q` - Terminal
 - `Super + R` - App launcher
 - `Super + C` - Close window

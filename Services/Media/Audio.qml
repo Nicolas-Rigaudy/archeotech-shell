@@ -67,6 +67,9 @@ QtObject {
     readonly property int  micVolume: (_source && _source.audio) ? Math.round(_source.audio.volume * 100) : 0
     readonly property bool micMuted:  (_source && _source.audio) ? _source.audio.muted                    : false
 
+    // False while the default sink is missing or not yet bound (volume reads 0).
+    readonly property bool sinkBound: !!(_sink && _sink.audio)
+
     readonly property string defaultSink:   _sink   ? _sink.name   : ""
     readonly property string defaultSource: _source ? _source.name : ""
 
