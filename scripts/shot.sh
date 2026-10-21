@@ -271,7 +271,7 @@ if [ -n "$WALLPAPER" ] && [ -f "$WALLPAPER" ] && command -v awww-daemon >/dev/nu
   printf '%s' "$WALLPAPER" > "$RUN/wallpaper.path"   # read back in-session: no quoting of the path
   WP_CMD="(awww-daemon >$LOG/awww.log 2>&1 &) ; sleep 1; awww img \"\$(cat $RUN/wallpaper.path)\" >>$LOG/awww.log 2>&1"
 fi
-OVERRIDE="exec|exec-once|bind|binds|gesturebind|mousebind|axisbind|switchbind|touchbind|keymode|monitorrule|monitor_rule|env|source|source-optional|spawn_on_empty"
+OVERRIDE="exec|exec-once|exec_once|source_optional|bind|binds|gesturebind|mousebind|axisbind|switchbind|touchbind|keymode|monitorrule|monitor_rule|env|source|source-optional|spawn_on_empty"
 # mango 0.18 renamed the colour keys (bordercolor -> border_color, ...) and draws
 # an error overlay over the output for an unknown key, so the theme's colours
 # (stored under the 0.17 names) are written under the nested mango's names.

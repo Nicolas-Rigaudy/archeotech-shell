@@ -122,7 +122,7 @@ def main():
         script.append(APP[args.app] + f" sh -c {shlex.quote(fill)} >/dev/null 2>&1 & sleep 3")
     script += [step_cmd(s) for s in args.steps]
 
-    mango = [f"monitorrule=name:HEADLESS-1,width:{w},height:{h},refresh:60,x:0,y:0,scale:1,rr:0",
+    mango = [f"monitor_rule=name:HEADLESS-1,width:{w},height:{h},refresh:60,x:0,y:0,scale:1,rr:0",
              f"blur_layer={0 if args.blur == 'off' else 1}",
              f"blur_optimized={0 if args.blur == 'windows' else 1}"] + args.mango_line
     cmd = [str(root / "scripts" / "shot.sh"), "--root", str(root), "--renderer", "gles2",
