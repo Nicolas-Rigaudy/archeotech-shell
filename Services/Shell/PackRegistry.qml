@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell.Io
+import "ManifestLogic.js" as Manifest
 
 // Theme-pack discovery (adr_027 Layer A). Mirrors ModuleRegistry: scans a bundled
 // dir + the user XDG dir for `pack.json` manifests. A pack overlays the base
@@ -92,11 +93,10 @@ QtObject {
         command: ["bash", "-c",
             "scan(){ [ -d \"$1\" ] || return; for d in \"$1\"/*/; do m=\"${d}pack.json\"; " +
             "[ -f \"$m\" ] || continue; " +
-            "styles='[]'; " +
+            "styles=''; " +
             "if [ -d \"${d}styles\" ]; then " +
-            "styles=$(cd \"${d}styles\" && ls *.qml 2>/dev/null | sed 's/\\.qml$//' | jq -R . | jq -sc .); " +
-            "[ -n \"$styles\" ] || styles='[]'; fi; " +
-            "jq -c --arg dir \"$d\" --argjson styles \"$styles\" '{dir:$dir, id, name, tier, minShellVersion, inherits, styles:$styles, configSchema}' \"$m\" 2>/dev/null; " +
+            "styles=$(cd \"${d}styles\" && ls *.qml 2>/dev/null | sed 's/\\.qml$//' | tr '\\n' ' '); fi; " +
+            "printf '%s\\n%s\\n' \"$d\" \"$styles\"; cat \"$m\" 2>/dev/null; printf '\\n\\036'; " +
             "done; }; " +
             "scan \"" + root._bundledDir + "\"; " +
             "scan \"$HOME/.local/share/archeotech/packs\""
@@ -105,16 +105,15 @@ QtObject {
         property var _buf: []
         onRunningChanged: if (running) _buf = []
 
+        // One record per manifest, \x1e-separated: "<dir>\n<style ids>\n<pack.json>"
+        // (ManifestLogic.js), so discovery needs no jq.
         stdout: SplitParser {
-            onRead: line => {
-                var t = line.trim()
-                if (!t) return
-                try {
-                    var p = JSON.parse(t)
-                    if (p && p.id) _scan._buf = _scan._buf.concat([p])
-                } catch (e) {
-                    console.warn("[PackRegistry] bad manifest line:", t)
-                }
+            splitMarker: "\x1e"
+            onRead: record => {
+                if (!record.trim()) return
+                var p = Manifest.parsePack(record)
+                if (p) _scan._buf = _scan._buf.concat([p])
+                else console.warn("[PackRegistry] bad manifest:", record.split("\n")[0])
             }
         }
         onExited: {
