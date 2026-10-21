@@ -282,7 +282,12 @@ Item {
                     source: cell.modelData
                         ? "file://" + ((_useThumb && cell.modelData.thumb) ? cell.modelData.thumb : cell.modelData.path)
                         : ""
-                    onStatusChanged: if (status === Image.Error && _useThumb) _useThumb = false
+                    // Sticky: the thumb -> full-image swap must not fade a second time.
+                    property bool _bloomed: false
+                    onStatusChanged: {
+                        if (status === Image.Ready) _bloomed = true
+                        else if (status === Image.Error && _useThumb) _useThumb = false
+                    }
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     cache: true
@@ -300,6 +305,8 @@ Item {
                     anchors.fill: cellImg
                     source: cellImg
                     maskSource: cellMask
+                    opacity: cellImg._bloomed ? 1 : 0   // thumbnails bloom in instead of popping
+                    Behavior on opacity { Commons.Tween { time: Commons.Appearance.anim.base } }
                 }
 
                 Rectangle {
