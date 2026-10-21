@@ -360,6 +360,14 @@ QtObject {
     readonly property bool frameChamfer: !!(root._mergedPack && root._mergedPack.frame
                                             && root._mergedPack.frame.corners === "chamfer")
 
+    // Plated chrome (machined-plate surfaces: steel gradients, bolted collars, copper
+    // trim). Declared by the pack as `surfaces.plated`, independent of corner
+    // geometry above, so a pack can cut chamfered corners without plated chrome and
+    // the reverse. Primitives that draw a plated look read this, never the corner
+    // style (item_112; per-role recipes below replace it role by role).
+    readonly property bool platedChrome: !!(root._mergedPack && root._mergedPack.surfaces
+                                            && root._mergedPack.surfaces.plated === true)
+
     // Decorator/FX block from the active pack (adr_027 Wave 2). Consumed by the
     // FrameFx overlay: { glow{}, brackets{}, texture{} }, each optional. Empty
     // object when no pack (or no fx) — the base look stays untouched. Re-evaluates

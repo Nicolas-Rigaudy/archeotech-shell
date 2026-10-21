@@ -352,7 +352,7 @@ Item {
         // whole outline (the open popup is THE live element, so teal is licensed
         // here per the pack rules). Base/glass packs keep the screen-mapped
         // liquid-glass sheen untouched.
-        readonly property bool  _steel:    Commons.Appearance.frameChamfer
+        readonly property bool  _steel:    Commons.Appearance.platedChrome
         readonly property color _fillTop:  _steel ? Commons.Appearance.steel.hi : Commons.Appearance.colors.glassSheenTop
         readonly property color _fillMid:  _steel ? Commons.Appearance.steel.md : Commons.Appearance.colors.glassSheenTop
         readonly property color _fillBot:  _steel ? Commons.Appearance.steel.lo : Commons.Appearance.colors.glassSheenBot

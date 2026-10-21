@@ -45,7 +45,7 @@ ToolTip {
         }
         Rectangle {               // glass rim (the steel plate draws its own seat)
             anchors.fill: parent
-            visible: !Commons.Appearance.frameChamfer
+            visible: !Commons.Appearance.platedChrome
             radius: surface.radius
             antialiasing: !Commons.Appearance.crispEdges
             color: "transparent"

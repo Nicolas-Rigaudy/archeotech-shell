@@ -87,7 +87,7 @@ Item {
                 "steelLo":   Commons.Appearance.steel.lo,
                 "steelEdge": Commons.Appearance.steel.edge,
                 "steelLip":  Commons.Appearance.steel.lip,
-                "chamfer":   Commons.Appearance.frameChamfer
+                "chamfer":   Commons.Appearance.platedChrome
             }
         })
     }
@@ -105,7 +105,7 @@ Item {
         text: btn.text
         // Active text: dark `base` reads on the base accent fill, but the steel
         // pack's active chrome is dark steel + a teal edge → use light text there.
-        color: btn.active ? (Commons.Appearance.frameChamfer ? Commons.Appearance.colors.textPrimary
+        color: btn.active ? (Commons.Appearance.platedChrome ? Commons.Appearance.colors.textPrimary
                                                              : Commons.Appearance.colors.base)
                           : Commons.Appearance.colors.textSecondary
         font.pixelSize: Commons.Appearance.font.sizeSm

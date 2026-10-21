@@ -5,14 +5,14 @@ import ".." as Commons
 // look, single-sourced so every bar cluster matches: a soft chamfered recessed
 // steel plate (no raised top-light + faint seat, so it delineates without popping
 // off the bar face) with ONE domed copper rivet per side, vertically centred,
-// bolting it on. Pack-gated via Appearance.frameChamfer; zero-cost on base/glass
+// bolting it on. Pack-gated via Appearance.platedChrome; zero-cost on base/glass
 // packs. Drop in behind a cluster's content with `anchors.fill: parent` (z below
 // the content); the host pads its content so the readout sits balanced between the
 // rivets.
 Item {
     id: seg
     property int chamfer: 6
-    readonly property bool _on: Commons.Appearance.frameChamfer
+    readonly property bool _on: Commons.Appearance.platedChrome
     readonly property string _pack:  Commons.Appearance.activePackDir
     readonly property string _rivet: _pack === "" ? "" : "file://" + _pack + "panels/rivet.png"
 

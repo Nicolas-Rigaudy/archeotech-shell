@@ -75,7 +75,7 @@ Item {
 
                     RectangularShadow {              // soft glow — base packs only (reads modern on steel)
                         anchors.fill: famBg
-                        visible: !Commons.Appearance.frameChamfer
+                        visible: !Commons.Appearance.platedChrome
                         radius: famBg.radius
                         blur:   Commons.Appearance.elevation.e2.blur; offset: Qt.vector2d(0, Commons.Appearance.elevation.e2.y); spread: Commons.Appearance.elevation.e2.spread
                         color:  Commons.Appearance.elevation.e2.color
@@ -85,18 +85,18 @@ Item {
                         anchors.fill: parent
                         // Steel pack: a square-cut machined plate (copper hairline, teal when
                         // selected); base packs keep the rounded grey card.
-                        radius: Commons.Appearance.frameChamfer ? 1 : Commons.Appearance.radius.md
+                        radius: Commons.Appearance.platedChrome ? 1 : Commons.Appearance.radius.md
                         antialiasing: true
-                        border.width: famCard._on ? (Commons.Appearance.frameChamfer ? 1.6 : 3) : 1
+                        border.width: famCard._on ? (Commons.Appearance.platedChrome ? 1.6 : 3) : 1
                         border.color: famCard._on
-                            ? (Commons.Appearance.frameChamfer ? Qt.lighter(Commons.Appearance.colors.accent, 1.25) : Commons.Appearance.colors.accent)
-                            : (Commons.Appearance.frameChamfer
+                            ? (Commons.Appearance.platedChrome ? Qt.lighter(Commons.Appearance.colors.accent, 1.25) : Commons.Appearance.colors.accent)
+                            : (Commons.Appearance.platedChrome
                                ? Qt.rgba(Commons.Appearance.colors.peach.r, Commons.Appearance.colors.peach.g, Commons.Appearance.colors.peach.b, 0.32)
                                : Commons.Appearance.colors.glassBorder)
                         gradient: Gradient {
-                            GradientStop { position: 0.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.hi : Commons.Appearance.sheenHi(Commons.Appearance.colors.surfaceCard, Commons.Appearance.sheen.surface.hi) }
-                            GradientStop { position: 0.5; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.md : Commons.Appearance.sheenHi(Commons.Appearance.colors.surfaceCard, Commons.Appearance.sheen.surface.hi) }
-                            GradientStop { position: 1.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.lo : Commons.Appearance.sheenLo(Commons.Appearance.colors.surfaceCard, Commons.Appearance.sheen.surface.lo) }
+                            GradientStop { position: 0.0; color: Commons.Appearance.platedChrome ? Commons.Appearance.steel.hi : Commons.Appearance.sheenHi(Commons.Appearance.colors.surfaceCard, Commons.Appearance.sheen.surface.hi) }
+                            GradientStop { position: 0.5; color: Commons.Appearance.platedChrome ? Commons.Appearance.steel.md : Commons.Appearance.sheenHi(Commons.Appearance.colors.surfaceCard, Commons.Appearance.sheen.surface.hi) }
+                            GradientStop { position: 1.0; color: Commons.Appearance.platedChrome ? Commons.Appearance.steel.lo : Commons.Appearance.sheenLo(Commons.Appearance.colors.surfaceCard, Commons.Appearance.sheen.surface.lo) }
                         }
                         Behavior on border.color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                         Behavior on border.width { NumberAnimation { duration: Commons.Appearance.anim.fast } }

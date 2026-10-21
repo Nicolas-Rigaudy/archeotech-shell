@@ -27,7 +27,7 @@ Item {
     visible: raw.length > 0 && holderRoot && holderRoot.horizontal
 
     readonly property bool _seg: holderRoot && holderRoot.horizontal
-        && holderRoot._consoleOn === true && Commons.Appearance.frameChamfer
+        && holderRoot._consoleOn === true && Commons.Appearance.platedChrome
     readonly property int _pad: _seg ? 14 : 0
 
     // Boxed on the steel pack → fill the bar height; else size to the text.

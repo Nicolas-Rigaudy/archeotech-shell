@@ -136,7 +136,7 @@ Item {
 
         // Steel pack: local top-lit steel plate (matches the strip popups + frame);
         // glass packs keep the screen-mapped liquid sheen.
-        readonly property bool _steel: Commons.Appearance.frameChamfer
+        readonly property bool _steel: Commons.Appearance.platedChrome
         ShapePath {
             fillGradient: LinearGradient {
                 x1: 0; y1: card._steel ? 0 : -root._winY
@@ -176,7 +176,7 @@ Item {
     // Bolted-console hardware — trim + gussets + a bolted collar on the bar edge.
     ConsoleChrome {
         anchors.fill: parent
-        visible: Commons.Appearance.frameChamfer
+        visible: Commons.Appearance.platedChrome
         attachSide: root._side ? root._side : "top"
         radius: root._r
     }

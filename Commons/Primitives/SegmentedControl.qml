@@ -30,7 +30,7 @@ Item {
     // Steel pack (Grimdark): the selected pill is a raised machined-steel key
     // edged with the teal live-line (the "cyan pinpoint = this is live"), not a
     // copper wash. Base packs keep the accent pill.
-    readonly property bool _steel: Commons.Appearance.frameChamfer
+    readonly property bool _steel: Commons.Appearance.platedChrome
     readonly property color _teal: Commons.Appearance.colors.teal
 
     readonly property color _cu: Commons.Appearance.colors.peach

@@ -251,7 +251,7 @@ Item {
     // Steel pack: the console is expressed as per-cluster bolted BarSegments
     // (workspaces / media / clock, + the right status bank below), so the old
     // standalone seam dividers are suppressed — the panels do the dividing.
-    readonly property bool _segmentsActive: _consoleOn && Commons.Appearance.frameChamfer
+    readonly property bool _segmentsActive: _consoleOn && Commons.Appearance.platedChrome
     readonly property real _consoleInset: Commons.Appearance.bar.innerPadding + 12
     // Two fixed full-height seams splitting the bar into three sections. Anchored
     // to the bar centre (± _seamHalf), so they never move as content resizes.

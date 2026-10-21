@@ -51,18 +51,18 @@ Item {
     Prim.BarSegment {
         id: mediaHousing
         z: -1
-        visible: root.active && Commons.Appearance.frameChamfer
+        visible: root.active && Commons.Appearance.platedChrome
         anchors.fill: parent
     }
 
     Text {
         id: mprisSep
         // Redundant once the housing frames the readout — drop it on the steel pack.
-        visible: !Commons.Appearance.frameChamfer
+        visible: !Commons.Appearance.platedChrome
         anchors.left: parent.left
         // Housed: small lead-in so the icon sits just inboard of the left rivet
         // (balanced against the tail — see the marquee's rightMargin).
-        anchors.leftMargin: Commons.Appearance.frameChamfer ? 4 : 10
+        anchors.leftMargin: Commons.Appearance.platedChrome ? 4 : 10
         anchors.verticalCenter: parent.verticalCenter
         text: "·"
         color: Commons.Appearance.colors.surface1
@@ -93,7 +93,7 @@ Item {
         anchors.right: parent.right
         // Housed: tail matched to the lead-in so the readout sits balanced between
         // the two end rivets.
-        anchors.rightMargin: Commons.Appearance.frameChamfer ? 16 : 4
+        anchors.rightMargin: Commons.Appearance.platedChrome ? 16 : 4
         anchors.verticalCenter: parent.verticalCenter
         height: Commons.Appearance.font.sizeSm + 4
         clip: true

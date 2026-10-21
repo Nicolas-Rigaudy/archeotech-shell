@@ -22,7 +22,7 @@ Item {
     // Bolted console segment (steel pack, horizontal bar) — the centre gauge in its
     // own panel; pad the readout balanced inside, clear of the end rivets.
     readonly property bool _seg: _horizontal && holderRoot._consoleOn === true
-        && Commons.Appearance.frameChamfer
+        && Commons.Appearance.platedChrome
     readonly property int _pad: _seg ? 26 : 0
     implicitWidth:  _horizontal ? centerClock.implicitWidth + 2 * _pad : (holderRoot ? holderRoot.thickness : 30)
     implicitHeight: _horizontal ? Commons.Appearance.bar.height : vClock.implicitHeight

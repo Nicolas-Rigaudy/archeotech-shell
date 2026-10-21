@@ -32,7 +32,7 @@ Item {
     property bool  crisp: false
 
     readonly property string _plate: Commons.Appearance.panelPlate
-    readonly property bool   _steel: Commons.Appearance.frameChamfer
+    readonly property bool   _steel: Commons.Appearance.platedChrome
     readonly property int    _c:     Math.max(2, Math.min(chamfer, Math.min(width, height) / 2))
 
     Rectangle {                         // fallback — no metal pack
