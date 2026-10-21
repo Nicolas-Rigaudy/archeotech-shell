@@ -131,7 +131,7 @@ do not race. The optional second arg is an **accent** color name (see below).
 |------------|--------------------------------------------------------------------------------------------------------------|--------------------------------------|
 | Quickshell | Atomic write of `theme.json` → `~/.config/archeotech/theme.json`                                             | `qs ipc call theme reload`           |
 | Kitty      | Copy the variant's co-located `themes/<variant>/kitty.conf` + append theme-aware `background_opacity` (0.9 light / 0.6 dark) → `current-theme.conf` | `pkill -USR1 kitty`     |
-| MangoWC    | Regex-patch `shadowscolor` / `shadows_size` / `bordercolor` / `focuscolor` / `urgentcolor` in `mango/config.conf` | `mmsg -s -d reload_config`           |
+| MangoWC    | Regex-patch `shadows_color` / `shadows_size` / `border_color` / `focus_color` / `urgent_color` in `mango/config.conf` | `mmsg -s -d reload_config`           |
 | Rofi       | Render `rofi-colors.rasi.tmpl` → `~/.config/rofi/colors.rasi` (theme.rasi `@imports` it)                    | none (read on next rofi launch)      |
 | Starship   | Render `starship.toml.tmpl` → `~/.config/starship.toml`                                                       | none (read on next prompt)           |
 | Swaylock   | Render `swaylock.config.tmpl` (stripped-hex vars) → `swaylock/config`                                         | none (read on next lock)             |
@@ -148,7 +148,7 @@ values:
 
 - **QML** — sets the top-level `accent` color *name*; `Commons/Appearance.qml`
   resolves `colors.accent` (and `accentAlpha` / `accentBorder`) from it.
-- **mango** — `focuscolor` / `bordercolor` → the accent hex (`0xrrggbbff`).
+- **mango** — `focus_color` / `border_color` → the accent hex (`0xrrggbbff`).
 - **rofi** — `border` → the accent hex.
 - **GTK** — for Catppuccin, swaps to `catppuccin-<flavor>-<accent>-standard+default`
   *only if that theme is installed*, else keeps the variant's default (so GTK is
