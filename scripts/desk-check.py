@@ -19,6 +19,7 @@ Steps run in order inside the nested session:
                          e.g. set:appearance.glass="solid"
     notify:<text>        notify-send a toast (stays until dismissed)
     sleep:<seconds>
+    burst:<prefix>:<n>:<gap>:<cmd>   run <cmd> and grab n frames <gap> s apart (<prefix>-NN.ppm)
 The capture follows the last step. --zoom regions (screen pixels) are cropped,
 upscaled with nearest-neighbour and stacked next to each other in <out>-zoom.png.
 --wallpaper defaults to what awww shows on the owner's first output (read-only query).
@@ -78,6 +79,13 @@ def step_cmd(step):
         return f"python3 -c {shlex.quote(py)}; sleep 2"
     if kind == "notify":
         return f"notify-send -t 0 Archeotech {shlex.quote(arg)}; sleep 2"
+    if kind == "burst":
+        # burst:<prefix>:<n>:<gap>:<shell cmd>: run the command, and at once start n
+        # grims <gap> seconds apart (PPM, so each frame is taken before the last is
+        # encoded): the frames of a fade that is over in 150 ms.
+        prefix, n, gap, cmd = arg.split(":", 3)
+        return (f"( {cmd} ) & for i in $(seq 1 {int(n)}); do grim -t ppm {shlex.quote(prefix)}-$(printf %02d $i).ppm & "
+                f"sleep {float(gap)}; done; sleep 1.5")
     if kind == "sleep":
         return f"sleep {float(arg)}"
     sys.exit(f"desk-check: unknown step {step!r}")
