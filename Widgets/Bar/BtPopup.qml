@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Shapes
 import QtQuick.Effects
 import "../../Commons" as Commons
 import "../../Commons/Primitives"
@@ -25,7 +24,7 @@ Item {
            (holderRoot ? holderRoot.width : 0) - width - Commons.Appearance.bar.marginSide - 4)
     y: Commons.Appearance.bar.marginTop + Commons.Appearance.bar.height
     width:  _bw + _r * 2
-    height: _btContent.implicitHeight + (Commons.Appearance.frameChamfer ? 30 : 20)
+    height: _btContent.implicitHeight + (20 + Commons.Appearance.popupSurface.padTop)
 
     transformOrigin: Item.Top
     scale:   (holderRoot && holderRoot._btPopupVisible) ? 1.0 : 0.85
@@ -34,47 +33,9 @@ Item {
     Behavior on scale   { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
     Behavior on opacity { enabled: Commons.Appearance.glassFades; NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
-    // Soft downward lift — shared neck-panel shadow (top-attached).
-    PanelShadow { side: "top"; perpInset: card._r; cornerRadius: card._rb }
-
-    Shape {
-        id: cardShape
-        anchors.fill: parent
-        layer.enabled: true
-        layer.samples: Commons.Appearance.crispEdges ? 0 : 8
-
-        ShapePath {
-            fillGradient: LinearGradient {
-                x1: 0; y1: Commons.Appearance.frameChamfer ? 0 : -card._winY
-                x2: 0; y2: Commons.Appearance.frameChamfer ? card.height : (card._winH - card._winY)
-                GradientStop { position: 0.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.hi : Commons.Appearance.colors.glassSheenTop }
-                GradientStop { position: Commons.Appearance.frameChamfer ? 0.30 : 1.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.md : Commons.Appearance.colors.glassSheenBot }
-                GradientStop { position: 1.0; color: Commons.Appearance.frameChamfer ? Commons.Appearance.steel.lo : Commons.Appearance.colors.glassSheenBot }
-            }
-            strokeWidth: Commons.Appearance.frameChamfer ? 1.4 : 0
-            strokeColor: Commons.Appearance.frameChamfer ? Commons.Appearance.colors.copperLit : "transparent"
-            startX: 0; startY: 0
-            PathLine { x: card._bw + card._r * 2; y: 0 }
-            PathArc  { x: card._bw + card._r;     y: card._r
-                       radiusX: card._r; radiusY: card._r; direction: PathArc.Counterclockwise }
-            PathLine { x: card._bw + card._r;     y: card.height - card._rb }
-            PathArc  { x: card._bw + card._r - card._rb; y: card.height
-                       radiusX: card._rb; radiusY: card._rb; direction: PathArc.Clockwise }
-            PathLine { x: card._r + card._rb;     y: card.height }
-            PathArc  { x: card._r;                y: card.height - card._rb
-                       radiusX: card._rb; radiusY: card._rb; direction: PathArc.Clockwise }
-            PathLine { x: card._r;                y: card._r }
-            PathArc  { x: 0;                      y: 0
-                       radiusX: card._r; radiusY: card._r; direction: PathArc.Counterclockwise }
-            PathLine { x: 0; y: 0 }
-        }
-    }
-
-    ConsoleChrome {                              // bolted-collar connection to the bar (steel pack)
-        anchors.fill: parent
-        visible: Commons.Appearance.frameChamfer
-        attachSide: "top"; showTrim: false; showGussets: false
-        radius: card._rb
+    PopupSurface {
+        r: card._r; rb: card._rb; bw: card._bw
+        winY: card._winY; winH: card._winH
     }
 
     MouseArea {
@@ -84,7 +45,7 @@ Item {
 
     Column {
         id: _btContent
-        x: card._r + 12; y: Commons.Appearance.frameChamfer ? 20 : 10
+        x: card._r + 12; y: 10 + Commons.Appearance.popupSurface.padTop
         width: card._bw - 24
         spacing: 0
 

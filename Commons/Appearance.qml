@@ -405,6 +405,39 @@ QtObject {
         readonly property color lit:    root._steelTok("lit",    "#cdd9e8")   // lit outer bevel
     }
 
+    // ── Surface recipes (item_112) ───────────────────────────────────────────────
+    // A recipe says HOW a surface role is drawn, so primitives read values instead
+    // of asking "is this the steel pack". A pack overrides a role with
+    // `surfaces.<role>` in its tokens.json; unset keys fall back to the glass
+    // default. Colours are role names ("steel.hi", "copperLit", any colors key) or
+    // literal colours. Roles so far: popup (bar hover/click popups).
+    //   popup: { sheen: "screen"|"local", stops: [[pos, colour] x3],
+    //            strokeWidth, strokeColor, collar (bolted neck), padTop }
+    function _surfaceColor(c) {
+        if (typeof c !== "string") return c
+        var d = c.indexOf(".")
+        if (d > 0) {
+            var grp = root[c.substring(0, d)]
+            return grp ? grp[c.substring(d + 1)] : c
+        }
+        return (root.colors && root.colors[c] !== undefined) ? root.colors[c] : c
+    }
+    function _surfaceTok(role, key, fallback) {
+        var p = root._mergedPack
+        if (p && p.surfaces && p.surfaces[role] && p.surfaces[role][key] !== undefined)
+            return p.surfaces[role][key]
+        return fallback
+    }
+    readonly property QtObject popupSurface: QtObject {
+        readonly property string sheen:       root._surfaceTok("popup", "sheen", "screen")
+        readonly property var    stops:       root._surfaceTok("popup", "stops",
+                                                  [[0.0, "glassSheenTop"], [1.0, "glassSheenBot"], [1.0, "glassSheenBot"]])
+        readonly property real   strokeWidth: root._surfaceTok("popup", "strokeWidth", 0)
+        readonly property string strokeColor: root._surfaceTok("popup", "strokeColor", "transparent")
+        readonly property bool   collar:      root._surfaceTok("popup", "collar", false)
+        readonly property real   padTop:      root._surfaceTok("popup", "padTop", 0)
+    }
+
     // Pack material (adr_027 / item_083): a pack may drop the base frosted-glass
     // look for a flat/matte "slab" (dataslate). Drives flatMode from shell.qml so
     // all the existing glass/flat branches follow — no per-component work.
