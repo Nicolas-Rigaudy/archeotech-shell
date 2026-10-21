@@ -107,8 +107,8 @@ Item {
             transform: Translate { x: carousel.xPrev }
         }
 
-        Behavior on xMain { enabled: !carousel._snap; NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
-        Behavior on xPrev { enabled: !carousel._snap; NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+        Behavior on xMain { enabled: !carousel._snap; Commons.Tween { spatial: true; time: Commons.Appearance.anim.base } }
+        Behavior on xPrev { enabled: !carousel._snap; Commons.Tween { spatial: true; time: Commons.Appearance.anim.base } }
 
         function transition(dir) {
             var oldSrc = faceHost._shownSource
@@ -173,7 +173,7 @@ Item {
                 radius: 3
                 color: index === faceHost._idx ? Commons.Appearance.colors.accent
                                                : Commons.Appearance.colors.surface1
-                Behavior on implicitWidth { NumberAnimation { duration: Commons.Appearance.anim.fast; easing.type: Easing.OutCubic } }
+                Behavior on implicitWidth { Commons.Tween { spatial: true; time: Commons.Appearance.anim.fast } }
                 Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                 TapHandler { onTapped: faceHost._selectIndex(index) }
             }

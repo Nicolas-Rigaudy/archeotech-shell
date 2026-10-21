@@ -93,7 +93,7 @@ PanelWindow {
                 GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
             }
             opacity: osdWindow.shown ? 1.0 : 0.0
-            Behavior on opacity { enabled: Commons.Appearance.glassFades; NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+            Behavior on opacity { enabled: Commons.Appearance.glassFades; Commons.Tween { time: Commons.Appearance.anim.base } }
 
             RowLayout {
                 anchors.fill: parent
@@ -119,7 +119,7 @@ PanelWindow {
                         width: parent.width * (osdWindow.osdMuted ? 0 : Math.min(osdWindow.osdValue / 100, 1))
                         height: parent.height; radius: 2
                         color: osdWindow.osdColor
-                        Behavior on width { NumberAnimation { duration: Commons.Appearance.anim.fast; easing.type: Easing.OutCubic } }
+                        Behavior on width { Commons.Tween { spatial: true; time: Commons.Appearance.anim.fast } }
                         Behavior on color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                     }
                 }

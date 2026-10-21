@@ -217,9 +217,9 @@ Variants {
                 leftMargin:  _surface._off + (_surface._leftGap  > 0 ? _surface._leftGap  : 0)
                 rightMargin: _surface._off + (_surface._rightGap > 0 ? _surface._rightGap : 0)
             }
-            Behavior on anchors.topMargin   { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
-            Behavior on anchors.leftMargin  { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
-            Behavior on anchors.rightMargin { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
+            Behavior on anchors.topMargin   { Commons.Tween { spatial: true; time: Commons.Appearance.anim.panel } }
+            Behavior on anchors.leftMargin  { Commons.Tween { spatial: true; time: Commons.Appearance.anim.panel } }
+            Behavior on anchors.rightMargin { Commons.Tween { spatial: true; time: Commons.Appearance.anim.panel } }
         }
 
         Sides.SideLoader {
@@ -235,9 +235,9 @@ Variants {
                 leftMargin:   _surface._off + (_surface._leftGap  > 0 ? _surface._leftGap  + _surface._r : 0)
                 rightMargin:  _surface._off + (_surface._rightGap > 0 ? _surface._rightGap + _surface._r : 0)
             }
-            Behavior on anchors.bottomMargin { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
-            Behavior on anchors.leftMargin   { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
-            Behavior on anchors.rightMargin  { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
+            Behavior on anchors.bottomMargin { Commons.Tween { spatial: true; time: Commons.Appearance.anim.panel } }
+            Behavior on anchors.leftMargin   { Commons.Tween { spatial: true; time: Commons.Appearance.anim.panel } }
+            Behavior on anchors.rightMargin  { Commons.Tween { spatial: true; time: Commons.Appearance.anim.panel } }
         }
 
         Sides.SideLoader {
@@ -253,9 +253,9 @@ Variants {
                 topMargin:    _surface._off + (_surface._topGap    > 0 ? _surface._topGap    + _surface._r : 0)
                 bottomMargin: _surface._off + (_surface._bottomGap > 0 ? _surface._bottomGap + _surface._r : 0)
             }
-            Behavior on anchors.rightMargin  { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
-            Behavior on anchors.topMargin    { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
-            Behavior on anchors.bottomMargin { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
+            Behavior on anchors.rightMargin  { Commons.Tween { spatial: true; time: Commons.Appearance.anim.panel } }
+            Behavior on anchors.topMargin    { Commons.Tween { spatial: true; time: Commons.Appearance.anim.panel } }
+            Behavior on anchors.bottomMargin { Commons.Tween { spatial: true; time: Commons.Appearance.anim.panel } }
         }
 
         Sides.SideLoader {
@@ -271,9 +271,9 @@ Variants {
                 topMargin:    _surface._off + (_surface._topGap    > 0 ? _surface._topGap    + _surface._r : 0)
                 bottomMargin: _surface._off + (_surface._bottomGap > 0 ? _surface._bottomGap + _surface._r : 0)
             }
-            Behavior on anchors.leftMargin   { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
-            Behavior on anchors.topMargin    { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
-            Behavior on anchors.bottomMargin { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
+            Behavior on anchors.leftMargin   { Commons.Tween { spatial: true; time: Commons.Appearance.anim.panel } }
+            Behavior on anchors.topMargin    { Commons.Tween { spatial: true; time: Commons.Appearance.anim.panel } }
+            Behavior on anchors.bottomMargin { Commons.Tween { spatial: true; time: Commons.Appearance.anim.panel } }
         }
 
         // Corner blends removed (S22) — the FrameBackground above now draws all

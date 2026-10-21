@@ -172,7 +172,7 @@ Item {
                                 text: NetworkServices.Bluetooth.discovering ? "󰑙" : "󰂰"
                                 color: NetworkServices.Bluetooth.discovering ? Commons.Appearance.colors.base : Commons.Appearance.colors.accent
                                 font.pixelSize: Commons.Appearance.font.sizeSm; font.family: Commons.Appearance.font.family
-                                RotationAnimator { target: scanIco; running: NetworkServices.Bluetooth.discovering; loops: Animation.Infinite; from: 0; to: 360; duration: 900 }
+                                Commons.Spin { target: scanIco; running: NetworkServices.Bluetooth.discovering }
                             }
                             Text {
                                 text: NetworkServices.Bluetooth.discovering ? "Scanning…" : "Scan"
@@ -299,7 +299,7 @@ Item {
                                             anchors.centerIn: parent
                                             text: "󰑙"; color: Commons.Appearance.colors.accent
                                             font.pixelSize: Commons.Appearance.font.sizeLg; font.family: Commons.Appearance.font.family
-                                            RotationAnimator { target: btSpinner; running: btSpinner.visible; loops: Animation.Infinite; from: 0; to: 360; duration: 900 }
+                                            Commons.Spin { target: btSpinner; running: btSpinner.visible }
                                         }
 
                                         GlassButton {
@@ -330,7 +330,7 @@ Item {
                                             visible: parent._busy; anchors.centerIn: parent
                                             text: "󰑙"; color: Commons.Appearance.colors.red
                                             font.pixelSize: Commons.Appearance.font.sizeMd; font.family: Commons.Appearance.font.family
-                                            RotationAnimator { target: btRmSpin; running: btRmSpin.visible; loops: Animation.Infinite; from: 0; to: 360; duration: 900 }
+                                            Commons.Spin { target: btRmSpin; running: btRmSpin.visible }
                                         }
                                         Rectangle {
                                             visible: !parent._busy
@@ -406,7 +406,7 @@ Item {
                                             id: pairSpin; visible: parent._busy; anchors.centerIn: parent
                                             text: "󰑙"; color: Commons.Appearance.colors.accent
                                             font.pixelSize: Commons.Appearance.font.sizeLg; font.family: Commons.Appearance.font.family
-                                            RotationAnimator { target: pairSpin; running: pairSpin.visible; loops: Animation.Infinite; from: 0; to: 360; duration: 900 }
+                                            Commons.Spin { target: pairSpin; running: pairSpin.visible }
                                         }
                                         GlassButton {
                                             id: pairBtn; visible: !parent._busy
@@ -449,7 +449,7 @@ Item {
 
         implicitHeight: _showPw ? 82 : 40
         clip: true
-        Behavior on implicitHeight { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+        Behavior on implicitHeight { Commons.Tween { spatial: true } }
 
         RowLayout {
             anchors { left: parent.left; right: parent.right; top: parent.top }
@@ -499,7 +499,7 @@ Item {
                     anchors.centerIn: parent
                     text: "󰑙"; color: Commons.Appearance.colors.accent
                     font.pixelSize: Commons.Appearance.font.sizeLg; font.family: Commons.Appearance.font.family
-                    RotationAnimator { target: spinnerTxt; running: _busy; loops: Animation.Infinite; from: 0; to: 360; duration: 900 }
+                    Commons.Spin { target: spinnerTxt; running: _busy }
                 }
 
                 GlassButton {

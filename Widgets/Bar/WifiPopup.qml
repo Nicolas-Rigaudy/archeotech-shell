@@ -35,8 +35,8 @@ Item {
     scale:   (holderRoot && holderRoot._wifiPopupVisible) ? 1.0 : 0.85
     opacity: (holderRoot && holderRoot._wifiPopupVisible) ? 1.0 : 0.0
     visible: holderRoot && holderRoot.side === "top" && opacity > 0.01
-    Behavior on scale   { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-    Behavior on opacity { enabled: Commons.Appearance.glassFades; NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+    Behavior on scale   { Commons.Tween { spatial: true } }
+    Behavior on opacity { enabled: Commons.Appearance.glassFades; Commons.Tween { } }
 
     PopupSurface {
         r: card._r; rb: card._rb; bw: card._bw
@@ -136,7 +136,7 @@ Item {
                             id: _wBtnSpinner; visible: _busy; anchors.centerIn: parent
                             text: "󰑙"; color: Commons.Appearance.colors.accent
                             font.pixelSize: Commons.Appearance.font.sizeMd; font.family: Commons.Appearance.font.family
-                            RotationAnimator { target: _wBtnSpinner; running: _busy; loops: Animation.Infinite; from: 0; to: 360; duration: 900 }
+                            Commons.Spin { target: _wBtnSpinner; running: _busy }
                         }
                         RectangularShadow {
                             anchors.fill: _wBtn; radius: _wBtn.radius

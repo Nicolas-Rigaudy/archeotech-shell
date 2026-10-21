@@ -77,7 +77,7 @@ Item {
 
     visible: opacity > 0.01
     opacity: (_open && host.ready) ? 1 : 0
-    Behavior on opacity { enabled: Commons.Appearance.glassFades; NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+    Behavior on opacity { enabled: Commons.Appearance.glassFades; Commons.Tween { time: Commons.Appearance.anim.base } }
 
     // Slide in from the bar edge (perpendicular) for the "drop" feel.
     transform: Translate {
@@ -85,8 +85,8 @@ Item {
          : root._side === "bottom" ? (root._open ? 0 :  12) : 0
         x: root._side === "left"   ? (root._open ? 0 : -12)
          : root._side === "right"  ? (root._open ? 0 :  12) : 0
-        Behavior on x { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
-        Behavior on y { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+        Behavior on x { Commons.Tween { spatial: true; time: Commons.Appearance.anim.base } }
+        Behavior on y { Commons.Tween { spatial: true; time: Commons.Appearance.anim.base } }
     }
 
     // Esc closes (the surface holds exclusive keyboard focus while open).

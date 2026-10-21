@@ -86,8 +86,8 @@ Item {
                 GradientStop { position: 1.0; color: root._steel ? Commons.Appearance.steel.lo
                                                                   : Commons.Appearance.sheenLo(Commons.Appearance.colors.accent, Commons.Appearance.sheen.control.lo) }
             }
-            Behavior on x { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
-            Behavior on y { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+            Behavior on x { Commons.Tween { spatial: true; time: Commons.Appearance.anim.base } }
+            Behavior on y { Commons.Tween { spatial: true; time: Commons.Appearance.anim.base } }
         }
 
         Repeater {

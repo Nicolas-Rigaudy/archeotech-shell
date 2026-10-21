@@ -197,7 +197,7 @@ Item {
 
     // Animated values — bound to targets so they animate on state changes.
     property real _perp: _perpTarget
-    Behavior on _perp { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
+    Behavior on _perp { Commons.Tween { spatial: true; time: Commons.Appearance.anim.panel } }
 
     // Along-strip extent. Floor at the icon cluster width; ceil at the screen
     // axis. axisSize "full" = legacy (entire screen edge), "auto" = follow
@@ -210,7 +210,7 @@ Item {
         : _axisSizeRaw === "auto" ? Math.min(_screenAxis, Math.max(_axisFloor, _contentImplicitAxis + 2 * _r))
         :                            Math.min(_screenAxis, Math.max(_axisFloor, _axisSizeRaw))
     property real _axis: _axisTarget
-    Behavior on _axis { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
+    Behavior on _axis { Commons.Tween { spatial: true; time: Commons.Appearance.anim.panel } }
 
     // Card position along the strip axis: always centered on the screen.
     // Icons cluster around the card's center via iconArea, so a centered
@@ -333,7 +333,7 @@ Item {
 
         opacity: strip._showCard ? 1.0 : 0.0
         visible: opacity > 0.01
-        Behavior on opacity { enabled: Commons.Appearance.glassFades; NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+        Behavior on opacity { enabled: Commons.Appearance.glassFades; Commons.Tween { } }
 
         // Card top in WINDOW coords. A horizontal (top/bottom) strip Item is only
         // content-tall (strip.height ≠ screen height), so a strip-relative gradient
@@ -441,7 +441,7 @@ Item {
             anchors.bottomMargin: strip.side === "bottom" ? 4 : strip._r
 
             opacity: (strip._panelOpen && strip._ready) ? 1.0 : 0.0
-            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+            Behavior on opacity { Commons.Tween { time: Commons.Appearance.anim.base } }
 
             Panels.PanelHost {
                 id: host

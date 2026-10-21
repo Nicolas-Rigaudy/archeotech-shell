@@ -50,7 +50,7 @@ RowLayout {
                 id: frame
                 Layout.preferredWidth: 180
                 Layout.preferredHeight: 108
-                Behavior on scale { NumberAnimation { duration: Commons.Appearance.anim.fast; easing.type: Easing.OutCubic } }
+                Behavior on scale { Commons.Tween { spatial: true; time: Commons.Appearance.anim.fast } }
 
                 RectangularShadow {
                     anchors.fill: parent

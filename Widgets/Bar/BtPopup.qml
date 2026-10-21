@@ -30,8 +30,8 @@ Item {
     scale:   (holderRoot && holderRoot._btPopupVisible) ? 1.0 : 0.85
     opacity: (holderRoot && holderRoot._btPopupVisible) ? 1.0 : 0.0
     visible: holderRoot && holderRoot.side === "top" && opacity > 0.01
-    Behavior on scale   { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-    Behavior on opacity { enabled: Commons.Appearance.glassFades; NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+    Behavior on scale   { Commons.Tween { spatial: true } }
+    Behavior on opacity { enabled: Commons.Appearance.glassFades; Commons.Tween { } }
 
     PopupSurface {
         r: card._r; rb: card._rb; bw: card._bw
@@ -149,7 +149,7 @@ Item {
                             anchors.centerIn: parent
                             text: "󰑙"; color: Commons.Appearance.colors.accent
                             font.pixelSize: Commons.Appearance.font.sizeBase; font.family: Commons.Appearance.font.family
-                            RotationAnimator { target: _btDevSpinner; running: _btDevSpinner.visible; loops: Animation.Infinite; from: 0; to: 360; duration: 900 }
+                            Commons.Spin { target: _btDevSpinner; running: _btDevSpinner.visible }
                         }
 
                         RectangularShadow {

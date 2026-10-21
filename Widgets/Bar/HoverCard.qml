@@ -33,8 +33,8 @@ Item {
     opacity: (holderRoot && holderRoot._popupVisible) ? 1.0 : 0.0
     visible: holderRoot && holderRoot.side === "top" && opacity > 0.01
 
-    Behavior on scale   { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-    Behavior on opacity { enabled: Commons.Appearance.glassFades; NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+    Behavior on scale   { Commons.Tween { spatial: true } }
+    Behavior on opacity { enabled: Commons.Appearance.glassFades; Commons.Tween { } }
 
     PopupSurface {
         r: card._r; rb: card._rb; bw: card._bw

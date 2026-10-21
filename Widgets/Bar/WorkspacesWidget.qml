@@ -62,8 +62,8 @@ Item {
                 readonly property bool _metal: Commons.Appearance.panelPlate !== "" && !Commons.Appearance.depthFlat
                 readonly property bool _glass: !Commons.Appearance.depthFlat && !_metal
 
-                Behavior on width  { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
-                Behavior on height { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
+                Behavior on width  { Commons.Tween { spatial: true; overshoot: true; time: Commons.Appearance.anim.base } }
+                Behavior on height { Commons.Tween { spatial: true; overshoot: true; time: Commons.Appearance.anim.base } }
 
                 // Soft shadow lifts every bead off the bar face (glass mode) — this
                 // is what delineates the dim empty beads, no hard outline needed.

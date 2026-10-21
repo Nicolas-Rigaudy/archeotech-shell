@@ -253,8 +253,8 @@ Item {
                 // Centre item full-size + opaque; neighbours shrink + dim.
                 scale:   _current ? 1.0 : 0.72
                 opacity: root.applying ? (_active ? 1.0 : 0.4) : (_current ? 1.0 : 0.6)
-                Behavior on scale   { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
-                Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+                Behavior on scale   { Commons.Tween { spatial: true; time: Commons.Appearance.anim.base } }
+                Behavior on opacity { Commons.Tween { time: Commons.Appearance.anim.base } }
 
                 // Soft cast shadow UNDER the hero (centred) item only — lifts it
                 // off the panel. Sibling behind the image (never on the thumbnail

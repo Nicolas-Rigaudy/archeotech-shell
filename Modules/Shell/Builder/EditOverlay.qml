@@ -465,7 +465,7 @@ Item {
                                         implicitWidth:  chip._iconOnly ? 30
                                                        : (dragMA.containsMouse ? chipRow.implicitWidth + 14 : 34)
                                         implicitHeight: chip._iconOnly ? 30 : (sideCard._isBar ? 30 : 28)
-                                        Behavior on implicitWidth { NumberAnimation { duration: 70; easing.type: Easing.OutQuad } }
+                                        Behavior on implicitWidth { Commons.Tween { spatial: true; time: Commons.Appearance.anim.fast } }
                                         radius: Commons.Appearance.radius.md
                                         // Raised surfaceCard sheen (shared scale) instead of a flat
                                         // fill; hover is a StateLayer wash overlay below.
@@ -477,7 +477,7 @@ Item {
                                         border.color: chip._isSource ? Commons.Appearance.colors.accentBorder
                                                                      : Commons.Appearance.colors.glassBorder
                                         opacity: chip._isSource ? 0.35 : 1
-                                        Behavior on opacity { NumberAnimation { duration: 90 } }
+                                        Behavior on opacity { Commons.Tween { time: Commons.Appearance.anim.fast } }
 
                                         // Hover wash — the StateLayer micro-interaction language
                                         // (accent-tinted overlay) rather than a flat surface swap.
@@ -597,8 +597,8 @@ Item {
                                          && editOverlay._dropIndex >= 0
                                 color: editOverlay._dropValid ? Commons.Appearance.colors.accent
                                                               : Commons.Appearance.colors.red
-                                Behavior on x { NumberAnimation { duration: 90; easing.type: Easing.OutQuad } }
-                                Behavior on y { NumberAnimation { duration: 90; easing.type: Easing.OutQuad } }
+                                Behavior on x { Commons.Tween { spatial: true; time: Commons.Appearance.anim.fast } }
+                                Behavior on y { Commons.Tween { spatial: true; time: Commons.Appearance.anim.fast } }
                             }
 
                             // Drop target covering this section (DropAreas ignore clicks).
@@ -712,7 +712,7 @@ Item {
                                           && Commons.State.draggedSource.indexOf("lib:") !== 0
         readonly property var _all: editOverlay._libraryItems()
         border.color: _removing ? Commons.Appearance.colors.red : Commons.Appearance.colors.glassBorder
-        Behavior on border.color { ColorAnimation { duration: 120 } }
+        Behavior on border.color { Commons.ColorAnim { duration: Commons.Appearance.anim.fast } }
 
         ColumnLayout {
             id: libCol

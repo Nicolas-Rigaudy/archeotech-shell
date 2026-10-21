@@ -32,7 +32,7 @@ Item {
     implicitHeight: Commons.Appearance.bar.height
     Layout.alignment: Qt.AlignVCenter
     opacity: active ? 1 : 0
-    Behavior on implicitWidth { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+    Behavior on implicitWidth { Commons.Tween { spatial: true; time: Commons.Appearance.anim.base } }
     Behavior on opacity       { NumberAnimation { duration: Commons.Appearance.anim.fast } }
 
     // Follow implicitWidth (200 active / 0 idle) so an idle player reserves NO
@@ -99,7 +99,8 @@ Item {
         clip: true
 
         property real textWidth: marqueeText1.implicitWidth
-        property bool needsScroll: textWidth > marqueeContainer.width
+        // Reduced motion: the title elides instead of scrolling.
+        property bool needsScroll: textWidth > marqueeContainer.width && !Commons.Appearance.reducedMotion
         property real scrollPos: 0
 
         property string displayText: root.displayText
@@ -138,11 +139,11 @@ Item {
                 from: 0
                 to: marqueeContainer.textWidth + 40
                 duration: Math.max(5000, (marqueeContainer.textWidth + 40) * 20)
-                easing.type: Easing.Linear
+                easing.type: Commons.Appearance.easingLinear
             }
-            PauseAnimation { duration: 600 }
+            PauseAnimation { duration: Commons.Appearance.anim.hold }
             ScriptAction { script: marqueeContainer.scrollPos = 0 }
-            PauseAnimation { duration: 300 }
+            PauseAnimation { duration: Commons.Appearance.anim.hold / 2 }
         }
 
         Text {

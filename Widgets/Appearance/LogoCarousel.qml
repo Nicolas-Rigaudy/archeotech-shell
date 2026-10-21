@@ -125,8 +125,8 @@ Item {
             z: _current ? 2 : 1
             scale:   _current ? 1.0 : 0.7
             opacity: root.applying ? (_active ? 1.0 : 0.4) : (_current ? 1.0 : 0.55)
-            Behavior on scale   { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
-            Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+            Behavior on scale   { Commons.Tween { spatial: true; time: Commons.Appearance.anim.base } }
+            Behavior on opacity { Commons.Tween { time: Commons.Appearance.anim.base } }
 
             // Soft cast shadow under the hero (centred) tile only — lifts it off
             // the panel; side tiles stay flat. Gated on shadowStrength.
