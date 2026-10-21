@@ -121,6 +121,18 @@ Item {
         }
     }
 
+    // Global close (`ipc call panel close`, Esc on a panel, click outside) also
+    // dismisses this bar's popups, not only the panels.
+    property var _dismissConn: Connections {
+        target: ShellServices.ShellState
+        function onDismissed() {
+            bar._wifiPopupVisible = false
+            bar._btPopupVisible   = false
+            bar._calendarVisible  = false
+            bar._popupVisible     = false
+        }
+    }
+
     // ── holderRoot API surface ─────────────────────────────────────────────────────
     function showPopup(item, label, primary, secondary, hint) {
         // A pinned control popup (WiFi/BT) owns the screen — never raise a hover

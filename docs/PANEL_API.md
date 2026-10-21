@@ -90,6 +90,22 @@ Use it to dismiss the panel after a successful action:
 TapHandler { onTapped: { doThing(); if (panelRoot) panelRoot.close() } }
 ```
 
+### Dismissal
+
+Every holder claims keyboard focus when its panel opens and closes it on Esc, so
+panel content gets Esc for free: an input that wants Esc itself (clear a search
+field first) handles `Keys.onEscapePressed`, anything it leaves unhandled bubbles
+up to the holder. Global close, from a keybind or a script:
+
+```
+qs -c archeotech ipc call panel close
+```
+
+`ShellState.closeAllAcross()` (that bind, a click outside, every panel's `close()`)
+emits `dismissed()`, which also drops a bar's wifi, bluetooth, calendar and hover
+popups. Bar popups themselves take no keyboard focus, so Esc does not reach them;
+use the global close or click away.
+
 Watch `panelOpen` to react to open/close (refresh, focus a field, etc.):
 
 ```qml
@@ -169,16 +185,27 @@ smaller gap, but the panel's top-level rhythm is `xl`.
 
 ## Animation tokens
 
-Use the shared `Commons.Appearance.anim` tokens for any panel-internal transitions so everything matches the strip's perp/axis growth:
+Use `Commons.Tween` (and the `Commons.Appearance.anim` tokens it takes) for any
+panel-internal transition, so everything matches the strip's perp/axis growth and
+follows the Animation speed and Reduce motion settings. No literal `duration:` or
+`easing.type:` outside `Commons/` (`scripts/token-lint.py` fails on them).
 
-| Token   | ms  | Use for                                                            |
-|---------|-----|--------------------------------------------------------------------|
-| `fast`  | 100 | Hover-color, button-color transitions.                             |
-| `base`  | 200 | Content fades, in-panel size changes, hover→active state.          |
-| `slow`  | 300 | Slower reveal animations (collapsible sections, modal dialogs).    |
-| `panel` | 240 | Strip popup ↔ panel transition. Defined for symmetry — usually owned by Strip.qml, not panel content. |
+```qml
+Behavior on opacity { Commons.Tween {} }                        // fade, effectsFast
+Behavior on height  { Commons.Tween { spatial: true; time: Commons.Appearance.anim.base } }
+```
 
-Stick to `OutCubic` easing for entrance/exit motion.
+`spatial: true` marks movement (position, size, scale): Reduce motion makes it
+instant, while fades keep their duration.
+
+| Token          | ms  | Use for                                                            |
+|----------------|-----|--------------------------------------------------------------------|
+| `fast`         | 100 | Hover-color, button-color transitions.                             |
+| `base`         | 200 | Content fades, in-panel size changes, hover→active state.          |
+| `effectsSlow`  | 300 | Slower reveal animations (collapsible sections, modal dialogs).    |
+| `panel`        | 240 | Strip popup ↔ panel transition. Usually owned by Strip.qml, not panel content. |
+
+A busy spinner is `Prim.Spinner` (unscaled: it is a state indicator).
 
 ---
 
