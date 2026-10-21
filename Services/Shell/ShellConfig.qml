@@ -201,6 +201,10 @@ QtObject {
     // Bar seeds default to the right zone; strip seeds to the icon list ("").
     function _contentToBar(e) {
         if (_stripToBarWidget[e.id]) return { id: _stripToBarWidget[e.id], config: {}, align: "right" }
+        if (typeof e.id === "string" && e.id.indexOf("plugin:") === 0) {
+            var m = ModuleRegistry.moduleFor(e.id)
+            if (!m || !Logic.canLiveOnBar(m.canLiveIn)) return null
+        }
         return { id: e.id, config: e.config || {}, align: "right" }   // opener id is the same on a bar
     }
     function _contentToStrip(e) {

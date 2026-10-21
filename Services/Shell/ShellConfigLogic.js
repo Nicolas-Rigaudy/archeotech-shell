@@ -66,3 +66,8 @@ function canLiveOnStrip(canLiveIn) {
     var cl = canLiveIn || []
     return cl.indexOf("strip-icon") !== -1 || cl.indexOf("panel-content") !== -1
 }
+
+// Can a plugin whose manifest lists `canLiveIn` sit on a bar? Only with bar-zone.
+function canLiveOnBar(canLiveIn) {
+    return (canLiveIn || []).indexOf("bar-zone") !== -1
+}

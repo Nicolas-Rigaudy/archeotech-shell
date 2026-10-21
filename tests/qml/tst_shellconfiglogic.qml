@@ -75,4 +75,10 @@ TestCase {
         verify(!Logic.canLiveOnStrip(["bar-zone"]), "bar-only plugin stays off a strip")
         verify(!Logic.canLiveOnStrip(undefined))
     }
+
+    function test_canLiveOnBar() {
+        verify(Logic.canLiveOnBar(["bar-zone", "panel-content"]), "dual plugin fits a bar")
+        verify(!Logic.canLiveOnBar(["strip-icon"]), "strip-only plugin stays off a bar")
+        verify(!Logic.canLiveOnBar(undefined))
+    }
 }
