@@ -256,25 +256,26 @@ Item {
     }
 
     // ── Banner ──────────────────────────────────────────────────────────────────
+    // A docked toolbar across the top, opaque and at least as tall as the
+    // real bar underneath, so no bar content (the clock, the right-hand pills)
+    // pokes out around it whatever the bar holds or however tall it is (item_130).
+    // The editable mocks below show the layout being changed.
     RectangularShadow {
-        anchors.fill: banner; radius: banner.radius; blur:   Commons.Appearance.elevation.e2.blur
+        anchors.fill: banner; blur: Commons.Appearance.elevation.e2.blur
         offset: Qt.vector2d(0, Commons.Appearance.elevation.e2.y); spread: Commons.Appearance.elevation.e2.spread
         color:  Commons.Appearance.elevation.e2.color
     }
     Rectangle {
         id: banner
-        anchors.top: parent.top
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: Commons.Appearance.spacing.s4
-        width: bannerRow.implicitWidth + 28
-        height: 40
-        radius: Commons.Appearance.radius.pill
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
-            GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+        anchors { top: parent.top; left: parent.left; right: parent.right }
+        // The real bar's row plus a hairline of margin, never shorter than the buttons need.
+        height: Math.max(44, Commons.Appearance.bar.marginTop + Commons.Appearance.bar.height + Commons.Appearance.spacing.s2)
+        color: Commons.Appearance.colors.base   // opaque: the dimmed bar must not show through
+        Rectangle {                     // bottom edge: accent hairline
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+            height: 1
+            color: Commons.Appearance.colors.accentBorder
         }
-        border.width: 1
-        border.color: Commons.Appearance.colors.accentBorder
 
         Row {
             id: bannerRow
