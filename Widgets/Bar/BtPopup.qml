@@ -143,14 +143,7 @@ Item {
                         implicitHeight: 22
                         Behavior on implicitWidth { NumberAnimation { duration: Commons.Appearance.anim.fast } }
 
-                        Text {
-                            id: _btDevSpinner
-                            visible: parent._busy
-                            anchors.centerIn: parent
-                            text: "󰑙"; color: Commons.Appearance.colors.accent
-                            font.pixelSize: Commons.Appearance.font.sizeBase; font.family: Commons.Appearance.font.family
-                            Commons.Spin { target: _btDevSpinner; running: _btDevSpinner.visible }
-                        }
+                        Spinner { running: parent._busy; anchors.centerIn: parent; tint: Commons.Appearance.colors.accent; size: Commons.Appearance.font.sizeBase }
 
                         RectangularShadow {
                             anchors.fill: _btDevBtn; radius: _btDevBtn.radius

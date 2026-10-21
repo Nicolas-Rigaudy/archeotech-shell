@@ -132,12 +132,7 @@ Item {
                     Item {
                         width: _busy ? 20 : _wBtnTxt.implicitWidth + 16; height: 22
                         Behavior on width { NumberAnimation { duration: Commons.Appearance.anim.fast } }
-                        Text {
-                            id: _wBtnSpinner; visible: _busy; anchors.centerIn: parent
-                            text: "󰑙"; color: Commons.Appearance.colors.accent
-                            font.pixelSize: Commons.Appearance.font.sizeMd; font.family: Commons.Appearance.font.family
-                            Commons.Spin { target: _wBtnSpinner; running: _busy }
-                        }
+                        Spinner { running: _busy; anchors.centerIn: parent; tint: Commons.Appearance.colors.accent; size: Commons.Appearance.font.sizeMd }
                         RectangularShadow {
                             anchors.fill: _wBtn; radius: _wBtn.radius
                             blur:   Commons.Appearance.elevation.e1.blur; offset: Qt.vector2d(0, Commons.Appearance.elevation.e1.y); spread: Commons.Appearance.elevation.e1.spread
