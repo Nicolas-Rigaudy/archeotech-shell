@@ -368,7 +368,7 @@ STARTUP="bash -c '
 '"
 
 # A burst needs the whole series to land before teardown; budget for it.
-CAP_SECS=$((BURST * (INTERVAL + 1) + 5))
+CAP_SECS=$(awk -v b="$BURST" -v i="$INTERVAL" 'BEGIN { v = b * (i + 1) + 5; printf "%d", (v == int(v)) ? v : int(v) + 1 }')
 
 # Isolate the nested session behind its OWN D-Bus: the live shell already owns
 # org.freedesktop.Notifications on the real session bus.
