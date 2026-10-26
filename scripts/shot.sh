@@ -15,6 +15,7 @@
 #   shot.sh --state settings:appearance out  # open settings on a named pane
 #   shot.sh --state setting:clock.format out # open settings on one setting (search key)
 #   shot.sh --theme archeotech-latte --pack grimdark --flat 1 out.png
+#   shot.sh --wallpapers demo/walls out.png  # picker lists this folder, not the owner's
 #   shot.sh --shell-config fixtures/bar.json out.png  # render a fixed layout
 #   shot.sh --set notifications.maxToasts=2 --notify-count 4 out.png
 #   shot.sh --fresh out.png                  # first boot: no user config or state at all
@@ -89,6 +90,7 @@ THEME=""            # theme variant dir under <root>/themes (empty = user's curr
 PACK="-"            # pack id, "base" for none, "-" = user's current
 FLAT="-"            # 0|1, "-" = user's current
 WALLPAPER=""        # image path (default: what the live awww shows, if anything)
+WALLDIR=""          # wallpaper folder for the picker (default: the owner's, read-only link)
 SHELL_CONFIG=""     # shell-config.json to render with (default: the user's copy)
 MANGO_LINES=()      # extra lines appended to the nested mango config (--mango-line)
 MANGO_INCLUDES=()   # files sourced by the nested mango config (--mango-include)
@@ -115,6 +117,7 @@ while [ $# -gt 0 ]; do
     --pack)     PACK="$2"; shift 2 ;;
     --flat)     FLAT="$2"; shift 2 ;;
     --wallpaper) WALLPAPER="$2"; shift 2 ;;
+    --wallpapers) WALLDIR="$(readlink -f "$2")"; shift 2 ;;
     --shell-config) SHELL_CONFIG="$(readlink -f "$2")"; shift 2 ;;
     --set)      SETS+=("$2"); shift 2 ;;
     --mango-line) MANGO_LINES+=("$2"); shift 2 ;;
@@ -179,7 +182,12 @@ fi
 # Read-only resources: symlinks are fine, nothing writes into them.
 ln -s "$ROOT/themes"         "$FH/.config/archeotech/themes"
 ln -s "$ROOT/scripts/assets" "$FH/.config/archeotech/assets"
-[ -e "$RA/wallpapers" ] && ln -s "$(readlink -f "$RA/wallpapers")" "$FH/.config/archeotech/wallpapers"
+if [ -n "$WALLDIR" ]; then
+  [ -d "$WALLDIR" ] || { echo "no such --wallpapers dir: $WALLDIR" >&2; rm -rf "$RUN"; exit 2; }
+  ln -s "$WALLDIR" "$FH/.config/archeotech/wallpapers"
+elif [ -e "$RA/wallpapers" ]; then
+  ln -s "$(readlink -f "$RA/wallpapers")" "$FH/.config/archeotech/wallpapers"
+fi
 if [ "$FRESH" = 0 ]; then
   [ -d "$REAL_HOME/.local/share/archeotech" ] && cp -a "$REAL_HOME/.local/share/archeotech/." "$FH/.local/share/archeotech/"
   [ -d "$REAL_HOME/.cache/archeotech" ] && cp -a "$REAL_HOME/.cache/archeotech" "$FH/.cache/"
