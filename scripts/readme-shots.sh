@@ -25,7 +25,9 @@ for p in "dotfiles main 3" "homelab main 0" "notes main 5" "website dev 0" "weat
   for ((i = 0; i < $3; i++)); do echo "$i" >"$FIX/Projects/$1/f$i"; done
 done
 
-WALL="$ROOT/wallpapers/pexels-eberhardgross-1287145.jpg"
+WALL="$(readlink -f "${WALL:-$ROOT/wallpapers/pexels-eberhardgross-1287145.jpg}")"
+# Wallpapers the picker lists: freely licensed only (default: the repo's own).
+WALLS="$(readlink -f "${WALLS:-$ROOT/wallpapers}")"
 
 shot() {  # shot <name> <shot.sh args...>
   local name="$1"; shift
@@ -34,19 +36,18 @@ shot() {  # shot <name> <shot.sh args...>
     --mango-line "monitor_rule=name:HEADLESS-1,width:1920,height:1080,refresh:60,x:0,y:0,scale:1,rr:0" \
     --mango-line blur_layer=1 --mango-line blur_optimized=1 \
     --set 'appearance.glass="glass"' --set "dashboard.scanRoots=[\"$FIX/Projects\"]" \
-    --wallpaper "$WALL" --theme archeotech-macchiato --pack base --flat 0 \
+    --set 'dashboard.notes=["snapshot","uptime","updates","kernel","host"]' \
+    --wallpapers "$WALLS" --wallpaper "$WALL" --theme archeotech-macchiato --pack base --flat 0 \
     "$@" "$OUT/$name.png" | grep '^shot:' || echo "failed: $name" >&2
 }
 
-shot dashboard      --state dashboard
+shot dashboard      --state dashboard -w 20   # long enough for the update count to load
 shot launcher       --state launcher
 shot settings       --state settings:appearance
 shot settings-light --state settings:appearance --theme archeotech-latte
 shot editmode       --state editmode --fresh
 shot keyboard       --state keybinds
 shot wallpaper      --state wallpaper
-shot grimdark       --state dashboard --pack grimdark
-shot hud            --state dashboard --pack hud
 for t in dracula gruvbox-light nord tokyo-night archeotech-latte; do
   shot "theme-$t"   --state dashboard --theme "$t"
 done

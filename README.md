@@ -1,121 +1,98 @@
 <div align="center">
 
-<img src="docs/img/header.svg" alt="Archeotech shell" width="620">
+<img src="docs/img/header.svg" alt="Archeotech" width="620">
 
-### A complete desktop shell for Wayland. One theme for every app. A layout you arrange with the mouse.
+### Your desktop, your rules.
 
-[![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-c6a0f6.svg)](LICENSE)
-![Built with Quickshell](https://img.shields.io/badge/built%20with-Quickshell-8aadf4)
-![MangoWC and Hyprland](https://img.shields.io/badge/compositor-MangoWC%20%C2%B7%20Hyprland-7dc4e4)
-![Status: pre-1.0](https://img.shields.io/badge/status-pre--1.0-494d64)
-
-<img src="docs/img/dashboard.png" alt="The Archeotech dashboard over a glass frame" width="900">
-
-<sub>The dashboard on Catppuccin Macchiato, with real compositor blur. Demo projects, isolated render.</sub>
+[![Built with Quickshell](https://img.shields.io/badge/built%20with-quickshell-c6a0f6?style=for-the-badge&labelColor=24273a)](https://quickshell.org)
+[![MangoWC](https://img.shields.io/badge/mangowc-supported-8aadf4?style=for-the-badge&labelColor=24273a)](https://github.com/DreamMaoMao/mangowc)
+[![Hyprland](https://img.shields.io/badge/hyprland-supported-7dc4e4?style=for-the-badge&labelColor=24273a)](https://hyprland.org)
+[![License](https://img.shields.io/badge/license-GPL--3.0-a6da95?style=for-the-badge&labelColor=24273a)](LICENSE)
 
 </div>
 
----
+<!-- Placeholder until the showcase video is recorded: replace with the bare user-attachments mp4 URL. -->
+<div align="center">
+<img src="docs/img/dashboard.png" alt="The Archeotech dashboard over the glass frame" width="900">
+</div>
 
-Archeotech is a [Quickshell](https://quickshell.org) desktop shell for MangoWC and Hyprland.
-It draws the bar, side strips, launcher, dashboard, notifications, OSD, wallpaper picker and settings
-in one process and one glass frame. A theme change recolours the shell and your apps together:
-kitty, GTK, rofi, fish, starship, hyprlock, VS Code, Obsidian and the compositor borders.
-Every bar item and panel is a module. You place them in edit mode and the layout reloads live.
+<details>
+<summary><b>More screenshots</b></summary>
 
-## A day with Archeotech
+| | |
+|:---:|:---:|
+| <img src="docs/img/launcher.png" alt="Launcher" width="440"><br>Launcher | <img src="docs/img/settings.png" alt="Settings" width="440"><br>Settings |
+| <img src="docs/img/editmode.png" alt="Edit mode" width="440"><br>Edit mode | <img src="docs/img/keyboard.png" alt="Keybinds panel" width="440"><br>Keybinds panel |
+| <img src="docs/img/wallpaper.png" alt="Wallpaper picker" width="440"><br>Wallpaper picker | <img src="docs/img/themes.png" alt="Six themes" width="440"><br>Themes |
 
-- **Morning.** You dock the laptop. The display profile for that desk applies itself.
-- **Work.** `Super+Space` opens the launcher. One search box finds apps, settings and actions.
-- **A new shortcut.** `Super+K` lists every compositor bind, labelled for the keyboard you type on.
-- **Late afternoon.** The room gets bright. You pick a light theme and the terminals, GTK apps and shell follow.
-- **Weekend.** You move the clock to a side strip and add a notes panel. No file to edit.
+</details>
 
-## Why you want it
+Archeotech is a shell made to be shaped. The layout, the look and the behaviour are yours to change,
+from inside the shell, while it runs. Whatever is missing, you can add as a folder.
 
-| You have | Archeotech gives you |
-|---|---|
-| A bar, a launcher, a notifier and a wallpaper tool that each look different | **One shell** with one material and one set of tokens |
-| A theme that stops at the terminal | **One switch** for 13 official palettes, a flavor and an accent, applied to 11 targets |
-| A config file to edit for every layout change | **Edit mode**: drag widgets onto a bar, a strip or a holder |
-| Displays that change between home and work | **Per-monitor profiles** applied on dock and undock |
-| Settings scattered across tools | **One Settings panel** with search and a reset per setting |
-| A look you want to make your own | **Theme packs** that change the material, the frames and the fonts |
+## Make it yours
 
-## See it
+**Layout.** Every screen edge can be a bar, an icon strip or nothing. Open edit mode and drag widgets where you want them.
 
-### Launcher
-Apps, settings and shell actions in one list. Recent apps on top.
+**Look.** Pick a palette, dark or light, and any accent. Add a theme pack to change the material, the frames and the fonts.
+Your terminal, GTK apps, launcher menus and editor follow along.
 
-<img src="docs/img/launcher.png" alt="The launcher" width="900">
+**Behaviour.** Everything else is a setting in one searchable app, and every setting goes back to its default in one click.
 
-### Settings
-Theme family, flavor and accent. Solid or Glass, X-ray or real blur behind windows, text size.
-Displays, input, audio, connections, plugins and power. Every setting is searchable and resets to its default in one click.
+**Extend.** Widgets, panels and theme packs are plain folders with a manifest. Write your own or drop in someone else's.
 
-<img src="docs/img/settings.png" alt="Settings, Appearance pane" width="900">
+Also in the box: a launcher, a dashboard, notifications, a wallpaper picker, a keybinds panel and display profiles that follow your monitors.
 
-### Themes
-13 palettes from the official upstream sources, dark and light. CI checks every text colour for contrast.
+## Installation
 
-<img src="docs/img/themes.png" alt="The dashboard in six themes" width="900">
+You need [Quickshell](https://quickshell.org) 0.3 or newer, a Nerd Font and an icon theme (Papirus recommended).
 
-### Theme packs
-A pack changes the material on top of the palette. Base, Angular, Grimdark and HUD ship with the shell.
-
-<img src="docs/img/packs.png" alt="Base, Grimdark and HUD packs" width="900">
-
-### Edit mode
-Pick what each side of the screen is: a bar, an icon strip, a holder or nothing. Drag widgets from the library onto it.
-
-<img src="docs/img/editmode.png" alt="Edit mode with the widget library" width="900">
-
-### Keyboard
-Shortcuts and special characters in one panel. Hover a combo and the keyboard diagram lights its keys.
-
-<img src="docs/img/keyboard.png" alt="The keyboard panel" width="900">
-
-### Wallpapers
-Thumbnails per mode, with the logo overlay and the theme one tab away.
-
-<img src="docs/img/wallpaper.png" alt="The wallpaper picker" width="900">
-
-## Get started
-
-1. Install [Quickshell](https://quickshell.org) 0.3.0 or newer, a Nerd Font and an icon theme (Papirus recommended).
-2. Clone and install:
-   ```sh
-   git clone https://github.com/Nicolas-Rigaudy/archeotech-shell.git ~/Projects/archeotech-shell
-   cd ~/Projects/archeotech-shell
-   ./scripts/install.sh --dry-run   # preview, then run it without the flag
-   ```
-3. Add the required rules and keybinds to your compositor from [`examples/`](examples/)
-   ([MangoWC](examples/mangowc.conf.example), [Hyprland](examples/hyprland.conf.example)).
-4. Start it with `qs -c archeotech`.
+```sh
+git clone https://github.com/Nicolas-Rigaudy/archeotech-shell.git ~/Projects/archeotech-shell
+cd ~/Projects/archeotech-shell
+./scripts/install.sh --dry-run   # preview, then run it without the flag
+qs -c archeotech
+```
 
 The installer links the repo to `~/.config/quickshell/archeotech`, adds the theme packages and two wallpapers,
 and puts the helper scripts on your `PATH`. Optional tools (NetworkManager, bluez, brightnessctl, awww and others)
-light up their widgets when present. The full list is in [`docs/INSTALL.md`](docs/INSTALL.md).
+enable their widgets when present. The full list is in [`docs/INSTALL.md`](docs/INSTALL.md).
 
-Want the whole desktop around it? [archeotech-dotfiles](https://github.com/Nicolas-Rigaudy/archeotech-dotfiles)
-is the machine config this shell runs on.
+Then add the window rules and keybinds from [`examples/`](examples/) to your compositor:
+[MangoWC](examples/mangowc.conf.example) or [Hyprland](examples/hyprland.conf.example).
 
-<details>
-<summary><b>What is in the box</b></summary>
+> [!NOTE]
+> Archeotech is pre-1.0. It is a daily driver on MangoWC; Hyprland is supported through the example config.
 
-| Path | What |
+## Usage
+
+Default binds from the example config:
+
+| Keybind | Action |
 |---|---|
-| `shell.qml` | entry point: one frame per monitor with its bar, strips and panels |
-| `Modules/` | dashboard, launcher, notifications, OSD, settings, edit mode, panels |
-| `Widgets/Bar/` | bar widgets, mounted by file name (`<Id>Widget.qml`) |
-| `Services/` | audio, network, Bluetooth, displays, media, compositor IPC, config |
-| `Commons/` | design tokens, primitives, animation |
-| `themes/`, `packs/` | palettes and theme packs |
-| `modules/` | plugins (a folder with a `module.json`) |
-| `scripts/` | installer, theme switch, wallpaper, display profiles, render tools |
-| `tests/` | logic tests and 25 golden renders |
+| `Super + R` | Launcher |
+| `Super + Home` | Dashboard |
+| `Super + ,` | Settings |
+| `Super + W` | Wallpaper picker |
+| `Super + K` | Keybinds panel |
+| `Super + Shift + K` | Special characters |
+| `Super + ;` | Notifications |
+| `Super + Shift + E` | Edit mode |
 
-</details>
+Everything is also reachable over IPC:
+
+```sh
+qs -c archeotech ipc call launcher toggle
+qs -c archeotech ipc call settings openPane appearance
+```
+
+Targets: `launcher`, `dashboard`, `settings`, `wallpaper`, `keybinds`, `notifications`, `editmode`, `media`,
+`layout`, `osd`, `panel`, `popup`, `sides`, `theme`.
+
+## Configuring
+
+Most things are set from the Settings app and edit mode. Both write `~/.config/archeotech/config.json`,
+which hot-reloads when you edit it by hand.
 
 <details>
 <summary><b>Extend it</b></summary>
@@ -133,11 +110,38 @@ is the machine config this shell runs on.
 - `scripts/shot.sh` renders the shell in an isolated headless compositor. Your running session stays untouched.
 - `tests/run.sh` runs the logic tests. `scripts/golden.sh` compares 25 renders against the goldens.
 - CI runs qmllint, the logic tests, palette fidelity and contrast checks.
-- Regenerate the screenshots above: [`docs/screenshots.md`](docs/screenshots.md).
+- Regenerate the screenshots: [`docs/screenshots.md`](docs/screenshots.md).
 
 </details>
 
+## Updating
+
+```sh
+cd ~/Projects/archeotech-shell && git pull
+```
+
+The config dir is a link to the clone. QML changes hot-reload; restart the shell after a pull that adds packs or plugins.
+
+## FAQ
+
+**Does it work on other compositors?**
+MangoWC and Hyprland only. The workspace and window widgets talk to their IPC.
+
+**Where do my settings live?**
+`~/.config/archeotech/config.json`. Delete it to start from the defaults.
+
+**Can I use only the bar?**
+Yes. Turn the other screen edges off in edit mode and leave the panels on their binds.
+
+## Credits
+
+- [outfoxxed](https://github.com/outfoxxed) and [Quickshell](https://quickshell.org), which makes all of this possible.
+- [caelestia](https://github.com/caelestia-dots/shell), [end-4](https://github.com/end-4/dots-hyprland), [Noctalia](https://github.com/noctalia-dev/noctalia) and [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) for showing what a Quickshell shell can be.
+- [Catppuccin](https://github.com/catppuccin), Dracula, Gruvbox, Nord and Tokyo Night for the palettes, and [Papirus](https://github.com/PapirusDevelopmentTeam/papirus-icon-theme) for the icons.
+- [MangoWC](https://github.com/DreamMaoMao/mangowc) for the compositor.
+
+Want the whole desktop around it? [archeotech-dotfiles](https://github.com/Nicolas-Rigaudy/archeotech-dotfiles) is the machine config this shell runs on.
+
 ## License
 
-[GPL-3.0](LICENSE). Theme packs and plugins kept in their own repositories may use their own license.
-The bundled wallpapers are from [Pexels](https://www.pexels.com/license/).
+[GPL-3.0](LICENSE). The bundled wallpapers are from [Pexels](https://www.pexels.com/license/).
