@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import "../../../../Commons" as Commons
 import "../../../Dashboard/panels"
 import "../../../../Commons/Primitives" as Prim
@@ -23,8 +24,9 @@ Item {
     // Kept for the narrow (vertical-strip) edge case — stack to 1 column there.
     readonly property bool _wide: width >= 720
 
-    // Live clock/greeting — tick while the panel is open.
-    property var _now: new Date()
+    // Live clock/greeting, on the minute boundary (no seconds shown).
+    SystemClock { id: _sysClock; precision: SystemClock.Minutes }
+    readonly property var _now: _sysClock.date
     function _greeting() {
         var h = root._now.getHours()
         var g = h < 5 ? "Good night" : h < 12 ? "Good morning"
@@ -34,11 +36,6 @@ Item {
         var u = (Commons.Paths.home || "").split("/").filter(Boolean).pop() || ""
         if (u.length) u = u.charAt(0).toUpperCase() + u.slice(1)
         return u.length ? g + ", " + u : g
-    }
-    Timer {
-        interval: 1000; repeat: true
-        running: root.panelRoot ? root.panelRoot.panelOpen : false
-        onTriggered: root._now = new Date()
     }
 
     // Content container — fills Panel's Loader bounds. Panel.qml owns chrome.

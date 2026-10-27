@@ -16,6 +16,7 @@ import "Services/Persistence" as Persistence
 import "Services/Shell" as ShellServices
 import "Services/Theming" as ThemeServices
 import "Modules/OSD"
+import "Modules/OSD/OsdLogic.js" as OsdLogic
 import "Modules/Shell" as Shell
 import "Modules/Settings" as Stg
 import "Modules/NotificationCenter"
@@ -205,6 +206,11 @@ ShellRoot {
         function toggle() { ShellServices.ShellState.toggleGlobal("launcher") }
         function open()   { ShellServices.ShellState.openGlobal("launcher")  }
         function close()  { ShellServices.ShellState.closeAllAcross()        }
+        // Open with the search box pre-filled: `ipc call launcher search "fire"`.
+        function search(text: string) {
+            Commons.State.launcherQuery = text
+            ShellServices.ShellState.openGlobal("launcher")
+        }
     }
 
     IpcHandler {
@@ -380,6 +386,67 @@ ShellRoot {
         var items = osdVariants.instances
         for (var i = 0; i < items.length; i++)
             items[i].show(type)
+    }
+
+    // The OSD follows state (item_120): a volume, mute or brightness change from
+    // any source shows it, not only the keybinds' `ipc call osd`. OsdLogic keeps
+    // startup reads and default-sink switches silent. Last values are kept here
+    // (not bound), and the sink identity is re-checked on every change, so the
+    // order in which the Audio signals arrive does not matter.
+    QtObject {
+        id: _osdFollow
+        readonly property double armedAt: Date.now()
+        property double sinkChangedAt: Date.now()
+        property string sink: ""
+        property bool   bound: false
+        property int    volume: 0
+        property bool   muted: false
+        property int    brightness: 0
+
+        function _checkSink() {
+            var a = MediaServices.Audio
+            if (a.defaultSink !== sink || a.sinkBound !== bound) {
+                sink = a.defaultSink
+                bound = a.sinkBound
+                sinkChangedAt = Date.now()
+            }
+        }
+        function changed(kind, prev, next) {
+            if (kind !== "brightness") _checkSink()
+            if (kind !== "brightness" && !bound) return
+            var type = OsdLogic.trigger(kind, prev, next,
+                { now: Date.now(), armedAt: armedAt, sinkChangedAt: sinkChangedAt })
+            if (type !== "") shell._osdShow(type)
+        }
+        Component.onCompleted: {
+            _checkSink()
+            volume = MediaServices.Audio.volume
+            muted = MediaServices.Audio.muted
+            brightness = HardwareServices.Brightness.percent
+        }
+    }
+    Connections {
+        target: MediaServices.Audio
+        function onDefaultSinkChanged() { _osdFollow._checkSink() }
+        function onSinkBoundChanged()   { _osdFollow._checkSink() }
+        function onVolumeChanged() {
+            var v = MediaServices.Audio.volume
+            _osdFollow.changed("volume", _osdFollow.volume, v)
+            _osdFollow.volume = v
+        }
+        function onMutedChanged() {
+            var m = MediaServices.Audio.muted
+            _osdFollow.changed("muted", _osdFollow.muted, m)
+            _osdFollow.muted = m
+        }
+    }
+    Connections {
+        target: HardwareServices.Brightness
+        function onPercentChanged() {
+            var p = HardwareServices.Brightness.percent
+            _osdFollow.changed("brightness", _osdFollow.brightness, p)
+            _osdFollow.brightness = p
+        }
     }
 
     IpcHandler {

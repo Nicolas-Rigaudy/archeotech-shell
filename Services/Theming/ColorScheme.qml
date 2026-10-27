@@ -1,5 +1,6 @@
 pragma Singleton
 import QtQuick
+import Quickshell
 import "../../Commons" as Commons
 import "../Persistence" as Persistence
 
@@ -138,11 +139,17 @@ QtObject {
         _applyRunner.run([Commons.Paths.themeSwitch, "--glass", g, "--blur", b].concat(t ? ["--tune", t] : []))
     }
 
-    // Auto-mode clock — re-resolve every minute; applies on day↔night crossing.
-    property var _clock: Timer {
-        interval: 60000; repeat: true; triggeredOnStart: false
-        running: root.mode === "auto"
-        onTriggered: { root._now = Qt.formatDateTime(new Date(), "HH:mm"); root._apply() }
+    // Auto-mode clock — re-resolve on each wall-clock minute (a free-running
+    // 60 s Timer crossed day↔night up to a minute late); applies on a crossing.
+    property var _clock: SystemClock {
+        precision: SystemClock.Minutes
+        enabled: root.mode === "auto"
+        onDateChanged: {
+            var t = Qt.formatDateTime(date, "HH:mm")
+            if (t === root._now) return
+            root._now = t
+            root._apply()
+        }
     }
 
     // ── Boot: seed from the applied variant, then resolve once Config is ready ───

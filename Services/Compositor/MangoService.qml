@@ -270,10 +270,10 @@ QtObject {
             + "if [ \"$(grep -oP '^border_?px=\\K[0-9]+' \"$CFG\")\" != \"" + bp + "\" ]; then "
             + "sed --follow-symlinks -i -E 's#^(border_?px)=.*#\\1=" + bp + "#' \"$CFG\"; CH=1; fi; "
             + "if [ \"$CH\" = \"1\" ]; then "
-            + "PREV_KB=$(mmsg get keyboardlayout 2>/dev/null | jq -r '.layout // empty' 2>/dev/null); "
+            + "PREV_KB=$(mmsg get keyboardlayout 2>/dev/null | sed -n 's/.*\"layout\" *: *\"\\([^\"]*\\)\".*/\\1/p'); "
             + "mmsg dispatch reload_config; "
             + "if [ -n \"$PREV_KB\" ]; then for _ in $(seq 1 6); do "
-            + "[ \"$(mmsg get keyboardlayout 2>/dev/null | jq -r '.layout // empty' 2>/dev/null)\" = \"$PREV_KB\" ] && break; "
+            + "[ \"$(mmsg get keyboardlayout 2>/dev/null | sed -n 's/.*\"layout\" *: *\"\\([^\"]*\\)\".*/\\1/p')\" = \"$PREV_KB\" ] && break; "
             + "mmsg dispatch switch_keyboard_layout 2>/dev/null; sleep 0.1; done; fi; fi"])
     }
 

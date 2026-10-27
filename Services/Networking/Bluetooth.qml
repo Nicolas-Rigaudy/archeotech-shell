@@ -1,20 +1,57 @@
 pragma Singleton
 import QtQuick
 import Quickshell.Io
-import "../../Commons" as Commons
+import Quickshell.Bluetooth
 
+// Bluetooth state, event-driven off Quickshell's native BlueZ bindings (item_121):
+// adapter power, the device list, connect / disconnect / trust / forget and
+// battery update from BlueZ's own D-Bus signals, with no process spawned.
+//
+// Replaces a `gdbus monitor` + `busctl` design that re-ran one busctl per
+// device property on every signal burst, hard-wired to /org/bluez/hci0.
+// Discovery and pairing still go through bt-agent.py: pairing needs a
+// registered agent for the SSP handshake, which Quickshell does not provide.
 QtObject {
     id: root
 
-    property bool   enabled:   false
-    property bool   connected: false
-    property string device:    ""
-    property var    devices:   []
+    readonly property var adapter: Bluetooth.defaultAdapter
+
+    // ── Public state (same contract the busctl service exposed) ──────────────
+    readonly property bool enabled: !!(adapter && adapter.enabled)
+
+    // Every device of the default adapter (paired + discovered) as plain rows.
+    // Reading each device's properties here makes the binding follow them, so
+    // a connect, rename or battery change re-evaluates the list.
+    readonly property var devices: {
+        var out = []
+        var a = root.adapter
+        if (!a) return out
+        var vals = Bluetooth.devices.values
+        for (var i = 0; i < vals.length; i++) {
+            var d = vals[i]
+            if (!d || d.adapter !== a || !d.address) continue
+            out.push({
+                name:      d.name || d.address,
+                address:   d.address,
+                connected: d.connected,
+                paired:    d.paired,
+                trusted:   d.trusted,
+                battery:   d.batteryAvailable ? Math.round(d.battery * 100) : null
+            })
+        }
+        // Stable order (the native model's is not): by address, as the old
+        // per-path listing was.
+        out.sort((x, y) => x.address < y.address ? -1 : x.address > y.address ? 1 : 0)
+        return out
+    }
+    readonly property var _connected: devices.filter(d => d.connected)
+    readonly property bool   connected: _connected.length > 0
+    readonly property string device:    connected ? _connected[0].name : ""
 
     // In-flight operation tracking (drives the UI spinners). Holds the address
     // of the device being (dis)connected; "" when idle. Single-flight: only one
-    // op at a time — mirrors the Network service and avoids the overlapping
-    // "Operation already in progress" Connect calls seen in bluetoothd logs.
+    // op at a time, which avoids the overlapping "Operation already in progress"
+    // Connect calls seen in bluetoothd logs.
     property string connectingTo:      ""
     property string disconnectingFrom: ""
     property string pairingTo:         ""
@@ -25,216 +62,109 @@ QtObject {
     // button state and the "AVAILABLE" device section in the settings pane.
     property bool discovering: false
 
-    Component.onCompleted: _refresh()
-
-    function _refresh() {
-        if (!pollEnabled.running) pollEnabled.running = true
-        if (!pollDevices.running) {
-            pollDevices._incoming = []
-            pollDevices.running   = true
-        }
+    function _deviceFor(address) {
+        if (!address) return null
+        var vals = Bluetooth.devices.values
+        for (var i = 0; i < vals.length; i++)
+            if (vals[i] && vals[i].address === address && vals[i].adapter === root.adapter) return vals[i]
+        return null
     }
 
-    // ── D-Bus signal monitor (event-driven) ───────────────────────────────────
-    // `busctl monitor` needs BecomeMonitor/eavesdrop privilege → "Access denied"
-    // as a normal user, so it died instantly and left only the 3s poll running.
-    // `gdbus monitor` is an ordinary signal subscription (no privilege) and picks
-    // up org.bluez's PropertiesChanged / InterfacesAdded / InterfacesRemoved, so
-    // connect/disconnect/power/battery changes refresh instantly.
-    property var monitor: Process {
-        command: ["stdbuf", "-oL", "gdbus", "monitor", "--system", "--dest", "org.bluez"]
-        running: true
-        stdout: SplitParser {
-            onRead: _line => {
-                // Ignore the chatty MediaPlayer1/MediaTransport1 signals (audio
-                // position/volume ticks) — only refresh on device/adapter/battery
-                // topology + state changes. Debounced so bursts coalesce.
-                if (_line.indexOf("InterfacesAdded")   !== -1
-                 || _line.indexOf("InterfacesRemoved") !== -1
-                 || _line.indexOf("org.bluez.Device1")  !== -1
-                 || _line.indexOf("org.bluez.Adapter1") !== -1
-                 || _line.indexOf("org.bluez.Battery1") !== -1)
-                    root._refreshDebounce.restart()
-            }
+    // An operation ends when the device settles (connected, disconnected or
+    // gone), or after BlueZ's own connect timeout at the latest. A connect only
+    // ends on Disconnected once it was seen Connecting, so the state before the
+    // call starts does not end it.
+    property bool _opSawConnecting: false
+    function _settle() {
+        if (root.connectingTo !== "") {
+            var c = _deviceFor(root.connectingTo)
+            if (c && c.state === BluetoothDeviceState.Connecting) root._opSawConnecting = true
+            else if (!c || c.state === BluetoothDeviceState.Connected
+                     || (c.state === BluetoothDeviceState.Disconnected && root._opSawConnecting))
+                root._endOp()
         }
-        onExited: (code, status) => root._monRestart.start()
-    }
-    property var _refreshDebounce: Timer { interval: 300; repeat: false; onTriggered: root._refresh() }
-    property var _monRestart:      Timer { interval: 1000; repeat: false; onTriggered: root.monitor.running = true }
-
-    // Polling fallback — only fires if the monitor is somehow down (kept as a
-    // safety net; with gdbus working it stays running and this never triggers).
-    property var _pollTimer: Timer {
-        interval: 3000; running: true; repeat: true
-        onTriggered: if (!root.monitor.running) root._refresh()
-    }
-
-    // ── Adapter powered state ──────────────────────────────────────────────────
-    property var pollEnabled: Process {
-        command: ["busctl", "get-property", "org.bluez", "/org/bluez/hci0",
-                  "org.bluez.Adapter1", "Powered"]
-        running: false
-        stdout: SplitParser {
-            onRead: data => { root.enabled = data.trim().includes("true") }
+        if (root.disconnectingFrom !== "") {
+            var d = _deviceFor(root.disconnectingFrom)
+            if (!d || d.state === BluetoothDeviceState.Disconnected) root._endOp()
         }
-        onExited: (code, status) => {
-            if (code !== 0) console.warn("Bluetooth: pollEnabled exited with code " + code)
-        }
+        if (root.removingFrom !== "" && !_deviceFor(root.removingFrom)) root._endOp()
     }
-
-    // ── Device list ──────────────────────────────────────────────────────────
-    // Emits every device in the adapter tree (paired + discovered) with its
-    // paired/trusted/connected state. The UI shows paired ones always and
-    // discovered (unpaired) ones under "AVAILABLE" while a scan is running.
-    // `sort -u` collapses the device path that grep also matches on each of a
-    // connected device's audio sub-objects (fd0/sep/player) — without it a
-    // connected device appeared once per sub-object.
-    property var pollDevices: Process {
-        property var _incoming: []
-        command: ["bash", "-c",
-            "busctl tree org.bluez 2>/dev/null | grep -oP '/org/bluez/hci0/dev_\\w+' | sort -u | " +
-            "while IFS= read -r dev; do " +
-            "  name=$(busctl get-property org.bluez \"$dev\" org.bluez.Device1 Alias 2>/dev/null | cut -d'\"' -f2); " +
-            "  addr=$(busctl get-property org.bluez \"$dev\" org.bluez.Device1 Address 2>/dev/null | cut -d'\"' -f2); " +
-            "  conn=$(busctl get-property org.bluez \"$dev\" org.bluez.Device1 Connected 2>/dev/null | awk '{print $2}'); " +
-            "  paird=$(busctl get-property org.bluez \"$dev\" org.bluez.Device1 Paired 2>/dev/null | awk '{print $2}'); " +
-            "  trust=$(busctl get-property org.bluez \"$dev\" org.bluez.Device1 Trusted 2>/dev/null | awk '{print $2}'); " +
-            "  bat=$(busctl get-property org.bluez \"$dev\" org.bluez.Battery1 Percentage 2>/dev/null | awk '{print $2}'); " +
-            "  [ -n \"$addr\" ] && " +
-            "    printf '{\"name\":\"%s\",\"address\":\"%s\",\"connected\":%s,\"paired\":%s,\"trusted\":%s,\"battery\":%s}\\n' " +
-            "      \"${name:-$addr}\" \"$addr\" \"${conn:-false}\" \"${paird:-false}\" \"${trust:-false}\" \"${bat:-null}\"; " +
-            "done"]
-        running: false
-        stdout: SplitParser {
-            onRead: data => {
-                try {
-                    var d = JSON.parse(data.trim())
-                    pollDevices._incoming = pollDevices._incoming.concat([d])
-                } catch(e) {}
-            }
-        }
-        onExited: (code, status) => {
-            root.devices = pollDevices._incoming
-            var conn = pollDevices._incoming.filter(d => d.connected)
-            root.connected = conn.length > 0
-            root.device    = conn.length > 0 ? conn[0].name : ""
-            if (code !== 0) console.warn("Bluetooth: pollDevices exited with code " + code)
-        }
+    function _beginOp() {
+        root._opSawConnecting = false
+        _opTimeout.restart()
     }
-
-    // Faster polling while discovering so newly-found devices appear promptly.
-    property var _scanPoll: Timer {
-        interval: 1500; repeat: true; running: root.discovering
-        onTriggered: root._refresh()
+    function _endOp() {
+        root.connectingTo = ""
+        root.disconnectingFrom = ""
+        root.removingFrom = ""
+        root._opSawConnecting = false
+        _opTimeout.stop()
     }
+    property var _opTimeout: Timer { interval: 30000; onTriggered: root._endOp() }
+    // Device states change on the device objects, not on the list: follow the
+    // one being worked on.
+    property var _opWatch: Connections {
+        target: root._deviceFor(root.connectingTo || root.disconnectingFrom || root.removingFrom)
+        ignoreUnknownSignals: true
+        function onStateChanged() { root._settle() }
+    }
+    onDevicesChanged: _settle()
 
     // ── Commands ───────────────────────────────────────────────────────────────
-    property var _cmd: Commons.CommandRunner {
-        label: "Bluetooth"
-        onFinished: (argv, code) => root._refresh()
-    }
-
-    function _run(cmd) { _cmd.runShell(cmd) }
-
-    function _devPath(address) {
-        return "/org/bluez/hci0/dev_" + address.replace(/:/g, "_")
-    }
-
     function toggle() {
-        _run("busctl set-property org.bluez /org/bluez/hci0 org.bluez.Adapter1 Powered b " +
-             (enabled ? "false" : "true"))
+        if (root.adapter) root.adapter.enabled = !root.adapter.enabled
     }
 
-    // ── Connect ──────────────────────────────────────────────────────────────
     // Mark the device Trusted *before* Connect. An untrusted audio device (e.g.
     // a Jabra headset) brings the ACL link up, but bluez is then denied the
     // A2DP/HFP profile setup ("avdtp ... Permission denied", "Hands-Free ...
     // Connection refused" in bluetoothd) and tears the whole link down — i.e.
     // it "connects then disconnects straight away". Trust authorises the audio
     // profiles and also enables auto-reconnect on power-on / range return.
-    property var _connCmd: Process {
-        property string cmd: ""
-        command: ["bash", "-c", cmd]
-        running: false
-        onExited: (code, status) => {
-            if (code !== 0) console.warn("Bluetooth: connect exited with code " + code)
-            root.connectingTo = ""
-            root._refresh()
-        }
-    }
-
     function connectDevice(address) {
         if (root.connectingTo !== "" || root.disconnectingFrom !== "") return
-        var path = root._devPath(address)
+        var d = _deviceFor(address)
+        if (!d) return
         root.connectingTo = address
-        _connCmd.cmd =
-            "busctl set-property org.bluez \"" + path + "\" org.bluez.Device1 Trusted b true; " +
-            "busctl call org.bluez \"" + path + "\" org.bluez.Device1 Connect"
-        _connCmd.running = true
-    }
-
-    // ── Disconnect ─────────────────────────────────────────────────────────────
-    property var _disconnCmd: Process {
-        property string cmd: ""
-        command: ["bash", "-c", cmd]
-        running: false
-        onExited: (code, status) => {
-            if (code !== 0) console.warn("Bluetooth: disconnect exited with code " + code)
-            root.disconnectingFrom = ""
-            root._refresh()
-        }
+        _beginOp()
+        d.trusted = true
+        d.connect()
     }
 
     function disconnectDevice(address) {
         if (root.connectingTo !== "" || root.disconnectingFrom !== "") return
-        var path = root._devPath(address)
+        var d = _deviceFor(address)
+        if (!d) return
         root.disconnectingFrom = address
-        _disconnCmd.cmd = "busctl call org.bluez \"" + path + "\" org.bluez.Device1 Disconnect"
-        _disconnCmd.running = true
+        _beginOp()
+        d.disconnect()
     }
 
-    // ── Trust toggle (agent-free) ──────────────────────────────────────────────
     function setTrusted(address, on) {
-        var path = root._devPath(address)
-        _run("busctl set-property org.bluez \"" + path + "\" org.bluez.Device1 Trusted b "
-             + (on ? "true" : "false"))
+        var d = _deviceFor(address)
+        if (d) d.trusted = on
     }
 
-    // ── Remove / unpair (agent-free) ───────────────────────────────────────────
     // Adapter1.RemoveDevice drops the pairing + link key. This is the in-panel
     // replacement for opening blueman just to unpair.
-    property var _removeCmd: Process {
-        property string cmd: ""
-        command: ["bash", "-c", cmd]
-        running: false
-        onExited: (code, status) => {
-            if (code !== 0) console.warn("Bluetooth: remove exited with code " + code)
-            root.removingFrom = ""
-            root._refresh()
-        }
-    }
-
     function removeDevice(address) {
         if (root.removingFrom !== "") return
-        var path = root._devPath(address)
+        var d = _deviceFor(address)
+        if (!d) return
         root.removingFrom = address
-        _removeCmd.cmd = "busctl call org.bluez /org/bluez/hci0 org.bluez.Adapter1 RemoveDevice o \""
-                         + path + "\""
-        _removeCmd.running = true
+        _beginOp()
+        d.forget()
     }
 
     // ── Discovery scan (needs a persistent connection → bt-agent.py --scan) ─────
-    // A one-shot `busctl StartDiscovery` stops the instant busctl exits (the
-    // session is bound to the calling D-Bus connection), so the helper holds it
-    // open + registers a pairing agent. Killing the process (running=false) ends
-    // discovery cleanly; the helper also self-times-out.
+    // The helper holds the discovery session open + registers a pairing agent so
+    // a discovered device can be paired. Killing the process (running=false)
+    // ends discovery cleanly; the helper also self-times-out. Found devices show
+    // up through the native device list.
     property var _scanCmd: Process {
         command: ["bash", "-c", "bt-agent.py --scan 30"]
         running: false
-        onExited: (code, status) => {
-            root.discovering = false
-            root._refresh()
-        }
+        onExited: (code, status) => { root.discovering = false }
     }
 
     function startScan() {
@@ -254,7 +184,6 @@ QtObject {
         onExited: (code, status) => {
             if (code !== 0) console.warn("Bluetooth: pair exited with code " + code)
             root.pairingTo = ""
-            root._refresh()
         }
     }
 

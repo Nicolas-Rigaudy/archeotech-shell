@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell.Io
 import "../Persistence" as Persistence
+import "ManifestLogic.js" as Manifest
 
 // Sprint 21 Chunk 2 — community extension discovery.
 //
@@ -15,9 +16,9 @@ import "../Persistence" as Persistence
 // strip icons and panels are NOT modules — they stay in WidgetRegistry /
 // PanelRegistry. This registry is purely the third-party extension layer.
 //
-// Discovery uses the codebase's standard Process+jq scan idiom (see
-// ActiveProjects). jq emits one compact JSON object per module, each tagged
-// with its absolute directory so `entryUrl()` can resolve the QML file.
+// Discovery is one Process that cats every module.json with its absolute
+// directory (ManifestLogic.js parses the records), so `entryUrl()` can resolve
+// the QML file. No jq: a machine without it still finds its modules.
 //
 // module.json schema — see docs/MODULE_API.md:
 //   { id, name, author, version, canLiveIn[], entry, icon, defaultSize{}, panel{},
@@ -152,7 +153,7 @@ QtObject {
         command: ["bash", "-c",
             "scan(){ [ -d \"$1\" ] || return; for d in \"$1\"/*/; do m=\"${d}module.json\"; " +
             "[ -f \"$m\" ] || continue; " +
-            "jq -c --arg dir \"$d\" '{dir:$dir, id, name, author, version, canLiveIn, entry, icon, defaultSize, panel, configSchema, official, verified, minShellVersion, dependencies, description}' \"$m\" 2>/dev/null; " +
+            "printf '%s\\n' \"$d\"; cat \"$m\" 2>/dev/null; printf '\\n\\036'; " +
             "done; }; " +
             "scan \"" + root._bundledDir + "\"; " +
             "scan \"$HOME/.local/share/archeotech/modules\""
@@ -161,16 +162,15 @@ QtObject {
         property var _buf: []
         onRunningChanged: if (running) _buf = []
 
+        // One record per manifest, \x1e-separated: "<dir>\n<module.json>"
+        // (ManifestLogic.js), so discovery needs no jq.
         stdout: SplitParser {
-            onRead: line => {
-                var t = line.trim()
-                if (!t) return
-                try {
-                    var m = JSON.parse(t)
-                    if (m && m.id && m.entry) _scan._buf = _scan._buf.concat([m])
-                } catch (e) {
-                    console.warn("[ModuleRegistry] bad manifest line:", t)
-                }
+            splitMarker: "\x1e"
+            onRead: record => {
+                if (!record.trim()) return
+                var m = Manifest.parseModule(record)
+                if (m) _scan._buf = _scan._buf.concat([m])
+                else console.warn("[ModuleRegistry] bad manifest:", record.split("\n")[0])
             }
         }
         onExited: {

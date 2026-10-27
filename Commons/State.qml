@@ -18,6 +18,10 @@ QtObject {
     // | "". Lets headless renders check popups that otherwise need a mouse (item_116).
     property string popupProbe:               ""
 
+    // Launcher pre-fill (`ipc call launcher search <text>`): the text the launcher
+    // starts with on its next open (or at once if open). It takes it and clears it.
+    property string launcherQuery:            ""
+
     // Sprint 21 — visual builder. When true, every ShellSurface shows the
     // EditOverlay (click-to-assign editor). Toggled via `editmode` IPC /
     // Super+Shift+E.

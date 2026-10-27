@@ -208,10 +208,10 @@ QtObject {
           + "&& NEW=$(printf '%s' \"$NEW\" | sed 's/^device_rule=/devicerule=/'); "
           + "[ -f \"$F\" ] && [ \"$(cat \"$F\")\" = \"$NEW\" ] && exit 0; "
           + "printf '%s\\n' \"$NEW\" > \"$F.tmp\" && mv \"$F.tmp\" \"$F\" || exit 1; "
-          + "PREV_KB=$(mmsg get keyboardlayout 2>/dev/null | jq -r '.layout // empty' 2>/dev/null); "
+          + "PREV_KB=$(mmsg get keyboardlayout 2>/dev/null | sed -n 's/.*\"layout\" *: *\"\\([^\"]*\\)\".*/\\1/p'); "
           + "mmsg dispatch reload_config; "
           + "if [ -n \"$PREV_KB\" ]; then for _ in $(seq 1 6); do "
-          + "[ \"$(mmsg get keyboardlayout 2>/dev/null | jq -r '.layout // empty' 2>/dev/null)\" = \"$PREV_KB\" ] && break; "
+          + "[ \"$(mmsg get keyboardlayout 2>/dev/null | sed -n 's/.*\"layout\" *: *\"\\([^\"]*\\)\".*/\\1/p')\" = \"$PREV_KB\" ] && break; "
           + "mmsg dispatch switch_keyboard_layout 2>/dev/null; sleep 0.1; done; fi",
             "input", root._confPath, root.render()])
     }

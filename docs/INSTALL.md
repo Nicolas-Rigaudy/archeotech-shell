@@ -14,7 +14,8 @@ degrades gracefully otherwise): `wl-clipboard`, `brightnessctl`,
 `bluez` + `bluez-utils` (bluetooth widget), `wlr-randr`, `swww`/`awww`
 (wallpaper), `hyprlock` (lock), `wlogout` (power menu),
 `rsvg-convert` + `imagemagick` (wallpaper/logo compositing), `kitty`
-(themed terminal colors).
+(themed terminal colors), `python` (theme switching, the Wi-Fi network list,
+Bluetooth scan and pairing), `jq` (VSCode and Obsidian theme sync).
 
 ### Install dependencies (Arch)
 
@@ -29,7 +30,7 @@ paru -S quickshell-git mangowc-git \
 # Optional (recommended for the full experience)
 paru -S wl-clipboard brightnessctl pipewire wireplumber \
         networkmanager bluez bluez-utils wlr-randr swww \
-        hyprlock wlogout imagemagick librsvg kitty
+        hyprlock wlogout imagemagick librsvg kitty python jq
 ```
 
 > Using the companion [`archeotech-dotfiles`](https://github.com/Nicolas-Rigaudy/archeotech-dotfiles)?

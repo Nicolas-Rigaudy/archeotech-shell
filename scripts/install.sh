@@ -35,6 +35,11 @@ BIN_DIR="$HOME/.local/bin"
 
 link() {  # link <target> <linkname>
     local target="$1" name="$2"
+    # A real directory in the way: ln -sfn would nest the link inside it
+    # (themes/themes) instead of replacing it, so leave it for the user.
+    if [[ -d "$name" && ! -L "$name" ]]; then
+        warn "$name is a real directory, not linked: move it aside and re-run"; return
+    fi
     if [[ $DRY -eq 1 ]]; then info "would link $name → $target"; return; fi
     mkdir -p "$(dirname "$name")"
     ln -sfn "$target" "$name"

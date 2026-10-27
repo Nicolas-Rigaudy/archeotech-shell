@@ -1,8 +1,11 @@
 pragma Singleton
 import QtQuick
+import QtCore
+import Quickshell.Io
 import Quickshell.Services.Notifications
 import "../Persistence" as Persistence
 import "ClockLogic.js" as Clock
+import "NotificationsLogic.js" as Logic
 
 Item {
     id: root
@@ -43,6 +46,7 @@ Item {
 
         onNotification: notif => {
             root.history = root.history.concat([{
+                id:        notif.id,
                 appIcon:   notif.appIcon   || "",
                 appName:   notif.appName   || "",
                 summary:   notif.summary   || "",
@@ -56,6 +60,30 @@ Item {
             root.arrived(notif)
         }
     }
+
+    // ── History on disk (item_119) ──────────────────────────────────────────────
+    // Survives a shell reload or restart. Restored once, before any write, so an
+    // empty startup list never overwrites the saved one; notifications arriving
+    // before the read ends are kept after the restored ones. After a reload the
+    // server still holds the notifications it kept (keepOnReload), and each is
+    // re-attached to its entry so a dismiss still reaches the app.
+    property bool _historyRestored: false
+    property FileView _historyFile: FileView {
+        path: StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/share/archeotech/notifications.json"
+        watchChanges: false
+        printErrors: false
+        onLoaded: {
+            var restored = Logic.reattach(Logic.restore(text()), server.trackedNotifications.values)
+            root.history = restored.concat(root.history)
+            root._historyRestored = true
+        }
+        onLoadFailed: root._historyRestored = true    // no file yet
+    }
+    property Timer _historySave: Timer {
+        interval: 500
+        onTriggered: root._historyFile.setText(Logic.serialize(root.history))
+    }
+    onHistoryChanged: if (_historyRestored) _historySave.restart()
 
     // Empty the list first so the UI always clears, then best-effort dismiss
     // each backing notif — an already-expired one throws and would otherwise
