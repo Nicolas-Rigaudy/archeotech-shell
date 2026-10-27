@@ -2,6 +2,8 @@ pragma Singleton
 import QtQuick
 import QtCore
 import Quickshell.Io
+import "MotionLogic.js" as Motion
+import "PaletteLogic.js" as Palette
 
 QtObject {
     id: root
@@ -228,8 +230,53 @@ QtObject {
         onTextChanged: {
             var content = text()
             if (!content || !content.trim()) return
-            try { root._data = JSON.parse(content) } catch (_) {}
+            try { root._applyTheme(JSON.parse(content)) } catch (_) {}
         }
+    }
+
+    // ── Palette crossfade (item_009) ─────────────────────────────────────────
+    // A theme switch rewrites theme.json; instead of snapping, every base palette
+    // colour eases from what is on screen to the new value. `_c` is the single
+    // colour source, so it does the mixing: while `_mix` < 1 it returns
+    // blend(_prevData, _data, _mix). The snapshot is taken from `_c` itself, so a
+    // switch landing mid-fade starts from the blended colours (no jump). The accent
+    // follows the accent ROLE, not its palette name, so picking a different accent
+    // fades too. Pack colours and the first load snap; animation scale 0 and
+    // reduced motion are honoured by the duration token (0 = snap).
+    property var    _prevData: null
+    property real   _mix: 1.0
+    property NumberAnimation _fade: NumberAnimation {
+        target: root; property: "_mix"; from: 0; to: 1
+        duration: Motion.effects(root._tok("anim", "effectsSlow", 300), root.animScale)
+        easing.type: Easing.OutCubic
+    }
+
+    function _applyTheme(next) {
+        var first = !(root._data && root._data.colors)
+        if (first || root.animScale <= 0 || !Palette.differs(root._data, next)) {
+            root._fade.stop(); root._prevData = null; root._mix = 1
+            root._data = next
+            return
+        }
+        var snap = { colors: {}, accent: root._baseColor(root._accentName, "") }
+        var keys = Object.keys((root._data && root._data.colors) || {})
+        for (var i = 0; i < keys.length; i++)
+            snap.colors[keys[i]] = root._baseColor(keys[i], "")
+        root._fade.stop()
+        root._prevData = snap
+        root._mix = 0
+        root._data = next
+        root._fade.start()
+    }
+
+    // Base theme colour for a key (no pack overlay), mid-fade aware.
+    function _baseColor(key, fallback) {
+        var d = root._data
+        var to = (d && d.colors && d.colors[key]) || fallback
+        var pd = root._prevData
+        if (!pd || root._mix >= 1) return to
+        var from = (key === root._accentName) ? pd.accent : pd.colors[key]
+        return from ? Palette.blend(from, to, root._mix) : to
     }
 
     // Colour lookup with pack overlay (adr_027 Layer A): the active pack's tokens
@@ -238,8 +285,7 @@ QtObject {
         var p = root._mergedPack
         if (p && p.colors && p.colors[key] !== undefined && p.colors[key] !== null)
             return p.colors[key]
-        var d = root._data
-        return (d && d.colors && d.colors[key]) || fallback
+        return root._baseColor(key, fallback)
     }
 
     // Slot a semantic role maps to: the active pack's roles win, then the theme's
@@ -388,6 +434,14 @@ QtObject {
     readonly property bool frameChamfer: !!(root._mergedPack && root._mergedPack.frame
                                             && root._mergedPack.frame.corners === "chamfer")
 
+    // Plated chrome (machined-plate surfaces: steel gradients, bolted collars, copper
+    // trim). Declared by the pack as `surfaces.plated`, independent of corner
+    // geometry above, so a pack can cut chamfered corners without plated chrome and
+    // the reverse. Primitives that draw a plated look read this, never the corner
+    // style (item_112; per-role recipes below replace it role by role).
+    readonly property bool platedChrome: !!(root._mergedPack && root._mergedPack.surfaces
+                                            && root._mergedPack.surfaces.plated === true)
+
     // Decorator/FX block from the active pack (adr_027 Wave 2). Consumed by the
     // FrameFx overlay: { glow{}, brackets{}, texture{} }, each optional. Empty
     // object when no pack (or no fx) — the base look stays untouched. Re-evaluates
@@ -431,6 +485,39 @@ QtObject {
         readonly property color faceMd: root._steelTok("faceMd", "#2c3644")
         readonly property color faceLo: root._steelTok("faceLo", "#1a212b")   // toward the content
         readonly property color lit:    root._steelTok("lit",    "#cdd9e8")   // lit outer bevel
+    }
+
+    // ── Surface recipes (item_112) ───────────────────────────────────────────────
+    // A recipe says HOW a surface role is drawn, so primitives read values instead
+    // of asking "is this the steel pack". A pack overrides a role with
+    // `surfaces.<role>` in its tokens.json; unset keys fall back to the glass
+    // default. Colours are role names ("steel.hi", "copperLit", any colors key) or
+    // literal colours. Roles so far: popup (bar hover/click popups).
+    //   popup: { sheen: "screen"|"local", stops: [[pos, colour] x3],
+    //            strokeWidth, strokeColor, collar (bolted neck), padTop }
+    function _surfaceColor(c) {
+        if (typeof c !== "string") return c
+        var d = c.indexOf(".")
+        if (d > 0) {
+            var grp = root[c.substring(0, d)]
+            return grp ? grp[c.substring(d + 1)] : c
+        }
+        return (root.colors && root.colors[c] !== undefined) ? root.colors[c] : c
+    }
+    function _surfaceTok(role, key, fallback) {
+        var p = root._mergedPack
+        if (p && p.surfaces && p.surfaces[role] && p.surfaces[role][key] !== undefined)
+            return p.surfaces[role][key]
+        return fallback
+    }
+    readonly property QtObject popupSurface: QtObject {
+        readonly property string sheen:       root._surfaceTok("popup", "sheen", "screen")
+        readonly property var    stops:       root._surfaceTok("popup", "stops",
+                                                  [[0.0, "glassSheenTop"], [1.0, "glassSheenBot"], [1.0, "glassSheenBot"]])
+        readonly property real   strokeWidth: root._surfaceTok("popup", "strokeWidth", 0)
+        readonly property string strokeColor: root._surfaceTok("popup", "strokeColor", "transparent")
+        readonly property bool   collar:      root._surfaceTok("popup", "collar", false)
+        readonly property real   padTop:      root._surfaceTok("popup", "padTop", 0)
     }
 
     // Pack material (adr_027 / item_083): a pack may drop the base frosted-glass
@@ -632,7 +719,11 @@ QtObject {
     }
 
     readonly property QtObject font: QtObject {
-        readonly property string family: root._tok("font", "family", "FiraCode Nerd Font")
+        // UI face (labels, titles, body): proportional. Mono is reserved for data
+        // (clock, readouts, branch names, values) via `mono`. Corvus Dataslate
+        // identity (item_115, adr_032); a pack may set either in tokens.json font.
+        readonly property string family: root._tok("font", "family", "Noto Sans")
+        readonly property string mono:   root._tok("font", "mono",   "FiraCode Nerd Font")
         // Display/header face — falls back to the body family when the pack ships none.
         readonly property string display:
             (root._displayFont.status === FontLoader.Ready && root._displayFont.name)
@@ -737,24 +828,52 @@ QtObject {
     // longer, and the enter/exit split ("enter gently, leave briskly").
     // Durations route through _tok so a pack's `anim` group can retune the whole
     // shell's motion (adr_027 Wave 2) — components already read these tokens.
+    // Motion settings (item_114), driven from shell.qml like fontScale. animScale
+    // multiplies every duration below (0 = off); reducedMotion makes spatial
+    // durations instant and stops decorative loops (see MotionLogic.js).
+    property real animScale: 1.0
+    property bool reducedMotion: false
+    function _fx(key, ms)  { return Motion.effects(root._tok("anim", key, ms), root.animScale) }
+    function _sp(key, ms)  { return Motion.spatial(root._tok("anim", key, ms), root.animScale, root.reducedMotion) }
+
     readonly property QtObject anim: QtObject {
-        readonly property int fast:   root._tok("anim", "fast",   100)
-        readonly property int base:   root._tok("anim", "base",   200)
+        readonly property int fast:   root._fx("fast",   100)
+        readonly property int base:   root._fx("base",   200)
         // Strip popup → panel transitions (perp + axis growth).
-        readonly property int panel:  root._tok("anim", "panel",  240)
+        readonly property int panel:  root._sp("panel",  240)
 
         // Effects — opacity / colour crossfades.
-        readonly property int effectsFast: root._tok("anim", "effectsFast", 150)
-        readonly property int effectsMed:  root._tok("anim", "effectsMed",  200)
-        readonly property int effectsSlow: root._tok("anim", "effectsSlow", 300)
+        readonly property int effectsFast: root._fx("effectsFast", 150)
+        readonly property int effectsMed:  root._fx("effectsMed",  200)
+        readonly property int effectsSlow: root._fx("effectsSlow", 300)
         // Spatial — position / size moves.
-        readonly property int spatialFast:    root._tok("anim", "spatialFast",    350)
-        readonly property int spatialDefault: root._tok("anim", "spatialDefault", 500)
-        readonly property int spatialSlow:    root._tok("anim", "spatialSlow",    650)
+        readonly property int spatialFast:    root._sp("spatialFast",    350)
+        readonly property int spatialDefault: root._sp("spatialDefault", 500)
+        readonly property int spatialSlow:    root._sp("spatialSlow",    650)
         // Enter/exit asymmetry defaults.
-        readonly property int enter: root._tok("anim", "enter", 400)
-        readonly property int exit:  root._tok("anim", "exit",  200)
+        readonly property int enter: root._sp("enter", 400)
+        readonly property int exit:  root._sp("exit",  200)
+        // Once-a-second progress smoothing (media position): spatial, just under
+        // the tick so each step lands as the next arrives.
+        readonly property int tick: root._sp("tick", 950)
+        // Dwell before a looping scroll restarts (media title marquee).
+        readonly property int hold: root._fx("hold", 600)
+        // Busy-spinner revolution. Unscaled: a spinner is a state indicator, and a
+        // zero duration on an infinite loop would freeze it.
+        readonly property int spin: root._tok("anim", "spin", 900)
     }
+
+    // Keyboard focus ring (FocusRing primitive) and the dim of a disabled control.
+    readonly property QtObject focusRing: QtObject {
+        readonly property int   width: root._tok("focusRing", "width", 2)
+        readonly property int   gap:   root._tok("focusRing", "gap",   2)
+        readonly property color color: root.colors.accent
+    }
+    readonly property real disabledOpacity: root._tok("state", "disabledOpacity", 0.4)
+
+    // Linear easing for constant-speed scrolls (marquee); a named token so call sites
+    // carry no Easing literal.
+    readonly property int easingLinear: Easing.Linear
 
     // ── Motion curves (§18.2) ────────────────────────────────────────────────
     // M3 bezier control-point lists for `easing.bezierCurve` (with

@@ -112,7 +112,7 @@ Item {
                     width: MediaServices.MprisService.length > 0 ? parent.width * Math.min(MediaServices.MprisService.position / MediaServices.MprisService.length, 1) : 0
                     height: parent.height; radius: 2
                     color: Commons.Appearance.colors.accent
-                    Behavior on width { NumberAnimation { duration: 950 } }
+                    Behavior on width { Commons.Tween { spatial: true; time: Commons.Appearance.anim.tick } }
                 }
                 MouseArea {
                     anchors.fill: parent

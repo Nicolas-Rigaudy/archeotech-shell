@@ -168,7 +168,7 @@ Item {
     // Fixed steel for the plate face (the Grimdark armour is
     // always this cool steel; only the copper trim follows the accent). Tuned tones,
     // brighter than the derived chassis so the plate reads as a RAISED piece.
-    readonly property bool  _coOn:     _rlOn && Commons.Appearance.frameChamfer
+    readonly property bool  _coOn:     _rlOn && Commons.Appearance.platedChrome
     readonly property color _faceHi:   Commons.Appearance.steel.faceHi   // facet hotspot at the outer corner
     readonly property color _faceMd:   Commons.Appearance.steel.faceMd
     readonly property color _faceLo:   Commons.Appearance.steel.faceLo   // toward the content

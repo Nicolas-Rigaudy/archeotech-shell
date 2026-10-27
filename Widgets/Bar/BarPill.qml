@@ -81,7 +81,7 @@ Item {
             anchors.fill: keyBg
             // No soft glow on strip cells under the steel pack — it bleeds past the
             // popup's console trim (reads as clipping) and is a "modern" tell.
-            visible: !(pill.showActiveBg && Commons.Appearance.frameChamfer)
+            visible: !(pill.showActiveBg && Commons.Appearance.platedChrome)
             radius: keyBg.radius
             // Under layer blur the e2 shadow would bleed past the strip's edge, and
             // mango blurs every faint pixel at full strength (a hard band, adr_035):
@@ -142,7 +142,7 @@ Item {
             text: pill.text
             color: pill.textColor
             font.pixelSize: Commons.Appearance.font.sizeSm
-            font.family: Commons.Appearance.font.family
+            font.family: Commons.Appearance.font.mono
             anchors.verticalCenter: parent.verticalCenter
         }
     }

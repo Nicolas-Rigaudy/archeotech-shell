@@ -13,6 +13,8 @@ var INDEX = [
     { pane: "appearance", key: "appearance.glassBlur", section: "Style",     label: "Behind windows",   keywords: "blur frosted x-ray xray glass windows wallpaper see-through" },
     { pane: "appearance", key: "appearance.fontScale", section: "Style",     label: "Text size",        keywords: "typography font size scale larger smaller" },
     { pane: "appearance", key: "appearance.flatMode", section: "Style",      label: "Depth",            keywords: "flat 3d shadows sheen" },
+    { pane: "appearance", key: "appearance.animScale", section: "Style",    label: "Animation speed",  keywords: "motion animations speed fast slow off transitions" },
+    { pane: "appearance", key: "appearance.reducedMotion", section: "Style", label: "Reduce motion",    keywords: "motion animations accessibility vestibular instant slides marquee" },
     { pane: "appearance", key: "appearance.wallpaper", section: "Wallpaper", label: "Wallpaper",        keywords: "background image picker" },
     { pane: "appearance", key: "wallpaper.modes",     section: "Wallpaper",  label: "Light and dark wallpapers", keywords: "per mode separate day night background theme" },
     { pane: "appearance", key: "appearance.logo",     section: "Logo",       label: "Logo overlay",     keywords: "arch rebel imperial emblem sigil wallpaper" },

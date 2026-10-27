@@ -139,9 +139,12 @@ edits then reach the bar only when a commit is promoted.
   renders, use `shot.sh --pack`, which edits only the fake HOME's copy.
 - To test a **register** without UI: flip `defaultRegister` in the pack
   `tokens.json` and render; set it back afterwards. (Registers = parked feature.)
-- `material` MUST be `matte` for the steel/depth look; `frameChamfer` (pack
-  `frame.corners=="chamfer"`) is currently the gate every Grimdark branch keys on
-  (to be replaced by surface recipes, item_112).
+- `material` MUST be `matte` for the steel/depth look. Plated chrome (steel
+  gradients, bolted collars, copper trim) is declared by the pack as
+  `surfaces.plated: true` and read as `Appearance.platedChrome`; `frameChamfer`
+  (pack `frame.corners=="chamfer"`) now only drives corner geometry. Roles that
+  already take full recipes (`surfaces.popup`) need no flag; the rest move from
+  the flag to recipes role by role (item_112).
 
 ## Theme tokens (single sources)
 - Steel family: `packs/grimdark/tokens.json` → `panels.steel {hi,md,lo,edge,lip,mid,faceHi,faceMd,faceLo,lit}`

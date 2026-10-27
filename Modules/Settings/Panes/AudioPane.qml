@@ -68,7 +68,7 @@ Item {
                                 readonly property bool isDefault: modelData.name === MediaServices.Audio.defaultSink
                                 readonly property bool _expanded: root.expandedSink === modelData.name
 
-                                Behavior on implicitHeight { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                Behavior on implicitHeight { Commons.Tween { spatial: true } }
 
                                 Divider {
                                     thin: true
@@ -130,7 +130,7 @@ Item {
                                                 anchors.centerIn: parent
                                                 text: "󰢻"
                                                 rotation: sinkDelegate._expanded ? 90 : 0
-                                                Behavior on rotation { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                                Behavior on rotation { Commons.Tween { spatial: true } }
                                                 color: sinkDelegate._expanded ? Commons.Appearance.colors.accent
                                                      : (gearLayer.hovered ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.textMuted)
                                                 font.pixelSize: Commons.Appearance.font.sizeLg; font.family: Commons.Appearance.font.family

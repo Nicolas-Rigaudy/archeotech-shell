@@ -18,6 +18,11 @@ A pack is a directory under `$XDG_DATA_HOME` (freedesktop data convention):
   tokens.json   # token overrides (Layer A)
 ```
 
+Bundled packs (`packs/`) are real packs only (Grimdark). The engine's test packs,
+`angular` (recoloured base) and `hud` (glow, grid texture, window brackets, window
+corner radius), live in `tests/fixtures/packs/` and never show in the pack picker;
+`tests/py/test_pack_fixtures.py` keeps them loadable.
+
 ## `pack.json`
 
 ```json

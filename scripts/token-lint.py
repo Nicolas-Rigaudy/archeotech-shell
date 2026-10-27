@@ -12,6 +12,9 @@ type scale, pack overrides and the Text size setting reach every label. Flags:
     Height|Width: N }` with N >= 4 (use Appearance.spacing.s<N>, the 4pt grid;
     0-3 px hairlines and nudges stay literal)
 Computed sizes (e.g. derived from a cell size) are allowed. Exits 1 on any hit.
+  - `duration: <number>` or `easing.type: Easing.*` outside Commons (item_114: use
+    Commons.Tween / Anim / ColorAnim / Spin or an Appearance.anim token, so the
+    animation-scale and reduced-motion settings and pack motion overrides apply)
   - a hex colour (#rgb..#rrggbbaa) outside Commons/ (colours live in Appearance
     tokens or theme.json). Exempt: packs/ (a pack owns its palette),
     Services/Theming/ThemeCatalog.qml (family preview swatches, verified against
@@ -36,13 +39,20 @@ RULES = [
         r"topMargin|bottomMargin|padding|leftPadding|rightPadding|topPadding|bottomPadding|horizontalPadding|"
         r"verticalPadding|leftInset|rightInset|topInset|bottomInset)\s*:\s*-?([4-9]|[1-9]\d+)(?![\w.]|\s*[*+/-])")),
     ("hex colour", re.compile(r"[\"']#[0-9a-fA-F]{3,8}[\"']")),
+    ("literal animation duration", re.compile(r"\bduration:\s*\d")),
+    ("literal easing", re.compile(r"\beasing\.type:\s*Easing\.")),
     ("off-token spacer", re.compile(r"Item\s*\{[^}]*?\bimplicit(?:Height|Width)\s*:\s*([4-9]|[1-9]\d+)\s*[;}]")),
 ]
 # modules/ holds the plugin examples: they run against the plugin API and keep
 # literal fallbacks for hosts without Appearance (docs/WIDGET_API.md).
 SKIP_DIRS = {"tests", "modules", "packs"}
 # Per-rule exemptions: (path prefixes, exact files) a rule does not apply to.
-EXEMPT = {"hex colour": ({"Commons"}, {pathlib.Path("Services/Theming/ThemeCatalog.qml")})}
+EXEMPT = {
+    "hex colour": ({"Commons"}, {pathlib.Path("Services/Theming/ThemeCatalog.qml")}),
+    # Motion presets and tokens live in Commons (Tween, Anim, Spin, Appearance.anim).
+    "literal animation duration": ({"Commons"}, set()),
+    "literal easing": ({"Commons"}, set()),
+}
 
 
 def main():

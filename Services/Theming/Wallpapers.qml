@@ -130,6 +130,46 @@ QtObject {
         return t === "both" || t === (mode || root.mode)
     }
 
+    // ── Colour preview (item_006) ────────────────────────────────────────────
+    // The accent wallpaper-set.sh would extract for a wallpaper, so a picker can
+    // show it while it scrolls. Nothing is applied: `--print-color` only reads the
+    // image. One lookup at a time, debounced, cached per path for the session.
+    property string previewFor: ""
+    property var _previewCache: ({})
+    readonly property string previewColor: root.previewFor ? (root._previewCache[root.previewFor] || "") : ""
+
+    function preview(path) {
+        root.previewFor = path || ""
+        if (root.previewFor && !root._previewCache[root.previewFor]) _previewWant.restart()
+    }
+    property Timer _previewWant: Timer {
+        interval: 150
+        onTriggered: root._previewNext()
+    }
+    function _previewNext() {
+        if (_previewProc.running) return
+        var p = root.previewFor
+        if (!p || root._previewCache[p]) return
+        _previewProc.target = p
+        _previewProc.command = [Commons.Paths.wallpaperSet, "--print-color", p]
+        _previewProc.running = true
+    }
+    property Process _previewProc: Process {
+        property string target: ""
+        running: false
+        stdout: SplitParser {
+            onRead: line => {
+                var c = line.trim()
+                if (!/^#[0-9a-fA-F]{6}$/.test(c)) return
+                var next = Object.assign({}, root._previewCache)
+                next[root._previewProc.target] = c
+                root._previewCache = next
+            }
+        }
+        // The pick moved on while this ran: look the new one up now.
+        onExited: root._previewNext()
+    }
+
     // Settled, so a theme switch (palette file rewritten, pack resolved at boot)
     // applies once, after the mode has stopped moving. The timer re-reads the
     // applied wallpaper first (it may have changed outside the shell); the reader

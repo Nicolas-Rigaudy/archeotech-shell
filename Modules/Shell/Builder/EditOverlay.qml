@@ -259,25 +259,26 @@ Item {
     }
 
     // ── Banner ──────────────────────────────────────────────────────────────────
+    // A docked toolbar across the top, opaque and at least as tall as the
+    // real bar underneath, so no bar content (the clock, the right-hand pills)
+    // pokes out around it whatever the bar holds or however tall it is (item_130).
+    // The editable mocks below show the layout being changed.
     RectangularShadow {
-        anchors.fill: banner; radius: banner.radius; blur:   Commons.Appearance.elevation.e2.blur
+        anchors.fill: banner; blur: Commons.Appearance.elevation.e2.blur
         offset: Qt.vector2d(0, Commons.Appearance.elevation.e2.y); spread: Commons.Appearance.elevation.e2.spread
         color:  Commons.Appearance.elevation.e2.color
     }
     Rectangle {
         id: banner
-        anchors.top: parent.top
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: Commons.Appearance.spacing.s4
-        width: bannerRow.implicitWidth + 28
-        height: 40
-        radius: Commons.Appearance.radius.pill
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
-            GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+        anchors { top: parent.top; left: parent.left; right: parent.right }
+        // The real bar's row plus a hairline of margin, never shorter than the buttons need.
+        height: Math.max(44, Commons.Appearance.bar.marginTop + Commons.Appearance.bar.height + Commons.Appearance.spacing.s2)
+        color: Commons.Appearance.colors.base   // opaque: the dimmed bar must not show through
+        Rectangle {                     // bottom edge: accent hairline
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+            height: 1
+            color: Commons.Appearance.colors.accentBorder
         }
-        border.width: 1
-        border.color: Commons.Appearance.colors.accentBorder
 
         Row {
             id: bannerRow
@@ -468,7 +469,7 @@ Item {
                                         implicitWidth:  chip._iconOnly ? 30
                                                        : (dragMA.containsMouse ? chipRow.implicitWidth + 14 : 34)
                                         implicitHeight: chip._iconOnly ? 30 : (sideCard._isBar ? 30 : 28)
-                                        Behavior on implicitWidth { NumberAnimation { duration: 70; easing.type: Easing.OutQuad } }
+                                        Behavior on implicitWidth { Commons.Tween { spatial: true; time: Commons.Appearance.anim.fast } }
                                         radius: Commons.Appearance.radius.md
                                         // Raised surfaceCard sheen (shared scale) instead of a flat
                                         // fill; hover is a StateLayer wash overlay below.
@@ -480,7 +481,7 @@ Item {
                                         border.color: chip._isSource ? Commons.Appearance.colors.accentBorder
                                                                      : Commons.Appearance.colors.glassBorder
                                         opacity: chip._isSource ? 0.35 : 1
-                                        Behavior on opacity { NumberAnimation { duration: 90 } }
+                                        Behavior on opacity { Commons.Tween { time: Commons.Appearance.anim.fast } }
 
                                         // Hover wash — the StateLayer micro-interaction language
                                         // (accent-tinted overlay) rather than a flat surface swap.
@@ -600,8 +601,8 @@ Item {
                                          && editOverlay._dropIndex >= 0
                                 color: editOverlay._dropValid ? Commons.Appearance.colors.accent
                                                               : Commons.Appearance.colors.red
-                                Behavior on x { NumberAnimation { duration: 90; easing.type: Easing.OutQuad } }
-                                Behavior on y { NumberAnimation { duration: 90; easing.type: Easing.OutQuad } }
+                                Behavior on x { Commons.Tween { spatial: true; time: Commons.Appearance.anim.fast } }
+                                Behavior on y { Commons.Tween { spatial: true; time: Commons.Appearance.anim.fast } }
                             }
 
                             // Drop target covering this section (DropAreas ignore clicks).
@@ -715,7 +716,7 @@ Item {
                                           && Commons.State.draggedSource.indexOf("lib:") !== 0
         readonly property var _all: editOverlay._libraryItems()
         border.color: _removing ? Commons.Appearance.colors.red : Commons.Appearance.colors.glassBorder
-        Behavior on border.color { ColorAnimation { duration: 120 } }
+        Behavior on border.color { Commons.ColorAnim { duration: Commons.Appearance.anim.fast } }
 
         ColumnLayout {
             id: libCol

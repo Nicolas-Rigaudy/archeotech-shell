@@ -14,7 +14,7 @@ import ".." as Commons
 //     deliberate hardware).
 // Copper is single-sourced from the pack accent (peach) via the same NMM ramp the
 // frame uses; teal is deliberately absent here (reserved as a pinpoint on live
-// content values). Caller gates on Commons.Appearance.frameChamfer.
+// content values). Caller gates on Commons.Appearance.platedChrome.
 Item {
     id: chrome
 

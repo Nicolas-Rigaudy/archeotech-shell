@@ -39,18 +39,36 @@ Item {
         font.family: Commons.Appearance.font.family
     }
 
-    // One reused anchor — only one context menu is ever open at a time. Menu
-    // drops off the bar edge: below a top/bottom bar, beside a side strip.
-    QsMenuAnchor {
+    // One reused popup — only one context menu is ever open at a time. The glass
+    // menu (TrayMenu) drops off the bar edge: below a top/bottom bar, beside a strip.
+    TrayMenu {
         id: trayMenu
         anchor.edges: root._horizontal ? Edges.Bottom
                     : (root.holderRoot && root.holderRoot.side === "right" ? Edges.Left : Edges.Right)
+        anchor.gravity: root._horizontal ? Edges.Bottom
+                    : (root.holderRoot && root.holderRoot.side === "right" ? Edges.Left : Edges.Right)
     }
-    function _openMenu(cell) {
+    // `grab: false` only for the headless probe: a focus-grabbing popup needs a
+    // parent window that has received input, which a render has not.
+    function _openMenu(cell, grab) {
         if (!cell.modelData.hasMenu) return
-        trayMenu.menu = cell.modelData.menu
+        if (root.holderRoot) root.holderRoot.keepPopupsAlive()
+        trayMenu.grabFocus = grab !== false
+        trayMenu.menuHandle = cell.modelData.menu
         trayMenu.anchor.item = cell
-        trayMenu.open()
+        trayMenu.wanted = true
+    }
+
+    // `ipc call popup open tray` (Commons.State.popupProbe): open the first item's
+    // menu with no pointer, for headless renders (tests/tools/fake-sni.py).
+    Connections {
+        target: Commons.State
+        function onPopupProbeChanged() {
+            if (Commons.State.popupProbe !== "tray") { trayMenu.wanted = false; return }
+            for (var i = 0; i < grid.children.length; i++) {
+                if (grid.children[i].modelData) { root._openMenu(grid.children[i], false); break }
+            }
+        }
     }
 
     Grid {
@@ -106,10 +124,19 @@ Item {
                     font.weight: Commons.Appearance.font.weightMedium
                 }
 
+                // Hover card with the item's own tooltip (title + description), the
+                // same card the other bar widgets raise. Suppressed while its menu is open.
+                readonly property string _tipTitle:  cell.modelData.tooltipTitle || cell.modelData.title || cell.modelData.id || ""
+                readonly property string _tipDetail: cell.modelData.tooltipDescription || ""
+
                 MouseArea {
                     id: _ma
                     anchors.fill: parent
                     hoverEnabled: true
+                    onEntered: if (root.holderRoot && root.holderRoot.horizontal && !trayMenu.visible && cell._tipTitle !== "")
+                        root.holderRoot.showPopup(cell, "TRAY", cell._tipTitle, cell._tipDetail,
+                                                  cell.modelData.hasMenu ? "Click for the menu" : "")
+                    onExited: if (root.holderRoot) root.holderRoot.hidePopup(cell)
                     cursorShape: Qt.PointingHandCursor
                     acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
                     onClicked: event => {

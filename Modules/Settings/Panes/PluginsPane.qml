@@ -183,7 +183,6 @@ Item {
                                 ToggleSwitch {
                                     // Blocked (not silently loaded) when the shell is too old (AC2).
                                     enabled: modCard._compatible
-                                    opacity: modCard._compatible ? 1.0 : 0.4
                                     checked: modCard._enabled && modCard._compatible
                                     onToggled: state => root._mods.setEnabled(modCard.modelData.id, state)
                                 }

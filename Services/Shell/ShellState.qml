@@ -88,10 +88,15 @@ QtObject {
         else open(screenName, panel, side)
     }
 
+    // Emitted by closeAllAcross() so surfaces that hold more than a panel (a bar's
+    // wifi/bluetooth/calendar/hover popups) dismiss with it: one global close.
+    signal dismissed()
+
     function closeAllAcross() {
         var m = _clone()
         for (var k in m) m[k].open = ""
         _commit(m)
+        root.dismissed()
     }
 
     // True if `panel` is open on any screen — used by IPC toggles that want

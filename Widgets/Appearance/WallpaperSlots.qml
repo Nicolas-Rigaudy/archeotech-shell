@@ -50,7 +50,7 @@ RowLayout {
                 id: frame
                 Layout.preferredWidth: 180
                 Layout.preferredHeight: 108
-                Behavior on scale { NumberAnimation { duration: Commons.Appearance.anim.fast; easing.type: Easing.OutCubic } }
+                Behavior on scale { Commons.Tween { spatial: true; time: Commons.Appearance.anim.fast } }
 
                 RectangularShadow {
                     anchors.fill: parent
@@ -74,7 +74,12 @@ RowLayout {
                     on_GenChanged: _useThumb = true
                     readonly property string _src: img._useThumb ? root._thumb(slot._path) : slot._path
                     source: slot._path ? "file://" + _src : ""
-                    onStatusChanged: if (status === Image.Error && _useThumb) _useThumb = false
+                    // Sticky: the thumb -> full-image swap must not fade a second time.
+                    property bool _bloomed: false
+                    onStatusChanged: {
+                        if (status === Image.Ready) _bloomed = true
+                        else if (status === Image.Error && _useThumb) _useThumb = false
+                    }
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     sourceSize.width: 360
@@ -82,7 +87,11 @@ RowLayout {
                     visible: false
                 }
                 Rectangle { id: mask; anchors.fill: parent; radius: Commons.Appearance.radius.lg; visible: false }
-                OpacityMask { anchors.fill: img; source: img; maskSource: mask; visible: slot._path !== "" }
+                OpacityMask {
+                    anchors.fill: img; source: img; maskSource: mask; visible: slot._path !== ""
+                    opacity: img._bloomed ? 1 : 0   // thumbnails bloom in instead of popping
+                    Behavior on opacity { Commons.Tween { time: Commons.Appearance.anim.base } }
+                }
 
                 // Mode glyph on a chip, so it reads on any wallpaper.
                 Rectangle {

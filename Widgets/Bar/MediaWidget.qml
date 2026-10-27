@@ -32,7 +32,7 @@ Item {
     implicitHeight: Commons.Appearance.bar.height
     Layout.alignment: Qt.AlignVCenter
     opacity: active ? 1 : 0
-    Behavior on implicitWidth { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+    Behavior on implicitWidth { Commons.Tween { spatial: true; time: Commons.Appearance.anim.base } }
     Behavior on opacity       { NumberAnimation { duration: Commons.Appearance.anim.fast } }
 
     // Follow implicitWidth (200 active / 0 idle) so an idle player reserves NO
@@ -51,18 +51,18 @@ Item {
     Prim.BarSegment {
         id: mediaHousing
         z: -1
-        visible: root.active && Commons.Appearance.frameChamfer
+        visible: root.active && Commons.Appearance.platedChrome
         anchors.fill: parent
     }
 
     Text {
         id: mprisSep
         // Redundant once the housing frames the readout — drop it on the steel pack.
-        visible: !Commons.Appearance.frameChamfer
+        visible: !Commons.Appearance.platedChrome
         anchors.left: parent.left
         // Housed: small lead-in so the icon sits just inboard of the left rivet
         // (balanced against the tail — see the marquee's rightMargin).
-        anchors.leftMargin: Commons.Appearance.frameChamfer ? 4 : 10
+        anchors.leftMargin: Commons.Appearance.platedChrome ? 4 : 10
         anchors.verticalCenter: parent.verticalCenter
         text: "·"
         color: Commons.Appearance.colors.surface1
@@ -93,13 +93,14 @@ Item {
         anchors.right: parent.right
         // Housed: tail matched to the lead-in so the readout sits balanced between
         // the two end rivets.
-        anchors.rightMargin: Commons.Appearance.frameChamfer ? 16 : 4
+        anchors.rightMargin: Commons.Appearance.platedChrome ? 16 : 4
         anchors.verticalCenter: parent.verticalCenter
         height: Commons.Appearance.font.sizeSm + 4
         clip: true
 
         property real textWidth: marqueeText1.implicitWidth
-        property bool needsScroll: textWidth > marqueeContainer.width
+        // Reduced motion: the title elides instead of scrolling.
+        property bool needsScroll: textWidth > marqueeContainer.width && !Commons.Appearance.reducedMotion
         property real scrollPos: 0
 
         property string displayText: root.displayText
@@ -138,11 +139,11 @@ Item {
                 from: 0
                 to: marqueeContainer.textWidth + 40
                 duration: Math.max(5000, (marqueeContainer.textWidth + 40) * 20)
-                easing.type: Easing.Linear
+                easing.type: Commons.Appearance.easingLinear
             }
-            PauseAnimation { duration: 600 }
+            PauseAnimation { duration: Commons.Appearance.anim.hold }
             ScriptAction { script: marqueeContainer.scrollPos = 0 }
-            PauseAnimation { duration: 300 }
+            PauseAnimation { duration: Commons.Appearance.anim.hold / 2 }
         }
 
         Text {

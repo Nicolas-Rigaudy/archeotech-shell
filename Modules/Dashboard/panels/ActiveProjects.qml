@@ -161,7 +161,7 @@ DashCard {
             Text {
                 text: modelData.branch
                 color: Commons.Appearance.colors.textSecondary
-                font.family: Commons.Appearance.font.family
+                font.family: Commons.Appearance.font.mono
                 font.pixelSize: Commons.Appearance.font.sizeBase
                 anchors { left: nameLbl.right; leftMargin: Commons.Appearance.spacing.s2; verticalCenter: parent.verticalCenter }
                 elide: Text.ElideRight
@@ -170,7 +170,7 @@ DashCard {
             Text {
                 text: modelData.dirty > 0 ? "+" + modelData.dirty : "✔"
                 color: modelData.dirty > 0 ? Commons.Appearance.colors.peach : Commons.Appearance.colors.green
-                font.family: Commons.Appearance.font.family
+                font.family: Commons.Appearance.font.mono
                 font.pixelSize: Commons.Appearance.font.sizeBase
                 // +8 re-pad to sit flush at 16px from the card edge (list bleeds 8).
                 anchors { right: parent.right; rightMargin: Commons.Appearance.spacing.s2; verticalCenter: parent.verticalCenter }

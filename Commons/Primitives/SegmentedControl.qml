@@ -25,12 +25,26 @@ Item {
     signal activated(int index)
 
     readonly property bool _v: root.vertical
+
+    // Keyboard: Tab focuses (ring below); Left/Right (Up/Down when vertical) step the
+    // selection. The control is stateless, so stepping only emits `activated`.
+    // `enabled: false` dims it and ignores input.
+    activeFocusOnTab: enabled
+    opacity: enabled ? 1.0 : Commons.Appearance.disabledOpacity
+    function _step(d) {
+        var n = root.currentIndex + d
+        if (n >= 0 && n < root.model.length) root.activated(n)
+    }
+    Keys.onLeftPressed:  if (enabled && !_v) _step(-1)
+    Keys.onRightPressed: if (enabled && !_v) _step(1)
+    Keys.onUpPressed:    if (enabled && _v)  _step(-1)
+    Keys.onDownPressed:  if (enabled && _v)  _step(1)
     implicitHeight: _v ? 30 * Math.max(1, model.length) : 30
 
     // Steel pack (Grimdark): the selected pill is a raised machined-steel key
     // edged with the teal live-line (the "cyan pinpoint = this is live"), not a
     // copper wash. Base packs keep the accent pill.
-    readonly property bool _steel: Commons.Appearance.frameChamfer
+    readonly property bool _steel: Commons.Appearance.platedChrome
     readonly property color _teal: Commons.Appearance.colors.teal
 
     readonly property color _cu: Commons.Appearance.colors.peach
@@ -86,8 +100,8 @@ Item {
                 GradientStop { position: 1.0; color: root._steel ? Commons.Appearance.steel.lo
                                                                   : Commons.Appearance.sheenLo(Commons.Appearance.colors.accent, Commons.Appearance.sheen.control.lo) }
             }
-            Behavior on x { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
-            Behavior on y { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+            Behavior on x { Commons.Tween { spatial: true; time: Commons.Appearance.anim.base } }
+            Behavior on y { Commons.Tween { spatial: true; time: Commons.Appearance.anim.base } }
         }
 
         Repeater {
@@ -144,4 +158,6 @@ Item {
             }
         }
     }
+
+    FocusRing { shown: root.activeFocus; cornerRadius: track.radius }
 }

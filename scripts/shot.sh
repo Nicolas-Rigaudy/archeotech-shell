@@ -207,8 +207,12 @@ fi
 # inside the nested session are linked; the rest become stubs that log their
 # arguments to log/stubs.log (tests can count calls there).
 mkdir -p "$FH/.local/bin"
+# The checkout under test wins when it ships the script, so a worktree renders
+# its own wallpaper-set.sh rather than the installed (main) one.
 for s in wallpaper-set.sh wallpaper-picker.sh list-desktop-apps.sh wifi-scan.sh; do
-  [ -e "$REAL_HOME/.local/bin/$s" ] && ln -s "$(readlink -f "$REAL_HOME/.local/bin/$s")" "$FH/.local/bin/$s"
+  if [ -e "$ROOT/scripts/$s" ]; then ln -s "$ROOT/scripts/$s" "$FH/.local/bin/$s"
+  elif [ -e "$REAL_HOME/.local/bin/$s" ]; then ln -s "$(readlink -f "$REAL_HOME/.local/bin/$s")" "$FH/.local/bin/$s"
+  fi
 done
 for s in theme-switch.sh theme-switch.py hyprlock-launch.sh wlogout-launch.sh swaylock-launch.sh \
          mango-reload.sh shell-reload.sh gaming-mode.sh monitor-apply.sh zen-opacity-toggle.sh; do

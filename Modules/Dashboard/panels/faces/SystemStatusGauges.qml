@@ -54,7 +54,7 @@ RowLayout {
                 anchors.centerIn: parent
                 text: value + "%"
                 color: Commons.Appearance.colors.textPrimary
-                font.family: Commons.Appearance.font.family
+                font.family: Commons.Appearance.font.mono
                 font.pixelSize: Commons.Appearance.font.sizeMd
                 font.bold: true
             }
@@ -67,7 +67,7 @@ RowLayout {
             anchors.horizontalCenter: parent.horizontalCenter
             text: parent.label
             color: Commons.Appearance.colors.textSecondary
-            font.family: Commons.Appearance.font.family
+            font.family: Commons.Appearance.font.mono
             font.pixelSize: Commons.Appearance.font.sizeSm
         }
     }

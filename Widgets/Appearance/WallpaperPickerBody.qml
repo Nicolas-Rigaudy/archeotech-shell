@@ -75,6 +75,14 @@ Item {
 
     function _apply(path) { Theming.Wallpapers.choose(path, root.slot) }
 
+    // Colour preview (item_006): the accent of the wallpaper in the middle of the
+    // carousel, extracted but never applied.
+    readonly property string previewColor: Theming.Wallpapers.previewColor
+    function _previewCurrent() {
+        var w = root.wallpapers[grid.currentIndex]
+        Theming.Wallpapers.preview(w ? w.path : "")
+    }
+
     // ── UI ────────────────────────────────────────────────────────────────
     ColumnLayout {
         anchors.fill: parent
@@ -167,6 +175,15 @@ Item {
                 font.pixelSize: Commons.Appearance.font.sizeSm
                 font.family: Commons.Appearance.font.family
             }
+            Row {   // colour preview: dot + hex
+                visible: root.previewColor !== ""
+                spacing: Commons.Appearance.spacing.s1
+                Rectangle { width: 12; height: 12; radius: 6; anchors.verticalCenter: parent.verticalCenter
+                            color: root.previewColor; border.width: 1; border.color: Commons.Appearance.colors.glassBorder }
+                Text { text: root.previewColor; anchors.verticalCenter: parent.verticalCenter
+                       color: Commons.Appearance.colors.textMuted
+                       font.pixelSize: Commons.Appearance.font.sizeSm; font.family: Commons.Appearance.font.mono }
+            }
             Rectangle {
                 id: allChip
                 readonly property bool _on: Theming.Wallpapers.showAll
@@ -221,8 +238,9 @@ Item {
             // asynchronously (Wallpapers.readCurrent), so it usually lands AFTER these two
             // fire — re-centre when it does, else the picker opens on item 0
             // instead of the active wallpaper. (Theme/Logo carousels do the same.)
-            onModelChanged: _syncCurrent()
-            Component.onCompleted: _syncCurrent()
+            onModelChanged: { _syncCurrent(); root._previewCurrent() }
+            onCurrentIndexChanged: root._previewCurrent()
+            Component.onCompleted: { _syncCurrent(); root._previewCurrent() }
             Connections {
                 target: root
                 function onCurrentPathChanged() { grid._syncCurrent() }
@@ -253,8 +271,8 @@ Item {
                 // Centre item full-size + opaque; neighbours shrink + dim.
                 scale:   _current ? 1.0 : 0.72
                 opacity: root.applying ? (_active ? 1.0 : 0.4) : (_current ? 1.0 : 0.6)
-                Behavior on scale   { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
-                Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.base; easing.type: Easing.OutCubic } }
+                Behavior on scale   { Commons.Tween { spatial: true; time: Commons.Appearance.anim.base } }
+                Behavior on opacity { Commons.Tween { time: Commons.Appearance.anim.base } }
 
                 // Soft cast shadow UNDER the hero (centred) item only — lifts it
                 // off the panel. Sibling behind the image (never on the thumbnail
@@ -282,7 +300,12 @@ Item {
                     source: cell.modelData
                         ? "file://" + ((_useThumb && cell.modelData.thumb) ? cell.modelData.thumb : cell.modelData.path)
                         : ""
-                    onStatusChanged: if (status === Image.Error && _useThumb) _useThumb = false
+                    // Sticky: the thumb -> full-image swap must not fade a second time.
+                    property bool _bloomed: false
+                    onStatusChanged: {
+                        if (status === Image.Ready) _bloomed = true
+                        else if (status === Image.Error && _useThumb) _useThumb = false
+                    }
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     cache: true
@@ -300,6 +323,8 @@ Item {
                     anchors.fill: cellImg
                     source: cellImg
                     maskSource: cellMask
+                    opacity: cellImg._bloomed ? 1 : 0   // thumbnails bloom in instead of popping
+                    Behavior on opacity { Commons.Tween { time: Commons.Appearance.anim.base } }
                 }
 
                 Rectangle {

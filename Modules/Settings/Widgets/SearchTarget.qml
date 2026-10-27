@@ -82,8 +82,8 @@ Item {
     SequentialAnimation {
         id: _pulse
         NumberAnimation { target: hl; property: "opacity"; to: 1; duration: Commons.Appearance.anim.fast }
-        PauseAnimation  { duration: 4 * Commons.Appearance.anim.panel }
-        NumberAnimation { target: hl; property: "opacity"; to: 0; duration: 3 * Commons.Appearance.anim.base }
+        PauseAnimation  { duration: Commons.Appearance.anim.base * 5 }
+        NumberAnimation { target: hl; property: "opacity"; to: 0; duration: Commons.Appearance.anim.base * 3 }
         onStopped: { st._shown = null; st._flick = null }
     }
 }

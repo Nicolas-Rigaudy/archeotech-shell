@@ -22,7 +22,7 @@ Item {
     // Bolted console segment (steel pack, horizontal bar) — the centre gauge in its
     // own panel; pad the readout balanced inside, clear of the end rivets.
     readonly property bool _seg: _horizontal && holderRoot._consoleOn === true
-        && Commons.Appearance.frameChamfer
+        && Commons.Appearance.platedChrome
     readonly property int _pad: _seg ? 26 : 0
     implicitWidth:  _horizontal ? centerClock.implicitWidth + 2 * _pad : (holderRoot ? holderRoot.thickness : 30)
     implicitHeight: _horizontal ? Commons.Appearance.bar.height : vClock.implicitHeight
@@ -39,7 +39,7 @@ Item {
         // Bound (never assigned), so a Settings change shows at once.
         text: clockText(now, root._timeFmt, root._dateFmt)
         font.pixelSize: Commons.Appearance.font.sizeMd
-        font.family: Commons.Appearance.font.family
+        font.family: Commons.Appearance.font.mono
 
         function clockText(now, timeFmt, dateFmt) {
             var time = "<span style='color:" + Commons.Appearance.colors.textPrimary + ";font-weight:600'>"
@@ -72,14 +72,14 @@ Item {
             text: Qt.formatDateTime(vClock._now, Clock.hourFormat(root._format))
             color: Commons.Appearance.colors.textPrimary
             font.pixelSize: Commons.Appearance.font.sizeMd; font.weight: Commons.Appearance.font.weightSemibold
-            font.family: Commons.Appearance.font.family
+            font.family: Commons.Appearance.font.mono
         }
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: Qt.formatDateTime(vClock._now, "mm")
             color: Commons.Appearance.colors.textSecondary
             font.pixelSize: Commons.Appearance.font.sizeMd
-            font.family: Commons.Appearance.font.family
+            font.family: Commons.Appearance.font.mono
         }
     }
 

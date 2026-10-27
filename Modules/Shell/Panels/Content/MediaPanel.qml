@@ -33,7 +33,7 @@ Item {
         if (panelRoot && !panelRoot._horizontal) return compact ? 210 : 300   // vertical strip
         return compact ? 360 : 520                                            // horizontal strip
     }
-    Behavior on implicitAxis { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
+    Behavior on implicitAxis { Commons.Tween { spatial: true; time: Commons.Appearance.anim.panel } }
 
     // CROSS-axis DEPTH per face (only on a horizontal strip, where the cross axis is
     // the panel HEIGHT) — declared per face (like implicitAxis), NOT measured, so
@@ -42,7 +42,7 @@ Item {
     property real implicitPerp: (panelRoot && panelRoot._horizontal)
         ? (!root._available ? 296 : mediaFaces && mediaFaces.face === "compact" ? 224 : 296)
         : 0
-    Behavior on implicitPerp { NumberAnimation { duration: Commons.Appearance.anim.panel; easing.type: Easing.OutCubic } }
+    Behavior on implicitPerp { Commons.Tween { spatial: true; time: Commons.Appearance.anim.panel } }
 
     // Responsive: faces key on this to stack when narrow (vertical side strip).
     readonly property bool _narrow: width < 360

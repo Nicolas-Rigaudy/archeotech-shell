@@ -121,6 +121,18 @@ Item {
         }
     }
 
+    // Global close (`ipc call panel close`, Esc on a panel, click outside) also
+    // dismisses this bar's popups, not only the panels.
+    property var _dismissConn: Connections {
+        target: ShellServices.ShellState
+        function onDismissed() {
+            bar._wifiPopupVisible = false
+            bar._btPopupVisible   = false
+            bar._calendarVisible  = false
+            bar._popupVisible     = false
+        }
+    }
+
     // ── holderRoot API surface ─────────────────────────────────────────────────────
     function showPopup(item, label, primary, secondary, hint) {
         // A pinned control popup (WiFi/BT) owns the screen — never raise a hover
@@ -251,7 +263,7 @@ Item {
     // Steel pack: the console is expressed as per-cluster bolted BarSegments
     // (workspaces / media / clock, + the right status bank below), so the old
     // standalone seam dividers are suppressed — the panels do the dividing.
-    readonly property bool _segmentsActive: _consoleOn && Commons.Appearance.frameChamfer
+    readonly property bool _segmentsActive: _consoleOn && Commons.Appearance.platedChrome
     readonly property real _consoleInset: Commons.Appearance.bar.innerPadding + 12
     // Two fixed full-height seams splitting the bar into three sections. Anchored
     // to the bar centre (± _seamHalf), so they never move as content resizes.
