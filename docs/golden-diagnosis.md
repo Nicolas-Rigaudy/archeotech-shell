@@ -3,6 +3,9 @@
 Why `scripts/golden.sh` fails on main (`a52d1a9`), grouped by cause. Nothing
 here was regenerated: the goldens stay as committed until blur is validated.
 
+Resolved 2026-10-27: blur validated, `golden.sh` pins `appearance.coverageBlur=on`,
+and all 25 goldens were regenerated after the night branches merged (25/25 pass).
+
 ## Run
 
 `scripts/golden.sh --root .` from a worktree of `a52d1a9`, default
