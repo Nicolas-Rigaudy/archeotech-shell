@@ -86,6 +86,12 @@ ShellRoot {
         property: "coverageBlurMode"
         value: Persistence.Config.get("appearance.coverageBlur")
     }
+    // Blur-mode compensation preset (glass-presets.json blurTunes), same wiring.
+    Binding {
+        target: Commons.Appearance
+        property: "blurTuneSetting"
+        value: Persistence.Config.get("appearance.blurTune")
+    }
     // What layer blur shows over a window (item_116), same wiring.
     Binding {
         target: Commons.Appearance

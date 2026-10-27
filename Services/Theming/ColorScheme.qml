@@ -116,6 +116,7 @@ QtObject {
         target: Commons.Appearance
         function onEffectiveGlassPresetChanged() { root._applyGlass() }
         function onEffectiveGlassBlurChanged() { root._applyGlass() }
+        function onBlurTuneChanged() { root._applyGlass() }
         function onLayerBlurChanged() { root._latchBlur() }
     }
     // mango never un-blurs a layer (Appearance.surfaceBlurred): once blur has been
@@ -129,9 +130,12 @@ QtObject {
         if (!Persistence.Config.ready) return
         var g = Commons.Appearance.effectiveGlassPreset
         var b = Commons.Appearance.effectiveGlassBlur
-        if (g + "/" + b === Persistence.Config.get("theme.appliedGlass", Commons.Appearance.glassDefault + "/xray")) return
-        Persistence.Config.set("theme.appliedGlass", g + "/" + b)
-        _applyRunner.run([Commons.Paths.themeSwitch, "--glass", g, "--blur", b])
+        // blurTune only reaches mango for "brightness" (blur_params_brightness)
+        var t = Commons.Appearance.blurTune === "brightness" ? "brightness" : ""
+        var key = g + "/" + b + (t ? "/" + t : "")
+        if (key === Persistence.Config.get("theme.appliedGlass", Commons.Appearance.glassDefault + "/xray")) return
+        Persistence.Config.set("theme.appliedGlass", key)
+        _applyRunner.run([Commons.Paths.themeSwitch, "--glass", g, "--blur", b].concat(t ? ["--tune", t] : []))
     }
 
     // Auto-mode clock — re-resolve every minute; applies on day↔night crossing.

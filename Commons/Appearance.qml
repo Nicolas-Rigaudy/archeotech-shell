@@ -66,7 +66,35 @@ QtObject {
         var w = p && root.layerBlur && root.glassBlur === "windows" && p[mode + "Windows"]
         if (w && w[role] !== undefined) return w[role]
         var m = p && p[mode]
-        return (m && m[role] !== undefined) ? m[role] : 1.0
+        var a = (m && m[role] !== undefined) ? m[role] : 1.0
+        // blurTune "opacity": panels sit at least that opaque in Blur mode.
+        if (root.blurTune === "opacity" && (role === "panel" || role === "panelAlt"))
+            a = Math.max(a, root._blurTuneValue("panel", a))
+        return a
+    }
+
+    // Blur-mode compensation (owner picks, 2026-10-21): over a dark window a Blur
+    // panel reads darker than X-ray. appearance.blurTune picks one of the
+    // presets in glass-presets.json "blurTunes"; "none" (default) changes nothing.
+    // Only live in Blur mode (glassBlur = windows) under layer blur.
+    property string blurTuneSetting: ""
+    readonly property string blurTune: {
+        var t = root._glassTable && root._glassTable.blurTunes
+        var known = !!(t && root.blurTuneSetting !== "none" && t[root.blurTuneSetting])
+        return (known && root.layerBlur && root.glassBlur === "windows") ? root.blurTuneSetting : "none"
+    }
+    function _blurTuneValue(key, fallback) {
+        var t = root._glassTable && root._glassTable.blurTunes
+        var v = t && t[root.blurTune] && t[root.blurTune][key]
+        return v !== undefined ? v : fallback
+    }
+    // Panel base colour: mantle, lifted toward surface2 (white on light) by the
+    // blurTune "tint" preset.
+    readonly property color _panelBase: {
+        var c = root._c("mantle", "#1e2030")
+        if (root.blurTune !== "tint") return Qt.color(c)
+        return root._blend(c, root.isLight ? "#ffffff" : root._c("surface2", "#5b6078"),
+                           root._blurTuneValue("lift", 0))
     }
 
     // Compositor blur behind the shell's surfaces (item_116, adr_035): on for a
@@ -521,8 +549,8 @@ QtObject {
         // toggle never touches opacity; it just drops the sheen/shadows.
         // Light: mantle is each designer's side-pane / float colour (Latte mantle,
         // Tokyo bg_dark, Alucard Floating, Gruvbox bg1), as a light glass.
-        readonly property color glassBg:      root._rgba("mantle", "#1e2030", root.glassAlpha("panel"))
-        readonly property color glassBgLight: root._rgba("mantle", "#1e2030", root.glassAlpha("panelAlt"))
+        readonly property color glassBg:      Qt.rgba(root._panelBase.r, root._panelBase.g, root._panelBase.b, root.glassAlpha("panel"))
+        readonly property color glassBgLight: Qt.rgba(root._panelBase.r, root._panelBase.g, root._panelBase.b, root.glassAlpha("panelAlt"))
         readonly property color glassBorder:  root.isLight ? root._rgba("surface1", "#bcc0cc", 0.85) : root._rgba("surface0", "#363a4f", 0.90)
 
         // Liquid-glass sheen — endpoints for a subtle top-lit vertical gradient
@@ -536,8 +564,8 @@ QtObject {
             // Lit from above: on light palettes surface2 is DARKER than mantle, so
             // the light recipe lifts toward base (the lightest official background).
             var c = root.isLight
-                ? root._blend(root._c("mantle", "#1e2030"), root._c("base", "#24273a"), 0.60)
-                : root._blend(root._c("mantle", "#1e2030"), root._c("surface2", "#5b6078"), 0.38)
+                ? root._blend(root._panelBase, root._c("base", "#24273a"), 0.60)
+                : root._blend(root._panelBase, root._c("surface2", "#5b6078"), 0.38)
             return Qt.rgba(c.r, c.g, c.b, root.glassAlpha("panelAlt"))
         }
         readonly property color glassSheenBot: {
@@ -545,8 +573,8 @@ QtObject {
             // crust is barely darker than mantle, so sink toward black instead —
             // except on light palettes, where black reads as dirt: settle into crust.
             var c = root.isLight
-                ? root._blend(root._c("mantle", "#1e2030"), root._c("crust", "#181926"), 0.55)
-                : root._blend(root._c("mantle", "#1e2030"), "#000000", 0.22)
+                ? root._blend(root._panelBase, root._c("crust", "#181926"), 0.55)
+                : root._blend(root._panelBase, "#000000", 0.22)
             return Qt.rgba(c.r, c.g, c.b, root.glassAlpha("panelAlt"))
         }
 
