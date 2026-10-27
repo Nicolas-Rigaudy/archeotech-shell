@@ -70,7 +70,9 @@ mkdir -p "$RUN/out" "$RUN/diff"
 
 render() {  # $1 = scenario spec → $RUN/out/<name>.png
   IFS='|' read -r name state theme flat pack <<<"$1"
-  local args=(--root "$ROOT" --fresh --wallpaper "$WALL" --theme "$theme" --flat "$flat" --pack "$pack")
+  # Coverage blur pinned on: renders match with or without scenefx-coverage installed.
+  local args=(--root "$ROOT" --fresh --wallpaper "$WALL" --theme "$theme" --flat "$flat" --pack "$pack"
+              --set appearance.coverageBlur=on)
   [ -n "$state" ] && args+=(--state "$state")
   "$HERE/shot.sh" "${args[@]}" "$RUN/out/$name.png" >"$RUN/out/$name.log" 2>&1 \
     || echo "render failed: $name (see $RUN/out/$name.log)" >&2
