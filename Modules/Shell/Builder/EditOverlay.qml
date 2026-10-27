@@ -222,16 +222,19 @@ Item {
     // ShellConfig.moveConversion, so a bar-only widget dropped on a strip lights
     // the red caret and is rejected exactly as a cross-flavour move would be.
     function _libraryItems() {
+        // Built-ins dedupe by id; a plugin listing both bar-zone and strip-icon /
+        // panel-content gets one tile on each side of the library.
         var out = [], seen = ({})
+        var key = function(id, flavour) { return id.indexOf("plugin:") === 0 ? flavour + ":" + id : id }
         var bar = _reg.availableBarWidgets.concat(_pluginTiles(["bar-zone"]))
         for (var i = 0; i < bar.length; i++) {
             var b = bar[i]
-            if (!seen[b.id]) { seen[b.id] = 1; out.push({ id: b.id, name: b.name || b.id, icon: b.icon || "", native: "bar" }) }
+            if (!seen[key(b.id, "bar")]) { seen[key(b.id, "bar")] = 1; out.push({ id: b.id, name: b.name || b.id, icon: b.icon || "", native: "bar" }) }
         }
         var strip = _reg.availableStripIcons.concat(_pluginTiles(["strip-icon", "panel-content"]))
         for (var j = 0; j < strip.length; j++) {
             var s = strip[j]
-            if (!seen[s.id]) { seen[s.id] = 1; out.push({ id: s.id, name: s.name || s.id, icon: s.icon || "", native: "strip" }) }
+            if (!seen[key(s.id, "strip")]) { seen[key(s.id, "strip")] = 1; out.push({ id: s.id, name: s.name || s.id, icon: s.icon || "", native: "strip" }) }
         }
         return out
     }

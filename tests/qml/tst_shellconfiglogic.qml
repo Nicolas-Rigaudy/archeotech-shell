@@ -68,4 +68,17 @@ TestCase {
         compare(Logic.resolveSide(data, _defaults, "top", "eDP-1").size, 30, "other screens keep the global side")
         compare(data.sides.top.size, 30, "override does not mutate the global side")
     }
+
+    function test_canLiveOnStrip() {
+        verify(Logic.canLiveOnStrip(["bar-zone", "panel-content"]), "dual plugin fits a strip")
+        verify(Logic.canLiveOnStrip(["strip-icon"]))
+        verify(!Logic.canLiveOnStrip(["bar-zone"]), "bar-only plugin stays off a strip")
+        verify(!Logic.canLiveOnStrip(undefined))
+    }
+
+    function test_canLiveOnBar() {
+        verify(Logic.canLiveOnBar(["bar-zone", "panel-content"]), "dual plugin fits a bar")
+        verify(!Logic.canLiveOnBar(["strip-icon"]), "strip-only plugin stays off a bar")
+        verify(!Logic.canLiveOnBar(undefined))
+    }
 }

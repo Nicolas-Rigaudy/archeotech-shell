@@ -59,3 +59,15 @@ function resolveSide(data, defaults, name, screenName) {
     for (var k2 in override) merged[k2] = override[k2]
     return merged
 }
+
+// Can a plugin whose manifest lists `canLiveIn` sit on a strip? A strip hosts a
+// strip-icon, or a panel-content plugin (rendered as the generic opener icon).
+function canLiveOnStrip(canLiveIn) {
+    var cl = canLiveIn || []
+    return cl.indexOf("strip-icon") !== -1 || cl.indexOf("panel-content") !== -1
+}
+
+// Can a plugin whose manifest lists `canLiveIn` sit on a bar? Only with bar-zone.
+function canLiveOnBar(canLiveIn) {
+    return (canLiveIn || []).indexOf("bar-zone") !== -1
+}
