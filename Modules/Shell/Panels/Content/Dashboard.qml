@@ -3,6 +3,7 @@ import QtQuick
 import QtQuick.Layouts
 import "../../../../Commons" as Commons
 import "../../../Dashboard/panels"
+import "../../../../Commons/Primitives" as Prim
 import "../../../../Services/Persistence" as Persistence
 import "../../../../Services/System/ClockLogic.js" as Clock
 
@@ -49,8 +50,10 @@ Item {
 
         // ── Hero — human anchor: greeting + name, big clock, date ────────────
         Item {
+            id: hero
             Layout.fillWidth: true
             implicitHeight: 56
+            Prim.EntranceStagger { target: hero; index: 0 }
 
             Column {
                 anchors { left: parent.left; verticalCenter: parent.verticalCenter }
@@ -114,13 +117,13 @@ Item {
             // fillHeight stretches cards to the row height (aligns them);
             // minimumHeight floors each at its content so fillHeight can't
             // shrink it below the content (which caused the overflow).
-            SystemStatus   { Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredWidth: 1; Layout.minimumHeight: implicitHeight }
-            ActiveProjects { Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredWidth: 1; Layout.minimumHeight: implicitHeight }
-            QuickLaunch    { Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredWidth: 1; Layout.minimumHeight: implicitHeight }
-            SystemNotes    { Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredWidth: 1; Layout.minimumHeight: implicitHeight }
+            SystemStatus   { enterIndex: 1; Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredWidth: 1; Layout.minimumHeight: implicitHeight }
+            ActiveProjects { enterIndex: 2; Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredWidth: 1; Layout.minimumHeight: implicitHeight }
+            QuickLaunch    { enterIndex: 3; Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredWidth: 1; Layout.minimumHeight: implicitHeight }
+            SystemNotes    { enterIndex: 4; Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredWidth: 1; Layout.minimumHeight: implicitHeight }
         }
 
         // ── Tip — slim full-width strip at the bottom (its own line). ────────
-        TipOfSession { Layout.fillWidth: true }
+        TipOfSession { enterIndex: 5; Layout.fillWidth: true }
     }
 }

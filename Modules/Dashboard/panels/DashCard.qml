@@ -33,7 +33,17 @@ Item {
     property string face: ""
     property string faceKey: title
 
+    // Entrance choreography: >= 0 fades + lifts the card in `enterIndex` places
+    // after the panel mounts (see Prim.EntranceStagger); -1 = no entrance.
+    property int enterIndex: -1
+
     implicitHeight: bg.implicitHeight
+
+    Prim.EntranceStagger {
+        target: card
+        index: Math.max(0, card.enterIndex)
+        enabled: card.enterIndex >= 0
+    }
 
     RectangularShadow {
         anchors.fill: bg
