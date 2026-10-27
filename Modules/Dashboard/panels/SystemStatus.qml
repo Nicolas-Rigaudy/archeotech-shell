@@ -91,14 +91,12 @@ DashCard {
     //   gauges    — radial rings (current value)
     //   bars      — labelled bars (current value)
     //   sparkline — detailed trend charts (uses rolling history)
-//   orbit     — Canvas hero viz: nodes circling a core on animated strands
     // ("compact" dropped for now — a fixed-height bento card can't shrink, so it
     //  can't earn its keep until item_046 gives variable card sizes.)
     face: "gauges"
     faces: [
         { id: "gauges",    label: "Gauges",    file: Qt.resolvedUrl("faces/SystemStatusGauges.qml") },
         { id: "bars",      label: "Bars",      file: Qt.resolvedUrl("faces/SystemStatusBars.qml") },
-        { id: "sparkline", label: "Sparkline", file: Qt.resolvedUrl("faces/SystemStatusSparkline.qml") },
-        { id: "orbit",     label: "Orbit",     file: Qt.resolvedUrl("faces/SystemStatusOrbit.qml") }
+        { id: "sparkline", label: "Sparkline", file: Qt.resolvedUrl("faces/SystemStatusSparkline.qml") }
     ]
 }
