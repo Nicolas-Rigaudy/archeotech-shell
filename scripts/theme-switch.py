@@ -331,13 +331,26 @@ def apply_glass_only(preset: str, blur: str = "xray", tune: str = "") -> None:
     info(f"glass {preset} ({blur}): kitty background_opacity {opacity}, mango windows + layer blur ({mode})")
 
 
-def apply_mango(theme: dict, vars: Dict[str, str]) -> None:
-    """Patch mango/config.conf lines for shadow/border/focus/urgent colors and
-    the jump-label + group-bar decorations, then trigger live reload via mmsg."""
-    path = HOME / ".config" / "mango" / "config.conf"
-    if not path.exists():
-        warn(f"mango config missing: {path}")
-        return
+# mango 0.18 renamed the colour keys (bordercolor -> border_color, ...) and
+# rejects the old names. A theme's "mango" block keeps the 0.17 names (the
+# theme.json schema); the config line is written under the name the config
+# already uses, so one theme-switch serves a 0.17 and a 0.18 config.
+MANGO_018_KEYS = {"shadowscolor": "shadows_color", "bordercolor": "border_color",
+                  "focuscolor": "focus_color", "urgentcolor": "urgent_color"}
+
+
+def mango_key(text: str, key: str) -> str:
+    """The config's name for a theme mango key: the 0.17 name if the config has
+    that line, else the 0.18 one."""
+    new = MANGO_018_KEYS.get(key)
+    if new and not re.search(rf"^{key}=", text, flags=re.M):
+        return new
+    return key
+
+
+def mango_theme_text(text: str, theme: dict) -> str:
+    """mango config text with the theme's shadow/border/focus/urgent colors, the
+    jump-label + group-bar decorations, the cursor and the glass opacity lines."""
     m = theme.get("mango", {})
     colors = theme.get("colors", {})
 
@@ -354,13 +367,12 @@ def apply_mango(theme: dict, vars: Dict[str, str]) -> None:
     surf   = _hx("surface0", "0x363a4fff")
     txt    = _hx("text", "0xcad3f5ff")
 
-    text = path.read_text()
     for key, val in (
-        ("shadows_color", m.get("shadowscolor")),
+        (mango_key(text, "shadowscolor"), m.get("shadowscolor")),
         ("shadows_size", str(m.get("shadows_size", ""))),
-        ("border_color", m.get("bordercolor")),
-        ("focus_color",  m.get("focuscolor")),
-        ("urgent_color", m.get("urgentcolor")),
+        (mango_key(text, "bordercolor"),  m.get("bordercolor")),
+        (mango_key(text, "focuscolor"),   m.get("focuscolor")),
+        (mango_key(text, "urgentcolor"),  m.get("urgentcolor")),
         ("jump_label_decorate_bg_color",       base),
         ("jump_label_decorate_fg_color",       txt),
         ("jump_label_decorate_border_color",   accent),
@@ -377,9 +389,18 @@ def apply_mango(theme: dict, vars: Dict[str, str]) -> None:
         if val:
             text = re.sub(rf"^{key}=.*$", f"{key}={val}", text, flags=re.M)
     # Window opacity follows the glass preset (item_139); a pack owns material.
-    text = mango_opacity_lines(text, theme.get("mode", "dark"), "" if theme.get("_pack") else glass_preset(),
+    return mango_opacity_lines(text, theme.get("mode", "dark"), "" if theme.get("_pack") else glass_preset(),
                                pack=bool(theme.get("_pack")), blur=glass_blur(), tune=glass_tune())
-    atomic_write(path, text)
+
+
+def apply_mango(theme: dict, vars: Dict[str, str]) -> None:
+    """Patch mango/config.conf with mango_theme_text, then trigger live reload
+    via mmsg."""
+    path = HOME / ".config" / "mango" / "config.conf"
+    if not path.exists():
+        warn(f"mango config missing: {path}")
+        return
+    atomic_write(path, mango_theme_text(path.read_text(), theme))
     mango_reload_preserving_kb()
 
     # Login-time counterpart: keep XCURSOR_THEME (env.d) in sync with the

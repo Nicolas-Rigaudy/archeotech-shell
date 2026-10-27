@@ -194,9 +194,11 @@ if [ "$FRESH" = 0 ]; then
   # A COPY of the owner's mango config, as data for the shell (the shortcuts
   # sheet parses its binds). The nested mango never reads it: it runs on the
   # generated $RUN/mango.conf (-c), which sources only --mango-include files.
-  if [ -f "$REAL_HOME/.config/mango/config.conf" ]; then
+  # With --mango-config, that file instead (the shell's mango writers follow its
+  # key names, e.g. the Input service's device rules).
+  if [ -f "${MANGO_CONFIG:-$REAL_HOME/.config/mango/config.conf}" ]; then
     mkdir -p "$FH/.config/mango"
-    cp "$REAL_HOME/.config/mango/config.conf" "$FH/.config/mango/config.conf"
+    cp "${MANGO_CONFIG:-$REAL_HOME/.config/mango/config.conf}" "$FH/.config/mango/config.conf"
   fi
 fi
 # ~/.local/bin is an ALLOWLIST, not a symlink to the real dir: some user scripts
@@ -279,11 +281,13 @@ if [ -n "$WALLPAPER" ] && [ -f "$WALLPAPER" ] && command -v awww-daemon >/dev/nu
   printf '%s' "$WALLPAPER" > "$RUN/wallpaper.path"   # read back in-session: no quoting of the path
   WP_CMD="(awww-daemon >$LOG/awww.log 2>&1 &) ; sleep 1; awww img \"\$(cat $RUN/wallpaper.path)\" >>$LOG/awww.log 2>&1"
 fi
-OVERRIDE="exec|exec-once|exec_once|source_optional|bind|binds|gesturebind|mousebind|axisbind|switchbind|touchbind|keymode|monitorrule|monitor_rule|env|source|source-optional|spawn_on_empty"
+OVERRIDE="exec|exec-once|exec_once|bind|binds|gesturebind|mousebind|axisbind|switchbind|touchbind|keymode|key_mode|monitorrule|monitor_rule|env|source|source-optional|source_optional|spawn_on_empty"
 # mango 0.18 renamed the colour keys (bordercolor -> border_color, ...) and draws
 # an error overlay over the output for an unknown key, so the theme's colours
 # (stored under the 0.17 names) are written under the nested mango's names.
 MANGO_VER="$(mango -v 2>&1 | sed -n 's/^mango \([0-9]*\.[0-9]*\).*/\1/p' | head -1)"
+SOURCE_KEY="source-optional"   # --mango-include's directive, 0.18 name below
+[ "$(printf '0.18\n%s\n' "${MANGO_VER:-0.0}" | sort -V | head -1)" = "0.18" ] && SOURCE_KEY="source_optional"
 if [ -n "$THEME" ] && [ -f "$ROOT/themes/$THEME/theme.json" ]; then
   python3 - "$ROOT/themes/$THEME/theme.json" "${MANGO_VER:-0.0}" >> "$RUN/mango.conf" <<'PY'
 import json, sys
@@ -310,12 +314,12 @@ for f in "${MANGO_INCLUDES[@]}"; do
   b=$(basename "$f")
   mkdir -p "$FH/.config/mango"
   cp "$f" "$FH/.config/mango/$b"
-  printf 'source-optional=~/.config/mango/%s\n' "$b" >> "$RUN/mango.conf"
-  INCLUDE_LINES+=("source-optional=~/.config/mango/$b")
+  printf '%s=~/.config/mango/%s\n' "$SOURCE_KEY" "$b" >> "$RUN/mango.conf"
+  INCLUDE_LINES+=("$SOURCE_KEY=~/.config/mango/$b")
 done
 # Guard: refuse to start if anything command-like survived the filter (a mango
 # keyword added after this list was written, or a spawn action inside a rule).
-# Exempt: only the exact source-optional lines added for --mango-include; the
+# Exempt: only the exact source-optional/source_optional lines added for --mango-include; the
 # included files themselves are scanned too.
 GUARDED=$(cat "$RUN/mango.conf")
 for l in "${INCLUDE_LINES[@]}"; do GUARDED=$(printf '%s\n' "$GUARDED" | grep -vxF "$l"); done

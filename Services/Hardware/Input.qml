@@ -9,13 +9,16 @@ import "../Compositor" as Compositor
 // Keyboards, key repeat and touchpad (item_136), MangoWC.
 //
 // Real devices come from `mmsg get all-devices` (identifier "vendor:product:name",
-// types, and `matched` = a device_rule applies to it). Choices persist in the
+// types, and `matched` = a device rule applies to it). Choices persist in the
 // shell config (input.*) and are written to ~/.config/mango/archeotech-input.conf,
 // which the mango config pulls in with
 // `source_optional=~/.config/mango/archeotech-input.conf` (after its own input
 // keys, so these win); mango then reloads. NB mango 0.17.5 resolves a bare
 // relative name against its working directory, NOT the config dir (only `./` and
-// `~` are): `source_optional=archeotech-input.conf` silently loaded nothing.
+// `~` are): `source-optional=archeotech-input.conf` silently loaded nothing.
+// mango 0.18 renamed devicerule -> device_rule and source-optional ->
+// source_optional and rejects the old names; the rules are written in the form
+// the mango config uses (0.17 while it still has `source-optional=`).
 //
 // Per-keyboard layouts use mango `device_rule`s, which give that keyboard its
 // OWN keymap once it (re)appears (replug; next login for a built-in keyboard): the external QWERTY always types QWERTY and the built-in AZERTY
@@ -192,13 +195,17 @@ QtObject {
     // when the content is unchanged (no needless reload), else write atomically,
     // reload, and cycle the active keyboard layout back (reload_config resets it
     // to the first layout; same recipe as MangoService.applyWindowDecor).
-    // Debounced 900 ms: a slider drag reloads once, after it settles.
+    // Debounced 900 ms: a slider drag reloads once, after it settles. A mango
+    // config still on the 0.17 names (it sources this file with
+    // `source-optional=`) gets the rules as `devicerule=`.
     readonly property string _confPath: Quickshell.env("HOME") + "/.config/mango/archeotech-input.conf"
     property var _runner: Commons.CommandRunner { label: "input settings"; coalesce: true }
     property var _apply: Timer {
         interval: 900
         onTriggered: root._runner.run(["bash", "-c",
             "F=\"$1\"; NEW=\"$2\"; mkdir -p \"$(dirname \"$F\")\"; "
+          + "grep -q '^source-optional=' \"$(dirname \"$F\")/config.conf\" 2>/dev/null "
+          + "&& NEW=$(printf '%s' \"$NEW\" | sed 's/^device_rule=/devicerule=/'); "
           + "[ -f \"$F\" ] && [ \"$(cat \"$F\")\" = \"$NEW\" ] && exit 0; "
           + "printf '%s\\n' \"$NEW\" > \"$F.tmp\" && mv \"$F.tmp\" \"$F\" || exit 1; "
           + "PREV_KB=$(mmsg get keyboardlayout 2>/dev/null | jq -r '.layout // empty' 2>/dev/null); "

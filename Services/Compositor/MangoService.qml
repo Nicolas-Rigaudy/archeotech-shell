@@ -258,7 +258,8 @@ QtObject {
     // no keyboard-layout cycle). reload_config resets the keyboard layout, so the
     // active one is saved and cycled back (matches mango-reload.sh). Surgical
     // anchored seds via --follow-symlinks edit the repo file behind the dotfiles
-    // symlink, keeping the symlink intact.
+    // symlink, keeping the symlink intact. The border width is `borderpx` up to
+    // mango 0.17 and `border_px` from 0.18: whichever the config has is edited.
     function applyWindowDecor(radius, borderpx) {
         var r  = Math.round(radius)
         var bp = Math.round(borderpx)
@@ -266,8 +267,8 @@ QtObject {
               "CFG=\"$HOME/.config/mango/config.conf\"; [ -f \"$CFG\" ] || exit 0; CH=0; "
             + "if [ \"$(grep -oP '^border_radius=\\K[0-9]+' \"$CFG\")\" != \"" + r + "\" ]; then "
             + "sed --follow-symlinks -i 's|^border_radius=.*|border_radius=" + r + "|' \"$CFG\"; CH=1; fi; "
-            + "if [ \"$(grep -oP '^borderpx=\\K[0-9]+' \"$CFG\")\" != \"" + bp + "\" ]; then "
-            + "sed --follow-symlinks -i 's|^borderpx=.*|borderpx=" + bp + "|' \"$CFG\"; CH=1; fi; "
+            + "if [ \"$(grep -oP '^border_?px=\\K[0-9]+' \"$CFG\")\" != \"" + bp + "\" ]; then "
+            + "sed --follow-symlinks -i -E 's#^(border_?px)=.*#\\1=" + bp + "#' \"$CFG\"; CH=1; fi; "
             + "if [ \"$CH\" = \"1\" ]; then "
             + "PREV_KB=$(mmsg get keyboardlayout 2>/dev/null | jq -r '.layout // empty' 2>/dev/null); "
             + "mmsg dispatch reload_config; "
