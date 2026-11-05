@@ -39,6 +39,12 @@ Item {
 
     property var topRecents: []
 
+    // Selected-row text colour: a pack RowSelection's `selectedText`, else fallback.
+    function _selText(fallback) {
+        const h = resultList.highlightItem
+        return (h && h.sel) ? h.sel.textColor(fallback) : fallback
+    }
+
     function _findApp(needle) {
         var n = (needle || "").toLowerCase()
         for (var i = 0; i < allApps.length; i++) {
@@ -678,11 +684,22 @@ Item {
                 // animation just lags the bar behind the cursor.
                 highlightMoveDuration: 0
                 highlightMoveVelocity: -1
-                highlight: Rectangle {
+                highlight: Item {
+                    readonly property alias sel: _rowSel   // read by rows (selectedText)
                     width:  resultList.width
                     height: resultList.rowH
-                    radius: Commons.Appearance.radius.md
-                    color:  Commons.Appearance.colors.accentAlpha
+                    Rectangle {
+                        anchors.fill: parent
+                        visible: !_rowSel.active
+                        radius: Commons.Appearance.radius.md
+                        color:  Commons.Appearance.colors.accentAlpha
+                    }
+                    RowSelection {
+                        id: _rowSel
+                        anchors.fill: parent
+                        context: "launcher"
+                        radius: Commons.Appearance.radius.md
+                    }
                 }
 
                 ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
@@ -748,7 +765,7 @@ Item {
                             width: parent.width
                             text:  modelData.name || ""
                             color: root.selectedIdx === index
-                                       ? Commons.Appearance.colors.textPrimary
+                                       ? root._selText(Commons.Appearance.colors.textPrimary)
                                        : Commons.Appearance.colors.textSecondary
                             font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeMd; weight: Commons.Appearance.font.weightMedium }
                             elide: Text.ElideRight
@@ -758,7 +775,9 @@ Item {
                             readonly property string _sub: modelData.comment || modelData.genericName || ""
                             text:    _sub
                             visible: _sub.length > 0
-                            color:   Commons.Appearance.colors.textMuted
+                            color:   root.selectedIdx === index
+                                         ? root._selText(Commons.Appearance.colors.textMuted)
+                                         : Commons.Appearance.colors.textMuted
                             font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeSm }
                             elide: Text.ElideRight
                         }

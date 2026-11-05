@@ -14,10 +14,17 @@ StyleDelegate {
     property int chamfer: 6
     // Vertical inset from the holder edges (the plate's top/bottom margin).
     property int vMargin: 2
+    // Which bar cluster this plate houses ("bank", "clock", "media", "title",
+    // "workspaces"), so a pack can style clusters differently (item_156), and
+    // whether the bar runs vertically (left/right side).
+    property string cluster: ""
+    property bool vertical: false
 
     api: ({
         "chamfer": seg.chamfer,
         "vMargin": seg.vMargin,
+        "cluster": seg.cluster,
+        "vertical": seg.vertical,
         "palette": Commons.Appearance.colors,
         "steel":   Commons.Appearance.steel
     })

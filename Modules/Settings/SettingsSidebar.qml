@@ -178,6 +178,7 @@ Item {
                         anchors.fill: activeBg; radius: activeBg.radius
                         blur:   Commons.Appearance.elevation.e2.blur; offset: Qt.vector2d(0, Commons.Appearance.elevation.e2.y); spread: Commons.Appearance.elevation.e2.spread
                         color:  Commons.Appearance.elevation.e2.color
+                        visible: !navSel.active
                         opacity: root.activeIndex === navItem.index ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: Commons.Appearance.anim.fast } }
                     }
@@ -189,7 +190,8 @@ Item {
                         // language): resting → subtle neutral pill on hover → raised
                         // warm pill (+ the shadow above) on active. No separate accent
                         // wash — StateLayer here is click + (disabled) tint only.
-                        color: root.activeIndex === navItem.index ? Commons.Appearance.colors.surfaceWarm
+                        color: navSel.active                       ? "transparent"
+                             : root.activeIndex === navItem.index ? Commons.Appearance.colors.surfaceWarm
                              : navSL.hovered                       ? Commons.Appearance.colors.surface0Alpha
                              :                                       "transparent"
                         Behavior on color { Commons.ColorAnim {} }
@@ -206,9 +208,21 @@ Item {
                         }
                     }
 
+                    // Pack style seam (item_156): a RowSelection delegate replaces
+                    // the shadow, pill and accent bar; StateLayer keeps the input.
+                    RowSelection {
+                        id: navSel
+                        anchors.fill: activeBg
+                        z: -1
+                        context: "settingsNav"
+                        selected: root.activeIndex === navItem.index
+                        hovered: navSL.hovered
+                        radius: Commons.Appearance.radius.base
+                    }
+
                     // Left accent bar for active state
                     Rectangle {
-                        visible: root.activeIndex === navItem.index
+                        visible: root.activeIndex === navItem.index && !navSel.active
                         anchors { left: parent.left; leftMargin: Commons.Appearance.spacing.s3; verticalCenter: parent.verticalCenter }
                         width: 3; height: 20; radius: 2
                         // Active pane marker = accent (register metal); teal dropped (too modern).
@@ -223,7 +237,7 @@ Item {
                         Text {
                             text: navItem.modelData.icon
                             color: root.activeIndex === navItem.index
-                                ? Commons.Appearance.colors.accent
+                                ? navSel.textColor(Commons.Appearance.colors.accent)
                                 : Commons.Appearance.colors.textSecondary
                             font.pixelSize: Commons.Appearance.font.sizeXl
                             font.family: Commons.Appearance.font.family
@@ -234,7 +248,7 @@ Item {
                         Text {
                             text: navItem.modelData.label
                             color: root.activeIndex === navItem.index
-                                ? Commons.Appearance.colors.textPrimary
+                                ? navSel.textColor(Commons.Appearance.colors.textPrimary)
                                 : Commons.Appearance.colors.textSecondary
                             font.pixelSize: Commons.Appearance.font.sizeMd
                             font.family: Commons.Appearance.font.display   // page names in the display face

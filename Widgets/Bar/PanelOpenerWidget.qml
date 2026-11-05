@@ -30,7 +30,8 @@ BarPill {
     iconSize: _onStrip ? 22 : 18
     iconColor: _open ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textSecondary
     hoverColor: Commons.Appearance.colors.accent
-    showActiveBg: _onStrip
+    // A pack StripButton delegate replaces the accent cell (Strip.buttonStyled).
+    showActiveBg: _onStrip && !(holderRoot && holderRoot.buttonStyled === true)
     active:       _open
 
     // No hover popup — just open the panel on click, like a strip icon does.

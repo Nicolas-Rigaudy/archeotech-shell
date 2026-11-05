@@ -118,11 +118,105 @@ layouts pad their clusters (`surfaces.segment.pad`) only when the pack ships one
 |-------|------|---------|
 | `chamfer` | int | corner cut |
 | `vMargin` | int | top/bottom inset from the bar edges |
+| `cluster` | string | which housing: `bank` (the status bank), `clock`, `workspaces`, `title`, `media` |
+| `vertical` | bool | the bar runs down a left/right edge |
 
 ### `BarDivider`
 Hardware on the console's zone seams (`bar.dividers`). The core draws the groove;
 the delegate sits on the groove's x with the bar's height and zero width. No
 fields beyond the shared ones.
 
-_(More components (DashCard, SegmentedControl, BarPill, PanelShadow, a form Row)
-are added here as they gain delegate seams.)_
+### `FrameStyle`
+The whole frame (bands + corners) on each screen, drawn over the core glass
+(z 1, beside FrameFx). Without `replacesGlass` the delegate is an overlay; set
+`property bool replacesGlass: true` on the delegate's root to blank the core glass
+fill and paint the frame body yourself. The compositor blurs wherever the layer's
+alpha is above 0, so a body painted fully transparent loses the frame blur: keep
+some alpha where blur should show.
+
+| field | type | meaning |
+|-------|------|---------|
+| `contentRect` | rect | the content hole (where windows show) |
+| `cornerRadius` | real | the hole's corner radius |
+| `framePath` | string | SVG path of the frame shape (outer rect minus the hole), for a `PathSvg` |
+| `chamfer` | bool | the pack cuts corners at 45° (`frame.corners: "chamfer"`) |
+| `bands` | object | `{ top, bottom, left, right }`: band thickness in px |
+| `screenName` | string | output name |
+| `palette` / `steel` | object | `Appearance.colors` / `Appearance.steel` |
+
+### `ScreenEffects`
+A full-screen overlay above the bar and strips (z 11, below edit mode); never
+takes input, and hides with the frame when the sides auto-hide. Scanlines, vignette, glitch bursts. **Never paint inside
+`contentRect`**: the compositor blurs wherever the layer's alpha is above 0, so
+anything drawn over the hole blurs the windows under it.
+
+| field | type | meaning |
+|-------|------|---------|
+| `contentRect` | rect | the content hole (keep it clear) |
+| `level` | string | the pack setting `screenEffects` (the pack defines the values; `""` unset) |
+| `animate` | bool | false under reduced motion: draw a still frame |
+| `palette` | object | `Appearance.colors` |
+
+### `CardHeader`
+A dashboard card's title row (`Prim.CardHeader`, used by DashCard). The base draws
+the accent title over a divider; with a delegate the row takes the delegate's
+`implicitWidth`/`implicitHeight`, so a tab or label plate can be taller. The
+delegate must set `implicitHeight` (the row collapses to 0 without it).
+
+| field | type | meaning |
+|-------|------|---------|
+| `title` | string | card title |
+| `code` | string | optional short code; no host sets one yet, so `""` today |
+| `font` | object | `{ display, size, tracking }`: the base title font |
+| `palette` | object | `Appearance.colors` |
+
+### `SegmentedControl`
+The selector's track and selected key. With a delegate the core track, seat,
+shadows, pill and hover wash are hidden; the labels and hit areas stay core.
+Optional delegate properties `activeText` / `idleText` (colors) recolour the
+selected and other labels to suit the key.
+
+| field | type | meaning |
+|-------|------|---------|
+| `count` | int | number of segments |
+| `currentIndex` / `hoveredIndex` | int | selected / hovered segment (`-1` none) |
+| `vertical` | bool | segments stack vertically |
+| `segmentSize` | real | one segment's length along the track |
+| `keyRect` | rect | where the core pill would sit (animated between segments) |
+| `enabled` | bool | control enabled |
+| `radius` | real | track corner radius |
+| `palette` | object | `Appearance.colors` |
+
+### `RowSelection`
+The selected-row highlight in lists (`Prim.RowSelection`). The host hides its own
+highlight while the delegate is active. Optional delegate property `selectedText`
+(color) recolours the selected row's text. In `launcher` there is one instance
+(the moving highlight) and `selected` is always true. In `settingsNav` every row
+has one and the host drops its own hover pill, so the delegate draws hover too.
+
+| field | type | meaning |
+|-------|------|---------|
+| `context` | string | which list: `launcher`, `settingsNav` |
+| `selected` | bool | this row is the current one |
+| `hovered` | bool | pointer over the row |
+| `radius` | real | host row radius |
+| `palette` | object | `Appearance.colors` |
+
+### `StripButton`
+Housing behind each strip icon (key cap, socket, bracket), under the widget.
+When a pack ships one, panel openers drop their lifted accent cell
+(`Strip.buttonStyled`), so the delegate draws the active and hover states.
+
+| field | type | meaning |
+|-------|------|---------|
+| `side` | string | strip edge: `top` `bottom` `left` `right` |
+| `index` | int | slot position on the strip |
+| `widgetId` | string | the widget in this slot |
+| `active` | bool | this slot's panel is open |
+| `hovered` | bool | pointer over the slot |
+| `activePanel` | string | the strip's open panel id (`""` none) |
+| `panelOpen` | bool | any panel of this strip is open |
+| `palette` | object | `Appearance.colors` |
+
+_(More components (BarPill, PanelShadow, a form Row) are added here as they gain
+delegate seams.)_

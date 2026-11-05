@@ -69,19 +69,10 @@ Item {
             anchors { left: parent.left; right: parent.right; top: parent.top; bottom: parent.bottom; margins: Commons.Appearance.spacing.s4 }
             spacing: Commons.Appearance.spacing.s2
 
-            Text {
-                visible: card.title.length > 0
-                text: card.title
-                color: Commons.Appearance.colors.accent
-                // Display face for section headers (Cinzel under a grimdark pack; falls
-                // back to the body family when the pack ships none).
-                font.family: Commons.Appearance.font.display
-                font.pixelSize: Commons.Appearance.font.sizeMd
-                font.letterSpacing: Commons.Appearance.font.trackingLabel
-            }
-            Prim.Divider {
+            Prim.CardHeader {
                 visible: card.title.length > 0
                 Layout.fillWidth: true
+                title: card.title
             }
 
             ColumnLayout {

@@ -415,6 +415,8 @@ Item {
             // the live _rightGroup; it ends at pill.width - the console inset, so its
             // left edge = that minus its width. 10px pad each side clears the icons.
             Prim.BarSegment {
+                cluster: "bank"
+                vertical: !bar.horizontal
                 visible: bar._segmentsActive && _rightGroup.width > 4
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom

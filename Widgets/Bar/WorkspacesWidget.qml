@@ -26,7 +26,7 @@ Item {
     implicitHeight: _horizontal ? Commons.Appearance.bar.height : grid.implicitHeight
     Layout.alignment: _horizontal ? Qt.AlignVCenter : Qt.AlignHCenter
 
-    Prim.BarSegment { z: -1; visible: root._seg; anchors.fill: parent }
+    Prim.BarSegment { z: -1; visible: root._seg; anchors.fill: parent; cluster: "workspaces"; vertical: !root._horizontal }
 
     Grid {
         id: grid

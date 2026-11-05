@@ -38,7 +38,7 @@ Item {
     implicitWidth: Math.min(label.implicitWidth,
                             holderRoot ? holderRoot._titleMaxWidth : 100000)
 
-    Prim.BarSegment { z: -1; visible: root._seg; anchors.fill: parent }
+    Prim.BarSegment { z: -1; visible: root._seg; anchors.fill: parent; cluster: "title"; vertical: !!(root.holderRoot && !root.holderRoot.horizontal) }
 
     Text {
         id: label

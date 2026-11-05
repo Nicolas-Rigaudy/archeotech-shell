@@ -5,6 +5,7 @@ import "Sides" as Sides
 import "Panels" as Panels
 import "Builder" as Builder
 import "../../Commons" as Commons
+import "../../Commons/Primitives" as Prim
 import "../../Services/Shell" as ShellServices
 import "../../Services/Compositor" as CompositorServices
 
@@ -170,6 +171,37 @@ Variants {
             // bar/strip fill, so it must vanish too — hiding Bar/Strip alone
             // leaves this perimeter glass on screen. Restores on exit.
             visible: !ShellServices.ShellState.sidesHidden(_surface._screenName)
+            // A FrameStyle delegate that draws its own frame body (replacesGlass)
+            // takes over the glass fill; the path + geometry stay published.
+            suppressFill: !!(_frameStyle.active && _frameStyle.item
+                          && _frameStyle.item.replacesGlass === true)
+        }
+
+        // Frame style seam (adr_027 Layer C, item_156): a pack's
+        // `styles/FrameStyle.qml` draws the frame body/ornaments (rims, bevels,
+        // corner work) from the frame geometry. Nothing loads without a pack
+        // delegate. z:1 with FrameFx — above the glass, below panels/sides.
+        Prim.StyleDelegate {
+            id: _frameStyle
+            z: 1
+            anchors.fill: parent
+            componentId: "FrameStyle"
+            visible: _frameBg.visible
+            api: !Commons.Appearance.hasStyle("FrameStyle") ? ({}) : ({
+                "contentRect":  _frameBg.contentRect,
+                "cornerRadius": _frameBg.cornerR,
+                "framePath":    _frameBg.pathData,
+                "chamfer":      Commons.Appearance.frameChamfer,
+                "bands": {
+                    "top":    _frameBg.contentRect.y,
+                    "bottom": _frameBg.height - _frameBg.contentRect.y - _frameBg.contentRect.height,
+                    "left":   _frameBg.contentRect.x,
+                    "right":  _frameBg.width - _frameBg.contentRect.x - _frameBg.contentRect.width
+                },
+                "screenName": _surface._screenName,
+                "palette":    Commons.Appearance.colors,
+                "steel":      Commons.Appearance.steel
+            })
         }
 
         // Pack-gated decorator/FX overlay (adr_027 Wave 2). Additive chrome over
@@ -286,6 +318,26 @@ Variants {
         // the strip-attached edge so the user can switch between panels (e.g.
         // CC ↔ NC) without losing them. Panels.Panel is no longer instantiated
         // here; PanelRegistry remains the source of truth for content + size.
+
+        // Screen effects seam (item_156): a pack's `styles/ScreenEffects.qml`
+        // (scanlines, vignette, glitch) over the frame and sides. Never takes
+        // input. Delegates must not paint inside api.contentRect: the layer is
+        // blurred wherever alpha > 0, so a tint there would blur app windows.
+        Prim.StyleDelegate {
+            z: 11
+            anchors.fill: parent
+            enabled: false
+            componentId: "ScreenEffects"
+            visible: _frameBg.visible
+            api: ({
+                "contentRect": _frameBg.contentRect,
+                "level":   (Commons.Appearance.packSettings
+                            && Commons.Appearance.packSettings.screenEffects !== undefined)
+                           ? Commons.Appearance.packSettings.screenEffects : "",
+                "animate": !Commons.Appearance.reducedMotion,
+                "palette": Commons.Appearance.colors
+            })
+        }
 
         // ── Edit mode (Sprint 21) ──────────────────────────────────────────────
         // Full-surface visual builder, above everything. Visible only when

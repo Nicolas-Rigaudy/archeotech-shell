@@ -32,6 +32,11 @@ Shape {
     // glow anchor to the exact corners the frame draws. Set by _build().
     property rect contentRect: Qt.rect(0, 0, 0, 0)
     property int  cornerR: 0
+    // The frame's SVG path (all active sides as one shape), for a FrameStyle
+    // delegate that draws its own body. `suppressFill` hides the glass fill
+    // while such a delegate replaces it (item_156); geometry is still published.
+    readonly property string pathData: _d
+    property bool suppressFill: false
     function _rebuild() { _d = _build() }
     Component.onCompleted: _rebuild()
     onWidthChanged:  _rebuild()
@@ -128,8 +133,8 @@ Shape {
         fillGradient: LinearGradient {
             x1: 0; y1: 0
             x2: 0; y2: frame.height
-            GradientStop { position: 0.0; color: Commons.Appearance.colors.glassSheenTop }
-            GradientStop { position: 1.0; color: Commons.Appearance.colors.glassSheenBot }
+            GradientStop { position: 0.0; color: frame.suppressFill ? "transparent" : Commons.Appearance.colors.glassSheenTop }
+            GradientStop { position: 1.0; color: frame.suppressFill ? "transparent" : Commons.Appearance.colors.glassSheenBot }
         }
         strokeWidth: 0
         strokeColor: "transparent"

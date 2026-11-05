@@ -114,6 +114,9 @@ Item {
         return _activeSide === side || (_activeSide === "" && _isPrimaryHost(id))
     }
     readonly property bool   _panelOpen:   _activePanel !== "" && _showsPanel(_activePanel)
+    // A pack `StripButton` style owns the icon housing (item_156): openers drop
+    // their own lifted accent cell so the delegate draws the active/hover state.
+    readonly property bool   buttonStyled: Commons.Appearance.hasStyle("StripButton")
     readonly property bool   _showCard:    _hovShown || _panelOpen
 
     // Window-space rect of the actual panel card (which is narrower than the
@@ -493,6 +496,28 @@ Item {
                     height: strip._horizontal ? _hitShort : _hitLong
                     x: strip._horizontal ? _center - width  / 2 : (iconArea.width  - width)  / 2
                     y: strip._horizontal ? (iconArea.height - height) / 2 : _center - height / 2
+
+                    // Pack style seam (item_156): a `StripButton` delegate draws a
+                    // housing behind each strip icon (key cap, socket, bracket).
+                    // Chrome only, under the widget; hover via a passive handler.
+                    StyleDelegate {
+                        id: _btn
+                        z: -1
+                        anchors.fill: parent
+                        componentId: "StripButton"
+                        api: !strip.buttonStyled ? ({}) : ({
+                            "side":        strip.side,
+                            "index":       iconSlot.index,
+                            "widgetId":    iconSlot.modelData,
+                            "hovered":     _btnHover.hovered,
+                            "active":      strip.showsPanel(iconSlot.modelData),
+                            "activePanel": strip._activePanel,
+                            "panelOpen":   strip._panelOpen,
+                            "palette":     Commons.Appearance.colors
+                        })
+                    }
+                    // blocking: false so the strip's own hover area still sees the pointer.
+                    HoverHandler { id: _btnHover; enabled: _btn.active; blocking: false }
 
                     WidgetLoader {
                         anchors.fill: parent

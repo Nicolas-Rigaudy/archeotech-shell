@@ -36,7 +36,7 @@ Item {
     implicitWidth:  _horizontal ? centerClock.implicitWidth + 2 * _pad : (holderRoot ? holderRoot.thickness : 30)
     implicitHeight: _horizontal ? Commons.Appearance.bar.height : vClock.implicitHeight
 
-    Prim.BarSegment { z: -1; visible: root._seg; anchors.fill: parent }
+    Prim.BarSegment { z: -1; visible: root._seg; anchors.fill: parent; cluster: "clock"; vertical: !root._horizontal }
 
     // ── Horizontal — rich single line + calendar hover ──────────────────────────
     Text {

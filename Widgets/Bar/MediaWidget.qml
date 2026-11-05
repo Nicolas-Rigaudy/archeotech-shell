@@ -49,6 +49,8 @@ Item {
     readonly property bool _seg: Commons.Appearance.hasStyle("BarSegment")
     Prim.BarSegment {
         id: mediaHousing
+        cluster: "media"
+        vertical: !!(root.holderRoot && !root.holderRoot.horizontal)
         z: -1
         visible: root.active && root._seg
         anchors.fill: parent
