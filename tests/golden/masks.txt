@@ -18,6 +18,10 @@ dashboard-*  185,255 615,375   # system status gauges
 dashboard-*  655,260 1100,380  # active projects list
 dashboard-*  655,450 1100,560  # system notes values
 dashboard-*  180,590 1125,635  # rotating tip
+# Cyberdeck: the segmented gauge card is taller, so the battery gauge row and
+# the tip sit lower than on the default face.
+dashboard-cyberdeck-*  185,370 615,402   # battery gauge value + segments
+dashboard-cyberdeck-*  180,640 1125,672  # rotating tip
 
 # Launcher: recents and results come from this machine's desktop entries.
 launcher-*   70,70 450,155     # recents tiles

@@ -124,12 +124,15 @@ def main():
         d = json.loads(tk.read_text())
         if not d.get("colors"):
             continue
-        variants = {tk.parent.name: d["colors"]}
+        base = (d["colors"], d.get("roles", {}), d.get("accent", "mauve"))
+        variants = {tk.parent.name: base}
         for reg, spec in (d.get("registers") or {}).items():
-            if isinstance(spec, dict) and spec.get("colors"):
-                variants[f"{tk.parent.name}:{reg}"] = {**d["colors"], **spec["colors"]}
-        for name, colors in variants.items():
-            failures += check(name, colors, d.get("roles", {}), d.get("accent", "mauve"))
+            if isinstance(spec, dict) and (spec.get("colors") or spec.get("accent") or spec.get("roles")):
+                variants[f"{tk.parent.name}:{reg}"] = ({**base[0], **spec.get("colors", {})},
+                                                       {**base[1], **spec.get("roles", {})},
+                                                       spec.get("accent", base[2]))
+        for name, (colors, roles, accent) in variants.items():
+            failures += check(name, colors, roles, accent)
     print(f"\ncontrast: {failures} gated role(s) below floor (body {FLOOR['body']}, muted {FLOOR['muted']}, focus {FLOOR['focus']})"
           + ("" if args.strict else " — informational"))
     return 1 if (args.strict and failures) else 0

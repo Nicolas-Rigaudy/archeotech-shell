@@ -49,8 +49,11 @@ Item {
                 // reads on both brightness and sheen, selected elongates into the
                 // accent pill.
                 readonly property int _long: sel ? 22 : (occ ? 9 : 7)
-                width:  root._horizontal ? _long : 8
-                height: root._horizontal ? 8 : _long
+                // Pack seam (STYLE_API "WorkspaceCell"): a delegate draws the cell
+                // and sets its own implicit size; the base bead is hidden.
+                readonly property bool _styled: cellStyle.active
+                width:  _styled ? cellStyle.item.implicitWidth  : (root._horizontal ? _long : 8)
+                height: _styled ? cellStyle.item.implicitHeight : (root._horizontal ? 8 : _long)
                 readonly property color _base: (urg && !sel) ? Commons.Appearance.colors.red
                      : sel ? Commons.Appearance.colors.accent
                      : occ ? Commons.Appearance.colors.overlay1
@@ -67,19 +70,32 @@ Item {
 
                 // Soft shadow lifts every bead off the bar face (glass mode) — this
                 // is what delineates the dim empty beads, no hard outline needed.
+                Prim.StyleDelegate {
+                    id: cellStyle
+                    anchors.fill: parent
+                    componentId: "WorkspaceCell"
+                    api: ({
+                        "selected": cell.sel, "occupied": cell.occ, "urgent": cell.urg,
+                        "index": cell.modelData.num, "vertical": !root._horizontal,
+                        "animMs": Commons.Appearance.anim.spatialFast,
+                        "palette": Commons.Appearance.colors
+                    })
+                }
+
                 RectangularShadow {
                     anchors.fill: pill
                     radius: pill.radius
                     blur:   Commons.Appearance.elevation.e1.blur
                     offset: Qt.vector2d(0, Commons.Appearance.elevation.e1.y)
                     spread: Commons.Appearance.elevation.e1.spread
-                    visible: cell._glass
+                    visible: cell._glass && !cell._styled
                     // e1 alpha (0.5) for the selected tag, softer for occupied / empty tags.
                     color:  Qt.rgba(0, 0, 0, Commons.Appearance.elevation.e1.alpha * (cell.sel ? 1.0 : cell.occ ? 0.9 : 0.56) * Commons.Appearance.shadowStrength)
                 }
 
                 Rectangle {
                     id: pill
+                    visible: !cell._styled
                     anchors.fill: parent
                     radius: Commons.Appearance.radius.pill
                     antialiasing: true

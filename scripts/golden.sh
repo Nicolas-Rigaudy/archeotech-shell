@@ -51,7 +51,7 @@ MASKS="$GOLD/masks.txt"
 [ -f "$WALL" ] || { echo "missing $WALL" >&2; exit 2; }
 command -v magick >/dev/null || { echo "needs ImageMagick (magick)" >&2; exit 2; }
 
-# name | --state | theme dir | flat | pack
+# name | --state | theme dir | flat | pack [| --set key=value]
 SCENARIOS=(
   "bar-dark||archeotech-macchiato|0|base"
   "bar-light||archeotech-latte|0|base"
@@ -64,16 +64,20 @@ for st in dashboard launcher media wallpaper settings:appearance notifications e
               "$n-flat|$st|archeotech-macchiato|1|base")
 done
 SCENARIOS+=("dashboard-grimdark|dashboard|archeotech-macchiato|0|grimdark")
+for reg in netrunner megacorp deck; do
+  SCENARIOS+=("dashboard-cyberdeck-$reg|dashboard|archeotech-macchiato|0|cyberdeck|packs.cyberdeck.register=$reg")
+done
 
 RUN="$(mktemp -d "${TMPDIR:-/tmp}/archeotech-golden.XXXXXX")"
 mkdir -p "$RUN/out" "$RUN/diff"
 
 render() {  # $1 = scenario spec → $RUN/out/<name>.png
-  IFS='|' read -r name state theme flat pack <<<"$1"
+  IFS='|' read -r name state theme flat pack set <<<"$1"
   # Coverage blur pinned on: renders match with or without scenefx-coverage installed.
   local args=(--root "$ROOT" --fresh --wallpaper "$WALL" --theme "$theme" --flat "$flat" --pack "$pack"
               --set appearance.coverageBlur=on)
   [ -n "$state" ] && args+=(--state "$state")
+  [ -n "$set" ] && args+=(--set "$set")
   "$HERE/shot.sh" "${args[@]}" "$RUN/out/$name.png" >"$RUN/out/$name.log" 2>&1 \
     || echo "render failed: $name (see $RUN/out/$name.log)" >&2
 }

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../../../../Commons" as Commons
+import "../../../../Commons/Primitives" as Prim
 
 // SystemStatus face: "gauges" — the same cpu/ram/disk/bat data as a single ROW of
 // four radial gauges. A row (not a 2×2 grid) keeps the card height close to the
@@ -12,6 +13,27 @@ RowLayout {
     spacing: Commons.Appearance.spacing.s3
 
     readonly property int _bat: card ? card.bat : 0
+
+    // Pack seam (STYLE_API "GaugeFace"): a pack may replace the four rings with
+    // its own meter drawing (Cyberdeck: segmented sheared bars). The host keeps
+    // the data; the delegate gets one entry per stat plus palette and fonts.
+    Prim.StyleDelegate {
+        id: meters
+        componentId: "GaugeFace"
+        visible: active
+        Layout.fillWidth: true
+        Layout.preferredHeight: active && item ? item.implicitHeight : 0
+        api: ({
+            "stats": [
+                { "label": "CPU",  "value": face.card ? face.card.cpu : 0,  "kind": "cpu"  },
+                { "label": "RAM",  "value": face.card ? face.card.ram : 0,  "kind": "ram"  },
+                { "label": "Disk", "value": face.card ? face.card.disk : 0, "kind": "disk" },
+                { "label": "Bat",  "value": face._bat,                     "kind": "bat"  }
+            ],
+            "palette": Commons.Appearance.colors,
+            "font": Commons.Appearance.font
+        })
+    }
 
     component Gauge: Item {
         required property string label
@@ -72,10 +94,11 @@ RowLayout {
         }
     }
 
-    Gauge { label: "CPU";  value: face.card ? face.card.cpu : 0;  col: Commons.Appearance.colors.blue }
-    Gauge { label: "RAM";  value: face.card ? face.card.ram : 0;  col: Commons.Appearance.colors.mauve }
-    Gauge { label: "Disk"; value: face.card ? face.card.disk : 0; col: Commons.Appearance.colors.peach }
+    Gauge { visible: !meters.active; label: "CPU";  value: face.card ? face.card.cpu : 0;  col: Commons.Appearance.colors.blue }
+    Gauge { visible: !meters.active; label: "RAM";  value: face.card ? face.card.ram : 0;  col: Commons.Appearance.colors.mauve }
+    Gauge { visible: !meters.active; label: "Disk"; value: face.card ? face.card.disk : 0; col: Commons.Appearance.colors.peach }
     Gauge {
+        visible: !meters.active
         label: "Bat"
         value: face._bat
         col: face._bat > 20 ? Commons.Appearance.colors.green : Commons.Appearance.colors.red

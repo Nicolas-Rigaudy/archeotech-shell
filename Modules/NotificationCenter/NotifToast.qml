@@ -67,7 +67,12 @@ Item {
         onTriggered: root._close(true)
     }
 
+    // Pack housing (adr_027 Layer C, docs/STYLE_API.md Toast). Behind the card
+    // content; the card's own fill, border and shadow step aside when it loads.
+    readonly property bool _styled: Commons.Appearance.hasStyle("Toast")
+
     GlassShadow {
+        visible: !housing.active
         anchors.fill: card
         radius: card.radius
         blur:   Commons.Appearance.elevation.e3.blur
@@ -84,14 +89,27 @@ Item {
         antialiasing: !Commons.Appearance.crispEdges
         // Liquid-glass sheen — top-lit gradient (same tokens as the chrome),
         // sampled at this toast's screen position (see root._fTop/_fBot).
-        gradient: Gradient {
+        color: "transparent"
+        gradient: housing.active ? null : _sheen
+        property Gradient _sheen: Gradient {
             GradientStop { position: 0.0; color: root._mix(Commons.Appearance.colors.glassSheenTop, Commons.Appearance.colors.glassSheenBot, root._fTop) }
             GradientStop { position: 1.0; color: root._mix(Commons.Appearance.colors.glassSheenTop, Commons.Appearance.colors.glassSheenBot, root._fBot) }
         }
         border.color: (root.notification && root.notification.urgency === 2)
             ? Commons.Appearance.colors.red
             : Commons.Appearance.colors.glassBorder
-        border.width: 1
+        border.width: housing.active ? 0 : 1
+
+        StyleDelegate {
+            id: housing
+            anchors.fill: parent
+            componentId: "Toast"
+            api: !root._styled ? ({}) : ({
+                "urgency": root.notification ? root.notification.urgency : 1,
+                "palette": Commons.Appearance.colors,
+                "font":    Commons.Appearance.font
+            })
+        }
 
         MouseArea {
             anchors.fill: parent
@@ -107,6 +125,7 @@ Item {
             // App icon — top-aligned so it spans the two text lines (matches the
             // notification-center history rows).
             Item {
+                visible: !(housing.active && housing.item.hideIcon)
                 Layout.preferredWidth: 24; Layout.preferredHeight: 24
                 Layout.alignment: Qt.AlignTop
                 Image {
@@ -139,11 +158,15 @@ Item {
                     Layout.fillWidth: true
                     spacing: Commons.Appearance.spacing.s2
 
+                    // App name, or the pack's caption (with its colour, in the mono face).
                     Text {
-                        text: (root.notification && root.notification.appName) ? root.notification.appName : "Notification"
-                        color: Commons.Appearance.colors.textMuted
-                        font.pixelSize: Commons.Appearance.font.sizeSm
-                        font.family: Commons.Appearance.font.family
+                        readonly property bool _cap: housing.active && !!housing.item.caption
+                        text: _cap ? housing.item.caption
+                             : (root.notification && root.notification.appName) ? root.notification.appName : "Notification"
+                        color: _cap ? housing.item.captionColor : Commons.Appearance.colors.textMuted
+                        font.pixelSize: _cap ? Commons.Appearance.font.size2xs : Commons.Appearance.font.sizeSm
+                        font.family: _cap ? Commons.Appearance.font.mono : Commons.Appearance.font.family
+                        font.letterSpacing: _cap ? Commons.Appearance.font.trackingDisplay : 0
                         Layout.fillWidth: true
                         elide: Text.ElideRight
                     }
@@ -172,9 +195,12 @@ Item {
                     text: (root.notification && root.notification.summary) ? root.notification.summary : ""
                     visible: text.length > 0
                     color: Commons.Appearance.colors.textPrimary
-                    font.pixelSize: Commons.Appearance.font.sizeMd
-                    font.family: Commons.Appearance.font.family
-                    font.weight: Commons.Appearance.font.weightMedium
+                    // A styled toast titles in the pack's display face and case.
+                    font.pixelSize: housing.active ? Commons.Appearance.font.size2xl : Commons.Appearance.font.sizeMd
+                    font.family: housing.active ? Commons.Appearance.font.display : Commons.Appearance.font.family
+                    font.capitalization: housing.active ? Commons.Appearance.font.displayCase : Font.MixedCase
+                    font.letterSpacing: font.capitalization === Font.AllUppercase ? Commons.Appearance.font.trackingDisplay : 0
+                    font.weight: housing.active ? Commons.Appearance.font.weightBold : Commons.Appearance.font.weightMedium
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
                 }
@@ -184,7 +210,8 @@ Item {
                     visible: text.length > 0
                     color: Commons.Appearance.colors.textSecondary
                     font.pixelSize: Commons.Appearance.font.sizeSm
-                    font.family: Commons.Appearance.font.family
+                    font.family: housing.active && housing.item.dataBody ? Commons.Appearance.font.mono
+                                                                        : Commons.Appearance.font.family
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
                     maximumLineCount: 3

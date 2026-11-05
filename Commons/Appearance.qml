@@ -292,9 +292,14 @@ QtObject {
     // roles, then `fallbackSlot`. Resolved through _c() (pack colours > theme >
     // hex), never through `colors`, so a role binding inside `colors` does not
     // read the object while it is still being built.
-    function _role(name, fallbackSlot, fallbackHex) {
+    // Slot name a role resolves to (pack, then theme, then fallback).
+    function _roleSlot(name, fallbackSlot) {
         var p = root._mergedPack, d = root._data
-        var slot = (p && p.roles && p.roles[name]) || (d && d.roles && d.roles[name]) || fallbackSlot
+        return (p && p.roles && p.roles[name]) || (d && d.roles && d.roles[name]) || fallbackSlot
+    }
+
+    function _role(name, fallbackSlot, fallbackHex) {
+        var slot = root._roleSlot(name, fallbackSlot)
         if (slot === "accent") return root._c(root._accentName, "#c6a0f6")
         return root._c(slot, root._c(fallbackSlot, fallbackHex))
     }
@@ -585,7 +590,7 @@ QtObject {
     // ── Component style delegates (adr_027 Layer C) ──────────────────────────────
     // Current shell version, checked against a pack's minShellVersion before its
     // style delegates are honoured (the delegate prop contract is versioned).
-    readonly property string shellVersion: "0.4.0"
+    readonly property string shellVersion: "0.5.0"
     // Component ids the active pack ships a style delegate for, pushed from
     // shell.qml (PackRegistry, minShellVersion-gated — Commons can't import a
     // Service). A StyleDelegate loads `<packDir>/styles/<id>.qml` for these.
@@ -671,6 +676,13 @@ QtObject {
         readonly property color borderSubtle:  root._role("borderSubtle",  "surface1", "#494d64")
         readonly property color borderStrong:  root._role("borderStrong",  "surface2", "#5b6078")
         readonly property color focus:         root._role("focus",         "accent",   "#c6a0f6")
+        // Time readouts (bar clock, dashboard hero clock): accent unless a pack
+        // names another slot (Cyberdeck Netrunner: yellow).
+        readonly property color clock:         root._role("clock",         "accent",   "#c6a0f6")
+        readonly property color barClock:      root._role("barClock",      "text",     "#cad3f5")
+        // Settings section captions: the theme's textMuted slot unless a pack
+        // names one (themes map textMuted to overlay0/1/2 or subtext0).
+        readonly property color sectionLabel:  root._role("sectionLabel",  root._roleSlot("textMuted", "overlay1"), "#8087a2")
 
         // Recessed track — the sunk groove behind sliders and dashboard stat
         // bars (a fixed black overlay for the 3d "sunk" read, not a palette
@@ -776,17 +788,33 @@ QtObject {
                 ? ("file://" + root.activePackDir + root._mergedPack.font.displayFile) : ""
     }
 
+    // Same hook for the data face: `font.monoFile` (pack-relative) loads a pack
+    // mono for readouts; `font.mono` resolves loaded-file → declared family.
+    property FontLoader _monoFont: FontLoader {
+        source: (root.activePackDir && root._mergedPack.font && root._mergedPack.font.monoFile)
+                ? ("file://" + root.activePackDir + root._mergedPack.font.monoFile) : ""
+    }
+
     readonly property QtObject font: QtObject {
         // UI face (labels, titles, body): proportional. Mono is reserved for data
         // (clock, readouts, branch names, values) via `mono`. Corvus Dataslate
         // identity (item_115, adr_032); a pack may set either in tokens.json font.
         readonly property string family: root._tok("font", "family", "Noto Sans")
-        readonly property string mono:   root._tok("font", "mono",   "FiraCode Nerd Font")
+        readonly property string mono:
+            (root._monoFont.status === FontLoader.Ready && root._monoFont.name)
+                ? root._monoFont.name
+                : root._tok("font", "mono", "FiraCode Nerd Font")
         // Display/header face — falls back to the body family when the pack ships none.
         readonly property string display:
             (root._displayFont.status === FontLoader.Ready && root._displayFont.name)
                 ? root._displayFont.name
                 : root._tok("font", "displayFamily", family)
+        // Display text in capitals (pack token font.displayCaps): headers and
+        // hero headings set `font.capitalization: Appearance.font.displayCase`.
+        readonly property int displayCase: root._tok("font", "displayCaps", false) ? Font.AllUppercase : Font.MixedCase
+        // Face for time readouts: the mono data face unless a pack sets
+        // font.clockFace "display".
+        readonly property string clock: root._tok("font", "clockFace", "mono") === "display" ? display : mono
         // ── Type scale (item_110 wave 2) ──
         // ONE size scale for text and icon glyphs; every font.pixelSize in the
         // shell picks a step (CI: scripts/token-lint.py rejects raw numbers). A
@@ -821,7 +849,7 @@ QtObject {
         readonly property int  weightLight:    Font.Light
         readonly property real trackingLabel:  1.5
         readonly property real trackingWide:   1.2
-        readonly property real trackingDisplay: 1.0
+        readonly property real trackingDisplay: root._tok("font", "trackingDisplay", 1.0)
     }
 
     // Text size multiplier (item_110 wave 2), set from shell.qml (Persistence.Config
@@ -877,6 +905,30 @@ QtObject {
         // vertical seam dividers flanking the centre gauge, so it reads as bolted
         // instrument-panel sections. Off for the base look.
         readonly property bool dividers: root._tok("bar", "dividers", false)
+        // With dividers on, draw the full-height seam grooves between the
+        // zones (Grimdark). A pack whose segments stand on their own (Cyberdeck)
+        // sets bar.grooves false.
+        readonly property bool grooves: root._tok("bar", "grooves", true)
+        // Bar clock readout: time size (0 = font.sizeMd), date face
+        // ("display" | "mono") and capitals for the date.
+        readonly property int clockSize: root._tok("bar", "clockSize", 0)
+        readonly property string dateFace: root._tok("bar", "dateFace", "display")
+        readonly property bool dateCaps: root._tok("bar", "dateCaps", false)
+    }
+
+    // ── Launcher + list text (pack tokens `launcher`, `list`) ─────────────────
+    // Caption prefix and face for the launcher's RECENTS label, and the footer
+    // key-hint style: "keycap" (boxed keys, base) or "bracket" ("[ESC] CLOSE"
+    // in one caption-coloured mono run, Cyberdeck Netrunner).
+    readonly property QtObject launcher: QtObject {
+        readonly property string captionPrefix: root._tok("launcher", "captionPrefix", "")
+        readonly property string captionFace:   root._tok("launcher", "captionFace", "display") === "mono" ? root.font.mono : root.font.display
+        readonly property bool   bracketHints:  root._tok("launcher", "hints", "keycap") === "bracket"
+    }
+    // Status bullets in dashboard lists: "dot" (base) or "slant" (a sheared
+    // parallelogram, Cyberdeck Netrunner).
+    readonly property QtObject list: QtObject {
+        readonly property bool slantBullets: root._tok("list", "bullet", "dot") === "slant"
     }
 
     // ── Animation ─────────────────────────────────────────────────────────────

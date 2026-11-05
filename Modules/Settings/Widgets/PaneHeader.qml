@@ -35,6 +35,8 @@ Item {
                 // ships one; the body family otherwise.
                 font.family: Commons.Appearance.font.display
                 font.weight: Commons.Appearance.font.weightBold
+                font.capitalization: Commons.Appearance.font.displayCase
+                font.letterSpacing: font.capitalization === Font.AllUppercase ? Commons.Appearance.font.trackingDisplay : 0
             }
 
             Text {

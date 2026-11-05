@@ -31,5 +31,13 @@ Loader {
     // visual on this, so a failed/absent load safely falls back to the base.
     readonly property bool active: status === Loader.Ready && item !== null
 
-    onLoaded: if (item) item.api = Qt.binding(function() { return root.api })
+    // A delegate that declares `property string register` also receives the
+    // active pack register (e.g. Cyberdeck netrunner/megacorp/deck), so one
+    // styles/ directory can draw each register without importing Commons.
+    onLoaded: {
+        if (!item) return
+        item.api = Qt.binding(function() { return root.api })
+        if ("register" in item)
+            item["register"] = Qt.binding(function() { return Commons.Appearance.activeRegister })
+    }
 }

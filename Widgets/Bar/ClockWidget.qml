@@ -50,15 +50,19 @@ Item {
         font.family: Commons.Appearance.font.mono
 
         function clockText(now, timeFmt, dateFmt) {
-            var time = "<span style='color:" + Commons.Appearance.colors.textPrimary + ";font-weight:600'>"
+            var A = Commons.Appearance
+            var time = "<span style='color:" + A.colors.barClock + ";font-weight:600"
+                + ";font-family:\"" + A.font.clock + "\""
+                + (A.bar.clockSize > 0 ? ";font-size:" + A.bar.clockSize + "px" : "") + "'>"
                 + Qt.formatDateTime(now, timeFmt)
                 + "</span>"
             if (!dateFmt) return time
             return time
                 + "<span style='color:" + Commons.Appearance.colors.surface1 + "'> &nbsp;·&nbsp; </span>"
-                + "<span style='color:" + Commons.Appearance.colors.textSecondary
-                + ";font-family:\"" + Commons.Appearance.font.display + "\""
-                + ";font-size:" + (Commons.Appearance.font.sizeMd + 2) + "px'>"
+                + "<span style='color:" + A.colors.textSecondary
+                + ";font-family:\"" + (A.bar.dateFace === "mono" ? A.font.mono : A.font.display) + "\""
+                + (A.bar.dateCaps ? ";text-transform:uppercase;letter-spacing:1px" : "")
+                + ";font-size:" + (A.bar.dateFace === "mono" ? A.font.sizeMd : A.font.sizeMd + 2) + "px'>"
                 + Qt.formatDateTime(now, dateFmt)
                 + "</span>"
         }

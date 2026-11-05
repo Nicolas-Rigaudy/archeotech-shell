@@ -20,7 +20,7 @@ def pack_dirs(parent):
 
 class PackFixtures(unittest.TestCase):
     def test_bundled_packs_are_real_packs_only(self):
-        self.assertEqual([p.name for p in pack_dirs(BUNDLED)], ["grimdark"])
+        self.assertEqual([p.name for p in pack_dirs(BUNDLED)], ["cyberdeck", "grimdark"])
 
     def test_fixture_packs_exist(self):
         self.assertEqual([p.name for p in pack_dirs(FIXTURES)], ["angular", "hud"])

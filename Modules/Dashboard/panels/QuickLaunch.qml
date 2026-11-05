@@ -22,6 +22,7 @@ DashCard {
         ShellServices.ShellState.closeAllAcross()
     }
 
+    readonly property bool _tileStyled: Commons.Appearance.hasStyle("LaunchTile")
     readonly property string _p: "file:///usr/share/icons/Papirus/32x32/"
     readonly property var apps: [
         { label: "Terminal",    icon: _p + "apps/kitty.svg",               cmd: "kitty" },
@@ -52,9 +53,21 @@ DashCard {
                 Layout.preferredWidth: 1
                 Layout.preferredHeight: 34
                 radius: Commons.Appearance.radius.base
-                color: Commons.Appearance.colors.surface0Alpha
+                color: tileStyle.active ? "transparent" : Commons.Appearance.colors.surface0Alpha
                 border.color: launchLayer.hovered ? Commons.Appearance.colors.accentBorder : "transparent"
-                border.width: 1
+                border.width: tileStyle.active ? 0 : 1
+
+                // Tile housing seam (adr_027 Layer C, item_154): a pack's
+                // `styles/LaunchTile.qml` draws the tile plate and hover state.
+                StyleDelegate {
+                    id: tileStyle
+                    anchors.fill: parent
+                    componentId: "LaunchTile"
+                    api: !root._tileStyled ? ({}) : ({
+                        "hovered": launchLayer.hovered,
+                        "palette": Commons.Appearance.colors
+                    })
+                }
                 Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
 
                 RowLayout {

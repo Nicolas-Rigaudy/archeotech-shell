@@ -46,12 +46,24 @@ Item {
                 Rectangle {
                     anchors { fill: parent; leftMargin: Commons.Appearance.spacing.s2; rightMargin: Commons.Appearance.spacing.s2 }
                     radius: Commons.Appearance.radius.base
-                    // Nested input card — matches the launcher search field.
-                    color: Commons.Appearance.colors.surfaceCard
+                    // Nested input card, matching the launcher search field,
+                    // including its pack housing (LaunchTile "search").
+                    color: searchHousing.active ? "transparent" : Commons.Appearance.colors.surfaceCard
                     border.color: searchField.activeFocus
                         ? Commons.Appearance.colors.accent : Commons.Appearance.colors.glassBorder
-                    border.width: searchField.activeFocus ? 2 : 1
+                    border.width: searchHousing.active ? 0 : searchField.activeFocus ? 2 : 1
                     Behavior on border.color { Commons.ColorAnim {} }
+
+                    StyleDelegate {
+                        id: searchHousing
+                        anchors.fill: parent
+                        componentId: "LaunchTile"
+                        api: !Commons.Appearance.hasStyle("LaunchTile") ? ({}) : ({
+                            "context": "search",
+                            "focused": searchField.activeFocus,
+                            "palette": Commons.Appearance.colors
+                        })
+                    }
 
                     RowLayout {
                         anchors { fill: parent; leftMargin: Commons.Appearance.spacing.s3; rightMargin: Commons.Appearance.spacing.s2 }

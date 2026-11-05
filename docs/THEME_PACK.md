@@ -18,7 +18,7 @@ A pack is a directory under `$XDG_DATA_HOME` (freedesktop data convention):
   tokens.json   # token overrides (Layer A)
 ```
 
-Bundled packs (`packs/`) are real packs only (Grimdark). The engine's test packs,
+Bundled packs (`packs/`) are real packs only (Cyberdeck, Grimdark). The engine's test packs,
 `angular` (recoloured base) and `hud` (glow, grid texture, window brackets, window
 corner radius), live in `tests/fixtures/packs/` and never show in the pack picker;
 `tests/py/test_pack_fixtures.py` keeps them loadable.
@@ -88,7 +88,17 @@ token repaints the whole shell live — no per-component work.
 ```
 
 A pack that ships its own `colors` should declare `roles`; `scripts/contrast-check.py`
-tests them against the pack's colours and again for each faction register.
+tests them against the pack's colours and again for each register, using that
+register's own `accent` and `roles` when it sets them.
+
+A register (`registers.<name>` in `tokens.json`) deep-merges over the pack base
+and may override any token block (`accent`, `colors`, `roles`, `material`,
+`frame`, `radius`, `window`, `anim`, `bar`, `fx`, `font`); nested blocks merge
+key by key. Cyberdeck's three registers (megacorp,
+netrunner, deck) each carry their own palette, material and corner set; the
+base block is the default register (`defaultRegister`). `scripts/golden.sh`
+scenarios take an optional 6th `set` field, so one scenario per register can
+pin it with `packs.<id>.register=<name>`.
 
 Notes:
 - **Own palette**: a pack MAY override the whole `colors` block, not just the
@@ -98,6 +108,26 @@ Notes:
   family) or `font.displayFile` (a pack-relative `.ttf`/`.otf` loaded via
   FontLoader) sets a header/display face; body text stays the mono base for
   legibility. Read as `Appearance.font.display`. Ship open (OFL) fonts only.
+- **Data face and display options** (shell 0.5.0): `font.monoFile` loads a
+  pack-relative mono for readouts (`Appearance.font.mono`); `font.displayCaps`
+  sets display text (settings pane titles, dashboard greeting) in capitals;
+  `font.trackingDisplay` sets its letter spacing; `font.clockFace: "display"`
+  draws time readouts in the display face instead of the mono.
+- **Extra roles** (shell 0.5.0): `roles.clock` (dashboard clock, default
+  accent), `roles.barClock` (bar clock, default text) and `roles.sectionLabel`
+  (settings section captions, default overlay1) name a palette slot. Section
+  captions read `sectionLabel`, so overriding only `textMuted` no longer
+  recolours them.
+- **Bar clock and seams** (shell 0.5.0): `bar.clockSize` (time px, 0 = the
+  base size), `bar.dateFace` (`display` | `mono`), `bar.dateCaps` (bool), and
+  `bar.grooves` (false drops the full-height grooves between zones that
+  `bar.dividers` draws, for packs whose segments stand on their own).
+- **Launcher captions and hints**: `launcher.captionPrefix` (string put before
+  the RECENTS caption, e.g. `"// "`), `launcher.captionFace` (`display` |
+  `mono`) and `launcher.hints` (`keycap` draws the footer key hints as raised
+  keys, `bracket` as `[KEY] LABEL` text in the `sectionLabel` colour).
+- **List bullets**: `list.bullet` (`dot` | `slant`) shapes the dashboard
+  Active Projects bullets; `slant` is a sheared bar.
 - `accent` names one of the palette colours (e.g. `"red"`); the semantic
   `accent`, `accentBorder`, `accentAlpha`, state tints and accent-warmth surfaces
   all derive from it, so one line re-tints the whole accent system.

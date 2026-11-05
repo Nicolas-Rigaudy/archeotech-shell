@@ -39,6 +39,8 @@ Item {
 
     property var topRecents: []
 
+    readonly property bool _tileStyled: Commons.Appearance.hasStyle("LaunchTile")
+
     // Selected-row text colour: a pack RowSelection's `selectedText`, else fallback.
     function _selText(fallback) {
         const h = resultList.highlightItem
@@ -437,9 +439,9 @@ Item {
 
                 Text {
                     id: recentsLbl
-                    text:  "RECENTS"
-                    color: Commons.Appearance.colors.textMuted
-                    font { family: Commons.Appearance.font.display; pixelSize: Commons.Appearance.font.sizeSm; letterSpacing: Commons.Appearance.font.trackingLabel }
+                    text:  Commons.Appearance.launcher.captionPrefix + "RECENTS"
+                    color: Commons.Appearance.colors.sectionLabel
+                    font { family: Commons.Appearance.launcher.captionFace; pixelSize: Commons.Appearance.font.sizeSm; letterSpacing: Commons.Appearance.font.trackingLabel }
                     anchors { top: parent.top; left: parent.left }
                 }
 
@@ -461,6 +463,7 @@ Item {
                             // A sibling *behind* `card`, never a layer on the
                             // interactive rect (hit-testing rule, DECISIONS 2026-07-02).
                             RectangularShadow {
+                                visible: !tileHousing.active
                                 anchors.fill: card
                                 radius: card.radius
                                 blur:   Commons.Appearance.elevation.e3.blur
@@ -469,14 +472,26 @@ Item {
                                 color:  Commons.Appearance.elevation.e3.color
                             }
 
+                            // Pack tile housing (LaunchTile seam, item_154).
+                            StyleDelegate {
+                                id: tileHousing
+                                anchors.fill: parent
+                                componentId: "LaunchTile"
+                                api: !root._tileStyled ? ({}) : ({
+                                    "context": "recent",
+                                    "hovered": tileWash.hovered,
+                                    "palette": Commons.Appearance.colors
+                                })
+                            }
+
                             Rectangle {
                                 id: card
                                 anchors.fill: parent
                                 radius: Commons.Appearance.radius.base
                                 // Shared elevated card surface — same as dashboard/notif cards.
-                                color:  Commons.Appearance.colors.surfaceCard
+                                color:  tileHousing.active ? "transparent" : Commons.Appearance.colors.surfaceCard
                                 // Crisp accent edge on hover for definition.
-                                border.width: 1
+                                border.width: tileHousing.active ? 0 : 1
                                 border.color: tileWash.hovered ? Commons.Appearance.colors.accentBorder : "transparent"
                                 Behavior on border.color { Commons.ColorAnim {} }
 
@@ -585,18 +600,30 @@ Item {
                 width:        parent.width
                 height:       44
                 // Shared elevated card surface — matches the tiles below.
-                color:        Commons.Appearance.colors.surfaceCard
+                color:        searchHousing.active ? "transparent" : Commons.Appearance.colors.surfaceCard
                 // Neutral at rest; border brightens + thickens on focus only.
                 border.color: searchInput.activeFocus ? Commons.Appearance.colors.accent
                                                        : Commons.Appearance.colors.glassBorder
-                border.width: searchInput.activeFocus ? 2 : 1
+                border.width: searchHousing.active ? 0 : searchInput.activeFocus ? 2 : 1
+
+                StyleDelegate {
+                    id: searchHousing
+                    anchors.fill: parent
+                    componentId: "LaunchTile"
+                    api: !root._tileStyled ? ({}) : ({
+                        "context": "search",
+                        "focused": searchInput.activeFocus,
+                        "palette": Commons.Appearance.colors
+                    })
+                }
                 radius:       Commons.Appearance.radius.md
                 Behavior on border.color { Commons.ColorAnim {} }
 
                 Text {
                     id: searchGlyph
                     anchors { left: parent.left; leftMargin: Commons.Appearance.spacing.s3; verticalCenter: parent.verticalCenter }
-                    text:  ""
+                    // A pack housing may supply its own prompt glyph (e.g. ">").
+                    text:  searchHousing.active && searchHousing.item.glyph ? searchHousing.item.glyph : ""
                     font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeXl }
                     color: searchInput.activeFocus ? Commons.Appearance.colors.accent
                                                    : Commons.Appearance.colors.textMuted
@@ -705,15 +732,34 @@ Item {
                 ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
                 delegate: Item {
+                    id: resultRow
                     required property var modelData
                     required property int index
                     width:  ListView.view.width
                     height: resultList.rowH
 
+                    // Pack row housing (LaunchTile seam, item_154): each result
+                    // sits in its own plate; the selected one is the pack's call.
+                    StyleDelegate {
+                        id: rowHousing
+                        anchors.fill: parent
+                        componentId: "LaunchTile"
+                        api: !root._tileStyled ? ({}) : ({
+                            "context":  "row",
+                            "index":    resultRow.index,
+                            "font":     Commons.Appearance.font,
+                            "selected": resultRow.index === root.selectedIdx,
+                            "palette":  Commons.Appearance.colors
+                        })
+                    }
+
                     // ── Icon with fallback chain ───────────────────────────────
                     Item {
                         id: iconWrapper
-                        anchors { left: parent.left; leftMargin: Commons.Appearance.spacing.s3; verticalCenter: parent.verticalCenter }
+                        // A pack housing may reserve a lead gutter (e.g. a row index).
+                        anchors { left: parent.left; verticalCenter: parent.verticalCenter
+                                  leftMargin: Commons.Appearance.spacing.s3
+                                              + (rowHousing.active ? (rowHousing.item.leadInset || 0) : 0) }
                         width: 34; height: 34
 
                         property int _idx: 0
@@ -877,7 +923,10 @@ Item {
                     ? root.allApps.length + " apps"
                     : root.filtered.length + (root.filtered.length === 1 ? " result" : " results")
                 color: Commons.Appearance.colors.textSecondary
-                font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeSm }
+                font {
+                    family: Commons.Appearance.launcher.bracketHints ? Commons.Appearance.font.mono : Commons.Appearance.font.family
+                    pixelSize: Commons.Appearance.font.sizeSm
+                }
             }
 
             Row {
@@ -891,7 +940,21 @@ Item {
                         required property var modelData
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: Commons.Appearance.spacing.xs
+                        // Pack bracket style: "[ESC] CLOSE" as one caption run.
+                        Text {
+                            visible: Commons.Appearance.launcher.bracketHints
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "[" + hint.modelData.k + "] " + hint.modelData.l
+                            color: Commons.Appearance.colors.sectionLabel
+                            font {
+                                family: Commons.Appearance.font.mono
+                                pixelSize: Commons.Appearance.font.sizeSm
+                                capitalization: Font.AllUppercase
+                                letterSpacing: Commons.Appearance.font.trackingLabel
+                            }
+                        }
                         Rectangle {
+                            visible: !Commons.Appearance.launcher.bracketHints
                             anchors.verticalCenter: parent.verticalCenter
                             width: Math.max(20, keyTxt.implicitWidth + 10)
                             height: 18
@@ -908,6 +971,7 @@ Item {
                             }
                         }
                         Text {
+                            visible: !Commons.Appearance.launcher.bracketHints
                             anchors.verticalCenter: parent.verticalCenter
                             text: hint.modelData.l
                             color: Commons.Appearance.colors.textSecondary

@@ -49,6 +49,13 @@ visuals stand) and a warning is logged. `Appearance.shellVersion` is the current
 version.
 The FrameStyle, ScreenEffects, CardHeader, SegmentedControl, RowSelection and
 StripButton seams, and BarSegment's `cluster`/`vertical`, need `0.4.0`.
+The GaugeFace, WorkspaceCell, PanelChrome and LaunchTile seams, the
+`register` property, and the `sectionLabel`/`clock`/`barClock` roles and font
+tokens they lean on need `0.5.0`.
+
+A delegate that declares `property string register` receives the active pack
+register (`Appearance.activeRegister`, e.g. Cyberdeck `netrunner`), so one
+`styles/` directory can draw every register without importing Commons.
 
 ## Delegate skeleton
 
@@ -218,6 +225,78 @@ When a pack ships one, panel openers drop their lifted accent cell
 | `hovered` | bool | pointer over the slot |
 | `activePanel` | string | the strip's open panel id (`""` none) |
 | `panelOpen` | bool | any panel of this strip is open |
+| `palette` | object | `Appearance.colors` |
+
+### `GaugeFace`
+The dashboard System Status gauges (`SystemStatusGauges`). When a pack ships one,
+the host hides its bars and the delegate draws the whole face (labels, meters,
+readouts); its `implicitHeight` sizes the card.
+
+| field | type | meaning |
+|-------|------|---------|
+| `stats` | array | `[{ label, value, kind }]`: `value` 0..100 (percent); `kind` `cpu` `ram` `disk` `bat` (`bat` below 0 means no battery: skip it) |
+| `palette` | object | `Appearance.colors` |
+| `font` | object | `Appearance.font` (`display`, `mono`, `clock`…) |
+
+### `WorkspaceCell`
+One workspace marker in the bar `Workspaces` widget, replacing the base dot.
+Its `implicitWidth`/`implicitHeight` size the cell; the click area stays in the
+host.
+
+| field | type | meaning |
+|-------|------|---------|
+| `selected` | bool | the focused workspace |
+| `occupied` | bool | holds windows |
+| `urgent` | bool | has an urgent window |
+| `index` | int | the workspace number (1-based) |
+| `vertical` | bool | the bar runs down a left/right edge |
+| `animMs` | int | size-change duration, already scaled by anim speed and reduce motion (`Appearance.anim.spatialFast`) |
+| `palette` | object | `Appearance.colors` |
+
+### `PanelChrome`
+The body of a panel card that grows out of a strip (`Strip.qml`). The host drops
+the fill gradient and stroke of its whole outline while the delegate is active,
+the corner fillets toward the strip included, so the delegate paints the body
+inside `bodyRect` and the fillet area stays empty.
+
+| field | type | meaning |
+|-------|------|---------|
+| `side` | string | strip edge: `top` `bottom` `left` `right` |
+| `bodyRect` | rect | the card body, without the fillets toward the strip |
+| `panelOpen` | bool | a panel of this strip is open |
+| `palette` | object | `Appearance.colors` |
+
+### `LaunchTile`
+Housing for launch surfaces: dashboard Quick Launch tiles and the launcher's
+recents tiles, search box and result rows, and the settings sidebar search
+box (`search` context). The host drops its own fill and
+border while the delegate is active. Optional delegate properties read back by
+the host: `glyph` (string, the search prompt glyph) and `leadInset` (int, a lead
+gutter in px before a result row's icon, e.g. for an index).
+
+| field | type | meaning |
+|-------|------|---------|
+| `context` | string | `tile` (Quick Launch), `recent`, `search`, `row` |
+| `hovered` | bool | pointer over (`tile`, `recent`) |
+| `focused` | bool | the search field has focus (`search`) |
+| `selected` | bool | the current result (`row`) |
+| `index` | int | result position, 0-based (`row`) |
+| `font` | object | `Appearance.font` (`row`) |
+| `palette` | object | `Appearance.colors` |
+
+### `Toast`
+Housing for a notification toast (`NotifToast`). The host drops its sheen,
+border and shadow while the delegate is active, keeps the close button and the
+click-to-dismiss area, and titles the toast in `Appearance.font.display` with
+`displayCase`. Optional delegate properties read back by the host: `caption`
+(string, shown in place of the app name, mono, tracked), `captionColor`
+(color), `hideIcon` (bool, drop the app icon) and `dataBody` (bool, set the body
+in the mono face).
+
+| field | type | meaning |
+|-------|------|---------|
+| `urgency` | int | 0 low, 1 normal, 2 critical |
+| `font` | object | `Appearance.font` |
 | `palette` | object | `Appearance.colors` |
 
 _(More components (BarPill, PanelShadow, a form Row) are added here as they gain

@@ -117,6 +117,7 @@ Item {
     // A pack `StripButton` style owns the icon housing (item_156): openers drop
     // their own lifted accent cell so the delegate draws the active/hover state.
     readonly property bool   buttonStyled: Commons.Appearance.hasStyle("StripButton")
+    readonly property bool   chromeStyled: Commons.Appearance.hasStyle("PanelChrome")
     readonly property bool   _showCard:    _hovShown || _panelOpen
 
     // Window-space rect of the actual panel card (which is narrower than the
@@ -383,21 +384,43 @@ Item {
             ]
         }
 
+        // Panel chrome seam (adr_027 Layer C, item_154): a pack's
+        // `styles/PanelChrome.qml` draws the card body itself; the core sheen
+        // path below goes transparent while it is active. `bodyRect` is the card
+        // minus the neck fillets on the strip-attached edge.
+        readonly property bool _chromed: chrome.active
+        StyleDelegate {
+            id: chrome
+            z: -1
+            anchors.fill: parent
+            componentId: "PanelChrome"
+            api: !strip.chromeStyled ? ({}) : ({
+                "side":     strip.side,
+                "bodyRect": strip._horizontal
+                            ? Qt.rect(card._r, strip.side === "top" ? card._r : 0, card.width - 2 * card._r, card.height - card._r)
+                            : Qt.rect(strip.side === "left" ? card._r : 0, card._r, card.width - card._r, card.height - 2 * card._r),
+                "panelOpen": strip._panelOpen,
+                "palette":  Commons.Appearance.colors
+            })
+        }
+
         ShapePath {
             // Liquid-glass sheen — SCREEN-SPACE mapped: span the full surface
             // height offset by the card's own y, so the card's gradient continues
             // the frame's single top-lit light source instead of restarting
             // within the card (which caused a colour seam where a popup meets the
             // strip). strip fills the surface, so strip.height == screen height.
-            fillGradient: LinearGradient {
+            fillGradient: card._chromed ? null : sheen
+            property LinearGradient sheen: LinearGradient {
                 x1: 0; y1: card._local ? 0 : -card._winY
                 x2: 0; y2: card._local ? card.height : (card._winH - card._winY)
                 GradientStop { position: card._rec.stops[0][0]; color: Commons.Appearance._surfaceColor(card._rec.stops[0][1]) }
                 GradientStop { position: card._rec.stops[1][0]; color: Commons.Appearance._surfaceColor(card._rec.stops[1][1]) }
                 GradientStop { position: card._rec.stops[2][0]; color: Commons.Appearance._surfaceColor(card._rec.stops[2][1]) }
             }
-            strokeWidth: card._rec.strokeWidth
+            strokeWidth: card._chromed ? -1 : card._rec.strokeWidth
             strokeColor: Commons.Appearance._surfaceColor(card._rec.strokeColor)
+            fillColor: "transparent"
 
             startX: card._p[0].x
             startY: card._p[0].y

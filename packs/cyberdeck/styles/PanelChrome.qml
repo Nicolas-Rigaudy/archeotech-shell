@@ -1,0 +1,55 @@
+pragma ComponentBehavior: Bound
+import QtQuick
+import QtQuick.Shapes
+
+// Cyberdeck Netrunner: strip panel body (adr_027 Layer C delegate for
+// PanelChrome). A dark plate with a teal hairline, both corners away from the
+// strip cut at 45°; the strip-attached edge stays open so the panel reads as
+// docked into the frame.
+Item {
+    id: pc
+    property var api: ({})
+    property string register: ""
+
+    readonly property var  _p: api.palette
+    readonly property rect _b: api.bodyRect || Qt.rect(0, 0, width, height)
+    readonly property string _s: api.side || "bottom"
+    readonly property real _c: Math.min(22, _b.width / 4, _b.height / 4)
+
+    // Points walk the body clockwise from the strip edge's first corner; the
+    // two far corners are cut.
+    readonly property var _pts: {
+        const x0 = _b.x + 0.75, y0 = _b.y + 0.75
+        const x1 = _b.x + _b.width - 0.75, y1 = _b.y + _b.height - 0.75, c = _c
+        if (_s === "bottom") return [Qt.point(x0, y1), Qt.point(x0, y0 + c), Qt.point(x0 + c, y0),
+                                     Qt.point(x1 - c, y0), Qt.point(x1, y0 + c), Qt.point(x1, y1)]
+        if (_s === "top")    return [Qt.point(x1, y0), Qt.point(x1, y1 - c), Qt.point(x1 - c, y1),
+                                     Qt.point(x0 + c, y1), Qt.point(x0, y1 - c), Qt.point(x0, y0)]
+        if (_s === "left")   return [Qt.point(x0, y0), Qt.point(x1 - c, y0), Qt.point(x1, y0 + c),
+                                     Qt.point(x1, y1 - c), Qt.point(x1 - c, y1), Qt.point(x0, y1)]
+        return [Qt.point(x1, y1), Qt.point(x0 + c, y1), Qt.point(x0, y1 - c),
+                Qt.point(x0, y0 + c), Qt.point(x0 + c, y0), Qt.point(x1, y0)]
+    }
+
+    Shape {
+        anchors.fill: parent
+        visible: !!pc._p
+        preferredRendererType: Shape.CurveRenderer
+        // Body fill (closed).
+        ShapePath {
+            strokeWidth: -1
+            fillColor: Qt.rgba(0.02, 0.05, 0.07, 0.90)
+            startX: pc._pts[0].x; startY: pc._pts[0].y
+            PathPolyline { path: pc._pts }
+        }
+        // Edge rule (open on the strip side).
+        ShapePath {
+            strokeColor: pc._p ? Qt.lighter(pc._p.surface2, 1.45) : "transparent"
+            strokeWidth: 1.5
+            fillColor: "transparent"
+            joinStyle: ShapePath.MiterJoin
+            startX: pc._pts[0].x; startY: pc._pts[0].y
+            PathPolyline { path: pc._pts }
+        }
+    }
+}

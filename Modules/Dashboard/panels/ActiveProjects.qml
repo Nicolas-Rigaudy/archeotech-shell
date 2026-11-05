@@ -102,85 +102,98 @@ DashCard {
     }
 
     // Capped at 4 visible rows; scrolls inside the card when there are more.
-    ListView {
+    // The wrapper takes the spare height when the row stretches this card
+    // taller (a pack's taller gauge card), so the list stays under the header
+    // instead of the layout handing the space to the header row.
+    Item {
         Layout.fillWidth: true
+        Layout.fillHeight: true
         // Bleed 8px into the card padding on each side so the full-row hover
         // highlight is wider than the text (doesn't clip at the content edges).
         // Row content is re-padded to stay flush at 16px like the other cards.
         Layout.leftMargin:  -Commons.Appearance.spacing.s2
         Layout.rightMargin: -Commons.Appearance.spacing.s2
-        Layout.preferredHeight: Math.min(root.projects.length, 4) * root._rowH
+        implicitHeight: Math.min(root.projects.length, 4) * root._rowH
         visible: root.projects.length > 0
-        clip: true
-        interactive: root.projects.length > 4
-        boundsBehavior: Flickable.StopAtBounds
-        model: root.projects
-        spacing: 0
 
-        // Thin scrollbar tucked into the card's edge margin so it never sits on
-        // top of the row items. -6 pushes it past the list's 8px bleed to the edge.
-        ScrollBar.vertical: ScrollBar {
-            id: projScroll
-            policy: ScrollBar.AsNeeded
-            implicitWidth: 8
-            anchors.rightMargin: -Commons.Appearance.spacing.s2
-            contentItem: Rectangle {
-                implicitWidth: 4
-                radius: 2
-                color: Commons.Appearance.colors.overlay0
-                opacity: projScroll.pressed ? 0.9 : 0.45
-                Behavior on opacity { Commons.ColorAnim {} }
-            }
-        }
+        ListView {
+            anchors { left: parent.left; right: parent.right; top: parent.top }
+            height: parent.implicitHeight
+            clip: true
+            interactive: root.projects.length > 4
+            boundsBehavior: Flickable.StopAtBounds
+            model: root.projects
+            spacing: 0
 
-        delegate: Rectangle {
-            id: projRow
-            required property var modelData
-            width: ListView.view.width
-            height: root._rowH
-            radius: Commons.Appearance.radius.sm
-            color: "transparent"
-            Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
-
-            Rectangle {
-                width: 7; height: 7; radius: 4
-                // +8 re-pad to sit flush at 16px from the card edge (list bleeds 8).
-                anchors { left: parent.left; leftMargin: Commons.Appearance.spacing.s2; verticalCenter: parent.verticalCenter }
-                color: modelData.dirty > 0 ? Commons.Appearance.colors.peach : Commons.Appearance.colors.green
-            }
-            Text {
-                id: nameLbl
-                text: modelData.name
-                color: Commons.Appearance.colors.textPrimary
-                font.family: Commons.Appearance.font.family
-                font.pixelSize: Commons.Appearance.font.sizeBase
-                anchors { left: parent.left; leftMargin: Commons.Appearance.spacing.s6; verticalCenter: parent.verticalCenter }
-                elide: Text.ElideRight
-                width: parent.width * 0.48
-            }
-            Text {
-                text: modelData.branch
-                color: Commons.Appearance.colors.textSecondary
-                font.family: Commons.Appearance.font.mono
-                font.pixelSize: Commons.Appearance.font.sizeBase
-                anchors { left: nameLbl.right; leftMargin: Commons.Appearance.spacing.s2; verticalCenter: parent.verticalCenter }
-                elide: Text.ElideRight
-                width: parent.width * 0.28
-            }
-            Text {
-                text: modelData.dirty > 0 ? "+" + modelData.dirty : "✔"
-                color: modelData.dirty > 0 ? Commons.Appearance.colors.peach : Commons.Appearance.colors.green
-                font.family: Commons.Appearance.font.mono
-                font.pixelSize: Commons.Appearance.font.sizeBase
-                // +8 re-pad to sit flush at 16px from the card edge (list bleeds 8).
-                anchors { right: parent.right; rightMargin: Commons.Appearance.spacing.s2; verticalCenter: parent.verticalCenter }
+            // Thin scrollbar tucked into the card's edge margin so it never sits on
+            // top of the row items. -6 pushes it past the list's 8px bleed to the edge.
+            ScrollBar.vertical: ScrollBar {
+                id: projScroll
+                policy: ScrollBar.AsNeeded
+                implicitWidth: 8
+                anchors.rightMargin: -Commons.Appearance.spacing.s2
+                contentItem: Rectangle {
+                    implicitWidth: 4
+                    radius: 2
+                    color: Commons.Appearance.colors.overlay0
+                    opacity: projScroll.pressed ? 0.9 : 0.45
+                    Behavior on opacity { Commons.ColorAnim {} }
+                }
             }
 
-            StateLayer {
-                anchors.fill: parent
-                hoverScale: 1.0
-                pressScale: 0.98
-                onClicked: root.openProject(projRow.modelData.path)
+            delegate: Rectangle {
+                id: projRow
+                required property var modelData
+                width: ListView.view.width
+                height: root._rowH
+                radius: Commons.Appearance.radius.sm
+                color: "transparent"
+                Behavior on scale { Commons.Anim { curve: Commons.Appearance.curve.expressiveDefaultSpatial } }
+
+                Rectangle {
+                    id: bullet
+                    // Dot, or a sheared parallelogram when the pack sets list.bullet "slant".
+                    readonly property bool _slant: Commons.Appearance.list.slantBullets
+                    width: _slant ? 9 : 7; height: _slant ? 6 : 7; radius: _slant ? 0 : 4
+                    transform: Shear { xFactor: bullet._slant ? -0.5 : 0; origin.y: bullet.height / 2 }
+                    // +8 re-pad to sit flush at 16px from the card edge (list bleeds 8).
+                    anchors { left: parent.left; leftMargin: Commons.Appearance.spacing.s2; verticalCenter: parent.verticalCenter }
+                    color: modelData.dirty > 0 ? Commons.Appearance.colors.peach : Commons.Appearance.colors.green
+                }
+                Text {
+                    id: nameLbl
+                    text: modelData.name
+                    color: Commons.Appearance.colors.textPrimary
+                    font.family: Commons.Appearance.font.family
+                    font.pixelSize: Commons.Appearance.font.sizeBase
+                    anchors { left: parent.left; leftMargin: Commons.Appearance.spacing.s6; verticalCenter: parent.verticalCenter }
+                    elide: Text.ElideRight
+                    width: parent.width * 0.48
+                }
+                Text {
+                    text: modelData.branch
+                    color: Commons.Appearance.colors.textSecondary
+                    font.family: Commons.Appearance.font.mono
+                    font.pixelSize: Commons.Appearance.font.sizeBase
+                    anchors { left: nameLbl.right; leftMargin: Commons.Appearance.spacing.s2; verticalCenter: parent.verticalCenter }
+                    elide: Text.ElideRight
+                    width: parent.width * 0.28
+                }
+                Text {
+                    text: modelData.dirty > 0 ? "+" + modelData.dirty : "✔"
+                    color: modelData.dirty > 0 ? Commons.Appearance.colors.peach : Commons.Appearance.colors.green
+                    font.family: Commons.Appearance.font.mono
+                    font.pixelSize: Commons.Appearance.font.sizeBase
+                    // +8 re-pad to sit flush at 16px from the card edge (list bleeds 8).
+                    anchors { right: parent.right; rightMargin: Commons.Appearance.spacing.s2; verticalCenter: parent.verticalCenter }
+                }
+
+                StateLayer {
+                    anchors.fill: parent
+                    hoverScale: 1.0
+                    pressScale: 0.98
+                    onClicked: root.openProject(projRow.modelData.path)
+                }
             }
         }
     }

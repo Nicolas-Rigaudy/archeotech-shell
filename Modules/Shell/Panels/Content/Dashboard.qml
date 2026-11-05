@@ -61,6 +61,9 @@ Item {
                     font.family: Commons.Appearance.font.display
                     font.pixelSize: Commons.Appearance.font.sizeHeadline
                     font.weight: Commons.Appearance.font.weightSemibold
+                    font.capitalization: Commons.Appearance.font.displayCase
+                    font.letterSpacing: Commons.Appearance.font.displayCase === Font.AllUppercase
+                        ? Commons.Appearance.font.trackingDisplay : 0
                 }
                 Text {
                     text: Qt.formatDateTime(root._now, "dddd, d MMMM")
@@ -74,10 +77,12 @@ Item {
             Text {
                 anchors { right: closeBtn.left; rightMargin: Commons.Appearance.spacing.s4; verticalCenter: parent.verticalCenter }
                 text: Qt.formatDateTime(root._now, Clock.timeFormat(Persistence.Config.get("clock.format"), false))
-                color: Commons.Appearance.colors.accent
-                font.family: Commons.Appearance.font.mono
+                color: Commons.Appearance.colors.clock
+                font.family: Commons.Appearance.font.clock
                 font.pixelSize: Commons.Appearance.font.sizeDisplay
-                font.weight: Commons.Appearance.font.weightLight
+                // A display face (pack font.clockFace) reads heavy; the mono stays light.
+                font.weight: Commons.Appearance.font.clock === Commons.Appearance.font.mono
+                    ? Commons.Appearance.font.weightLight : Commons.Appearance.font.weightBold
             }
 
             // Close button

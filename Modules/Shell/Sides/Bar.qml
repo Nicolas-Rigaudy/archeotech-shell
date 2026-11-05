@@ -396,7 +396,7 @@ Item {
             // adds the zone dividers here; no separate plate (that inset gap/seam
             // is why the bar looked cut off from the screen edge).
             Repeater {                                  // zone dividers — recessed groove between two
-                model: bar._dividers                     // seams anchor the boxes (kept even with segments on)
+                model: Commons.Appearance.bar.grooves ? bar._dividers : []   // seams anchor the boxes (a pack may drop them: bar.grooves false)
                 delegate: Item {                         // full-height connector — same seam as before, now
                     x: modelData; y: 0; height: parent.height   // spanning top→bottom to connect the bar edges.
                     Rectangle { x: 0; width: 1; height: parent.height; color: Qt.rgba(0, 0, 0, 0.55) }
