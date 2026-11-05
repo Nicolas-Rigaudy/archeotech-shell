@@ -47,6 +47,8 @@ them.** A pack declares the minimum contract it needs via `minShellVersion` in
 `pack.json`; if the running shell is older, its delegates are ignored (base
 visuals stand) and a warning is logged. `Appearance.shellVersion` is the current
 version.
+The FrameStyle, ScreenEffects, CardHeader, SegmentedControl, RowSelection and
+StripButton seams, and BarSegment's `cluster`/`vertical`, need `0.4.0`.
 
 ## Delegate skeleton
 

@@ -585,7 +585,7 @@ QtObject {
     // ── Component style delegates (adr_027 Layer C) ──────────────────────────────
     // Current shell version, checked against a pack's minShellVersion before its
     // style delegates are honoured (the delegate prop contract is versioned).
-    readonly property string shellVersion: "0.3.0"
+    readonly property string shellVersion: "0.4.0"
     // Component ids the active pack ships a style delegate for, pushed from
     // shell.qml (PackRegistry, minShellVersion-gated — Commons can't import a
     // Service). A StyleDelegate loads `<packDir>/styles/<id>.qml` for these.
