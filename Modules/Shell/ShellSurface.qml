@@ -192,6 +192,7 @@ Variants {
                 "cornerRadius": _frameBg.cornerR,
                 "framePath":    _frameBg.pathData,
                 "chamfer":      Commons.Appearance.frameChamfer,
+                "gap":          ShellServices.ShellConfig.outerGap(),
                 "bands": {
                     "top":    _frameBg.contentRect.y,
                     "bottom": _frameBg.height - _frameBg.contentRect.y - _frameBg.contentRect.height,

@@ -22,8 +22,24 @@ Item {
 
     PanelShadow { side: "top"; perpInset: surf.r; cornerRadius: surf.rb }
 
+    // Pack style seam (adr_027 Layer C): a `PopupSurface` delegate draws the
+    // card body instead of the neck gradient and collar. Geometry as for the
+    // base: the body spans x r..bw+r, the top edge meets the bar.
+    StyleDelegate {
+        id: _style
+        anchors.fill: parent
+        componentId: "PopupSurface"
+        api: !Commons.Appearance.hasStyle("PopupSurface") ? ({}) : ({
+            "r":       surf.r,
+            "rb":      surf.rb,
+            "bw":      surf.bw,
+            "palette": Commons.Appearance.colors
+        })
+    }
+
     Shape {
         anchors.fill: parent
+        visible: !_style.active
         layer.enabled: true
         layer.samples: Commons.Appearance.crispEdges ? 0 : 8
 
@@ -57,7 +73,7 @@ Item {
 
     ConsoleChrome {                              // bolted-collar connection to the bar
         anchors.fill: parent
-        visible: surf._rec.collar
+        visible: surf._rec.collar && !_style.active
         attachSide: "top"; showTrim: false; showGussets: false
         radius: surf.rb
     }

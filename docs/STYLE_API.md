@@ -149,6 +149,7 @@ some alpha where blur should show.
 | `cornerRadius` | real | the hole's corner radius |
 | `framePath` | string | SVG path of the frame shape (outer rect minus the hole), for a `PathSvg` |
 | `chamfer` | bool | the pack cuts corners at 45° (`frame.corners: "chamfer"`) |
+| `gap` | real | px between `contentRect` and the windows (`outerGap`); a corner cut or ornament inside the hole stays under `2 * gap` or it crosses a window corner |
 | `bands` | object | `{ top, bottom, left, right }`: band thickness in px |
 | `screenName` | string | output name |
 | `palette` / `steel` | object | `Appearance.colors` / `Appearance.steel` |
@@ -297,6 +298,19 @@ in the mono face).
 |-------|------|---------|
 | `urgency` | int | 0 low, 1 normal, 2 critical |
 | `font` | object | `Appearance.font` |
+| `palette` | object | `Appearance.colors` |
+
+### `PopupSurface`
+Body of a bar popup card (hover cards, wifi, bluetooth, calendar). The host keeps
+the lift shadow and drops its neck-shaped gradient body and bolted collar while
+the delegate is active. The card's body spans x `r` to `bw + r`; its top edge
+meets the bar. Content sits on top, so the delegate draws chrome only.
+
+| field | type | meaning |
+|-------|------|---------|
+| `r` | real | neck arc radius (the body's left inset) |
+| `rb` | real | base radius of the body's bottom corners |
+| `bw` | real | body width |
 | `palette` | object | `Appearance.colors` |
 
 _(More components (BarPill, PanelShadow, a form Row) are added here as they gain

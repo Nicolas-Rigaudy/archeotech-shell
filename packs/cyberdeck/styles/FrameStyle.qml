@@ -17,7 +17,11 @@ Item {
     readonly property rect _r: api.contentRect || Qt.rect(0, 0, 0, 0)
     readonly property color _line: _p ? Qt.lighter(_p.surface2, 1.45) : "transparent"
     readonly property color _red:  _p ? _p.red : "transparent"
-    readonly property int  _cut: 26
+    // Corner cut: the fill's chamfer leg (api.cornerRadius), clamped so the
+    // diagonal stays inside the window gap (a window corner sits `gap` px in on
+    // both axes, so the line reaches it at cut == 2*gap).
+    readonly property real _cut: Math.max(0, Math.min(api.cornerRadius ?? 10,
+                                                      2 * (api.gap ?? 6) - 2))
 
     // Band body: the frame shape (outer rect minus the hole).
     Shape {
