@@ -346,18 +346,11 @@ Item {
         }
         readonly property real _winH: strip.screen ? strip.screen.height : strip.height
 
-        // Flat welded-steel popup (Grimdark / chamfer pack): the panel reads
-        // as a machined instrument plate — a LOCAL top-lit steel gradient (each
-        // popup its own plate, not screen-mapped) + a teal live-edge tracing the
-        // whole outline (the open popup is THE live element, so teal is licensed
-        // here per the pack rules). Base/glass packs keep the screen-mapped
-        // liquid-glass sheen untouched.
-        readonly property bool  _steel:    Commons.Appearance.platedChrome
-        readonly property color _fillTop:  _steel ? Commons.Appearance.steel.hi : Commons.Appearance.colors.glassSheenTop
-        readonly property color _fillMid:  _steel ? Commons.Appearance.steel.md : Commons.Appearance.colors.glassSheenTop
-        readonly property color _fillBot:  _steel ? Commons.Appearance.steel.lo : Commons.Appearance.colors.glassSheenBot
-        readonly property color _liveEdge: Qt.rgba(Commons.Appearance.colors.teal.r, Commons.Appearance.colors.teal.g,
-                                                   Commons.Appearance.colors.teal.b, 0.42)
+        // Fill + outline from the pack's `surfaces.panel` recipe: glass packs use
+        // the screen-mapped liquid sheen; a "local" recipe (Grimdark steel) makes
+        // each popup its own top-lit plate.
+        readonly property var  _rec:   Commons.Appearance.panelSurface
+        readonly property bool _local: _rec.sheen === "local"
 
         readonly property var _p: {
             const W = width, H = height, r = _r, rb = _rb
@@ -394,18 +387,14 @@ Item {
             // within the card (which caused a colour seam where a popup meets the
             // strip). strip fills the surface, so strip.height == screen height.
             fillGradient: LinearGradient {
-                // Steel: local top-lit (0→H) so each popup is its own plate.
-                // Glass: screen-space mapped (continues the frame's light source).
-                x1: 0; y1: card._steel ? 0 : -card._winY
-                x2: 0; y2: card._steel ? card.height : (card._winH - card._winY)
-                GradientStop { position: 0.0; color: card._fillTop }
-                GradientStop { position: card._steel ? 0.30 : 1.0; color: card._steel ? card._fillMid : card._fillBot }
-                GradientStop { position: 1.0; color: card._fillBot }
+                x1: 0; y1: card._local ? 0 : -card._winY
+                x2: 0; y2: card._local ? card.height : (card._winH - card._winY)
+                GradientStop { position: card._rec.stops[0][0]; color: Commons.Appearance._surfaceColor(card._rec.stops[0][1]) }
+                GradientStop { position: card._rec.stops[1][0]; color: Commons.Appearance._surfaceColor(card._rec.stops[1][1]) }
+                GradientStop { position: card._rec.stops[2][0]; color: Commons.Appearance._surfaceColor(card._rec.stops[2][1]) }
             }
-            // Dark seat under the copper trim (teal pulled back to a content
-            // pinpoint — the console hardware is drawn by ConsoleChrome below).
-            strokeWidth: card._steel ? 1 : 0
-            strokeColor: card._steel ? Commons.Appearance.steel.edge : "transparent"
+            strokeWidth: card._rec.strokeWidth
+            strokeColor: Commons.Appearance._surfaceColor(card._rec.strokeColor)
 
             startX: card._p[0].x
             startY: card._p[0].y
@@ -521,15 +510,11 @@ Item {
             }
         }
 
-        // ── Bolted-console hardware (Grimdark) — copper trim + gussets +
-        // a bolted collar on the strip-attached edge. Decorative only (no
-        // MouseArea → never eats icon/content hover). Steel packs only.
-        // Bolted-console hardware — copper trim + far-corner gussets + a bolted
-        // collar (shoulder cleats at the ends of the strip-attached edge, clear of
-        // the centred icon rail). Decorative (no MouseArea → never eats hover).
+        // Console hardware from a pack `ConsoleChrome` style (Grimdark: copper
+        // trim, far-corner gussets, a collar on the strip-attached edge).
+        // Decorative (no MouseArea → never eats hover); empty without a style.
         ConsoleChrome {
             anchors.fill: parent
-            visible: card._steel
             attachSide: strip.side
             radius: strip._r
         }

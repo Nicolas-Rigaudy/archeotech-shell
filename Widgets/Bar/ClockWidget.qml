@@ -28,11 +28,11 @@ Item {
     }
 
     visible: holderRoot
-    // Bolted console segment (steel pack, horizontal bar) — the centre gauge in its
-    // own panel; pad the readout balanced inside, clear of the end rivets.
+    // Console segment (pack BarSegment style, horizontal bar): the centre gauge in
+    // its own panel; pad the readout balanced inside the housing.
     readonly property bool _seg: _horizontal && holderRoot._consoleOn === true
-        && Commons.Appearance.platedChrome
-    readonly property int _pad: _seg ? 26 : 0
+        && Commons.Appearance.hasStyle("BarSegment")
+    readonly property int _pad: _seg ? Commons.Appearance.segmentPad("clock", 26) : 0
     implicitWidth:  _horizontal ? centerClock.implicitWidth + 2 * _pad : (holderRoot ? holderRoot.thickness : 30)
     implicitHeight: _horizontal ? Commons.Appearance.bar.height : vClock.implicitHeight
 

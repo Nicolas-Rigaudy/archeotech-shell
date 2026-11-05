@@ -1,51 +1,24 @@
 import QtQuick
 import ".." as Commons
 
-// Bar-cluster housing (Grimdark console language) — the approved media-readout
-// look, single-sourced so every bar cluster matches: a soft chamfered recessed
-// steel plate (no raised top-light + faint seat, so it delineates without popping
-// off the bar face) with ONE domed copper rivet per side, vertically centred,
-// bolting it on. Pack-gated via Appearance.platedChrome; zero-cost on base/glass
-// packs. Drop in behind a cluster's content with `anchors.fill: parent` (z below
-// the content); the host pads its content so the readout sits balanced between the
-// rivets.
-Item {
+// Bar-cluster housing: a plate behind one bar cluster (workspaces, title, media,
+// clock, the right status bank) so the bar reads as separate instrument
+// segments. Core has no visual of its own: a pack draws it with a `BarSegment`
+// style delegate (Grimdark: a recessed steel plate bolted on with one rivet per
+// side). Bar layouts make room for it only while Appearance.hasStyle("BarSegment"),
+// padding their content by Appearance.segmentPad(<cluster>). Drop in behind a
+// cluster's content with `anchors.fill: parent` (z below the content).
+StyleDelegate {
     id: seg
+    componentId: "BarSegment"
     property int chamfer: 6
-    readonly property bool _on: Commons.Appearance.platedChrome
-    readonly property string _pack:  Commons.Appearance.activePackDir
-    readonly property string _rivet: _pack === "" ? "" : "file://" + _pack + "panels/rivet.png"
-
-    // Vertical inset from the holder edges (the plate's top/bottom margin). Small,
-    // so the box is tall within the 30px bar and the content (icons ≈18px, clock
-    // text) keeps real vertical breathing room inside it.
+    // Vertical inset from the holder edges (the plate's top/bottom margin).
     property int vMargin: 2
-    MetalSurface {
-        id: plate
-        anchors.fill: parent
-        anchors.topMargin: seg.vMargin
-        anchors.bottomMargin: seg.vMargin
-        anchors.leftMargin: 2
-        anchors.rightMargin: 2
-        visible: seg._on
-        chamfer: seg.chamfer
-        // Subtle framing: no raised top-light, faint seat — a segment on the bar
-        // face, not a card that pops off it. The brass hairline does the delineating.
-        topLit: false
-        seatOpacity: 0.35
-    }
 
-    // One domed copper rivet per side, vertically centred — bolts the housing on.
-    Repeater {
-        model: (seg._on && seg._rivet !== "") ? ["left", "right"] : []
-        delegate: Image {
-            required property var modelData
-            z: 1
-            source: seg._rivet
-            width: 6; height: 6; sourceSize: Qt.size(12, 12); smooth: true
-            x: modelData === "left" ? plate.x + 4
-                                    : plate.x + plate.width - width - 4
-            y: plate.y + (plate.height - height) / 2
-        }
-    }
+    api: ({
+        "chamfer": seg.chamfer,
+        "vMargin": seg.vMargin,
+        "palette": Commons.Appearance.colors,
+        "steel":   Commons.Appearance.steel
+    })
 }

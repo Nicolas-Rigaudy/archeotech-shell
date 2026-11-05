@@ -43,9 +43,9 @@ ToolTip {
             chamfer: 4
             crisp: Commons.Appearance.crispEdges
         }
-        Rectangle {               // glass rim (the steel plate draws its own seat)
+        Rectangle {               // glass rim (a pack-styled surface draws its own seat)
             anchors.fill: parent
-            visible: !Commons.Appearance.platedChrome
+            visible: !surface.styled
             radius: surface.radius
             antialiasing: !Commons.Appearance.crispEdges
             color: "transparent"

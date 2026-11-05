@@ -41,45 +41,41 @@ Item {
     Keys.onDownPressed:  if (enabled && _v)  _step(1)
     implicitHeight: _v ? 30 * Math.max(1, model.length) : 30
 
-    // Steel pack (Grimdark): the selected pill is a raised machined-steel key
-    // edged with the teal live-line (the "cyan pinpoint = this is live"), not a
-    // copper wash. Base packs keep the accent pill.
-    readonly property bool _steel: Commons.Appearance.platedChrome
-    readonly property color _teal: Commons.Appearance.colors.teal
-
-    readonly property color _cu: Commons.Appearance.colors.peach
+    // Track + key look from the pack's `surfaces.selector` recipe (Grimdark: a
+    // recessed machined slot with a square-cut steel key and a lit-copper edge;
+    // base packs: the soft sunk track and the accent pill).
+    readonly property var _rec: Commons.Appearance.selectorSurface
+    function _col(c) { return Commons.Appearance._surfaceColor(c) }
 
     Rectangle {
         id: track
         anchors.fill: parent
-        // Steel: a recessed machined slot — dark seat, square-ish corners, copper
-        // hairline frame. Base packs keep the soft sunk rounded track.
-        radius: root._steel ? 1 : Commons.Appearance.radius.base
-        color: root._steel ? Qt.rgba(0, 0, 0, 0.5) : Commons.Appearance.colors.recessedTrack
-        border.width: root._steel ? 1 : 0
-        border.color: root._steel ? Qt.rgba(root._cu.r, root._cu.g, root._cu.b, 0.35) : "transparent"
+        radius: root._rec.trackRadius >= 0 ? root._rec.trackRadius : Commons.Appearance.radius.base
+        color: root._col(root._rec.trackColor)
+        border.width: root._rec.trackBorderWidth
+        border.color: root._col(root._rec.trackBorderColor)
         readonly property real _segW: root.model.length > 0 ? (root._v ? height : width) / root.model.length : (root._v ? height : width)
 
         // top inner shadow line → reads as recessed into the plate (not a flat box)
         Rectangle {
-            visible: root._steel
+            visible: root._rec.innerShadow
             anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 2; rightMargin: 2; topMargin: 1 }
             height: 1; color: Qt.rgba(0, 0, 0, 0.55)
         }
 
-        RectangularShadow {                 // soft drop shadow — base packs only (reads "modern" on steel)
+        RectangularShadow {                 // soft drop shadow under the key
             anchors.fill: pill
-            visible: root.model.length > 0 && !root._steel
+            visible: root.model.length > 0 && root._rec.keyShadow === "soft"
             radius: pill.radius
             blur:   Commons.Appearance.elevation.e2.blur
             offset: Qt.vector2d(0, Commons.Appearance.elevation.e2.y)
             spread: Commons.Appearance.elevation.e2.spread
             color:  Commons.Appearance.elevation.e2.color
         }
-        Rectangle {                         // hard dark seat under the key — machined depth, not a soft glow
-            visible: root._steel && root.model.length > 0
+        Rectangle {                         // hard seat under the key: machined depth, not a soft glow
+            visible: root.model.length > 0 && root._rec.keyShadow === "seat"
             x: pill.x; y: pill.y + 1.5; width: pill.width; height: pill.height
-            radius: pill.radius; color: Commons.Appearance.steel.edge
+            radius: pill.radius; color: root._col(root._rec.seatColor)
         }
         Rectangle {
             id: pill
@@ -88,17 +84,21 @@ Item {
             height: root._v ? track._segW - 8 : track.height - 8
             x: root._v ? 4 : root.currentIndex * track._segW + 4
             y: root._v ? root.currentIndex * track._segW + 4 : 4
-            // Square-cut machined key on steel; rounded pill on base packs.
-            radius: root._steel ? 1 : track.radius - 3
-            border.width: root._steel ? 1.2 : 0
-            // Selected key = lit copper edge (the register metal). Teal dropped — read too modern.
-            border.color: root._steel ? Qt.lighter(Commons.Appearance.colors.accent, 1.25) : "transparent"
+            radius: root._rec.keyRadius >= 0 ? root._rec.keyRadius : track.radius - 3
+            border.width: root._rec.keyBorderWidth
+            border.color: root._col(root._rec.keyBorderColor)
+            readonly property var _stops: root._rec.keyStops
+            readonly property bool _sheen: _stops.length < 3
             gradient: Gradient {
-                GradientStop { position: 0.0; color: root._steel ? Qt.lighter(Commons.Appearance.steel.hi, 1.18)
-                                                                  : Commons.Appearance.sheenHi(Commons.Appearance.colors.accent, Commons.Appearance.sheen.control.hi) }
-                GradientStop { position: 0.5; color: root._steel ? Commons.Appearance.steel.md : Commons.Appearance.sheenHi(Commons.Appearance.colors.accent, Commons.Appearance.sheen.control.hi) }
-                GradientStop { position: 1.0; color: root._steel ? Commons.Appearance.steel.lo
-                                                                  : Commons.Appearance.sheenLo(Commons.Appearance.colors.accent, Commons.Appearance.sheen.control.lo) }
+                GradientStop { position: pill._sheen ? 0.0 : pill._stops[0][0]
+                               color: pill._sheen ? Commons.Appearance.sheenHi(Commons.Appearance.colors.accent, Commons.Appearance.sheen.control.hi)
+                                                  : root._col(pill._stops[0][1]) }
+                GradientStop { position: pill._sheen ? 0.5 : pill._stops[1][0]
+                               color: pill._sheen ? Commons.Appearance.sheenHi(Commons.Appearance.colors.accent, Commons.Appearance.sheen.control.hi)
+                                                  : root._col(pill._stops[1][1]) }
+                GradientStop { position: pill._sheen ? 1.0 : pill._stops[2][0]
+                               color: pill._sheen ? Commons.Appearance.sheenLo(Commons.Appearance.colors.accent, Commons.Appearance.sheen.control.lo)
+                                                  : root._col(pill._stops[2][1]) }
             }
             Behavior on x { Commons.Tween { spatial: true; time: Commons.Appearance.anim.base } }
             Behavior on y { Commons.Tween { spatial: true; time: Commons.Appearance.anim.base } }
@@ -130,7 +130,7 @@ Item {
                     Text {
                         visible: !!seg.modelData.glyph
                         text: seg.modelData.glyph || ""
-                        color: seg._on ? (root._steel ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.base)
+                        color: seg._on ? root._col(root._rec.keyText)
                                        : Commons.Appearance.colors.textSecondary
                         font.pixelSize: Commons.Appearance.font.sizeLg; font.family: Commons.Appearance.font.family
                         anchors.verticalCenter: parent.verticalCenter
@@ -139,7 +139,7 @@ Item {
                     Text {
                         visible: !root.iconOnly && !!seg.modelData.label
                         text: seg.modelData.label || ""
-                        color: seg._on ? (root._steel ? Commons.Appearance.colors.textPrimary : Commons.Appearance.colors.base)
+                        color: seg._on ? root._col(root._rec.keyText)
                                        : Commons.Appearance.colors.textSecondary
                         font.pixelSize: Commons.Appearance.font.sizeBase
                         font.family: Commons.Appearance.font.family

@@ -75,7 +75,54 @@ The set is intentionally small; entries are added as real packs need them.
 | `pressed` | bool | pointer down |
 | `text` | string | the button label (already drawn by the base content layer) |
 | `radius` | int | the base corner radius token |
-| `colors` | object | `{ accent, surface, border, text, base }` — live theme colours |
+| `colors` | object | `{ accent, surface, border, text, base, teal, steelHi, steelMd, steelLo, steelEdge, steelLip, chamfer }`: live theme colours, the plate tones, and whether the pack cuts chamfered corners (`frame.corners`) |
 
-_(More components — DashCard, SegmentedControl, BarPill, PanelShadow, a form Row
-— are added here as they gain delegate seams.)_
+Every delegate below also receives `palette` (the live `Appearance.colors`
+object: read `api.palette.peach`, `api.palette.copperLit`, …) and `steel` (the
+stable chassis ramp `Appearance.steel`: `hi md lo edge lip`, set by the pack's
+`panels.steel`, so any pack can define its own plate tones there). Read them through
+a guard (`api.palette ? api.palette.x : "transparent"`): `api` is `{}` for the
+first binding pass. A delegate may reuse a sibling delegate of the same pack
+(same directory), e.g. a `BarSegment` built from the pack's `MetalSurface`.
+
+### `MetalSurface`
+Card/panel/tooltip/tray-menu background. A loaded delegate replaces the whole
+visual; the host exposes `styled: true`, and hosts drop their own glass rim.
+
+| field | type | meaning |
+|-------|------|---------|
+| `radius` | real | host corner radius |
+| `chamfer` | int | corner cut the host asks for (clamp to half the smaller side) |
+| `seatOpacity` | real | weight of a recessed seat outline (0..1) |
+| `topLit` | bool | raised top highlight (false for flush bar housings) |
+| `crisp` | bool | no anti-aliasing (edge meets nothing under layer blur) |
+| `color` | color | the host's fallback fill |
+
+### `ConsoleChrome`
+Hardware drawn over popup and panel cards where they fasten to the bar/strip.
+Core draws nothing without a delegate.
+
+| field | type | meaning |
+|-------|------|---------|
+| `attachSide` | string | `top` `bottom` `left` `right`: the edge on the bar/strip |
+| `radius` | real | card corner radius |
+| `showCollar` / `showTrim` / `showGussets` | bool | which parts the host wants |
+| `inset` | real | trim inset from the card edge |
+| `specular` | real | `Appearance.opacity.specular` |
+
+### `BarSegment`
+Housing behind one bar cluster. Core draws nothing without a delegate, and bar
+layouts pad their clusters (`surfaces.segment.pad`) only when the pack ships one.
+
+| field | type | meaning |
+|-------|------|---------|
+| `chamfer` | int | corner cut |
+| `vMargin` | int | top/bottom inset from the bar edges |
+
+### `BarDivider`
+Hardware on the console's zone seams (`bar.dividers`). The core draws the groove;
+the delegate sits on the groove's x with the bar's height and zero width. No
+fields beyond the shared ones.
+
+_(More components (DashCard, SegmentedControl, BarPill, PanelShadow, a form Row)
+are added here as they gain delegate seams.)_

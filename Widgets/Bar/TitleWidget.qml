@@ -27,10 +27,10 @@ Item {
     visible: raw.length > 0 && holderRoot && holderRoot.horizontal
 
     readonly property bool _seg: holderRoot && holderRoot.horizontal
-        && holderRoot._consoleOn === true && Commons.Appearance.platedChrome
-    readonly property int _pad: _seg ? 14 : 0
+        && holderRoot._consoleOn === true && Commons.Appearance.hasStyle("BarSegment")
+    readonly property int _pad: _seg ? Commons.Appearance.segmentPad("title", 14) : 0
 
-    // Boxed on the steel pack → fill the bar height; else size to the text.
+    // Boxed in a segment → fill the bar height; else size to the text.
     implicitHeight: _seg ? Commons.Appearance.bar.height : label.implicitHeight
     // min(natural width, allowed width) — shrinks (and the Text elides) only
     // when the title would otherwise reach the clock. label.implicitWidth already

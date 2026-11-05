@@ -79,9 +79,9 @@ Item {
 
         RectangularShadow {
             anchors.fill: keyBg
-            // No soft glow on strip cells under the steel pack — it bleeds past the
-            // popup's console trim (reads as clipping) and is a "modern" tell.
-            visible: !(pill.showActiveBg && Commons.Appearance.platedChrome)
+            // A pack can drop the soft glow on strip cells (`surfaces.key.stripShadow`:
+            // under Grimdark it bleeds past the popup's console trim).
+            visible: !(pill.showActiveBg && !Commons.Appearance.keySurface.stripShadow)
             radius: keyBg.radius
             // Under layer blur the e2 shadow would bleed past the strip's edge, and
             // mango blurs every faint pixel at full strength (a hard band, adr_035):

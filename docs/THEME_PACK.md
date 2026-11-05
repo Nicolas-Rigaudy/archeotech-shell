@@ -106,6 +106,31 @@ Notes:
 - `anim`/`curve` keys retune motion shell-wide — every component reads these
   tokens, so a pack changes the whole shell's feel with no per-component work.
 
+## `tokens.json` — `surfaces` (per-role surface recipes)
+
+A recipe says HOW one surface role is drawn; core primitives read these values
+and never ask which pack is active (item_112). Every key is optional: unset keys
+keep the glass default. Colours are a palette/role name (`"accent"`,
+`"glassBorder"`, `"copperLit"`), a group token (`"steel.hi"`) or a literal
+(`"#05080d"`), with optional modifiers: `"accent+1.25"` = `Qt.lighter(accent, 1.25)`,
+`"steel.lo-1.5"` = `Qt.darker`, `"peach/0.32"` = that colour at alpha 0.32 (a
+trailing `+`/`-`/`/` and number is always read as a modifier).
+Gradient `stops` are three `[position, colour]` pairs.
+
+| role | drawn by | keys (default) |
+|------|----------|----------------|
+| `popup` | bar hover/click popups (PopupSurface) | `sheen` `"screen"` (screen-mapped glass) or `"local"` (each card its own plate), `stops` (glass sheen), `strokeWidth` 0, `strokeColor`, `collar` false (ConsoleChrome on the bar edge), `padTop` 0 |
+| `panel` | bar panel card + strip popup card | `sheen`, `stops`, `strokeWidth`, `strokeColor` (as popup) |
+| `selector` | SegmentedControl | `trackRadius` -1 (= `radius.base`), `trackColor` `"recessedTrack"`, `trackBorderWidth` 0, `trackBorderColor`, `innerShadow` false, `keyRadius` -1, `keyBorderWidth` 0, `keyBorderColor`, `keyStops` [] (= accent sheen), `keyShadow` `"soft"` or `"seat"`, `seatColor` `"crust"`, `keyText` `"base"` |
+| `choice` | theme family cards | `radius` -1 (= `radius.md`), `softShadow` true, `borderOn` 3, `borderOff` 1, `borderOnColor` `"accent"`, `borderOffColor` `"glassBorder"`, `stops` [] (= card sheen) |
+| `key` | raised key behind strip icons (BarPill) | `stripShadow` true |
+| `button` | GlassButton | `activeText` `"base"` (label on an active button), `chamfer` false (handed to a GlassButton delegate as `api.colors.chamfer`) |
+| `segment` | bar clusters housed in a `BarSegment` style | `pad: { clock, title, workspaces, mediaLead, mediaTail, bank }` (26, 14, 16, 4, 16, 10) |
+
+Structure beyond values (a steel plate, bolted hardware, rivets) is a style
+delegate, not a recipe: see Layer C below. `fx.rails.cornerPlates: true` adds
+the raised steel corner plates to a pack that draws frame rails.
+
 ## `tokens.json` — `fx` (Layer B decorator/FX)
 
 Optional ADDITIVE overlays drawn once over the frame chrome (never per-widget).

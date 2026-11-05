@@ -95,7 +95,7 @@ Item {
                 "steelLo":   Commons.Appearance.steel.lo,
                 "steelEdge": Commons.Appearance.steel.edge,
                 "steelLip":  Commons.Appearance.steel.lip,
-                "chamfer":   Commons.Appearance.platedChrome
+                "chamfer":   Commons.Appearance.buttonSurface.chamfer
             }
         })
     }
@@ -111,10 +111,10 @@ Item {
         visible: btn.text !== ""
         anchors.centerIn: parent
         text: btn.text
-        // Active text: dark `base` reads on the base accent fill, but the steel
-        // pack's active chrome is dark steel + a teal edge → use light text there.
-        color: btn.active ? (Commons.Appearance.platedChrome ? Commons.Appearance.colors.textPrimary
-                                                             : Commons.Appearance.colors.base)
+        // Active text: dark `base` reads on the base accent fill; a pack whose
+        // active chrome is dark (Grimdark steel) names a light role in its
+        // `surfaces.button.activeText` recipe.
+        color: btn.active ? Commons.Appearance._surfaceColor(Commons.Appearance.buttonSurface.activeText)
                           : Commons.Appearance.colors.textSecondary
         font.pixelSize: Commons.Appearance.font.sizeSm
         font.family: Commons.Appearance.font.family

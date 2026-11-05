@@ -260,10 +260,9 @@ Item {
     // at the boundaries between the functional zones (left cluster | centre gauge
     // | right bank). Empty unless the pack sets bar.dividers.
     readonly property bool _consoleOn: Commons.Appearance.bar.dividers && bar.horizontal
-    // Steel pack: the console is expressed as per-cluster bolted BarSegments
-    // (workspaces / media / clock, + the right status bank below), so the old
-    // standalone seam dividers are suppressed — the panels do the dividing.
-    readonly property bool _segmentsActive: _consoleOn && Commons.Appearance.platedChrome
+    // Pack BarSegment style: the console is expressed as per-cluster segments
+    // (workspaces / media / clock, + the right status bank below).
+    readonly property bool _segmentsActive: _consoleOn && Commons.Appearance.hasStyle("BarSegment")
     readonly property real _consoleInset: Commons.Appearance.bar.innerPadding + 12
     // Two fixed full-height seams splitting the bar into three sections. Anchored
     // to the bar centre (± _seamHalf), so they never move as content resizes.
@@ -381,10 +380,9 @@ Item {
         }
 
         // ── Console instrument panel (pack console, item_083) ───────────────────
-        // The WHOLE top bar is one recessed steel instrument panel (Legion
-        // register): a single console face spanning the bar, copper corner-bolt
-        // fittings, and vertical seam dividers (bevel groove + bolt-pair) at the
-        // boundaries between the functional zones — NOT three floating boxes.
+        // The WHOLE top bar is one instrument panel: a single console face
+        // spanning the bar and vertical seam dividers (bevel groove + optional
+        // pack hardware) at the boundaries between the functional zones.
         // z:-1 keeps it behind the widgets, which sit in it as readouts. Base
         // look: dividers=false → _consoleOn false → nothing drawn.
         Item {
@@ -392,8 +390,6 @@ Item {
             visible: bar._consoleOn
             z: -1
             anchors.fill: parent
-            readonly property string _pack:  Commons.Appearance.activePackDir
-            readonly property string _rivet: _pack === "" ? "" : "file://" + _pack + "panels/rivet.png"
 
             // The bar FACE is drawn by FrameFx as the top band of the one brushed
             // chassis (full width, behind these widgets) — so the bar itself only
@@ -405,14 +401,12 @@ Item {
                     x: modelData; y: 0; height: parent.height   // spanning top→bottom to connect the bar edges.
                     Rectangle { x: 0; width: 1; height: parent.height; color: Qt.rgba(0, 0, 0, 0.55) }
                     Rectangle { x: 1; width: 1; height: parent.height; color: Qt.rgba(1, 1, 1, 0.06) }
-                    // rivets inset from the bar edges so they clear the frame bezel
-                    // (the groove still runs edge-to-edge). 4px top/bottom.
-                    // left-plate rivets
-                    Image { source: _console._rivet; width: 7; height: 7; sourceSize: Qt.size(14, 14); smooth: true; x: -9; y: 4 }
-                    Image { source: _console._rivet; width: 7; height: 7; sourceSize: Qt.size(14, 14); smooth: true; x: -9; y: parent.height - 11 }
-                    // right-plate rivets
-                    Image { source: _console._rivet; width: 7; height: 7; sourceSize: Qt.size(14, 14); smooth: true; x: 3; y: 4 }
-                    Image { source: _console._rivet; width: 7; height: 7; sourceSize: Qt.size(14, 14); smooth: true; x: 3; y: parent.height - 11 }
+                    // Seam hardware (Grimdark: a rivet pair either side) from a
+                    // pack `BarDivider` style; nothing without one.
+                    Prim.StyleDelegate {
+                        anchors.fill: parent
+                        componentId: "BarDivider"
+                    }
                 }
             }
 
@@ -424,8 +418,9 @@ Item {
                 visible: bar._segmentsActive && _rightGroup.width > 4
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                x: pill.width - bar._consoleInset - _rightGroup.width - 10
-                width: _rightGroup.width + 20
+                readonly property real _pad: Commons.Appearance.segmentPad("bank", 10)
+                x: pill.width - bar._consoleInset - _rightGroup.width - _pad
+                width: _rightGroup.width + 2 * _pad
             }
         }
 

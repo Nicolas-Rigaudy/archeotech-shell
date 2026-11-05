@@ -134,19 +134,21 @@ Item {
             ]
         }
 
-        // Steel pack: local top-lit steel plate (matches the strip popups + frame);
-        // glass packs keep the screen-mapped liquid sheen.
-        readonly property bool _steel: Commons.Appearance.platedChrome
+        // Fill + outline from the pack's `surfaces.panel` recipe (shared with the
+        // strip popups): glass packs use the screen-mapped liquid sheen; a "local"
+        // recipe (Grimdark steel) makes the card its own top-lit plate.
+        readonly property var  _rec:   Commons.Appearance.panelSurface
+        readonly property bool _local: _rec.sheen === "local"
         ShapePath {
             fillGradient: LinearGradient {
-                x1: 0; y1: card._steel ? 0 : -root._winY
-                x2: 0; y2: card._steel ? card.height : (root._winH - root._winY)
-                GradientStop { position: 0.0; color: card._steel ? Commons.Appearance.steel.hi : Commons.Appearance.colors.glassSheenTop }
-                GradientStop { position: card._steel ? 0.30 : 1.0; color: card._steel ? Commons.Appearance.steel.md : Commons.Appearance.colors.glassSheenBot }
-                GradientStop { position: 1.0; color: card._steel ? Commons.Appearance.steel.lo : Commons.Appearance.colors.glassSheenBot }
+                x1: 0; y1: card._local ? 0 : -root._winY
+                x2: 0; y2: card._local ? card.height : (root._winH - root._winY)
+                GradientStop { position: card._rec.stops[0][0]; color: Commons.Appearance._surfaceColor(card._rec.stops[0][1]) }
+                GradientStop { position: card._rec.stops[1][0]; color: Commons.Appearance._surfaceColor(card._rec.stops[1][1]) }
+                GradientStop { position: card._rec.stops[2][0]; color: Commons.Appearance._surfaceColor(card._rec.stops[2][1]) }
             }
-            strokeWidth: card._steel ? 1 : 0
-            strokeColor: card._steel ? Commons.Appearance.steel.edge : "transparent"
+            strokeWidth: card._rec.strokeWidth
+            strokeColor: Commons.Appearance._surfaceColor(card._rec.strokeColor)
             startX: card._p[0].x
             startY: card._p[0].y
             PathLine { x: card._p[1].x; y: card._p[1].y }
@@ -173,10 +175,10 @@ Item {
         panelRoot:  root
     }
 
-    // Bolted-console hardware — trim + gussets + a bolted collar on the bar edge.
+    // Console hardware from a pack `ConsoleChrome` style (trim, gussets, a collar
+    // on the bar edge); empty without one.
     ConsoleChrome {
         anchors.fill: parent
-        visible: Commons.Appearance.platedChrome
         attachSide: root._side ? root._side : "top"
         radius: root._r
     }

@@ -15,11 +15,11 @@ Item {
 
     readonly property bool _horizontal: holderRoot && holderRoot.horizontal
     visible: holderRoot
-    // Bolted console segment (steel pack, horizontal bar) — pad the dot grid so it
-    // sits balanced inside the housing, clear of the end rivets.
+    // Console segment (pack BarSegment style, horizontal bar): pad the dot grid so
+    // it sits balanced inside the housing.
     readonly property bool _seg: _horizontal && holderRoot._consoleOn === true
-        && Commons.Appearance.platedChrome
-    readonly property int _pad: _seg ? 16 : 0
+        && Commons.Appearance.hasStyle("BarSegment")
+    readonly property int _pad: _seg ? Commons.Appearance.segmentPad("workspaces", 16) : 0
     implicitWidth:  grid.implicitWidth + 2 * _pad
     // Fill the bar height on a horizontal bar so the housing is a real box around
     // the dots (was grid height ≈ 8px → a sliver clipped behind the pills).

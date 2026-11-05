@@ -434,14 +434,6 @@ QtObject {
     readonly property bool frameChamfer: !!(root._mergedPack && root._mergedPack.frame
                                             && root._mergedPack.frame.corners === "chamfer")
 
-    // Plated chrome (machined-plate surfaces: steel gradients, bolted collars, copper
-    // trim). Declared by the pack as `surfaces.plated`, independent of corner
-    // geometry above, so a pack can cut chamfered corners without plated chrome and
-    // the reverse. Primitives that draw a plated look read this, never the corner
-    // style (item_112; per-role recipes below replace it role by role).
-    readonly property bool platedChrome: !!(root._mergedPack && root._mergedPack.surfaces
-                                            && root._mergedPack.surfaces.plated === true)
-
     // Decorator/FX block from the active pack (adr_027 Wave 2). Consumed by the
     // FrameFx overlay: { glow{}, brackets{}, texture{} }, each optional. Empty
     // object when no pack (or no fx) — the base look stays untouched. Re-evaluates
@@ -491,12 +483,20 @@ QtObject {
     // A recipe says HOW a surface role is drawn, so primitives read values instead
     // of asking "is this the steel pack". A pack overrides a role with
     // `surfaces.<role>` in its tokens.json; unset keys fall back to the glass
-    // default. Colours are role names ("steel.hi", "copperLit", any colors key) or
-    // literal colours. Roles so far: popup (bar hover/click popups).
-    //   popup: { sheen: "screen"|"local", stops: [[pos, colour] x3],
-    //            strokeWidth, strokeColor, collar (bolted neck), padTop }
+    // default (docs/THEME_PACK.md lists the roles and keys).
+    // Colours are role names ("steel.hi", "copperLit", any colors key) or literal
+    // colours, with optional modifiers: "accent+1.25" = Qt.lighter(accent, 1.25),
+    // "steel.lo-1.5" = Qt.darker, "peach/0.32" = that colour at alpha 0.32.
     function _surfaceColor(c) {
         if (typeof c !== "string") return c
+        var m = /^(.*?)([+\-\/])([0-9.]+)$/.exec(c)
+        if (m && m[1] !== "") {
+            var b = root._surfaceColor(m[1]), f = parseFloat(m[3])
+            if (m[2] === "+") return Qt.lighter(b, f)
+            if (m[2] === "-") return Qt.darker(b, f)
+            var q = Qt.color(b)
+            return Qt.rgba(q.r, q.g, q.b, f)
+        }
         var d = c.indexOf(".")
         if (d > 0) {
             var grp = root[c.substring(0, d)]
@@ -510,14 +510,66 @@ QtObject {
             return p.surfaces[role][key]
         return fallback
     }
+    readonly property var _glassStops: [[0.0, "glassSheenTop"], [1.0, "glassSheenBot"], [1.0, "glassSheenBot"]]
+    // popup: bar hover/click popups (PopupSurface).
     readonly property QtObject popupSurface: QtObject {
         readonly property string sheen:       root._surfaceTok("popup", "sheen", "screen")
-        readonly property var    stops:       root._surfaceTok("popup", "stops",
-                                                  [[0.0, "glassSheenTop"], [1.0, "glassSheenBot"], [1.0, "glassSheenBot"]])
+        readonly property var    stops:       root._surfaceTok("popup", "stops", root._glassStops)
         readonly property real   strokeWidth: root._surfaceTok("popup", "strokeWidth", 0)
         readonly property string strokeColor: root._surfaceTok("popup", "strokeColor", "transparent")
         readonly property bool   collar:      root._surfaceTok("popup", "collar", false)
         readonly property real   padTop:      root._surfaceTok("popup", "padTop", 0)
+    }
+    // panel: the bar panel card and the strip popup card (same keys as popup).
+    readonly property QtObject panelSurface: QtObject {
+        readonly property string sheen:       root._surfaceTok("panel", "sheen", "screen")
+        readonly property var    stops:       root._surfaceTok("panel", "stops", root._glassStops)
+        readonly property real   strokeWidth: root._surfaceTok("panel", "strokeWidth", 0)
+        readonly property string strokeColor: root._surfaceTok("panel", "strokeColor", "transparent")
+    }
+    // selector: SegmentedControl track (recessed slot) and its sliding key.
+    // radius -1 = the base token; keyStops [] = the accent sheen; keyShadow
+    // "soft" (e2 drop shadow) | "seat" (hard offset seat in seatColor).
+    readonly property QtObject selectorSurface: QtObject {
+        readonly property real   trackRadius:      root._surfaceTok("selector", "trackRadius", -1)
+        readonly property string trackColor:       root._surfaceTok("selector", "trackColor", "recessedTrack")
+        readonly property real   trackBorderWidth: root._surfaceTok("selector", "trackBorderWidth", 0)
+        readonly property string trackBorderColor: root._surfaceTok("selector", "trackBorderColor", "transparent")
+        readonly property bool   innerShadow:      root._surfaceTok("selector", "innerShadow", false)
+        readonly property real   keyRadius:        root._surfaceTok("selector", "keyRadius", -1)
+        readonly property real   keyBorderWidth:   root._surfaceTok("selector", "keyBorderWidth", 0)
+        readonly property string keyBorderColor:   root._surfaceTok("selector", "keyBorderColor", "transparent")
+        readonly property var    keyStops:         root._surfaceTok("selector", "keyStops", [])
+        readonly property string keyShadow:        root._surfaceTok("selector", "keyShadow", "soft")
+        readonly property string seatColor:        root._surfaceTok("selector", "seatColor", "crust")
+        readonly property string keyText:          root._surfaceTok("selector", "keyText", "base")
+    }
+    // choice: a pickable card (theme family cards). stops [] = the card sheen.
+    readonly property QtObject choiceSurface: QtObject {
+        readonly property real   radius:         root._surfaceTok("choice", "radius", -1)
+        readonly property bool   softShadow:     root._surfaceTok("choice", "softShadow", true)
+        readonly property real   borderOn:       root._surfaceTok("choice", "borderOn", 3)
+        readonly property real   borderOff:      root._surfaceTok("choice", "borderOff", 1)
+        readonly property string borderOnColor:  root._surfaceTok("choice", "borderOnColor", "accent")
+        readonly property string borderOffColor: root._surfaceTok("choice", "borderOffColor", "glassBorder")
+        readonly property var    stops:          root._surfaceTok("choice", "stops", [])
+    }
+    // key: the raised key behind an active/hovered strip icon (BarPill).
+    readonly property QtObject keySurface: QtObject {
+        readonly property bool stripShadow: root._surfaceTok("key", "stripShadow", true)
+    }
+    // button: GlassButton label on an active button ("base" reads on the accent fill).
+    readonly property QtObject buttonSurface: QtObject {
+        readonly property string activeText: root._surfaceTok("button", "activeText", "base")
+        // Passed to a GlassButton style delegate as api.colors.chamfer.
+        readonly property bool   chamfer:    root._surfaceTok("button", "chamfer", false)
+    }
+    // segment: inner padding of bar clusters housed in a BarSegment (only used
+    // when the pack ships a BarSegment style). Keys: clock, title, workspaces,
+    // mediaLead, mediaTail, bank (right status bank, per side).
+    function segmentPad(key, fallback) {
+        var pad = root._surfaceTok("segment", "pad", null)
+        return (pad && pad[key] !== undefined) ? pad[key] : fallback
     }
 
     // Pack material (adr_027 / item_083): a pack may drop the base frosted-glass
@@ -542,6 +594,12 @@ QtObject {
     function styleUrl(componentId) {
         if (!root.activePackDir || root.activePackStyles.indexOf(componentId) === -1) return ""
         return "file://" + root.activePackDir + "styles/" + componentId + ".qml"
+    }
+    // True when the active pack ships a style delegate for this component. Hosts
+    // with no base visual (BarSegment, ConsoleChrome, BarDivider rivets) and the
+    // layouts that make room for them read this instead of naming a pack.
+    function hasStyle(componentId) {
+        return !!root.activePackDir && root.activePackStyles.indexOf(componentId) !== -1
     }
 
     // Resolve an fx colour string: a palette name ("accent","mauve",…) maps to

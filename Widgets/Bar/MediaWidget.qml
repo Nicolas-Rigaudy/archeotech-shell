@@ -43,26 +43,25 @@ Item {
     height: Commons.Appearance.bar.height
     clip: true
 
-    // Pack console housing — on the steel pack (Grimdark) the now-playing
-    // readout sits in its own bolted console segment (soft chamfered steel + a
-    // rivet per side) so it reads as a distinct panel on the bar rather than
-    // floating text. Off (and zero-cost) on base/glass packs, and only while
-    // something is actually playing.
+    // Pack console housing: when the pack ships a BarSegment style (Grimdark),
+    // the now-playing readout sits in its own segment so it reads as a distinct
+    // panel on the bar rather than floating text. Only while something plays.
+    readonly property bool _seg: Commons.Appearance.hasStyle("BarSegment")
     Prim.BarSegment {
         id: mediaHousing
         z: -1
-        visible: root.active && Commons.Appearance.platedChrome
+        visible: root.active && root._seg
         anchors.fill: parent
     }
 
     Text {
         id: mprisSep
-        // Redundant once the housing frames the readout — drop it on the steel pack.
-        visible: !Commons.Appearance.platedChrome
+        // Redundant once the housing frames the readout: drop it with segments.
+        visible: !root._seg
         anchors.left: parent.left
         // Housed: small lead-in so the icon sits just inboard of the left rivet
         // (balanced against the tail — see the marquee's rightMargin).
-        anchors.leftMargin: Commons.Appearance.platedChrome ? 4 : 10
+        anchors.leftMargin: root._seg ? Commons.Appearance.segmentPad("mediaLead", 4) : 10
         anchors.verticalCenter: parent.verticalCenter
         text: "·"
         color: Commons.Appearance.colors.surface1
@@ -93,7 +92,7 @@ Item {
         anchors.right: parent.right
         // Housed: tail matched to the lead-in so the readout sits balanced between
         // the two end rivets.
-        anchors.rightMargin: Commons.Appearance.platedChrome ? 16 : 4
+        anchors.rightMargin: root._seg ? Commons.Appearance.segmentPad("mediaTail", 16) : 4
         anchors.verticalCenter: parent.verticalCenter
         height: Commons.Appearance.font.sizeSm + 4
         clip: true

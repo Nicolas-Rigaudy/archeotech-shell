@@ -73,9 +73,13 @@ Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: root.compact ? 50 : 64
 
-                    RectangularShadow {              // soft glow — base packs only (reads modern on steel)
+                    readonly property var _rec: Commons.Appearance.choiceSurface
+                    readonly property bool _sheen: _rec.stops.length < 3
+                    function _col(c) { return Commons.Appearance._surfaceColor(c) }
+
+                    RectangularShadow {              // soft glow (a pack recipe can drop it)
                         anchors.fill: famBg
-                        visible: !Commons.Appearance.platedChrome
+                        visible: famCard._rec.softShadow
                         radius: famBg.radius
                         blur:   Commons.Appearance.elevation.e2.blur; offset: Qt.vector2d(0, Commons.Appearance.elevation.e2.y); spread: Commons.Appearance.elevation.e2.spread
                         color:  Commons.Appearance.elevation.e2.color
@@ -83,20 +87,19 @@ Item {
                     Rectangle {
                         id: famBg
                         anchors.fill: parent
-                        // Steel pack: a square-cut machined plate (copper hairline, teal when
-                        // selected); base packs keep the rounded grey card.
-                        radius: Commons.Appearance.platedChrome ? 1 : Commons.Appearance.radius.md
+                        // Shape, edge and fill from the pack's `surfaces.choice` recipe
+                        // (Grimdark: a square-cut steel plate with a copper hairline).
+                        radius: famCard._rec.radius >= 0 ? famCard._rec.radius : Commons.Appearance.radius.md
                         antialiasing: true
-                        border.width: famCard._on ? (Commons.Appearance.platedChrome ? 1.6 : 3) : 1
-                        border.color: famCard._on
-                            ? (Commons.Appearance.platedChrome ? Qt.lighter(Commons.Appearance.colors.accent, 1.25) : Commons.Appearance.colors.accent)
-                            : (Commons.Appearance.platedChrome
-                               ? Qt.rgba(Commons.Appearance.colors.peach.r, Commons.Appearance.colors.peach.g, Commons.Appearance.colors.peach.b, 0.32)
-                               : Commons.Appearance.colors.glassBorder)
+                        border.width: famCard._on ? famCard._rec.borderOn : famCard._rec.borderOff
+                        border.color: famCard._col(famCard._on ? famCard._rec.borderOnColor : famCard._rec.borderOffColor)
                         gradient: Gradient {
-                            GradientStop { position: 0.0; color: Commons.Appearance.platedChrome ? Commons.Appearance.steel.hi : Commons.Appearance.sheenHi(Commons.Appearance.colors.surfaceCard, Commons.Appearance.sheen.surface.hi) }
-                            GradientStop { position: 0.5; color: Commons.Appearance.platedChrome ? Commons.Appearance.steel.md : Commons.Appearance.sheenHi(Commons.Appearance.colors.surfaceCard, Commons.Appearance.sheen.surface.hi) }
-                            GradientStop { position: 1.0; color: Commons.Appearance.platedChrome ? Commons.Appearance.steel.lo : Commons.Appearance.sheenLo(Commons.Appearance.colors.surfaceCard, Commons.Appearance.sheen.surface.lo) }
+                            GradientStop { position: famCard._sheen ? 0.0 : famCard._rec.stops[0][0]
+                                           color: famCard._sheen ? Commons.Appearance.sheenHi(Commons.Appearance.colors.surfaceCard, Commons.Appearance.sheen.surface.hi) : famCard._col(famCard._rec.stops[0][1]) }
+                            GradientStop { position: famCard._sheen ? 0.5 : famCard._rec.stops[1][0]
+                                           color: famCard._sheen ? Commons.Appearance.sheenHi(Commons.Appearance.colors.surfaceCard, Commons.Appearance.sheen.surface.hi) : famCard._col(famCard._rec.stops[1][1]) }
+                            GradientStop { position: famCard._sheen ? 1.0 : famCard._rec.stops[2][0]
+                                           color: famCard._sheen ? Commons.Appearance.sheenLo(Commons.Appearance.colors.surfaceCard, Commons.Appearance.sheen.surface.lo) : famCard._col(famCard._rec.stops[2][1]) }
                         }
                         Behavior on border.color { ColorAnimation { duration: Commons.Appearance.anim.fast } }
                         Behavior on border.width { NumberAnimation { duration: Commons.Appearance.anim.fast } }

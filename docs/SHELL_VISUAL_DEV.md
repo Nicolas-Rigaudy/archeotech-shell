@@ -139,12 +139,12 @@ edits then reach the bar only when a commit is promoted.
   renders, use `shot.sh --pack`, which edits only the fake HOME's copy.
 - To test a **register** without UI: flip `defaultRegister` in the pack
   `tokens.json` and render; set it back afterwards. (Registers = parked feature.)
-- `material` MUST be `matte` for the steel/depth look. Plated chrome (steel
-  gradients, bolted collars, copper trim) is declared by the pack as
-  `surfaces.plated: true` and read as `Appearance.platedChrome`; `frameChamfer`
-  (pack `frame.corners=="chamfer"`) now only drives corner geometry. Roles that
-  already take full recipes (`surfaces.popup`) need no flag; the rest move from
-  the flag to recipes role by role (item_112).
+- `material` MUST be `matte` for the steel/depth look. Plated chrome is pack
+  code, not a core flag (item_112): value differences are `surfaces.<role>`
+  recipes (docs/THEME_PACK.md) and the structure (steel plate, copper console
+  hardware, bar segments, divider rivets) is `packs/grimdark/styles/*.qml`
+  delegates (docs/STYLE_API.md). `frameChamfer` (pack `frame.corners=="chamfer"`)
+  only drives corner geometry. Never add an "is this pack X" branch to core.
 
 ## Theme tokens (single sources)
 - Steel family: `packs/grimdark/tokens.json` → `panels.steel {hi,md,lo,edge,lip,mid,faceHi,faceMd,faceLo,lit}`
