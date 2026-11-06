@@ -12,8 +12,19 @@ Item {
     property string register: ""
 
     readonly property var  _p: api.palette
-    readonly property rect _b: api.bodyRect || Qt.rect(0, 0, width, height)
     readonly property string _s: api.side || "bottom"
+    // bodyRect stops a neck-fillet short of the strip (the core sheen fills
+    // that with curves); this plate has no fillets, so its open strip edge
+    // runs on to the card edge, else the wallpaper shows in between. One px
+    // more reaches under the frame rule (FrameStyle draws it 1 px outside the
+    // hole).
+    readonly property rect _b: {
+        const b = api.bodyRect || Qt.rect(0, 0, width, height)
+        if (_s === "bottom") return Qt.rect(b.x, b.y, b.width, height + 1 - b.y)
+        if (_s === "top")    return Qt.rect(b.x, -1, b.width, b.y + b.height + 1)
+        if (_s === "left")   return Qt.rect(-1, b.y, b.x + b.width + 1, b.height)
+        return Qt.rect(b.x, b.y, width + 1 - b.x, b.height)
+    }
     readonly property real _c: Math.min(22, _b.width / 4, _b.height / 4)
 
     // Points walk the body clockwise from the strip edge's first corner; the
