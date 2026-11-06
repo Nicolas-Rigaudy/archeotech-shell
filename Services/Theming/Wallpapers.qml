@@ -208,6 +208,26 @@ QtObject {
     readonly property string packId: Persistence.Config.get("appearance.activePack", "")
     readonly property string packDir: ShellServices.PackRegistry.wallpaperDirFor(root.packId)
     onPackDirChanged: refresh()
+    // Display name of the active pack ("" for the base look), for picker labels.
+    readonly property string packName: {
+        var p = root.packId ? ShellServices.PackRegistry.packFor(root.packId) : null
+        return p ? (p.name || p.id) : ""
+    }
+
+    // What a picker offers for `mode` (owner, 2026-11-06): while the active pack
+    // ships wallpapers that suit the mode, only those, with `keep` (the marked
+    // one) first so the carousel opens on it and the pack's sit beside it;
+    // otherwise every wallpaper that suits the mode. `packOnly` says which one a
+    // list is, for the label. Show all lifts both filters.
+    function offered(mode, keep) {
+        var all = root.list
+        if (root.showAll) return { list: all, packOnly: false }
+        var m = mode || root.mode
+        var pk = all.filter(w => w.pack && w.pack === root.packId && root.suits(w.path, m))
+        if (pk.length)
+            return { list: all.filter(w => w.path === keep && !w.pack).concat(pk), packOnly: true }
+        return { list: all.filter(w => w.path === keep || root.suits(w.path, m)), packOnly: false }
+    }
     // Read fresh by each pass (not from bindings, which may not have settled
     // when onPackDirChanged runs): [dir, thumb prefix, pack id].
     function _packNow() {

@@ -43,15 +43,13 @@ Item {
     readonly property string currentPath: Theming.Wallpapers.markedPath(root.slot)
     // Wallpaper list comes from the persistent Wallpapers service — scanned once
     // at startup and held, so opening the picker is instant (no re-scan/rebuild).
-    // Only those that suit the mode (by brightness) unless Show all is on; the
-    // marked one always stays so the carousel can centre on it.
-    readonly property var wallpapers: {
-        var all = Theming.Wallpapers.list
-        var lum = Theming.Wallpapers._lum   // re-filter once brightness is measured
-        if (Theming.Wallpapers.showAll) return all
-        var mode = root.filterMode, keep = root._kept
-        return all.filter(w => w.path === keep || Theming.Wallpapers.suits(w.path, mode))
-    }
+    // Wallpapers.offered: the active pack's own (plus the marked one) when it
+    // ships some for this mode, else those that suit the mode (by brightness);
+    // Show all lifts the filter. The marked one always stays so the carousel can
+    // centre on it.
+    // (The call reads list, showAll, packId and _lum, so it re-runs on each.)
+    readonly property var _offer: Theming.Wallpapers.offered(root.filterMode, root._kept)
+    readonly property var wallpapers: root._offer.list
     // The marked wallpaper kept in a filtered list, latched when the filter's
     // mode changes (not on every pick): a pick must not rebuild the list and
     // jump the carousel under the pointer.
@@ -170,7 +168,9 @@ Item {
                 elide: Text.ElideRight
                 text: Theming.Wallpapers.showAll
                     ? "All wallpapers · " + root.wallpapers.length
-                    : (root.filterMode === "light" ? "For light mode · " : "For dark mode · ") + root.wallpapers.length
+                    : (root.filterMode === "light" ? "For light mode · " : "For dark mode · ")
+                      + (root._offer.packOnly ? Theming.Wallpapers.packName + " · " : "")
+                      + root.wallpapers.length
                 color: Commons.Appearance.colors.textMuted
                 font.pixelSize: Commons.Appearance.font.sizeSm
                 font.family: Commons.Appearance.font.family

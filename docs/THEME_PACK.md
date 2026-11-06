@@ -37,9 +37,11 @@ corner radius), live in `tests/fixtures/packs/` and never show in the pack picke
 ```
 
 `wallpapers` names a folder inside the pack (relative; absolute paths and `..` are
-ignored). While the pack is active, its jpg/png/webp files join the wallpaper
-pickers ahead of the user's own (`~/.config/archeotech/wallpapers`), with the same
-light/dark filter and **Show all**; they leave the pickers when the pack changes.
+ignored). While the pack is active, the wallpaper pickers offer only its
+jpg/png/webp files that suit the mode (plus the wallpaper on screen), labelled with
+the pack's name; **Show all** adds the user's own (`~/.config/archeotech/wallpapers`).
+A mode the pack ships nothing for (light, for a dark-only pack) gets the user's
+wallpapers as usual. They leave the pickers when the pack changes.
 Record each image's origin and licence in the folder's `CREDITS.md`. A pack
 wallpaper that is on screen stays there after a switch to another pack (as any
 applied wallpaper does) until the next pick or mode flip. Like `tokens.json`,

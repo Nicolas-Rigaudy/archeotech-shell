@@ -16,7 +16,8 @@ Steps run in order inside the nested session:
     click:X,Y            hover, then left click
     ipc:<target>.<fn>[:arg]   qs ipc call on the nested shell (by --pid)
     set:<key>=<json>     edit the nested config.json (the shell hot-reloads it),
-                         e.g. set:appearance.glass="solid"
+                         e.g. set:appearance.glass="solid"; a "~/..." string
+                         expands to the session's fake HOME
     notify:<text>        notify-send a toast (stays until dismissed)
     sleep:<seconds>
     burst:<prefix>:<n>:<gap>:<cmd>   run <cmd> and grab n frames <gap> s apart (<prefix>-NN.ppm)
@@ -87,7 +88,10 @@ def step_cmd(step):
               "p=os.path.expanduser('~/.config/archeotech/config.json'); d=json.load(open(p))\n"
               f"k={key!r}.split('.'); t=d\n"
               "for part in k[:-1]: t=t.setdefault(part,{})\n"
-              f"t[k[-1]]=json.loads({val!r}); json.dump(d,open(p,'w'),indent=4)\n")
+              # A "~/..." string is a path in the session's (fake) HOME.
+              f"v=json.loads({val!r})\n"
+              "if isinstance(v,str) and v.startswith('~/'): v=os.path.expanduser(v)\n"
+              "t[k[-1]]=v; json.dump(d,open(p,'w'),indent=4)\n")
         return f"python3 -c {shlex.quote(py)}; sleep 2"
     if kind == "notify":
         return f"notify-send -t 0 Archeotech {shlex.quote(arg)}; sleep 2"
