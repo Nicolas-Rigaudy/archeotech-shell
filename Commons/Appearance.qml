@@ -931,6 +931,19 @@ QtObject {
         readonly property bool slantBullets: root._tok("list", "bullet", "dot") === "slant"
     }
 
+    // ── Side strips (pack token `strip`) ──────────────────────────────────────
+    // Icon slot along the strip (== hit area), padding at each strip end, and the
+    // clearance around the icon cell (floored at radius.md / 2 by Strip). A pack
+    // whose StripButton housing fills most of the slot widens these. panelCutInset:
+    // extra top space a strip panel's content leaves under a pack PanelChrome's
+    // corner cut (0 = no cut).
+    readonly property QtObject strip: QtObject {
+        readonly property int iconStride:    root._tok("strip", "iconStride", 48)
+        readonly property int padLong:       root._tok("strip", "padLong", 10)
+        readonly property int iconMargin:    root._tok("strip", "iconMargin", 9)
+        readonly property int panelCutInset: root._tok("strip", "panelCutInset", 0)
+    }
+
     // ── Animation ─────────────────────────────────────────────────────────────
     // Durations. Kept `fast`/`base`/`panel` as-is (used across ~125 call sites);
     // dropped the never-referenced `slow`/`spring`. New semantic names follow the

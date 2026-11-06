@@ -67,6 +67,9 @@ SCENARIOS+=("dashboard-grimdark|dashboard|archeotech-macchiato|0|grimdark")
 for reg in netrunner megacorp deck; do
   SCENARIOS+=("dashboard-cyberdeck-$reg|dashboard|archeotech-macchiato|0|cyberdeck|packs.cyberdeck.register=$reg")
 done
+# Cyberdeck cut plates (CutPlate) on a popup and a panel, plus the sidebar inset.
+SCENARIOS+=("popup-cyberdeck-netrunner|popup:hover|archeotech-macchiato|0|cyberdeck|packs.cyberdeck.register=netrunner"
+            "settings-cyberdeck-netrunner|settings:appearance|archeotech-macchiato|0|cyberdeck|packs.cyberdeck.register=netrunner")
 
 RUN="$(mktemp -d "${TMPDIR:-/tmp}/archeotech-golden.XXXXXX")"
 mkdir -p "$RUN/out" "$RUN/diff"

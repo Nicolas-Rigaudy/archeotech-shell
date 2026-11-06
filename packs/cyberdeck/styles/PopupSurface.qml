@@ -1,6 +1,6 @@
 pragma ComponentBehavior: Bound
 import QtQuick
-import QtQuick.Shapes
+import "parts"
 
 // Cyberdeck Netrunner: bar popup body (adr_027 Layer C delegate for
 // PopupSurface: hover cards, wifi, bluetooth, calendar). The same plate as the
@@ -26,25 +26,11 @@ Item {
                 Qt.point(x1 - c, y1), Qt.point(x1, y1 - c), Qt.point(x1, y0)]
     }
 
-    Shape {
+    CutPlate {
         anchors.fill: parent
-        visible: !!ps._p && ps.height > 0
-        preferredRendererType: Shape.CurveRenderer
-        ShapePath {
-            strokeWidth: -1
-            fillColor: Qt.rgba(0.02, 0.05, 0.07, 0.90)   // PanelChrome's plate
-            startX: ps._pts[0].x; startY: ps._pts[0].y
-            PathPolyline { path: ps._pts }
-        }
-        // Edge rule, open along the top (the bar edge).
-        ShapePath {
-            strokeColor: ps._p ? Qt.lighter(ps._p.surface2, 1.45) : "transparent"
-            strokeWidth: 1.5
-            fillColor: "transparent"
-            joinStyle: ShapePath.MiterJoin
-            startX: ps._pts[0].x; startY: ps._pts[0].y
-            PathPolyline { path: ps._pts }
-        }
+        // null hides the plate (CutPlate.visible) until the popup has a height
+        colors: ps._p && ps.height > 0 ? ps._p : null
+        points: ps._pts
     }
 
     Rectangle {

@@ -154,6 +154,11 @@ some alpha where blur should show.
 | `screenName` | string | output name |
 | `palette` / `steel` | object | `Appearance.colors` / `Appearance.steel` |
 
+`cornerRadius` follows the pack's `frame.cornerRadius` and can be larger than the
+window gap allows. A delegate that cuts the hole's corners clamps its cut leg to
+`min(cornerRadius, 2 * gap - 2)`: a window corner sits `gap` px in on both axes,
+so a 45° diagonal reaches it at a leg of `2 * gap` (Cyberdeck `FrameStyle`).
+
 ### `ScreenEffects`
 A full-screen overlay above the bar and strips (z 11, below edit mode); never
 takes input, and hides with the frame when the sides auto-hide. Scanlines, vignette, glitch bursts. **Never paint inside

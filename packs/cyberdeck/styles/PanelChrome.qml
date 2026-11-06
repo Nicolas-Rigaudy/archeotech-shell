@@ -1,6 +1,6 @@
 pragma ComponentBehavior: Bound
 import QtQuick
-import QtQuick.Shapes
+import "parts"
 
 // Cyberdeck Netrunner: strip panel body (adr_027 Layer C delegate for
 // PanelChrome). A dark plate with a teal hairline, both corners away from the
@@ -31,25 +31,9 @@ Item {
                 Qt.point(x0, y0 + c), Qt.point(x0 + c, y0), Qt.point(x1, y0)]
     }
 
-    Shape {
+    CutPlate {
         anchors.fill: parent
-        visible: !!pc._p
-        preferredRendererType: Shape.CurveRenderer
-        // Body fill (closed).
-        ShapePath {
-            strokeWidth: -1
-            fillColor: Qt.rgba(0.02, 0.05, 0.07, 0.90)
-            startX: pc._pts[0].x; startY: pc._pts[0].y
-            PathPolyline { path: pc._pts }
-        }
-        // Edge rule (open on the strip side).
-        ShapePath {
-            strokeColor: pc._p ? Qt.lighter(pc._p.surface2, 1.45) : "transparent"
-            strokeWidth: 1.5
-            fillColor: "transparent"
-            joinStyle: ShapePath.MiterJoin
-            startX: pc._pts[0].x; startY: pc._pts[0].y
-            PathPolyline { path: pc._pts }
-        }
+        colors: pc._p
+        points: pc._pts
     }
 }

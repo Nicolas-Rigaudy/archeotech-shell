@@ -162,10 +162,10 @@ Item {
 
     // ── Sizing ─────────────────────────────────────────────────────────────────
     readonly property int _iconSize:    36
-    // A pack StripButton housing (sheared key caps) fills most of the slot, so
-    // styled strips get a wider stride and end padding to keep caps apart.
-    readonly property int _iconStride:  buttonStyled ? 60 : 48  // along-axis slot per icon (== hit area)
-    readonly property int _padLong:     buttonStyled ? 16 : 10  // real breathing space at each strip end
+    // Pack tokens (`strip.*`): a StripButton housing that fills most of the slot
+    // (Cyberdeck's sheared key caps) widens the stride and end padding.
+    readonly property int _iconStride:  Commons.Appearance.strip.iconStride  // along-axis slot per icon (== hit area)
+    readonly property int _padLong:     Commons.Appearance.strip.padLong     // real breathing space at each strip end
     readonly property int _padShort:    4
     // Icons pack at a fixed stride with `_padLong` at each end (see the delegate's
     // `_center`), so the end margin is genuine padding — not the half-slot that
@@ -186,7 +186,7 @@ Item {
     // collapse with a pack's tiny corner radius (the Grimdark radius.md=2 made
     // the hover popup ~8px thinner than base and clipped the icon highlight). Used
     // for BOTH the popup depth and the iconArea edge margin so they stay in sync.
-    readonly property int _iconMargin: Math.max(buttonStyled ? 12 : 9, _r / 2)
+    readonly property int _iconMargin: Math.max(Commons.Appearance.strip.iconMargin, _r / 2)
     readonly property int _popupExtra: _bodyDepth + 2 * _iconMargin
 
     // Auto-sized panels only know their axis extent once their content has

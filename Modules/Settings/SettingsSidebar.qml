@@ -36,11 +36,12 @@ Item {
             anchors.fill: parent
             spacing: 0
 
-            // A pack PanelChrome cuts the panel's far corners (cyberdeck: 22 px at
-            // 45°); drop the search field below the cut so its corner clears it.
+            // A pack PanelChrome may cut the panel's far corners; its
+            // strip.panelCutInset token (0 by default) drops the search
+            // field below the cut.
             Item {
                 implicitHeight: Commons.Appearance.spacing.s3
-                              + (Commons.Appearance.hasStyle("PanelChrome") ? 12 : 0)
+                              + Commons.Appearance.strip.panelCutInset
                 Layout.fillWidth: true
             }
 

@@ -128,6 +128,14 @@ Notes:
   keys, `bracket` as `[KEY] LABEL` text in the `sectionLabel` colour).
 - **List bullets**: `list.bullet` (`dot` | `slant`) shapes the dashboard
   Active Projects bullets; `slant` is a sheared bar.
+- **Side strips**: `strip.iconStride` (48), `strip.padLong` (10) and
+  `strip.iconMargin` (9) set the icon slot along a strip, the padding at each
+  end and the clearance around the icon cell; a pack whose `StripButton`
+  housing fills the slot widens them (Cyberdeck: 60 / 16 / 12).
+  `strip.panelCutInset` (0) is the extra top space a strip panel's content
+  leaves under a `PanelChrome` corner cut (Cyberdeck: 12, settings search).
+  These tokens apply whether or not the pack ships those delegates; set them
+  together with the delegate they make room for.
 - `accent` names one of the palette colours (e.g. `"red"`); the semantic
   `accent`, `accentBorder`, `accentAlpha`, state tints and accent-warmth surfaces
   all derive from it, so one line re-tints the whole accent system.
