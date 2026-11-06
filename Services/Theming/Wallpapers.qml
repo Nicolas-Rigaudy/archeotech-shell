@@ -204,10 +204,12 @@ QtObject {
     // The active pack's own wallpapers (pack.json "wallpapers", a folder in the
     // pack) join the catalogue while that pack is active and leave it when the
     // pack changes. Their thumbs are keyed "pack-<id>-<file>" so a pack's
-    // netrunner.png never shares a thumb with a user file of the same name.
+    // netrunner.png never shares a thumb with a user file of the same name; the
+    // user's own ones for the pack (see _packNow) are keyed "pack-<id>~own~<file>".
     readonly property string packId: Persistence.Config.get("appearance.activePack", "")
     readonly property string packDir: ShellServices.PackRegistry.wallpaperDirFor(root.packId)
     onPackDirChanged: refresh()
+    onPackIdChanged: refresh()
     // Display name of the active pack ("" for the base look), for picker labels.
     readonly property string packName: {
         var p = root.packId ? ShellServices.PackRegistry.packFor(root.packId) : null
@@ -229,11 +231,18 @@ QtObject {
         return { list: all.filter(w => w.path === keep || root.suits(w.path, m)), packOnly: false }
     }
     // Read fresh by each pass (not from bindings, which may not have settled
-    // when onPackDirChanged runs): [dir, thumb prefix, pack id].
+    // when onPackDirChanged runs): [pack dir, its thumb prefix, pack id,
+    // own dir, its thumb prefix]. The own dir is the user's private folder for
+    // a pack, ~/.local/share/archeotech/pack-wallpapers/<id>/ (subfolders
+    // included): wallpapers that can't ship publicly with the pack (franchise
+    // art) but count as the pack's in the pickers. Basenames must be unique
+    // across its subfolders (thumbs are keyed by basename).
     function _packNow() {
         var id = root.packId
+        if (!id || !/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(id)) return ["", "", "", "", ""]
         var dir = ShellServices.PackRegistry.wallpaperDirFor(id)
-        return dir ? [dir, "pack-" + id + "-", id] : ["", "", ""]
+        return [dir || "", "pack-" + id + "-", id,
+                "pack-wallpapers/" + id, "pack-" + id + "~own~"]
     }
 
     // Re-scan + regenerate stale thumbs. Runs at startup and when the active
@@ -248,25 +257,31 @@ QtObject {
         else root._thumbs.start()
     }
 
-    // Prints "p\t<path>" for the pack's wallpapers ($1, may be empty), then
-    // "u\t<path>" for the user's.
+    // Prints "p\t<path>" for the pack's wallpapers ($1, may be empty), "o\t<path>"
+    // for the user's own ones for the pack ($2 under ~/.local/share/archeotech,
+    // recursive), then "u\t<path>" for the user's. ls1's $3 is unquoted on
+    // purpose: '' adds nothing, '-maxdepth 1' splits into two find args.
     property Process _scan: Process {
         id: scanProc
         running: false
         property bool again: false
         property string _pack: ""
         property string _prefix: ""
+        property string _ownPrefix: ""
         function start() {
             var pk = root._packNow()
             scanProc._prefix = pk[1]
             scanProc._pack = pk[2]
+            scanProc._ownPrefix = pk[4]
             scanProc.command = ["bash", "-c",
                 "ls1(){ [ -n \"$2\" ] && [ -d \"$2\" ] || return 0; " +
-                "find -L \"$2\" -maxdepth 1 -type f -regextype posix-extended " +
+                "find -L \"$2\" $3 -type f -regextype posix-extended " +
                 "-iregex '.*\\.(jpe?g|png|webp)$' | sort | " +
                 "while IFS= read -r f; do printf '%s\\t%s\\n' \"$1\" \"$f\"; done; }; " +
-                "ls1 p \"$1\"; ls1 u \"$HOME/.config/archeotech/wallpapers\"",
-                "_", pk[0]]
+                "ls1 p \"$1\" '-maxdepth 1'; " +
+                "[ -n \"$2\" ] && ls1 o \"$HOME/.local/share/archeotech/$2\" ''; " +
+                "ls1 u \"$HOME/.config/archeotech/wallpapers\" '-maxdepth 1'",
+                "_", pk[0], pk[3]]
             scanProc.running = true
         }
         property var _buf: []
@@ -275,15 +290,17 @@ QtObject {
             onRead: line => {
                 var tab = line.indexOf("\t")
                 if (tab < 0) return
-                var fromPack = line.substring(0, tab) === "p"
+                var tag = line.substring(0, tab)
+                var fromPack = tag === "p" || tag === "o"
                 var p = line.substring(tab + 1).trim()
-                if (!p) return
+                if (!p || (scanProc._buf || []).some(w => w.path === p)) return
                 var slash = p.lastIndexOf("/")
                 var dot   = p.lastIndexOf(".")
                 var stem  = p.substring(slash + 1, dot >= 0 ? dot : p.length)
                 var name  = stem.replace(/[_-]/g, " ")
                 // Thumb keyed by full basename (+.jpg) so a.png/a.jpg don't collide.
-                var thumb = root._thumbsDir + "/" + (fromPack ? scanProc._prefix : "")
+                var thumb = root._thumbsDir + "/"
+                    + (tag === "p" ? scanProc._prefix : tag === "o" ? scanProc._ownPrefix : "")
                     + p.substring(slash + 1) + ".jpg"
                 scanProc._buf = (scanProc._buf || []).concat([
                     { path: p, name: name, thumb: thumb, pack: fromPack ? scanProc._pack : "" }])
@@ -300,14 +317,15 @@ QtObject {
         running: false
         property bool again: false
         // Thumbnail, then its brightness (cached as <thumb>.lum); prints
-        // "<wallpaper>\t<lum>" per wallpaper. $1 = the pack's wallpaper dir (may
-        // be empty), $2 = its thumb prefix (same keys as the scan).
+        // "<wallpaper>\t<lum>" per wallpaper. $1/$2 = the pack's wallpaper dir (may
+        // be empty) + thumb prefix, $3/$4 = the user's own dir for the pack +
+        // prefix (same keys as the scan).
         function start() {
             var pk = root._packNow()
             thumbsProc.command = ["bash", "-c",
             "export TH=\"$HOME/.cache/archeotech/wallpaper-thumbs\"; mkdir -p \"$TH\"; " +
             "one(){ [ -n \"$1\" ] && [ -d \"$1\" ] || return 0; export PFX=\"$2\"; " +
-            "find -L \"$1\" -maxdepth 1 -type f " +
+            "find -L \"$1\" $3 -type f " +
             "-regextype posix-extended -iregex '.*\\.(jpe?g|png|webp)$' -print0 | " +
             "xargs -0 -r -P4 -I{} bash -c '" +
             "t=\"$TH/$PFX$(basename \"$1\").jpg\"; l=\"$t.lum\"; " +
@@ -316,8 +334,10 @@ QtObject {
             "{ [ -s \"$l\" ] && [ ! \"$t\" -nt \"$l\" ]; } || " +
             "magick \"$t\" -alpha off -resize 1x1! -colorspace Gray -format \"%[fx:mean]\" info: > \"$l\"; " +
             "printf \"%s\\t%s\\n\" \"$1\" \"$(cat \"$l\")\"' _ {}; }; " +
-            "one \"$1\" \"$2\"; one \"$HOME/.config/archeotech/wallpapers\" ''",
-            "_", pk[0], pk[1]]
+            "one \"$1\" \"$2\" '-maxdepth 1'; " +
+            "[ -n \"$3\" ] && one \"$HOME/.local/share/archeotech/$3\" \"$4\" ''; " +
+            "one \"$HOME/.config/archeotech/wallpapers\" '' '-maxdepth 1'",
+            "_", pk[0], pk[1], pk[3], pk[4]]
             thumbsProc.running = true
         }
         property var _buf: ({})

@@ -42,6 +42,10 @@ jpg/png/webp files that suit the mode (plus the wallpaper on screen), labelled w
 the pack's name; **Show all** adds the user's own (`~/.config/archeotech/wallpapers`).
 A mode the pack ships nothing for (light, for a dark-only pack) gets the user's
 wallpapers as usual. They leave the pickers when the pack changes.
+Wallpapers that can't ship with a pack (franchise art you keep for yourself) go in
+`~/.local/share/archeotech/pack-wallpapers/<pack id>/` (subfolders included, a
+symlink to a folder elsewhere works): the pickers count them as the pack's, for
+any pack whose id is letters, digits, `-` and `_`, even one that ships none. Keep their file names unique across subfolders.
 Record each image's origin and licence in the folder's `CREDITS.md`. A pack
 wallpaper that is on screen stays there after a switch to another pack (as any
 applied wallpaper does) until the next pick or mode flip. Like `tokens.json`,
