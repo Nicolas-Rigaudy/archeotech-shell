@@ -12,7 +12,7 @@ import "ManifestLogic.js" as Manifest
 //   <shell dir>/packs/                 — bundled packs (ship with the shell)
 //   ~/.local/share/archeotech/packs/   — user-installed packs
 //
-// pack.json schema: { id, name, tier, minShellVersion, inherits? }
+// pack.json schema: { id, name, tier, minShellVersion, inherits?, wallpapers? }
 QtObject {
     id: root
 
@@ -53,6 +53,13 @@ QtObject {
     function configSchemaFor(id) {
         var p = packFor(id)
         return (p && p.configSchema) ? p.configSchema : ({})
+    }
+
+    // Absolute dir (trailing slash) of the wallpapers a pack ships (pack.json
+    // "wallpapers", item_151), or "" when it ships none. Wallpapers offers them
+    // in the pickers while the pack is active.
+    function wallpaperDirFor(id) {
+        return id ? Manifest.packWallpaperDir(packFor(id)) : ""
     }
 
     // pack.json minShellVersion, or "" if unset (treated as compatible).

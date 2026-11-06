@@ -36,4 +36,16 @@ TestCase {
         var p = Logic.parsePack('/x/packs/plain/\n\n{"id": "plain"}')
         compare(p.styles, [])
     }
+    function test_packWallpaperDir() {
+        var p = Logic.parsePack('/x/packs/cyberdeck/\n\n{"id": "cyberdeck", "wallpapers": "walls"}')
+        compare(p.wallpapers, "walls")
+        compare(Logic.packWallpaperDir(p), "/x/packs/cyberdeck/walls/")
+        compare(Logic.packWallpaperDir({ id: "p", dir: "/x/p/", wallpapers: "./walls/" }), "/x/p/walls/")
+        compare(Logic.packWallpaperDir({ id: "a/b", dir: "/x/p/", wallpapers: "walls" }), "", "id not a plain name")
+        compare(Logic.packWallpaperDir({ id: "p", dir: "/x/p/", wallpapers: null }), "", "no wallpapers field")
+        compare(Logic.packWallpaperDir({ id: "p", dir: "/x/p/", wallpapers: "/etc" }), "", "absolute")
+        compare(Logic.packWallpaperDir({ id: "p", dir: "/x/p/", wallpapers: "../other/walls" }), "", "outside the pack")
+        compare(Logic.packWallpaperDir({ id: "p", dir: "/x/p/", wallpapers: ["a.png"] }), "", "not a folder")
+        compare(Logic.packWallpaperDir(null), "")
+    }
 }

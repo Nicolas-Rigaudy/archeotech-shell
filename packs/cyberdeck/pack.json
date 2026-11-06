@@ -4,6 +4,7 @@
   "tier": "official",
   "minShellVersion": "0.5.0",
   "inherits": "base",
+  "wallpapers": "walls",
   "configSchema": {
     "register": {
       "type": "enum",

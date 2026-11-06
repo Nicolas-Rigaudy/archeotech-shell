@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell.Io
 import "../../Commons" as Commons
 import "../Persistence" as Persistence
+import "../Shell" as ShellServices
 
 // Persistent wallpaper catalogue (picker perf). Scanned ONCE at shell startup
 // and held here, so opening the picker is instant — the old WallpaperPickerBody
@@ -13,7 +14,9 @@ import "../Persistence" as Persistence
 QtObject {
     id: root
 
-    // [{ path, name, thumb }] — bound by the picker; never cleared on open.
+    // [{ path, name, thumb, pack }] — bound by the picker; never cleared on open.
+    // `pack` is the id of the active pack that ships the wallpaper, "" for the
+    // user's own (~/.config/archeotech/wallpapers). Pack ones come first.
     property var list: []
     // Bumped when thumbnail generation finishes so delegates retry the thumb.
     property int thumbGen: 0
@@ -197,54 +200,106 @@ QtObject {
         function onReadyChanged() { root._followMode() }
     }
 
-    // Re-scan + regenerate stale thumbs. Runs once at startup; call again only
-    // to pick up newly-added wallpapers (reassigns `list`, which rebuilds the
-    // grid — so not wired to panel-open, which must stay instant).
-    function refresh() {
-        if (!_scan.running)   _scan.running   = true
-        if (!_thumbs.running) _thumbs.running = true
+    // ── Pack wallpapers (item_151) ───────────────────────────────────────────
+    // The active pack's own wallpapers (pack.json "wallpapers", a folder in the
+    // pack) join the catalogue while that pack is active and leave it when the
+    // pack changes. Their thumbs are keyed "pack-<id>-<file>" so a pack's
+    // netrunner.png never shares a thumb with a user file of the same name.
+    readonly property string packId: Persistence.Config.get("appearance.activePack", "")
+    readonly property string packDir: ShellServices.PackRegistry.wallpaperDirFor(root.packId)
+    onPackDirChanged: refresh()
+    // Read fresh by each pass (not from bindings, which may not have settled
+    // when onPackDirChanged runs): [dir, thumb prefix, pack id].
+    function _packNow() {
+        var id = root.packId
+        var dir = ShellServices.PackRegistry.wallpaperDirFor(id)
+        return dir ? [dir, "pack-" + id + "-", id] : ["", "", ""]
     }
 
+    // Re-scan + regenerate stale thumbs. Runs at startup and when the active
+    // pack's wallpapers change; call again only to pick up newly-added
+    // wallpapers (reassigns `list`, which rebuilds the grid — so not wired to
+    // panel-open, which must stay instant). A call while a scan runs queues one
+    // more pass, so a pack switch mid-scan is never lost.
+    function refresh() {
+        if (root._scan.running) root._scan.again = true
+        else root._scan.start()
+        if (root._thumbs.running) root._thumbs.again = true
+        else root._thumbs.start()
+    }
+
+    // Prints "p\t<path>" for the pack's wallpapers ($1, may be empty), then
+    // "u\t<path>" for the user's.
     property Process _scan: Process {
         id: scanProc
         running: false
-        command: ["bash", "-c",
-            "find -L \"$HOME/.config/archeotech/wallpapers\" " +
-            "-maxdepth 1 -type f -regextype posix-extended " +
-            "-iregex '.*\\.(jpe?g|png|webp)$' | sort"]
+        property bool again: false
+        property string _pack: ""
+        property string _prefix: ""
+        function start() {
+            var pk = root._packNow()
+            scanProc._prefix = pk[1]
+            scanProc._pack = pk[2]
+            scanProc.command = ["bash", "-c",
+                "ls1(){ [ -n \"$2\" ] && [ -d \"$2\" ] || return 0; " +
+                "find -L \"$2\" -maxdepth 1 -type f -regextype posix-extended " +
+                "-iregex '.*\\.(jpe?g|png|webp)$' | sort | " +
+                "while IFS= read -r f; do printf '%s\\t%s\\n' \"$1\" \"$f\"; done; }; " +
+                "ls1 p \"$1\"; ls1 u \"$HOME/.config/archeotech/wallpapers\"",
+                "_", pk[0]]
+            scanProc.running = true
+        }
         property var _buf: []
         onRunningChanged: if (running) scanProc._buf = []
         stdout: SplitParser {
             onRead: line => {
-                var p = line.trim()
+                var tab = line.indexOf("\t")
+                if (tab < 0) return
+                var fromPack = line.substring(0, tab) === "p"
+                var p = line.substring(tab + 1).trim()
                 if (!p) return
                 var slash = p.lastIndexOf("/")
                 var dot   = p.lastIndexOf(".")
                 var stem  = p.substring(slash + 1, dot >= 0 ? dot : p.length)
                 var name  = stem.replace(/[_-]/g, " ")
                 // Thumb keyed by full basename (+.jpg) so a.png/a.jpg don't collide.
-                var thumb = root._thumbsDir + "/" + p.substring(slash + 1) + ".jpg"
-                scanProc._buf = (scanProc._buf || []).concat([{ path: p, name: name, thumb: thumb }])
+                var thumb = root._thumbsDir + "/" + (fromPack ? scanProc._prefix : "")
+                    + p.substring(slash + 1) + ".jpg"
+                scanProc._buf = (scanProc._buf || []).concat([
+                    { path: p, name: name, thumb: thumb, pack: fromPack ? scanProc._pack : "" }])
             }
         }
-        onExited: { root.list = scanProc._buf || []; root._scanned = true; root._followMode() }
+        onExited: {
+            if (scanProc.again) { scanProc.again = false; scanProc.start(); return }
+            root.list = scanProc._buf || []; root._scanned = true; root._followMode()
+        }
     }
 
     property Process _thumbs: Process {
+        id: thumbsProc
         running: false
+        property bool again: false
         // Thumbnail, then its brightness (cached as <thumb>.lum); prints
-        // "<wallpaper>\t<lum>" per wallpaper.
-        command: ["bash", "-c",
+        // "<wallpaper>\t<lum>" per wallpaper. $1 = the pack's wallpaper dir (may
+        // be empty), $2 = its thumb prefix (same keys as the scan).
+        function start() {
+            var pk = root._packNow()
+            thumbsProc.command = ["bash", "-c",
             "export TH=\"$HOME/.cache/archeotech/wallpaper-thumbs\"; mkdir -p \"$TH\"; " +
-            "find -L \"$HOME/.config/archeotech/wallpapers\" -maxdepth 1 -type f " +
+            "one(){ [ -n \"$1\" ] && [ -d \"$1\" ] || return 0; export PFX=\"$2\"; " +
+            "find -L \"$1\" -maxdepth 1 -type f " +
             "-regextype posix-extended -iregex '.*\\.(jpe?g|png|webp)$' -print0 | " +
             "xargs -0 -r -P4 -I{} bash -c '" +
-            "t=\"$TH/$(basename \"$1\").jpg\"; l=\"$t.lum\"; " +
+            "t=\"$TH/$PFX$(basename \"$1\").jpg\"; l=\"$t.lum\"; " +
             "{ [ -f \"$t\" ] && [ ! \"$1\" -nt \"$t\" ]; } || " +
             "magick \"$1\" -thumbnail 640x480 -strip -quality 82 \"$t\"; " +
             "{ [ -s \"$l\" ] && [ ! \"$t\" -nt \"$l\" ]; } || " +
             "magick \"$t\" -alpha off -resize 1x1! -colorspace Gray -format \"%[fx:mean]\" info: > \"$l\"; " +
-            "printf \"%s\\t%s\\n\" \"$1\" \"$(cat \"$l\")\"' _ {}"]
+            "printf \"%s\\t%s\\n\" \"$1\" \"$(cat \"$l\")\"' _ {}; }; " +
+            "one \"$1\" \"$2\"; one \"$HOME/.config/archeotech/wallpapers\" ''",
+            "_", pk[0], pk[1]]
+            thumbsProc.running = true
+        }
         property var _buf: ({})
         onRunningChanged: if (running) _buf = ({})
         stdout: SplitParser {
@@ -255,6 +310,9 @@ QtObject {
                 if (!isNaN(v)) root._thumbs._buf[line.substring(0, tab)] = v
             }
         }
-        onExited: { root._lum = root._thumbs._buf; root.thumbGen++ }
+        onExited: {
+            if (thumbsProc.again) { thumbsProc.again = false; thumbsProc.start(); return }
+            root._lum = root._thumbs._buf; root.thumbGen++
+        }
     }
 }

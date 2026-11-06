@@ -9,7 +9,7 @@
 var MODULE_FIELDS = ["id", "name", "author", "version", "canLiveIn", "entry", "icon", "defaultSize",
                      "panel", "configSchema", "official", "verified", "minShellVersion", "dependencies",
                      "description"]
-var PACK_FIELDS = ["id", "name", "tier", "minShellVersion", "inherits", "configSchema"]
+var PACK_FIELDS = ["id", "name", "tier", "minShellVersion", "inherits", "configSchema", "wallpapers"]
 
 function _pick(obj, fields) {
     var out = {}
@@ -53,4 +53,16 @@ function parsePack(record) {
     p.dir = r.heads[0]
     p.styles = r.heads[1].split(" ").filter(function (s) { return s !== "" })
     return p
+}
+
+// Absolute dir (trailing slash) of the wallpapers a pack ships (item_151):
+// pack.json "wallpapers" names a folder inside the pack ("walls"). "" when the
+// pack names none, or names one outside itself (absolute, ".."). The id keys
+// thumbnail files, so an id that is not a plain name ships no wallpapers.
+function packWallpaperDir(p) {
+    if (!p || !p.dir || typeof p.wallpapers !== "string") return ""
+    if (!/^[A-Za-z0-9_.-]+$/.test(String(p.id || "")) || p.id === "." || p.id === "..") return ""
+    var rel = p.wallpapers.replace(/^\.\//, "").replace(/\/+$/, "")
+    if (!rel || rel.charAt(0) === "/" || rel.split("/").indexOf("..") !== -1) return ""
+    return p.dir + rel + "/"
 }

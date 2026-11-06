@@ -31,9 +31,19 @@ corner radius), live in `tests/fixtures/packs/` and never show in the pack picke
   "name": "Grimdark",
   "tier": "official",          // official | verified | community
   "minShellVersion": "0.3.0",  // versioned style-contract gate
-  "inherits": "base"           // optional — parent pack id (not resolved yet)
+  "inherits": "base",          // optional — parent pack id (not resolved yet)
+  "wallpapers": "walls"        // optional — folder inside the pack holding its wallpapers
 }
 ```
+
+`wallpapers` names a folder inside the pack (relative; absolute paths and `..` are
+ignored). While the pack is active, its jpg/png/webp files join the wallpaper
+pickers ahead of the user's own (`~/.config/archeotech/wallpapers`), with the same
+light/dark filter and **Show all**; they leave the pickers when the pack changes.
+Record each image's origin and licence in the folder's `CREDITS.md`. A pack
+wallpaper that is on screen stays there after a switch to another pack (as any
+applied wallpaper does) until the next pick or mode flip. Like `tokens.json`,
+wallpapers are not gated on `minShellVersion`; only style delegates are.
 
 ## `tokens.json` — the overlay
 
