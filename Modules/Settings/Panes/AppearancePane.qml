@@ -240,6 +240,48 @@ Item {
 
                 Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
 
+                // Fit across orientations (item_148): how a wallpaper lies on a
+                // screen turned the other way (a portrait monitor); screens of
+                // the image's own orientation always crop from the centre. A
+                // change re-sends the current wallpaper.
+                SettingsCard {
+                    id: wallFit
+                    readonly property string fit: Persistence.Config.get("wallpaper.fit")
+                    function _set(key, v) {
+                        if (v === undefined) Persistence.Config.reset(key)
+                        else Persistence.Config.set(key, v)
+                        Theming.Wallpapers.reapply()
+                    }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                    ButtonGroupRow {
+                        label: "Fit on rotated screens"
+                        configKey: "wallpaper.fit"
+                        autoReset: false
+                        description: "A wide wallpaper on a portrait screen, or a tall one on a wide screen"
+                        options: [{ value: "fill", label: "Fill" }, { value: "blur", label: "Blur" }, { value: "edges", label: "Edges" }]
+                        currentValue: wallFit.fit
+                        onSelected: v => wallFit._set("wallpaper.fit", v)
+                        onReset: wallFit._set("wallpaper.fit", undefined)
+                    }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: wallFit.fit === "fill" }
+                    Divider { visible: wallFit.fit === "fill" }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: wallFit.fit === "fill" }
+                    ButtonGroupRow {
+                        visible: wallFit.fit === "fill"
+                        label: "Keep"
+                        configKey: "wallpaper.anchor"
+                        autoReset: false
+                        description: "Which part of the image stays on screen (left is the top of a tall image)"
+                        options: [{ value: "left", label: "Left" }, { value: "centre", label: "Centre" }, { value: "right", label: "Right" }]
+                        currentValue: Persistence.Config.get("wallpaper.anchor")
+                        onSelected: v => wallFit._set("wallpaper.anchor", v)
+                        onReset: wallFit._set("wallpaper.anchor", undefined)
+                    }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                }
+
+                Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+
                 Appearance.WallpaperPickerBody {
                     id: wallBody
                     Layout.fillWidth: true

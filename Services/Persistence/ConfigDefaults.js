@@ -30,7 +30,9 @@ var DEFAULTS = {
     "input.pointerSpeed":             0,
     "nightLight.temperature":         4000,
     "wallpaper.light":                "",        // item_140: "" = keep what is on screen
-    "wallpaper.dark":                 ""
+    "wallpaper.dark":                 "",
+    "wallpaper.fit":                  "fill",    // item_148: fill | blur | edges (screens of the other orientation)
+    "wallpaper.anchor":               "centre"   // item_148: left | centre | right (fill only)
 }
 
 function has(key) { return DEFAULTS.hasOwnProperty(key) }

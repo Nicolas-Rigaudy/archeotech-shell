@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Effects
 import Quickshell.Io
 import "../../Commons" as Commons
+import "../../Services/Theming" as Theming
 
 // Sprint 26 — logo picker as a snap-to-centre carousel (Off / Arch / Rebel /
 // Imperial), matching the wallpaper + theme carousels. Each tile renders the
@@ -73,6 +74,7 @@ Item {
         logoProc.command = toggleOff
             ? [Commons.Paths.wallpaperSet, "--toggle-logo"]
             : [Commons.Paths.wallpaperSet, "--toggle-logo", id]
+        logoProc.environment = Theming.Wallpapers.fitEnv()
         logoProc.running = true
         logoRefreshTimer.restart()
     }

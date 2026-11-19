@@ -22,7 +22,6 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)"
 CACHE_DIR="$HOME/.cache/wallpaper"
 COMPOSED_DIR="$CACHE_DIR/composed"          # per-(wallpaper,logo) keyed cache
-PLAIN_PORTRAIT_IMG="$CACHE_DIR/plain-portrait.png"
 LOGO_STATE="$CACHE_DIR/logo-active"         # active logo name, empty/absent = none
 LAST_LOGO="$CACHE_DIR/logo-last"            # last active logo for keybind restore
 LAST_WALL="$CACHE_DIR/last-wallpaper"
@@ -30,19 +29,11 @@ CURRENT_LINK="$CACHE_DIR/current"           # stable symlink → current wallpap
 LAST_COLOR="$CACHE_DIR/last-color"
 LAST_COLOR_FOR="$CACHE_DIR/last-color-for"
 
-# Backwards-compat: old code wrote these. Used as fallback names by --status etc.
-COMPOSED_IMG="$CACHE_DIR/composed.png"
-COMPOSED_PORTRAIT_IMG="$CACHE_DIR/composed-portrait.png"
-
-# ── Cache key helpers ────────────────────────────────────────────────────────
-# Compose path per (wallpaper, logo, orientation). The hash keeps filenames
-# short and stable; sha1 is fast and good enough for cache identity.
+# ── Cache key helper ─────────────────────────────────────────────────────────
+# Composites are keyed by a 12-char sha1 of the wallpaper path (see
+# output_image), which keeps the cache filenames short and stable.
 _wall_hash() {
     printf "%s" "$1" | sha1sum | head -c 12
-}
-composed_path() {
-    local wallpaper="$1" logo="$2" orientation="${3:-l}"
-    echo "$COMPOSED_DIR/$(_wall_hash "$wallpaper")-${logo}-${orientation}.png"
 }
 
 # ── Logo definitions ─────────────────────────────────────────────────────────
@@ -153,18 +144,19 @@ render_logo() {
     local color="$2"
     local wall_w="$3"
     local wall_h="$4"
+    local work="$5"     # private scratch dir: parallel runs never share files
 
     # Size relative to the shorter dimension so logos fit on portrait screens too
     local shorter=$(( wall_w < wall_h ? wall_w : wall_h ))
     local logo_px=$(( shorter * LOGO_SIZE_PERCENT / 100 ))
     local logo_type="${LOGO_TYPE[$logo_name]}"
     local logo_src="${LOGO_PATH[$logo_name]}"
-    local logo_out="$CACHE_DIR/logo-rendered.png"
+    local logo_out="$work/logo-rendered.png"
 
     local opacity_decimal
     opacity_decimal=$(awk "BEGIN {printf \"%.2f\", $LOGO_OPACITY/100}")
 
-    local logo_raw="$CACHE_DIR/logo-raw.png"
+    local logo_raw="$work/logo-raw.png"
 
     # Inner margin so sharp logo edges never sit at the canvas boundary.
     # The shadow blur can then spread freely without clipping.
@@ -176,16 +168,16 @@ render_logo() {
         sed \
             -e "s/LOGO_COLOR/$color/g" \
             -e "s/LOGO_OPACITY/$opacity_decimal/g" \
-            "$logo_src" > "$CACHE_DIR/logo-colored.svg"
+            "$logo_src" > "$work/logo-colored.svg"
 
         # Normalize by area: target sqrt(w*h) = render_px for all logos.
         # This gives equal visual weight regardless of aspect ratio — a wide flat
         # logo and a tall square logo appear as the same "sticker size".
-        local raw_render="$CACHE_DIR/logo-raw-render.png"
+        local raw_render="$work/logo-raw-render.png"
         local norm_w norm_h
         read -r norm_w norm_h < <(python3 -c "
-import xml.etree.ElementTree as ET, re, math
-t = ET.parse('$CACHE_DIR/logo-colored.svg')
+import xml.etree.ElementTree as ET, re, math, sys
+t = ET.parse(sys.argv[1])
 vb = t.getroot().get('viewBox', '')
 parts = re.split(r'[\s,]+', vb.strip())
 vw = float(parts[2]) if len(parts) >= 4 else 1.0
@@ -196,10 +188,10 @@ target = $render_px
 w = target * math.sqrt(ratio)
 h = target / math.sqrt(ratio)
 print(round(w), round(h))
-" 2>/dev/null || echo "$render_px $render_px")
+" "$work/logo-colored.svg" 2>/dev/null || echo "$render_px $render_px")
         rsvg-convert \
             -w "${norm_w}" -h "${norm_h}" \
-            "$CACHE_DIR/logo-colored.svg" \
+            "$work/logo-colored.svg" \
             -o "$raw_render"
         # Pad with inner_margin on all sides
         local actual_w actual_h canvas_w canvas_h
@@ -247,105 +239,201 @@ print(round(w), round(h))
         -channel Alpha -blur "0x${shadow_blur}" +channel \
         -fill black -colorize 100 \
         -channel Alpha -evaluate multiply 0.95 +channel \
-        /tmp/logo-shadow-layer.png
+        "$work/logo-shadow-layer.png"
     magick -size "${raw_w}x${raw_h}" xc:none \
-        /tmp/logo-shadow-layer.png -gravity Center -composite \
+        "$work/logo-shadow-layer.png" -gravity Center -composite \
         "$logo_raw" -gravity Center -composite \
         "$logo_out"
 
     echo "$logo_out"
 }
 
-# ── Helper: composite logo onto wallpaper at given dimensions ────────────────
-# For landscape wallpapers on portrait canvases (and vice versa), we use a
-# "blurred backdrop" approach: the image is blurred/darkened to fill the canvas,
-# then the sharp image (fitted to contain) is composited centered on top.
-# This avoids heavy zoom/crop while filling the full screen.
-_compose_at_size() {
-    local wallpaper="$1"
-    local logo_name="$2"
-    local color="$3"
-    local out_w="$4"
-    local out_h="$5"
-    local out_file="$6"
-
-    local logo_png
-    logo_png=$(render_logo "$logo_name" "$color" "$out_w" "$out_h")
-
-    # Detect if wallpaper and output have mismatched orientation (landscape vs portrait)
-    local wall_w wall_h
-    wall_w=$(magick "$wallpaper" -format "%w" info: 2>/dev/null)
-    wall_h=$(magick "$wallpaper" -format "%h" info: 2>/dev/null)
-    local wall_is_portrait=$(( wall_h > wall_w ? 1 : 0 ))
-    local out_is_portrait=$(( out_h > out_w ? 1 : 0 ))
-
-    if [ "$wall_is_portrait" != "$out_is_portrait" ]; then
-        # Orientation mismatch: blurred backdrop + sharp centered image
-        magick \
-            \( "$wallpaper" -resize "${out_w}x${out_h}^" -gravity Center -extent "${out_w}x${out_h}" \
-               -blur 0x20 -fill black -colorize 40 \) \
-            \( "$wallpaper" -resize "${out_w}x${out_h}" \) \
-            -gravity Center -composite \
-            \( "$logo_png" \) \
-            -gravity Center -composite \
-            "$out_file"
-    else
-        # Same orientation: simple cover crop (original behaviour)
-        magick \
-            \( "$wallpaper" -resize "${out_w}x${out_h}^" -gravity Center -extent "${out_w}x${out_h}" \) \
-            \( "$logo_png" \) \
-            -gravity Center -composite \
-            "$out_file"
-    fi
+# ── Fit settings (item_148) ──────────────────────────────────────────────────
+# How an image is laid onto a screen whose orientation differs from it (a
+# landscape image on a portrait screen, or the reverse). Same-orientation
+# screens are always cover-cropped from the centre, as before.
+#   fill   cover crop; ANCHOR picks the kept part: left|centre|right (for a tall
+#          image on a wide screen: left = top, right = bottom)
+#   blur   whole image, centred over a blurred, darkened cover of itself
+#   edges  whole image; the bars repeat its outermost rows/columns, softened
+# Read from config.json `wallpaper.fit` / `wallpaper.anchor` (Settings >
+# Appearance > Wallpaper); WALLPAPER_FIT / WALLPAPER_ANCHOR override for tests.
+SHELL_CONFIG="$HOME/.config/archeotech/config.json"
+FIT=""
+ANCHOR=""
+load_fit_settings() {
+    [ -n "$FIT" ] && return 0
+    local cfg=""
+    cfg=$(python3 - "$SHELL_CONFIG" 2>/dev/null <<'PY'
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+except Exception:
+    d = {}
+w = d.get("wallpaper") if isinstance(d, dict) else None
+w = w if isinstance(w, dict) else {}
+print(w.get("fit") or "fill", w.get("anchor") or "centre")
+PY
+) || cfg=""
+    read -r FIT ANCHOR <<<"$cfg" || true
+    FIT="${WALLPAPER_FIT:-${FIT:-fill}}"
+    ANCHOR="${WALLPAPER_ANCHOR:-${ANCHOR:-centre}}"
+    case "$FIT" in fill|blur|edges) ;; *) FIT=fill ;; esac
+    case "$ANCHOR" in left|centre|right) ;; *) ANCHOR=centre ;; esac
 }
 
-# ── Helper: composite logo onto wallpaper (per-combo cached) ─────────────────
-# Writes to keyed cache files so every (wallpaper, logo) pair is preserved.
-# Switching logos on a previously-seen wallpaper hits the cache instantly.
-# Also creates a portrait variant if a portrait output is detected.
-composite_logo() {
-    local wallpaper="$1"
-    local logo_name="$2"
+# ── Helper: image size "W H" ─────────────────────────────────────────────────
+_image_size() {
+    magick identify -format "%w %h" "$1[0]" 2>/dev/null
+}
 
-    local land_out portrait_out
-    land_out=$(composed_path "$wallpaper" "$logo_name" l)
-    portrait_out=$(composed_path "$wallpaper" "$logo_name" p)
+# ── Helper: lay <wallpaper> onto a WxH canvas: fit_image wall W H out fit anchor
+fit_image() {
+    local wallpaper="$1" w="$2" h="$3" out="$4" fit="$5" anchor="$6"
+    local iw ih
+    read -r iw ih < <(_image_size "$wallpaper")
 
-    # Detect portrait output once — needed both for cache validity and for the
-    # build step below.
-    local pw="" ph="" portrait_res=""
-    if command -v awww >/dev/null 2>&1; then
-        portrait_res=$(awww query 2>/dev/null \
-            | grep -oP '\d+x\d+' \
-            | awk -F'x' '$2 > $1 {print; exit}')
-        if [ -n "$portrait_res" ]; then
-            pw=$(echo "$portrait_res" | cut -dx -f1)
-            ph=$(echo "$portrait_res" | cut -dx -f2)
+    case "$fit" in
+        blur)
+            magick \
+                \( "$wallpaper" -resize "${w}x${h}^" -gravity Center -extent "${w}x${h}" \
+                   -blur 0x20 -fill black -colorize 40 \) \
+                \( "$wallpaper" -resize "${w}x${h}" \) \
+                -gravity Center -composite +repage "$out"
+            ;;
+        edges)
+            _fit_edges "$wallpaper" "$w" "$h" "$out"
+            ;;
+        *)
+            # Cover crop. The anchor slides along the axis that gets cropped:
+            # horizontal when the image is wider than the screen, else vertical.
+            local gravity=Center
+            if [ "$anchor" != centre ]; then
+                if [ $(( iw * h )) -gt $(( w * ih )) ]; then
+                    [ "$anchor" = left ] && gravity=West || gravity=East
+                else
+                    [ "$anchor" = left ] && gravity=North || gravity=South
+                fi
+            fi
+            magick "$wallpaper" -resize "${w}x${h}^" -gravity "$gravity" \
+                -extent "${w}x${h}" +repage "$out"
+            ;;
+    esac
+}
+
+# Fit inside, then fill each bar by stretching the image's outermost 4 px
+# rows (or columns) across it and blurring, so the bars carry its edge colours.
+_fit_edges() {
+    local wallpaper="$1" w="$2" h="$3" out="$4"
+    local tmpd fw fh
+    tmpd=$(mktemp -d "$(dirname "$out")/edges.XXXXXX") || return 1
+    magick "$wallpaper" -resize "${w}x${h}" +repage "$tmpd/fit.png"
+    read -r fw fh < <(_image_size "$tmpd/fit.png")
+    local a=0 b=0
+    if [ "$fh" -lt "$h" ]; then
+        a=$(( (h - fh) / 2 )); b=$(( h - fh - a ))
+    elif [ "$fw" -lt "$w" ]; then
+        a=$(( (w - fw) / 2 )); b=$(( w - fw - a ))
+    fi
+    if [ "$a" -lt 1 ] || [ "$b" -lt 1 ]; then
+        # No real bars (rounding): plain cover crop.
+        magick "$wallpaper" -resize "${w}x${h}^" -gravity Center -extent "${w}x${h}" +repage "$out"
+    elif [ "$fh" -lt "$h" ]; then
+        magick "$tmpd/fit.png" -gravity North -crop "${fw}x4+0+0" +repage \
+            -resize "${fw}x${a}!" -blur 0x6 "$tmpd/a.png"
+        magick "$tmpd/fit.png" -gravity South -crop "${fw}x4+0+0" +repage \
+            -resize "${fw}x${b}!" -blur 0x6 "$tmpd/b.png"
+        magick "$tmpd/a.png" "$tmpd/fit.png" "$tmpd/b.png" -append \
+            -gravity Center -extent "${w}x${h}" +repage "$out"
+    else
+        magick "$tmpd/fit.png" -gravity West -crop "4x${fh}+0+0" +repage \
+            -resize "${a}x${fh}!" -blur 0x6 "$tmpd/a.png"
+        magick "$tmpd/fit.png" -gravity East -crop "4x${fh}+0+0" +repage \
+            -resize "${b}x${fh}!" -blur 0x6 "$tmpd/b.png"
+        magick "$tmpd/a.png" "$tmpd/fit.png" "$tmpd/b.png" +append \
+            -gravity Center -extent "${w}x${h}" +repage "$out"
+    fi
+    rm -rf "$tmpd"
+}
+
+# ── Helper: list outputs as "name W H" (empty without awww) ──────────────────
+list_outputs() {
+    command -v awww >/dev/null 2>&1 || return 0
+    local line name res
+    while IFS= read -r line; do
+        name=$(grep -oP '^: \K\S+(?=:)' <<<"$line" || true)
+        res=$(grep -oP '\d+x\d+' <<<"$line" | head -1 || true)
+        [ -n "$name" ] && [ -n "$res" ] && echo "$name ${res%x*} ${res#*x}"
+    done < <(awww query 2>/dev/null)
+    return 0
+}
+
+# ── Helper: the image to send to one WxH output (per-combo cached) ───────────
+# Keyed by wallpaper, logo (or "plain"), fit, anchor and output size, so every
+# screen gets a composite built at its own size. Prints the path. A plain
+# centre crop needs no file: awww's own default resize crops from the centre.
+output_image() {
+    local wallpaper="$1" logo="$2" w="$3" h="$4"
+    load_fit_settings
+    # The fit only applies across orientations; anchor only to fill.
+    local fit="$FIT" anchor="$ANCHOR" iw ih
+    read -r iw ih < <(_image_size "$wallpaper")
+    if [ $(( ih > iw )) = $(( h > w )) ]; then fit=fill; anchor=centre; fi
+    [ "$fit" = fill ] || anchor=centre
+    if [ -z "$logo" ] && [ "$fit" = fill ] && [ "$anchor" = centre ]; then
+        echo "$wallpaper"
+        return 0
+    fi
+    local out
+    out="$COMPOSED_DIR/$(_wall_hash "$wallpaper")-${logo:-plain}-${fit}-${anchor}-${w}x${h}.png"
+    if [ ! -f "$out" ]; then
+        # Build in a private dir, publish with one mv: a background warm and a
+        # foreground apply can build the same key at once without mixing files,
+        # and a failed step never leaves a wrong image under a valid key.
+        local work ok=0
+        work=$(mktemp -d "$COMPOSED_DIR/.work.XXXXXX") || return 1
+        if _build_output "$wallpaper" "$logo" "$w" "$h" "$fit" "$anchor" "$work" \
+            && [ -s "$work/out.png" ]; then
+            mv -f "$work/out.png" "$out" && ok=1
+        fi
+        rm -rf "$work"
+        if [ "$ok" != 1 ]; then
+            echo "wallpaper-set: could not build $(basename "$out")" >&2
+            return 1
         fi
     fi
+    echo "$out"
+}
 
-    # Cache hit when landscape exists AND (no portrait output OR portrait cached too)
-    if [ -f "$land_out" ] && { [ -z "$portrait_res" ] || [ -f "$portrait_out" ]; }; then
-        return
-    fi
+# Steps of one build, all inside <work>; each failure returns 1 (callers run
+# this in a condition, where set -e is off).
+_build_output() {
+    local wallpaper="$1" logo="$2" w="$3" h="$4" fit="$5" anchor="$6" work="$7"
+    fit_image "$wallpaper" "$w" "$h" "$work/out.png" "$fit" "$anchor" || return 1
+    [ -n "$logo" ] || return 0
+    local color logo_png
+    color=$(get_wallpaper_color "$wallpaper") || return 1
+    logo_png=$(render_logo "$logo" "$color" "$w" "$h" "$work") || return 1
+    [ -s "$logo_png" ] || return 1
+    magick "$work/out.png" "$logo_png" -gravity Center -composite "$work/out.png"
+}
 
-    local color
-    color=$(get_wallpaper_color "$wallpaper")
-
-    # Build landscape composite (1920x1080 — used by all landscape outputs)
-    if [ ! -f "$land_out" ]; then
-        _compose_at_size "$wallpaper" "$logo_name" "$color" 1920 1080 "$land_out"
-    fi
-
-    # Build portrait composite for any portrait output detected
-    if [ -n "$portrait_res" ] && [ ! -f "$portrait_out" ]; then
-        _compose_at_size "$wallpaper" "$logo_name" "$color" "$pw" "$ph" "$portrait_out"
-    fi
+# ── Helper: pre-build the composites for every current output ────────────────
+composite_logo() {
+    local wallpaper="$1" logo_name="$2"
+    local outputs name w h rc=0
+    load_fit_settings   # here, not in output_image's subshells: read config once
+    outputs=$(list_outputs)
+    [ -n "$outputs" ] || outputs="default 1920 1080"
+    while read -r name w h; do
+        output_image "$wallpaper" "$logo_name" "$w" "$h" >/dev/null || rc=1
+    done <<<"$outputs"
+    return "$rc"
 }
 
 # ── Background warm: precompute composites for current wallpaper × other ─────
-# logos. After applying any wallpaper, kicks off a detached subshell that
-# generates the missing combos so the next logo switch is cache-hit.
+# logos (and the plain fit when a logo is on). After applying any wallpaper,
+# kicks off a detached subshell so the next logo switch is a cache hit.
 warm_other_logos() {
     local wallpaper="$1"
     local skip_logo="${2:-}"
@@ -354,45 +442,16 @@ warm_other_logos() {
             [ "$lg" = "$skip_logo" ] && continue
             composite_logo "$wallpaper" "$lg" 2>/dev/null
         done
+        [ -n "$skip_logo" ] && composite_logo "$wallpaper" "" 2>/dev/null
     ) >/dev/null 2>&1 &
     disown 2>/dev/null || true
 }
 
-# ── Helper: build a portrait-adapted plain wallpaper (no logo) ───────────────
-# If a landscape wallpaper is being sent to a portrait output, generate a
-# blurred-backdrop version so it doesn't look zoomed in.
-_prepare_plain_portrait() {
-    local wallpaper="$1"
-    local pw="$2"
-    local ph="$3"
-
-    local wall_w wall_h
-    wall_w=$(magick "$wallpaper" -format "%w" info: 2>/dev/null)
-    wall_h=$(magick "$wallpaper" -format "%h" info: 2>/dev/null)
-    local wall_is_portrait=$(( wall_h > wall_w ? 1 : 0 ))
-    local out_is_portrait=$(( ph > pw ? 1 : 0 ))
-
-    if [ "$wall_is_portrait" != "$out_is_portrait" ]; then
-        magick \
-            \( "$wallpaper" -resize "${pw}x${ph}^" -gravity Center -extent "${pw}x${ph}" \
-               -blur 0x20 -fill black -colorize 40 \) \
-            \( "$wallpaper" -resize "${pw}x${ph}" \) \
-            -gravity Center -composite \
-            "$PLAIN_PORTRAIT_IMG"
-    else
-        # Already matching orientation — cover crop is fine
-        magick "$wallpaper" -resize "${pw}x${ph}^" -gravity Center -extent "${pw}x${ph}" \
-            "$PLAIN_PORTRAIT_IMG"
-    fi
-}
-
 # ── Helper: apply wallpaper via awww ─────────────────────────────────────────
-# apply_wallpaper <landscape_img> [portrait_img]
-# If portrait_img is given, routes it to portrait outputs; landscape_img to the rest.
-# If portrait_img is omitted, builds a plain portrait variant on the fly if needed.
+# apply_wallpaper <wallpaper> [logo]: sends each output the image built for its
+# own size with the current fit (and the logo composited on top).
 apply_wallpaper() {
-    local img="$1"
-    local portrait_img="${2:-}"
+    local wallpaper="$1" logo="${2:-}"
 
     local swww_opts=(
         --transition-type "$TRANSITION"
@@ -401,28 +460,20 @@ apply_wallpaper() {
         --transition-duration "$TRANSITION_DURATION"
     )
 
-    if command -v awww >/dev/null 2>&1; then
-        # Route per output, building a portrait variant on the fly if needed
-        while IFS= read -r line; do
-            local output res pw ph
-            output=$(echo "$line" | grep -oP '^: \K\S+(?=:)')
-            res=$(echo "$line" | grep -oP '\d+x\d+' | head -1)
-            pw=$(echo "$res" | cut -dx -f1)
-            ph=$(echo "$res" | cut -dx -f2)
-            if [ -n "$ph" ] && [ "$ph" -gt "$pw" ] 2>/dev/null; then
-                if [ -n "$portrait_img" ]; then
-                    awww img "$portrait_img" --outputs "$output" "${swww_opts[@]}"
-                else
-                    _prepare_plain_portrait "$img" "$pw" "$ph"
-                    awww img "$PLAIN_PORTRAIT_IMG" --outputs "$output" "${swww_opts[@]}"
-                fi
-            else
-                awww img "$img" --outputs "$output" "${swww_opts[@]}"
-            fi
-        done < <(awww query 2>/dev/null)
-    else
+    local outputs name w h img
+    load_fit_settings   # once, before output_image's subshells
+    outputs=$(list_outputs)
+    if [ -z "$outputs" ]; then
+        img=$(output_image "$wallpaper" "$logo" 1920 1080) || img="$wallpaper"
         awww img "$img" "${swww_opts[@]}"
+        return
     fi
+    # One screen's failed build falls back to the raw image; the rest go on.
+    while read -r name w h; do
+        img=$(output_image "$wallpaper" "$logo" "$w" "$h") || img="$wallpaper"
+        awww img "$img" --outputs "$name" "${swww_opts[@]}" \
+            || echo "wallpaper-set: awww failed on $name" >&2
+    done <<<"$outputs"
 }
 
 # ── Main logic ────────────────────────────────────────────────────────────────
@@ -471,10 +522,7 @@ case "${1:-}" in
             echo "$REQUESTED" > "$LOGO_STATE"
             echo "$REQUESTED" > "$LAST_LOGO"
             echo "Logo: $REQUESTED ON" >&2
-            composite_logo "$ORIGINAL" "$REQUESTED"
-            land_img=$(composed_path "$ORIGINAL" "$REQUESTED" l)
-            portrait_img=$(composed_path "$ORIGINAL" "$REQUESTED" p)
-            apply_wallpaper "$land_img" "$( [ -f "$portrait_img" ] && echo "$portrait_img" )"
+            apply_wallpaper "$ORIGINAL" "$REQUESTED"
             warm_other_logos "$ORIGINAL" "$REQUESTED"
         fi
         ;;
@@ -557,14 +605,7 @@ case "${1:-}" in
         ln -sfn "$WALLPAPER" "$CURRENT_LINK"
 
         CURRENT="$(active_logo)"
-        if [ -n "$CURRENT" ]; then
-            composite_logo "$WALLPAPER" "$CURRENT"
-            land_img=$(composed_path "$WALLPAPER" "$CURRENT" l)
-            portrait_img=$(composed_path "$WALLPAPER" "$CURRENT" p)
-            apply_wallpaper "$land_img" "$( [ -f "$portrait_img" ] && echo "$portrait_img" )"
-        else
-            apply_wallpaper "$WALLPAPER"
-        fi
+        apply_wallpaper "$WALLPAPER" "$CURRENT"
         # Warm other logos in the background so the next logo switch is instant
         warm_other_logos "$WALLPAPER" "$CURRENT"
         ;;

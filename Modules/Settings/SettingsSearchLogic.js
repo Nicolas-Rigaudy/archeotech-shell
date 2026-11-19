@@ -16,6 +16,8 @@ var INDEX = [
     { pane: "appearance", key: "appearance.animScale", section: "Style",    label: "Animation speed",  keywords: "motion animations speed fast slow off transitions" },
     { pane: "appearance", key: "appearance.reducedMotion", section: "Style", label: "Reduce motion",    keywords: "motion animations accessibility vestibular instant slides marquee" },
     { pane: "appearance", key: "appearance.wallpaper", section: "Wallpaper", label: "Wallpaper",        keywords: "background image picker" },
+    { pane: "appearance", key: "wallpaper.fit",       section: "Wallpaper",  label: "Wallpaper fit",    keywords: "portrait vertical rotated screen fill crop anchor blur bars edges stretch" },
+    { pane: "appearance", key: "wallpaper.anchor",    section: "Wallpaper",  label: "Wallpaper crop side", keywords: "portrait vertical keep left right centre top bottom crop anchor" },
     { pane: "appearance", key: "wallpaper.modes",     section: "Wallpaper",  label: "Light and dark wallpapers", keywords: "per mode separate day night background theme" },
     { pane: "appearance", key: "appearance.logo",     section: "Logo",       label: "Logo overlay",     keywords: "arch rebel imperial emblem sigil wallpaper" },
     // Shell

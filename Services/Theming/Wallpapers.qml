@@ -38,6 +38,16 @@ QtObject {
     property bool _currentRead: false
     readonly property bool applying: _applyProc.running
 
+    // Env for any wallpaper-set.sh run (item_148): the fit goes in by env
+    // because config.json is written on a debounce, so a just-changed Fit
+    // would not be on disk yet. Merged over the inherited environment.
+    function fitEnv() {
+        return {
+            WALLPAPER_FIT: Persistence.Config.get("wallpaper.fit"),
+            WALLPAPER_ANCHOR: Persistence.Config.get("wallpaper.anchor")
+        }
+    }
+
     function readCurrent() { if (!_currentReader.running) _currentReader.running = true }
 
     function apply(path) {
@@ -45,9 +55,12 @@ QtObject {
         // One wallpaper-set at a time; the last request wins once it exits.
         if (applying) { root._pending = path; return }
         root.currentPath = path
+        _applyProc.environment = root.fitEnv()
         _applyProc.command = [Commons.Paths.wallpaperSet, path]
         _applyProc.running = true
     }
+    // Re-send the applied wallpaper, e.g. after the Fit setting changed.
+    function reapply() { apply(root.currentPath) }
     property string _pending: ""
     property string _failedPath: ""
 
