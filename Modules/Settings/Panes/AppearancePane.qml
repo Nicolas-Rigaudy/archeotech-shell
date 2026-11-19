@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../../../Commons" as Commons
+import "../../../Services/Hardware" as Hardware
 import "../../../Services/Persistence" as Persistence
 import "../../../Services/Shell" as ShellServices
 import "../../../Services/Theming" as Theming
@@ -216,8 +217,111 @@ Item {
                 // uses (Sprint 24/26). Settings stacks; the quick panel tabs.
                 SectionLabel { text: "WALLPAPER"; SearchTarget { key: "appearance.wallpaper"; target: wallBody } }
 
+                // Screens (item_148): one image on all screens, or one per screen.
+                // The drawing shows what each output has now; a click picks the
+                // output the Fit rows, the Light/Dark cards and the picker below
+                // change (the empty canvas = all screens). Outputs missing from
+                // the config (a new monitor) use the all-screens settings.
+                SettingsCard {
+                    id: wallScreens
+                    SearchTarget { key: "wallpaper.layout"; target: wallScreens }
+                    readonly property var outputs: (Hardware.Displays.outputs || []).filter(o => o.enabled)
+                    property string chosen: ""
+                    // The selection, dropped when that output goes away.
+                    readonly property string sel: outputs.some(o => o.name === chosen) ? chosen : ""
+                    // The output the slots and picker target (per-screen layout only).
+                    readonly property string target: Theming.Wallpapers.perScreen ? sel : ""
+                    readonly property var _selOut: outputs.find(o => o.name === sel) || null
+                    readonly property string fit: Theming.Wallpapers.fitOf(sel)
+
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                    ButtonGroupRow {
+                        label: "Wallpaper on"
+                        configKey: "wallpaper.layout"
+                        autoReset: false
+                        description: "One wallpaper everywhere, or its own on each screen"
+                        options: [{ value: "same", label: "All screens" }, { value: "screens", label: "Each screen" }]
+                        currentValue: Theming.Wallpapers.layout
+                        onSelected: v => Theming.Wallpapers.setLayout(v)
+                        onReset: Theming.Wallpapers.setLayout("same")
+                    }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                    DisplayArrangement {
+                        Layout.fillWidth: true
+                        implicitHeight: 200
+                        movable: false
+                        outputs: wallScreens.outputs
+                        selected: wallScreens.sel
+                        images: {
+                            var m = {}
+                            for (var i = 0; i < wallScreens.outputs.length; i++) {
+                                const n = wallScreens.outputs[i].name
+                                const p = Theming.Wallpapers.shownOn(n)
+                                if (p) m[n] = Theming.Wallpapers.thumbOf(p)
+                            }
+                            return m
+                        }
+                        // A second click on the selected screen goes back to all screens.
+                        onSelect: name => wallScreens.chosen = (name === wallScreens.sel ? "" : name)
+                    }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                    Text {
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        text: wallScreens._selOut
+                            ? "Editing " + wallScreens.sel + " · " + Hardware.Displays.logicalSize(wallScreens._selOut).w
+                              + "×" + Hardware.Displays.logicalSize(wallScreens._selOut).h
+                              + (Theming.Wallpapers.perScreen ? "" : " (fit only; the image is the same on all screens)")
+                            : "Editing all screens · click a screen to change it alone"
+                        color: Commons.Appearance.colors.textMuted
+                        font.pixelSize: Commons.Appearance.font.sizeSm
+                        font.family: Commons.Appearance.font.family
+                    }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                    Divider {}
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                    // Fit across orientations (item_148 wave 1): how a wallpaper
+                    // lies on a screen turned the other way (a portrait monitor);
+                    // screens of the image's own orientation always crop from the
+                    // centre. Per output, an unset value follows all screens.
+                    ButtonGroupRow {
+                        label: "Fit on rotated screens"
+                        configKey: "wallpaper.fit"
+                        autoReset: false
+                        modified: wallScreens.sel ? Theming.Wallpapers.ownFit(wallScreens.sel, "fit")
+                                                  : Persistence.Config.isModified("wallpaper.fit")
+                        resetHint: wallScreens.sel ? "Same as all screens" : "Reset to Fill"
+                        description: "A wide wallpaper on a portrait screen, or a tall one on a wide screen"
+                        options: [{ value: "fill", label: "Fill" }, { value: "blur", label: "Blur" }, { value: "edges", label: "Edges" }]
+                        currentValue: wallScreens.fit
+                        onSelected: v => Theming.Wallpapers.setFit(wallScreens.sel, "fit", v)
+                        onReset: Theming.Wallpapers.setFit(wallScreens.sel, "fit", "")
+                    }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: wallScreens.fit === "fill" }
+                    Divider { visible: wallScreens.fit === "fill" }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: wallScreens.fit === "fill" }
+                    ButtonGroupRow {
+                        visible: wallScreens.fit === "fill"
+                        label: "Keep"
+                        configKey: "wallpaper.anchor"
+                        autoReset: false
+                        modified: wallScreens.sel ? Theming.Wallpapers.ownFit(wallScreens.sel, "anchor")
+                                                  : Persistence.Config.isModified("wallpaper.anchor")
+                        resetHint: wallScreens.sel ? "Same as all screens" : "Reset to Centre"
+                        description: "Which part of the image stays on screen (left is the top of a tall image)"
+                        options: [{ value: "left", label: "Left" }, { value: "centre", label: "Centre" }, { value: "right", label: "Right" }]
+                        currentValue: Theming.Wallpapers.anchorOf(wallScreens.sel)
+                        onSelected: v => Theming.Wallpapers.setFit(wallScreens.sel, "anchor", v)
+                        onReset: Theming.Wallpapers.setFit(wallScreens.sel, "anchor", "")
+                    }
+                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+                }
+
+                Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
+
                 // Per-mode wallpapers (item_140): each mode remembers its own; the
-                // selected card is the one the carousel below sets.
+                // selected card is the one the carousel below sets. In the
+                // per-screen layout they are the selected screen's.
                 SettingsCard {
                     id: wallModes
                     SearchTarget { key: "wallpaper.modes"; target: wallModes }
@@ -225,7 +329,9 @@ Item {
                     Text {
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap
-                        text: "Each mode keeps its own wallpaper and switches with the theme. Pick a card, then a wallpaper."
+                        text: wallScreens.target
+                            ? "Wallpapers of " + wallScreens.target + ", one per mode. An unset card shows the all-screens wallpaper."
+                            : "Each mode keeps its own wallpaper and switches with the theme. Pick a card, then a wallpaper."
                         color: Commons.Appearance.colors.textMuted
                         font.pixelSize: Commons.Appearance.font.sizeSm
                         font.family: Commons.Appearance.font.family
@@ -234,48 +340,7 @@ Item {
                     Appearance.WallpaperSlots {
                         id: wallSlots
                         Layout.fillWidth: true
-                    }
-                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
-                }
-
-                Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
-
-                // Fit across orientations (item_148): how a wallpaper lies on a
-                // screen turned the other way (a portrait monitor); screens of
-                // the image's own orientation always crop from the centre. A
-                // change re-sends the current wallpaper.
-                SettingsCard {
-                    id: wallFit
-                    readonly property string fit: Persistence.Config.get("wallpaper.fit")
-                    function _set(key, v) {
-                        if (v === undefined) Persistence.Config.reset(key)
-                        else Persistence.Config.set(key, v)
-                        Theming.Wallpapers.reapply()
-                    }
-                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
-                    ButtonGroupRow {
-                        label: "Fit on rotated screens"
-                        configKey: "wallpaper.fit"
-                        autoReset: false
-                        description: "A wide wallpaper on a portrait screen, or a tall one on a wide screen"
-                        options: [{ value: "fill", label: "Fill" }, { value: "blur", label: "Blur" }, { value: "edges", label: "Edges" }]
-                        currentValue: wallFit.fit
-                        onSelected: v => wallFit._set("wallpaper.fit", v)
-                        onReset: wallFit._set("wallpaper.fit", undefined)
-                    }
-                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: wallFit.fit === "fill" }
-                    Divider { visible: wallFit.fit === "fill" }
-                    Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true; visible: wallFit.fit === "fill" }
-                    ButtonGroupRow {
-                        visible: wallFit.fit === "fill"
-                        label: "Keep"
-                        configKey: "wallpaper.anchor"
-                        autoReset: false
-                        description: "Which part of the image stays on screen (left is the top of a tall image)"
-                        options: [{ value: "left", label: "Left" }, { value: "centre", label: "Centre" }, { value: "right", label: "Right" }]
-                        currentValue: Persistence.Config.get("wallpaper.anchor")
-                        onSelected: v => wallFit._set("wallpaper.anchor", v)
-                        onReset: wallFit._set("wallpaper.anchor", undefined)
+                        screen: wallScreens.target
                     }
                     Item { implicitHeight: Commons.Appearance.spacing.s2; Layout.fillWidth: true }
                 }
@@ -289,6 +354,7 @@ Item {
                     embedded: true
                     carouselHeight: 200
                     slot: wallSlots.selected
+                    screen: wallScreens.target
                 }
 
                 Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }

@@ -32,7 +32,9 @@ var DEFAULTS = {
     "wallpaper.light":                "",        // item_140: "" = keep what is on screen
     "wallpaper.dark":                 "",
     "wallpaper.fit":                  "fill",    // item_148: fill | blur | edges (screens of the other orientation)
-    "wallpaper.anchor":               "centre"   // item_148: left | centre | right (fill only)
+    "wallpaper.anchor":               "centre",  // item_148: left | centre | right (fill only)
+    "wallpaper.layout":               "same",    // item_148: same | screens (an image per output)
+    "wallpaper.screens":              {}         // item_148: { output: { light, dark, fit, anchor } }
 }
 
 function has(key) { return DEFAULTS.hasOwnProperty(key) }

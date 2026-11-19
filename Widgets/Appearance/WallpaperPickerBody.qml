@@ -38,9 +38,11 @@ Item {
     // Which mode's wallpaper a pick sets ("light" | "dark"); "" = the current
     // mode's, which also applies it. Settings passes the selected slot card.
     property string slot: ""
+    // Output a pick is for (item_148, per-screen layout); "" = all screens.
+    property string screen: ""
     readonly property string filterMode: root.slot || Theming.Wallpapers.mode
     // The wallpaper this picker marks: the slot's, or the one on screen.
-    readonly property string currentPath: Theming.Wallpapers.markedPath(root.slot)
+    readonly property string currentPath: Theming.Wallpapers.markedPath(root.slot, root.screen)
     // Wallpaper list comes from the persistent Wallpapers service — scanned once
     // at startup and held, so opening the picker is instant (no re-scan/rebuild).
     // Wallpapers.offered: the active pack's own (plus the marked one) when it
@@ -71,7 +73,7 @@ Item {
         }
     }
 
-    function _apply(path) { Theming.Wallpapers.choose(path, root.slot) }
+    function _apply(path) { Theming.Wallpapers.choose(path, root.slot, root.screen) }
 
     // Colour preview (item_006): the accent of the wallpaper in the middle of the
     // carousel, extracted but never applied.

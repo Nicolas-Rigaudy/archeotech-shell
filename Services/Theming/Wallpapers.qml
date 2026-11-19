@@ -4,6 +4,7 @@ import Quickshell.Io
 import "../../Commons" as Commons
 import "../Persistence" as Persistence
 import "../Shell" as ShellServices
+import "WallpapersLogic.js" as Logic
 
 // Persistent wallpaper catalogue (picker perf). Scanned ONCE at shell startup
 // and held here, so opening the picker is instant — the old WallpaperPickerBody
@@ -31,60 +32,108 @@ QtObject {
 
     // ── Applied wallpaper ─────────────────────────────────────────────────────
     // Shared by every picker (quick switcher, Settings) so they agree on what is
-    // applied. wallpaper-set.sh stays the one writer: it records the path in
-    // ~/.cache/wallpaper/last-wallpaper (its LAST_WALL), which the keybind and
-    // --restore write too, so that file, not this property, is the truth.
+    // applied. wallpaper-set.sh stays the one writer: it records the main image
+    // in ~/.cache/wallpaper/last-wallpaper (its LAST_WALL) and the screens with
+    // their own image in last-screens; the keybind and --restore write them too,
+    // so those files, not these properties, are the truth.
     property string currentPath: ""
+    property var currentScreens: ({})      // { output: path } with their own image
     property bool _currentRead: false
-    readonly property bool applying: _applyProc.running
+    // Set as soon as apply() launches: Process.running only turns true once the
+    // process has started, and a pick in between would replace the command of
+    // a run already launching (and be lost).
+    property bool _launched: false
+    readonly property bool applying: _launched || _applyProc.running
 
-    // Env for any wallpaper-set.sh run (item_148): the fit goes in by env
+    // The catalogue thumbnail of a wallpaper (the image itself when it has none).
+    function thumbOf(path) {
+        const w = root.list.find(e => e.path === path)
+        return w && w.thumb ? w.thumb : path
+    }
+    // The image on one output (item_148): its own, else the main one.
+    function shownOn(name) { return Logic.shownOn(root.currentPath, root.currentScreens, name) }
+
+    // Env for any wallpaper-set.sh run (item_148): the fits go in by env
     // because config.json is written on a debounce, so a just-changed Fit
     // would not be on disk yet. Merged over the inherited environment.
     function fitEnv() {
-        return {
-            WALLPAPER_FIT: Persistence.Config.get("wallpaper.fit"),
-            WALLPAPER_ANCHOR: Persistence.Config.get("wallpaper.anchor")
-        }
+        return { WALLPAPER_CONFIG: Logic.envConfig(Persistence.Config.get("wallpaper.fit"),
+            Persistence.Config.get("wallpaper.anchor"), root.screens) }
     }
 
     function readCurrent() { if (!_currentReader.running) _currentReader.running = true }
 
-    function apply(path) {
+    // apply(path[, images]): `path` on every output, `images` ({ output: path })
+    // on the outputs with their own (default: the current mode's per-screen
+    // images, none in the "same" layout).
+    function apply(path, images) {
         if (!path) return
+        var im = images !== undefined ? images : root._imagesFor(root.mode)
         // One wallpaper-set at a time; the last request wins once it exits.
-        if (applying) { root._pending = path; return }
+        if (applying) { root._pending = { path: path, images: im }; return }
         root.currentPath = path
+        root.currentScreens = im
         _applyProc.environment = root.fitEnv()
-        _applyProc.command = [Commons.Paths.wallpaperSet, path]
+        _applyProc.command = [Commons.Paths.wallpaperSet].concat(Logic.args(path, im))
+        root._launched = true
         _applyProc.running = true
+        _launchGuard.restart()
     }
-    // Re-send the applied wallpaper, e.g. after the Fit setting changed.
-    function reapply() { apply(root.currentPath) }
-    property string _pending: ""
-    property string _failedPath: ""
+    // A run that never started (no exit follows) must not block later picks.
+    property Timer _launchGuard: Timer {
+        interval: 5000
+        onTriggered: if (root._launched && !root._applyProc.running) {
+            root._launched = false
+            var next = root._pending
+            root._pending = null
+            if (next) root.apply(next.path, next.images)
+            else root.readCurrent()
+        }
+    }
+    // Re-send the applied wallpaper, e.g. after a Fit setting changed.
+    function reapply() { apply(root.currentPath, root.currentScreens) }
+    property var _pending: null
+    property string _failedSig: ""
 
     property Process _applyProc: Process {
         running: false
         // A failed run leaves the old wallpaper on screen: re-read what is applied
         // (which also re-checks the mode's slot) rather than trust the pick.
+        onRunningChanged: if (running) root._launchGuard.stop()
         onExited: (exitCode) => {
-            // A path that failed is not retried by the mode follow (it would loop);
+            root._launched = false
+            // A plan that failed is not retried by the mode follow (it would loop);
             // a pick from a picker still tries it again.
-            root._failedPath = exitCode !== 0 ? root.currentPath : ""
+            root._failedSig = exitCode !== 0 ? Logic.signature(root.currentPath, root.currentScreens) : ""
             var next = root._pending
-            root._pending = ""
-            if (next) root.apply(next)
+            root._pending = null
+            if (next) root.apply(next.path, next.images)
             else root.readCurrent()
         }
     }
     property Process _currentReader: Process {
+        property string _main: ""
+        property string _screens: ""
         running: false
-        command: ["bash", "-c", "cat \"$HOME/.cache/wallpaper/last-wallpaper\" 2>/dev/null || true"]
+        // Section markers keep the two files apart in one run.
+        command: ["bash", "-c", "d=\"$HOME/.cache/wallpaper\"; cat \"$d/last-wallpaper\" 2>/dev/null; "
+            + "echo @@screens; cat \"$d/last-screens\" 2>/dev/null; true"]
+        onStarted: { _main = ""; _screens = ""; _inScreens = false }
+        property bool _inScreens: false
         stdout: SplitParser {
-            onRead: line => { var t = line.trim(); if (t) root.currentPath = t }
+            onRead: line => {
+                var r = root._currentReader
+                if (line === "@@screens") { r._inScreens = true; return }
+                if (r._inScreens) r._screens += line + "\n"
+                else if (line.trim()) r._main = line.trim()
+            }
         }
-        onExited: { root._currentRead = true; root._applyModeSlot() }
+        onExited: {
+            if (_main) root.currentPath = _main
+            root.currentScreens = Logic.parseScreens(_screens)
+            root._currentRead = true
+            root._applyModeSlot()
+        }
     }
 
     // ── Per-mode wallpapers (item_140) ────────────────────────────────────────
@@ -101,30 +150,86 @@ QtObject {
     readonly property string lightPath: Persistence.Config.get("wallpaper.light")
     readonly property string darkPath: Persistence.Config.get("wallpaper.dark")
 
+    // ── Per screen (item_148 wave 2) ─────────────────────────────────────────
+    // layout "same": one image everywhere; "screens": each output may hold its
+    // own light/dark image in wallpaper.screens.<output> (unset = the all-screens
+    // one). Fit/anchor per output apply in both layouts. Outputs not in the
+    // config (a new monitor, after a dock) get the all-screens image and fit.
+    readonly property string layout: Persistence.Config.get("wallpaper.layout")
+    readonly property bool perScreen: root.layout === "screens"
+    readonly property var screens: Persistence.Config.get("wallpaper.screens")
+    function _imagesFor(mode) {
+        return Logic.screenImages(root.layout, root.screens, mode, p => root.list.some(w => w.path === p))
+    }
+    function setLayout(v) {
+        if (v === Persistence.Config.defaultFor("wallpaper.layout")) Persistence.Config.reset("wallpaper.layout")
+        else Persistence.Config.set("wallpaper.layout", v)
+    }
+    function _setScreen(name, key, value) {
+        var next = Logic.withScreen(root.screens, name, key, value)
+        if (Object.keys(next).length) Persistence.Config.set("wallpaper.screens", next)
+        else Persistence.Config.reset("wallpaper.screens")
+    }
+    // The fit/anchor an output uses ("" = the all-screens value), whether it has
+    // its own, and setting it ("" output = all screens; "" value = inherit).
+    function fitOf(name) { return Logic.fitOf(Persistence.Config.get("wallpaper.fit"), root.screens, name) }
+    function anchorOf(name) { return Logic.anchorOf(Persistence.Config.get("wallpaper.anchor"), root.screens, name) }
+    function ownFit(name, key) { return !!name && Logic.screenValue(root.screens, name, key || "fit") !== "" }
+    function setFit(name, key, value) {
+        if (name) root._setScreen(name, key, value)
+        else if (!value || value === Persistence.Config.defaultFor("wallpaper." + key)) Persistence.Config.reset("wallpaper." + key)
+        else Persistence.Config.set("wallpaper." + key, value)
+        root.reapply()
+    }
+
     // The mode is only final once theme.json is read and a configured pack has
     // resolved: before that isLight reads false, and following it would flash the
     // dark slot on a light theme at boot.
     readonly property bool _paletteReady: !!(Commons.Appearance._data && Commons.Appearance._data.mode)
         && (Persistence.Config.get("appearance.activePack", "") === "" || Commons.Appearance.activePackDir !== "")
 
-    // The wallpaper a slot holds ("light" | "dark"; "" = the current mode's).
-    function slotPath(slot) {
+    // The wallpaper a slot holds ("light" | "dark"; "" = the current mode's), for
+    // all screens, or for output `screen` in the per-screen layout ("" = unset,
+    // the all-screens one shows).
+    function slotPath(slot, screen) {
         var s = slot || root.mode
+        if (screen && root.perScreen) return Logic.screenValue(root.screens, screen, s)
         return s === "light" ? root.lightPath : root.darkPath
     }
     // What a picker marks for a slot: the slot's wallpaper, or (an empty slot of
-    // the current mode) the one on screen.
-    function markedPath(slot) {
+    // the current mode) the one on screen. An output with no image of its own
+    // marks the all-screens one.
+    function markedPath(slot, screen) {
         var s = slot || root.mode
+        if (screen && root.perScreen) {
+            const own = root.slotPath(s, screen)
+            if (own) return own
+        }
         return root.slotPath(s) || (s === root.mode ? root.currentPath : "")
     }
 
-    // A pick from a picker: fills `slot` (default: the current mode's) and is
-    // applied only when that slot is the current mode's.
-    function choose(path, slot) {
+    // A pick from a picker: fills `slot` (default: the current mode's), of output
+    // `screen` in the per-screen layout, and is applied only when that slot is
+    // the current mode's.
+    function choose(path, slot, screen) {
         var s = slot || root.mode
+        if (screen && root.perScreen) {
+            root._setScreen(screen, s, path)
+            if (s === root.mode) {
+                const im = Object.assign({}, root._imagesFor(s))
+                im[screen] = path
+                apply(root.slotPath(s) || root.currentPath || path, im)
+            }
+            return
+        }
         Persistence.Config.set("wallpaper." + s, path)
         if (s === root.mode) apply(path)
+    }
+    // Back to the all-screens image for one output's slot.
+    function clearScreen(screen, slot) {
+        var s = slot || root.mode
+        root._setScreen(screen, s, "")
+        if (s === root.mode) _followMode()
     }
 
     // ── Brightness (which mode a wallpaper suits) ───────────────────────────
@@ -197,16 +302,23 @@ QtObject {
     }
     function _applyModeSlot() {
         if (!Persistence.Config.ready || !root._currentRead || !root._scanned || !root._paletteReady) return
-        var want = root.slotPath(root.mode)
-        // Only a wallpaper still in the catalogue: a deleted file would leave
-        // the screen on the old one while the picker marks the missing one.
-        if (!want || want === root.currentPath || want === root._failedPath || root.applying) return
-        if (!root.list.some(w => w.path === want)) return
-        root.apply(want)
+        if (root.applying) return
+        // Only wallpapers still in the catalogue: a deleted file would leave the
+        // screen on the old one while the picker marks the missing one. An empty
+        // main slot keeps the image on screen.
+        var main = root.slotPath(root.mode)
+        if (!main || !root.list.some(w => w.path === main)) main = root.currentPath
+        if (!main) return
+        var im = root._imagesFor(root.mode)
+        var sig = Logic.signature(main, im)
+        if (sig === Logic.signature(root.currentPath, root.currentScreens) || sig === root._failedSig) return
+        root.apply(main, im)
     }
     onModeChanged: _followMode()
     onLightPathChanged: _followMode()
     onDarkPathChanged: _followMode()
+    onLayoutChanged: _followMode()
+    onScreensChanged: _followMode()
     on_PaletteReadyChanged: _followMode()
     property Connections _readyConn: Connections {
         target: Persistence.Config

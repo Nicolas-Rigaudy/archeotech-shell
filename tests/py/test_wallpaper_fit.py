@@ -27,7 +27,7 @@ else echo "$*" >> "$AWWW_LOG"; fi
 
 
 @unittest.skipUnless(shutil.which("magick"), "ImageMagick not installed")
-class Fit(unittest.TestCase):
+class Harness(unittest.TestCase):
     def setUp(self):
         self._d = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.home = pathlib.Path(self._d.name)
@@ -51,13 +51,14 @@ class Fit(unittest.TestCase):
         e.update(extra)
         return e
 
-    def run_script(self, config=None, **env_extra):
+    def run_script(self, config=None, args=None, rc=0, **env_extra):
         if config is not None:
             cfg = self.home / ".config" / "archeotech"
             cfg.mkdir(parents=True, exist_ok=True)
             (cfg / "config.json").write_text(json.dumps(config))
-        r = subprocess.run(["bash", str(SCRIPT), str(self.img)], env=self.env(**env_extra), capture_output=True, text=True, timeout=120)
-        self.assertEqual(r.returncode, 0, r.stderr)
+        argv = args if args is not None else [str(self.img)]
+        r = subprocess.run(["bash", str(SCRIPT), *argv], env=self.env(**env_extra), capture_output=True, text=True, timeout=120)
+        self.assertEqual(r.returncode, rc, r.stderr)
         sent = {}
         for line in self.log.read_text().splitlines():
             parts = line.split()
@@ -72,6 +73,8 @@ class Fit(unittest.TestCase):
         return subprocess.run(["magick", path, "-format", f"%[hex:p{{{x},{y}}}]", "info:"],
                               capture_output=True, text=True, check=True).stdout[:6].upper()
 
+
+class Fit(Harness):
     def test_default_fill_centre_sends_the_raw_image_everywhere(self):
         sent = self.run_script()
         self.assertEqual(sent, {"eDP-1": str(self.img), "DP-3": str(self.img)})
@@ -137,6 +140,88 @@ class Fit(unittest.TestCase):
         expect = sorted(f"{lg}-{fit}-{sz}.png" for lg in ("arch", "rebel", "imperial")
                         for fit, sz in (("fill-centre", "160x100"), ("blur-centre", "90x160")))
         self.assertEqual(names, expect)
+
+
+class PerScreen(Harness):
+    """Wave 2: an image per output (--screen NAME IMAGE, replayed from
+    last-screens) and a fit per output (wallpaper.screens.<NAME>)."""
+
+    def setUp(self):
+        super().setUp()
+        # Portrait 2:3 image: top third red, middle green, bottom third blue.
+        self.tall = self.home / "tall.png"
+        subprocess.run(["magick", "-size", "200x300", "xc:#00ff00",
+                        "-fill", "#ff0000", "-draw", "rectangle 0,0 199,99",
+                        "-fill", "#0000ff", "-draw", "rectangle 0,200 199,299", str(self.tall)], check=True)
+        self.cache = self.home / ".cache" / "wallpaper"
+
+    def test_screen_gets_its_own_image_and_others_the_main_one(self):
+        sent = self.run_script(args=[str(self.img), "--screen", "DP-3", str(self.tall)])
+        self.assertEqual(sent, {"eDP-1": str(self.img), "DP-3": str(self.tall)})
+        self.assertEqual((self.cache / "last-screens").read_text(), f"DP-3\t{self.tall}\n")
+        self.assertEqual((self.cache / "last-wallpaper").read_text().strip(), str(self.img))
+
+    def test_restore_and_logo_toggle_replay_the_screen_images(self):
+        self.run_script(args=[str(self.img), "--screen", "DP-3", str(self.tall)])
+        for argv in (["--restore"], ["--toggle-logo"]):
+            with self.subTest(argv=argv):
+                self.log.unlink()
+                sent = self.run_script(args=argv)
+                self.assertEqual(sent, {"eDP-1": str(self.img), "DP-3": str(self.tall)})
+
+    def test_plain_set_clears_the_screen_images(self):
+        self.run_script(args=[str(self.img), "--screen", "DP-3", str(self.tall)])
+        self.log.unlink()
+        sent = self.run_script()
+        self.assertEqual(sent, {"eDP-1": str(self.img), "DP-3": str(self.img)})
+        self.assertFalse((self.cache / "last-screens").exists())
+
+    def test_missing_screen_image_falls_back_to_the_main_one(self):
+        # Applied, then exit 3 so the shell does not retry the same plan forever.
+        sent = self.run_script(args=[str(self.img), "--screen", "DP-3", str(self.home / "gone.png"),
+                                     "--screen", "eDP-1", str(self.tall)], rc=3)
+        self.assertEqual(sent["DP-3"], str(self.img))
+        self.assertEqual(sent["eDP-1"], str(self.tall))
+
+    def test_bad_output_names_fail(self):
+        for name in ["", "a b", "x]", "@", "*"]:
+            r = subprocess.run(["bash", str(SCRIPT), str(self.img), "--screen", name, str(self.tall)],
+                               env=self.env(), capture_output=True, text=True, timeout=60)
+            self.assertEqual(r.returncode, 2, name)
+
+    def test_bad_arguments_fail(self):
+        r = subprocess.run(["bash", str(SCRIPT), str(self.img), "--screen", "DP-3"], env=self.env(),
+                           capture_output=True, text=True, timeout=60)
+        self.assertEqual(r.returncode, 2)
+
+    def test_fit_per_screen_overrides_the_all_screens_fit(self):
+        cfg = {"wallpaper": {"fit": "blur", "screens": {"DP-3": {"fit": "fill", "anchor": "right"}}}}
+        sent = self.run_script(cfg)
+        self.assertEqual(self.pixel(sent["DP-3"], 45, 80), "0000FF", "DP-3: its own fill + right")
+        # A screen without its own fit keeps the all-screens one: eDP-1 shows a
+        # tall image (rotated relative to it) with blur.
+        self.log.unlink()
+        sent = self.run_script(cfg, args=[str(self.img), "--screen", "eDP-1", str(self.tall)])
+        self.assertIn("-plain-blur-centre-160x100.png", sent["eDP-1"])
+
+    def test_missing_screen_fields_inherit(self):
+        cfg = {"wallpaper": {"fit": "fill", "anchor": "left", "screens": {"DP-3": {"fit": "fill"}}}}
+        sent = self.run_script(cfg)
+        self.assertEqual(self.pixel(sent["DP-3"], 45, 80), "FF0000", "anchor inherited: left")
+
+    def test_env_config_replaces_the_file(self):
+        cfg = {"wallpaper": {"fit": "fill", "anchor": "left"}}
+        env_cfg = json.dumps({"fit": "fill", "screens": {"DP-3": {"anchor": "right"}}})
+        sent = self.run_script(cfg, WALLPAPER_CONFIG=env_cfg)
+        self.assertEqual(self.pixel(sent["DP-3"], 45, 80), "0000FF")
+
+    @unittest.skipUnless(shutil.which("rsvg-convert"), "rsvg-convert not installed")
+    def test_only_the_main_image_writes_the_colour_cache(self):
+        self.cache.mkdir(parents=True)
+        (self.cache / "logo-active").write_text("arch")
+        sent = self.run_script(args=[str(self.img), "--screen", "DP-3", str(self.tall)])
+        self.assertTrue(sent["DP-3"].endswith("-arch-fill-centre-90x160.png"), sent)
+        self.assertEqual((self.cache / "last-color-for").read_text().strip(), str(self.img))
 
 
 if __name__ == "__main__":

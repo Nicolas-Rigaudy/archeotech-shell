@@ -17,6 +17,9 @@ RowLayout {
     // "" follows the current mode (the selected card moves when the theme
     // flips) until a card is clicked.
     property string chosenSlot: ""
+    // Output whose own slots these are (item_148, per-screen layout); "" = all
+    // screens. An unset slot of an output shows the all-screens wallpaper.
+    property string screen: ""
     readonly property string selected: chosenSlot || Theming.Wallpapers.mode
 
     readonly property var _slots: [
@@ -39,8 +42,8 @@ RowLayout {
             readonly property bool _selected: root.selected === slot.modelData.id
             readonly property bool _now: Theming.Wallpapers.mode === slot.modelData.id
             // An empty slot of the current mode shows what is on screen (it keeps it).
-            readonly property string _path: Theming.Wallpapers.markedPath(slot.modelData.id)
-            readonly property bool _unset: Theming.Wallpapers.slotPath(slot.modelData.id) === ""
+            readonly property string _path: Theming.Wallpapers.markedPath(slot.modelData.id, root.screen)
+            readonly property bool _unset: Theming.Wallpapers.slotPath(slot.modelData.id, root.screen) === ""
             spacing: Commons.Appearance.spacing.s2
             // The label row fills its width; keep that from widening the card.
             Layout.fillWidth: false
@@ -140,10 +143,34 @@ RowLayout {
                 // The mode the theme is in now: its card is the one on screen.
                 Text {
                     visible: slot._now || slot._unset
-                    text: [slot._now ? "· Now" : "", slot._unset ? "· not set" : ""].filter(t => t).join(" ")
+                    text: [slot._now ? "· Now" : "",
+                           slot._unset ? (root.screen && Theming.Wallpapers.slotPath(slot.modelData.id) ? "· all screens" : "· not set") : ""].filter(t => t).join(" ")
                     color: Commons.Appearance.colors.textMuted
                     font.pixelSize: Commons.Appearance.font.sizeSm
                     font.family: Commons.Appearance.font.family
+                }
+                Item { Layout.fillWidth: true }
+                // An output's own wallpaper: back to the all-screens one.
+                Text {
+                    id: clearIcon
+                    visible: root.screen !== "" && !slot._unset
+                    text: "󰜉"
+                    activeFocusOnTab: visible
+                    Keys.onReturnPressed: clearArea.clicked(null)
+                    Keys.onSpacePressed: clearArea.clicked(null)
+                    color: clearArea.containsMouse || activeFocus ? Commons.Appearance.colors.accent : Commons.Appearance.colors.textMuted
+                    font.pixelSize: Commons.Appearance.font.sizeMd
+                    font.family: Commons.Appearance.font.family
+                    MouseArea {
+                        id: clearArea
+                        anchors.fill: parent
+                        anchors.margins: -Commons.Appearance.spacing.s1
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: Theming.Wallpapers.clearScreen(root.screen, slot.modelData.id)
+                    }
+                    Prim.Tooltip { visible: clearArea.containsMouse || clearIcon.activeFocus; text: "Use the all-screens wallpaper" }
+                    Prim.FocusRing { shown: clearIcon.activeFocus; cornerRadius: Commons.Appearance.radius.sm }
                 }
             }
         }

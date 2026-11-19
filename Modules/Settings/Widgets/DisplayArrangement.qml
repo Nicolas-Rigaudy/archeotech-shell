@@ -10,11 +10,16 @@ import "../../../Services/Hardware/DisplaysLogic.js" as Logic
 // flush against the nearest neighbour edge (never overlapping) with edges
 // aligned within a threshold. The layout is re-normalised to start at 0,0.
 // Stateless: `outputs` is the caller's staged list; edits come back as signals.
+// The wallpaper editor (item_148) uses it read-only (`movable: false`) with an
+// image per tile (`images`: { name: path }); a click on the empty canvas there
+// selects "" (all screens).
 Item {
     id: root
 
     property var    outputs: []        // staged, same shape as Displays.outputs
     property string selected: ""
+    property bool   movable: true
+    property var    images: ({})       // { output name: image path } drawn in the tiles
     signal select(string name)
     signal moved(string name, int x, int y)
 
@@ -46,6 +51,13 @@ Item {
         color: Commons.Appearance.colors.recessedTrack
     }
 
+    // Read-only mode: the empty canvas means "all screens".
+    MouseArea {
+        anchors.fill: parent
+        enabled: !root.movable
+        onClicked: root.select("")
+    }
+
     Repeater {
         model: root._shown
         delegate: Rectangle {
@@ -68,7 +80,31 @@ Item {
                         : drag.containsMouse ? Commons.Appearance.colors.accentBorder : Commons.Appearance.colors.borderStrong
             z: drag.drag.active ? 10 : (_sel ? 2 : 1)
 
+            readonly property string _img: root.images[tile.modelData.name] || ""
+            Image {
+                // Inside the border, so the image never covers the selection ring.
+                anchors.fill: parent
+                anchors.margins: tile.border.width
+                visible: tile._img !== ""
+                source: tile._img ? "file://" + tile._img : ""
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                sourceSize.width: 320
+                sourceSize.height: 320
+                opacity: tile._sel || drag.containsMouse ? 1 : 0.8
+            }
+            // A chip behind the labels so they read on any wallpaper.
+            Rectangle {
+                visible: tile._img !== ""
+                anchors.centerIn: labels
+                width: labels.width + 2 * Commons.Appearance.spacing.s2
+                height: labels.height + Commons.Appearance.spacing.s2
+                radius: Commons.Appearance.radius.sm
+                color: Commons.Appearance.colors.glassBg
+            }
+
             Column {
+                id: labels
                 anchors.centerIn: parent
                 spacing: 2
                 Text {
@@ -92,8 +128,9 @@ Item {
             MouseArea {
                 id: drag
                 anchors.fill: parent
-                cursorShape: drag.drag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
-                drag.target: tile
+                cursorShape: !root.movable ? Qt.PointingHandCursor
+                           : drag.drag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                drag.target: root.movable ? tile : null
                 drag.threshold: 4
                 onPressed: root.select(tile.modelData.name)
                 hoverEnabled: true

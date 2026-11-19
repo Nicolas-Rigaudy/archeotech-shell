@@ -3,6 +3,9 @@
 #
 # Usage:
 #   wallpaper-set.sh <image>                Set wallpaper (respects active logo state)
+#   wallpaper-set.sh <image> --screen NAME IMAGE ...
+#                                           Same, with its own image on output NAME
+#                                           (others, and unknown outputs, get <image>)
 #   wallpaper-set.sh --toggle-logo <name>   Activate logo by name, or turn off if already active
 #   wallpaper-set.sh --toggle-logo          Turn off active logo (legacy toggle for keybind)
 #   wallpaper-set.sh --restore              Reapply last wallpaper (used at startup)
@@ -28,6 +31,7 @@ LAST_WALL="$CACHE_DIR/last-wallpaper"
 CURRENT_LINK="$CACHE_DIR/current"           # stable symlink → current wallpaper (hyprlock bg)
 LAST_COLOR="$CACHE_DIR/last-color"
 LAST_COLOR_FOR="$CACHE_DIR/last-color-for"
+LAST_SCREENS="$CACHE_DIR/last-screens"      # "NAME<TAB>IMAGE" per output with its own image
 
 # ── Cache key helper ─────────────────────────────────────────────────────────
 # Composites are keyed by a 12-char sha1 of the wallpaper path (see
@@ -257,29 +261,90 @@ print(round(w), round(h))
 #   blur   whole image, centred over a blurred, darkened cover of itself
 #   edges  whole image; the bars repeat its outermost rows/columns, softened
 # Read from config.json `wallpaper.fit` / `wallpaper.anchor` (Settings >
-# Appearance > Wallpaper); WALLPAPER_FIT / WALLPAPER_ANCHOR override for tests.
+# Appearance > Wallpaper), per output from `wallpaper.screens.<NAME>.fit` /
+# `.anchor` (a missing field inherits the all-screens value). WALLPAPER_CONFIG
+# (JSON of that `wallpaper` object; the shell passes it so a just-changed
+# setting applies before config.json is written) replaces the file;
+# WALLPAPER_FIT / WALLPAPER_ANCHOR override the all-screens values for tests.
 SHELL_CONFIG="$HOME/.config/archeotech/config.json"
 FIT=""
 ANCHOR=""
+declare -A SCREEN_FIT SCREEN_ANCHOR
 load_fit_settings() {
     [ -n "$FIT" ] && return 0
-    local cfg=""
+    local cfg="" name f a
     cfg=$(python3 - "$SHELL_CONFIG" 2>/dev/null <<'PY'
-import json, sys
-try:
-    d = json.load(open(sys.argv[1]))
-except Exception:
-    d = {}
-w = d.get("wallpaper") if isinstance(d, dict) else None
+import json, os, sys
+w = None
+if os.environ.get("WALLPAPER_CONFIG"):
+    try:
+        w = json.loads(os.environ["WALLPAPER_CONFIG"])
+    except Exception:
+        w = None
+if w is None:
+    try:
+        d = json.load(open(sys.argv[1]))
+    except Exception:
+        d = {}
+    w = d.get("wallpaper") if isinstance(d, dict) else None
 w = w if isinstance(w, dict) else {}
-print(w.get("fit") or "fill", w.get("anchor") or "centre")
+def word(v):
+    return v if isinstance(v, str) and v.isalpha() else "-"
+print("*", word(w.get("fit")), word(w.get("anchor")))
+screens = w.get("screens")
+for name, s in (screens.items() if isinstance(screens, dict) else []):
+    if isinstance(s, dict) and name and name != "*" and not any(c.isspace() for c in name):
+        print(name, word(s.get("fit")), word(s.get("anchor")))
 PY
 ) || cfg=""
-    read -r FIT ANCHOR <<<"$cfg" || true
+    FIT="" ANCHOR=""
+    while read -r name f a; do
+        [ -n "$name" ] || continue
+        [ "$f" = - ] && f=""
+        [ "$a" = - ] && a=""
+        if [ "$name" = "*" ]; then FIT="$f"; ANCHOR="$a"
+        else SCREEN_FIT[$name]="$f"; SCREEN_ANCHOR[$name]="$a"; fi
+    done <<<"$cfg"
     FIT="${WALLPAPER_FIT:-${FIT:-fill}}"
     ANCHOR="${WALLPAPER_ANCHOR:-${ANCHOR:-centre}}"
     case "$FIT" in fill|blur|edges) ;; *) FIT=fill ;; esac
     case "$ANCHOR" in left|centre|right) ;; *) ANCHOR=centre ;; esac
+}
+
+# fit_for NAME / anchor_for NAME: the output's own value, else the all-screens one.
+fit_for() {
+    local f="${SCREEN_FIT[$1]:-}"
+    case "$f" in fill|blur|edges) echo "$f" ;; *) echo "$FIT" ;; esac
+}
+anchor_for() {
+    local a="${SCREEN_ANCHOR[$1]:-}"
+    case "$a" in left|centre|right) echo "$a" ;; *) echo "$ANCHOR" ;; esac
+}
+
+# ── Per-output images ────────────────────────────────────────────────────────
+# MAIN_WALL goes to every output without its own entry in SCREEN_IMG.
+MAIN_WALL=""
+declare -A SCREEN_IMG
+image_for() {
+    local img="${SCREEN_IMG[$1]:-}"
+    if [ -n "$img" ] && [ -f "$img" ]; then echo "$img"; else echo "$MAIN_WALL"; fi
+}
+load_last_screens() {
+    local name img
+    [ -f "$LAST_SCREENS" ] || return 0
+    while IFS=$'\t' read -r name img; do
+        [ -n "$name" ] && [ -n "$img" ] && SCREEN_IMG[$name]="$img"
+    done <"$LAST_SCREENS"
+    return 0
+}
+save_last_screens() {
+    local name tmp
+    if [ ${#SCREEN_IMG[@]} -eq 0 ]; then rm -f "$LAST_SCREENS"; return 0; fi
+    tmp=$(mktemp "$CACHE_DIR/.screens.XXXXXX")
+    for name in "${!SCREEN_IMG[@]}"; do
+        printf '%s\t%s\n' "$name" "${SCREEN_IMG[$name]}"
+    done | sort >"$tmp"
+    mv -f "$tmp" "$LAST_SCREENS"
 }
 
 # ── Helper: image size "W H" ─────────────────────────────────────────────────
@@ -369,14 +434,14 @@ list_outputs() {
 }
 
 # ── Helper: the image to send to one WxH output (per-combo cached) ───────────
-# Keyed by wallpaper, logo (or "plain"), fit, anchor and output size, so every
-# screen gets a composite built at its own size. Prints the path. A plain
-# centre crop needs no file: awww's own default resize crops from the centre.
+# output_image <wallpaper> <logo> W H <fit> <anchor>. Keyed by wallpaper, logo
+# (or "plain"), fit, anchor and output size, so every screen gets a composite
+# built at its own size. Prints the path. A plain centre crop needs no file:
+# awww's own default resize crops from the centre.
 output_image() {
-    local wallpaper="$1" logo="$2" w="$3" h="$4"
-    load_fit_settings
+    local wallpaper="$1" logo="$2" w="$3" h="$4" fit="$5" anchor="$6"
     # The fit only applies across orientations; anchor only to fill.
-    local fit="$FIT" anchor="$ANCHOR" iw ih
+    local iw ih
     read -r iw ih < <(_image_size "$wallpaper")
     if [ $(( ih > iw )) = $(( h > w )) ]; then fit=fill; anchor=centre; fi
     [ "$fit" = fill ] || anchor=centre
@@ -412,21 +477,30 @@ _build_output() {
     fit_image "$wallpaper" "$w" "$h" "$work/out.png" "$fit" "$anchor" || return 1
     [ -n "$logo" ] || return 0
     local color logo_png
-    color=$(get_wallpaper_color "$wallpaper") || return 1
+    # Only the main wallpaper's colour is cached (it is the one read as the accent).
+    if [ "$wallpaper" = "$MAIN_WALL" ] || [ -z "$MAIN_WALL" ]; then
+        color=$(get_wallpaper_color "$wallpaper") || return 1
+    else
+        color=$(extract_wallpaper_color "$wallpaper") || return 1
+    fi
     logo_png=$(render_logo "$logo" "$color" "$w" "$h" "$work") || return 1
     [ -s "$logo_png" ] || return 1
     magick "$work/out.png" "$logo_png" -gravity Center -composite "$work/out.png"
 }
 
 # ── Helper: pre-build the composites for every current output ────────────────
+# composite_logo <wallpaper> <logo>: <wallpaper> is the main image; outputs
+# with their own image (SCREEN_IMG) build theirs.
 composite_logo() {
     local wallpaper="$1" logo_name="$2"
+    local MAIN_WALL="$wallpaper"
     local outputs name w h rc=0
     load_fit_settings   # here, not in output_image's subshells: read config once
     outputs=$(list_outputs)
     [ -n "$outputs" ] || outputs="default 1920 1080"
     while read -r name w h; do
-        output_image "$wallpaper" "$logo_name" "$w" "$h" >/dev/null || rc=1
+        output_image "$(image_for "$name")" "$logo_name" "$w" "$h" \
+            "$(fit_for "$name")" "$(anchor_for "$name")" >/dev/null || rc=1
     done <<<"$outputs"
     return "$rc"
 }
@@ -449,9 +523,11 @@ warm_other_logos() {
 
 # ── Helper: apply wallpaper via awww ─────────────────────────────────────────
 # apply_wallpaper <wallpaper> [logo]: sends each output the image built for its
-# own size with the current fit (and the logo composited on top).
+# own size with its fit (and the logo composited on top); outputs listed in
+# SCREEN_IMG get their own image.
 apply_wallpaper() {
     local wallpaper="$1" logo="${2:-}"
+    MAIN_WALL="$wallpaper"
 
     local swww_opts=(
         --transition-type "$TRANSITION"
@@ -464,13 +540,16 @@ apply_wallpaper() {
     load_fit_settings   # once, before output_image's subshells
     outputs=$(list_outputs)
     if [ -z "$outputs" ]; then
-        img=$(output_image "$wallpaper" "$logo" 1920 1080) || img="$wallpaper"
+        img=$(output_image "$wallpaper" "$logo" 1920 1080 "$FIT" "$ANCHOR") || img="$wallpaper"
         awww img "$img" "${swww_opts[@]}"
         return
     fi
     # One screen's failed build falls back to the raw image; the rest go on.
+    local own
     while read -r name w h; do
-        img=$(output_image "$wallpaper" "$logo" "$w" "$h") || img="$wallpaper"
+        own=$(image_for "$name")
+        img=$(output_image "$own" "$logo" "$w" "$h" "$(fit_for "$name")" "$(anchor_for "$name")") \
+            || img="$own"
         awww img "$img" --outputs "$name" "${swww_opts[@]}" \
             || echo "wallpaper-set: awww failed on $name" >&2
     done <<<"$outputs"
@@ -495,6 +574,7 @@ case "${1:-}" in
         fi
 
         CURRENT="$(active_logo)"
+        load_last_screens
 
         if [ -n "$REQUESTED" ] && [ "${LOGO_PATH[$REQUESTED]+set}" != "set" ]; then
             echo "Unknown logo: $REQUESTED" >&2
@@ -529,7 +609,10 @@ case "${1:-}" in
 
     --restore)
         if [ -f "$LAST_WALL" ]; then
-            exec "$0" "$(cat "$LAST_WALL")"
+            load_last_screens
+            ARGS=("$(cat "$LAST_WALL")")
+            for name in "${!SCREEN_IMG[@]}"; do ARGS+=(--screen "$name" "${SCREEN_IMG[$name]}"); done
+            exec "$0" "${ARGS[@]}"
         else
             echo "No previous wallpaper saved." >&2
             exit 1
@@ -584,7 +667,7 @@ case "${1:-}" in
         ;;
 
     "")
-        echo "Usage: wallpaper-set.sh <image>"
+        echo "Usage: wallpaper-set.sh <image> [--screen NAME IMAGE]..."
         echo "       wallpaper-set.sh --toggle-logo [arch|rebel|imperial]"
         echo "       wallpaper-set.sh --restore"
         echo "       wallpaper-set.sh --status"
@@ -593,13 +676,31 @@ case "${1:-}" in
 
     *)
         WALLPAPER="$1"
+        shift
 
         if [ ! -f "$WALLPAPER" ]; then
             echo "Error: file not found: $WALLPAPER" >&2
             exit 1
         fi
+        while [ $# -gt 0 ]; do
+            if [ "$1" != --screen ] || [ $# -lt 3 ]; then
+                echo "Usage: wallpaper-set.sh <image> [--screen NAME IMAGE]..." >&2
+                exit 2
+            fi
+            # Output names are plain words (mango prints e.g. DP-3, HDMI-A-1).
+            if ! [[ "$2" =~ ^[A-Za-z0-9._:-]+$ ]]; then
+                echo "wallpaper-set: bad output name: $2" >&2
+                exit 2
+            fi
+            # A missing per-screen file is skipped (that output gets <image>), and
+            # the run then exits 3 so the shell does not retry the same plan.
+            if [ -f "$3" ]; then SCREEN_IMG[$2]="$3"
+            else echo "wallpaper-set: $2: file not found: $3" >&2; SKIPPED=1; fi
+            shift 3
+        done
 
         echo "$WALLPAPER" > "$LAST_WALL"
+        save_last_screens
         # Repoint the stable symlink hyprlock's background reads (raw wallpaper,
         # no logo overlay — matches the prior swaylock --image behaviour).
         ln -sfn "$WALLPAPER" "$CURRENT_LINK"
@@ -608,5 +709,6 @@ case "${1:-}" in
         apply_wallpaper "$WALLPAPER" "$CURRENT"
         # Warm other logos in the background so the next logo switch is instant
         warm_other_logos "$WALLPAPER" "$CURRENT"
+        if [ "${SKIPPED:-0}" = 1 ]; then exit 3; fi
         ;;
 esac
