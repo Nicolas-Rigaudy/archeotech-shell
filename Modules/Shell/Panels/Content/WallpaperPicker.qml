@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import "../../../../Commons" as Commons
 import "../../../../Commons/Primitives"
 import "../../../../Services/Shell" as ShellServices
+import "../../../../Services/System" as SystemServices
 import "../../../../Widgets/Appearance" as Appearance
 
 // Appearance quick-switcher panel (Super+W). Tabbed: one carousel visible at a
@@ -65,6 +66,22 @@ Item {
                 currentIndex: root.tab
                 iconOnly: root._vertical
                 onActivated: index => root.tab = index
+            }
+
+            // Presentation mode (item_187): programs opened from now on are
+            // opaque and popups stay quiet. Real state from presentation-mode.sh's
+            // file (also Super+Shift+O); a click runs the script.
+            GlassButton {
+                id: presentBtn
+                Layout.preferredHeight: 26
+                text: root._vertical ? "󰐨" : "󰐨  Present"
+                active: SystemServices.Presentation.active
+                onClicked: SystemServices.Presentation.toggle()
+                Tooltip {
+                    visible: presentBtn.hovered
+                    text: presentBtn.active ? "Presentation mode on: new windows open opaque, popups muted"
+                                            : "Presentation mode: new windows open opaque, popups muted (Super+Shift+O)"
+                }
             }
 
             Rectangle {

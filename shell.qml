@@ -184,6 +184,15 @@ ShellRoot {
         function reload() { Commons.Appearance.reload() }
     }
 
+    // Presentation mode (item_187): runs presentation-mode.sh; state follows its file.
+    IpcHandler {
+        target: "presentation"
+        function toggle() { SystemServices.Presentation.toggle() }
+        function on()     { SystemServices.Presentation.setActive(true) }
+        function off()    { SystemServices.Presentation.setActive(false) }
+        function status(): string { return SystemServices.Presentation.active ? "on" : "off" }
+    }
+
     IpcHandler {
         target: "notifications"
         function toggle() {
@@ -332,6 +341,9 @@ ShellRoot {
         target: SystemServices.Notifications
         function onArrived(notification) {
             if (SystemServices.Notifications.dndEnabled) return
+            // Presentation mode (item_187): no popups while presenting; the
+            // notification still lands in the centre, and DND is left as set.
+            if (SystemServices.Presentation.active) return
             var urgency = notification.urgency || 0
             // Settings → Notifications "Show when fullscreen": off by default, so a
             // fullscreen app on the focused output is not covered. Critical

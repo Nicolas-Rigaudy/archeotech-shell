@@ -5,6 +5,7 @@ import "../../../Commons" as Commons
 import "../../../Services/Hardware" as Hardware
 import "../../../Services/Persistence" as Persistence
 import "../../../Services/Shell" as ShellServices
+import "../../../Services/System" as SystemServices
 import "../../../Services/Theming" as Theming
 import "../../../Commons/Primitives"
 import "../../../Widgets/Appearance" as Appearance
@@ -210,7 +211,22 @@ Item {
                     }
                 }
 
-                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true; visible: root._activePack === "" }
+                // ── Presentation (item_187) ───────────────────────────────────
+                // Shown with packs too: it is about other programs, not the
+                // shell's own material. State comes from presentation-mode.sh.
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
+                SectionLabel { text: "PRESENTATION" }
+                SettingsCard {
+                    ToggleRow {
+                        label: "Presentation mode"
+                        searchKey: "appearance.presentation"
+                        description: "Programs opened from now on are opaque, kitty turns solid and popups stay quiet (Super+Shift+O)"
+                        checked: SystemServices.Presentation.active
+                        onToggled: value => SystemServices.Presentation.setActive(value)
+                    }
+                }
+
+                Item { implicitHeight: Commons.Appearance.spacing.s3; Layout.fillWidth: true }
 
                 // ── Wallpaper ─────────────────────────────────────────────────
                 // Shares the exact WallpaperPickerBody the quick-switcher tab

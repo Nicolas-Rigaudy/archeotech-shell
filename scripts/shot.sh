@@ -219,6 +219,22 @@ for s in theme-switch.sh theme-switch.py hyprlock-launch.sh wlogout-launch.sh sw
   printf '#!/bin/sh\necho "$(date +%%T) %s $*" >> "%s/stubs.log"\n' "$s" "$LOG" > "$FH/.local/bin/$s"
   chmod +x "$FH/.local/bin/$s"
 done
+# presentation-mode.sh (dotfiles) changes live mango options and every kitty's
+# opacity, so it is stubbed too; the stub logs like the others and keeps the
+# state file the shell watches, in the PRIVATE runtime dir, so the shell's
+# toggles render both states (e.g. --exec 'presentation-mode.sh on').
+cat > "$FH/.local/bin/presentation-mode.sh" <<STUB
+#!/bin/sh
+echo "\$(date +%T) presentation-mode.sh \$*" >> "$LOG/stubs.log"
+f="\${XDG_RUNTIME_DIR:?}/presentation-mode.state"
+cur=\$(cat "\$f" 2>/dev/null || echo off)
+case "\${1:-toggle}" in
+  on|off) echo "\$1" > "\$f" ;;
+  toggle) if [ "\$cur" = on ]; then echo off > "\$f"; else echo on > "\$f"; fi ;;
+  status) echo "\$cur" ;;
+esac
+STUB
+chmod +x "$FH/.local/bin/presentation-mode.sh"
 for d in .local/share/fonts .local/share/icons .config/fontconfig Projects; do
   [ -e "$REAL_HOME/$d" ] && { mkdir -p "$(dirname "$FH/$d")"; ln -s "$REAL_HOME/$d" "$FH/$d"; }
 done
