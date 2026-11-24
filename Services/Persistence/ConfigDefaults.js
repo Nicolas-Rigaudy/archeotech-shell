@@ -29,6 +29,8 @@ var DEFAULTS = {
     "input.disableWhileTyping":       true,
     "input.pointerSpeed":             0,
     "nightLight.temperature":         4000,
+    "storage.warnPct":                15,        // item_181: % of / free at which the bar widget warns (disk-alert.sh's default)
+    "storage.critPct":                8,         // item_181: % free that is critical
     "wallpaper.light":                "",        // item_140: "" = keep what is on screen
     "wallpaper.dark":                 "",
     "wallpaper.fit":                  "fill",    // item_148: fill | blur | edges (screens of the other orientation)

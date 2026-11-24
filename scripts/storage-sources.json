@@ -1,0 +1,149 @@
+{
+  "_comment": "Cleanup sources shipped with the Storage panel. Format: docs/STORAGE.md. Add or override sources in ~/.config/archeotech/storage-sources.json (same id replaces, \"disabled\": true hides).",
+  "sources": [
+    {
+      "id": "pacman",
+      "label": "pacman package cache",
+      "path": "/var/cache/pacman/pkg",
+      "requires": "paccache",
+      "tier": "safe",
+      "action": "command",
+      "command": "paccache -rk2 && paccache -ruk0",
+      "root": true,
+      "upto": true,
+      "cost": "Keeps the 2 newest versions of each package; older ones download again to downgrade"
+    },
+    {
+      "id": "paru",
+      "label": "paru build files",
+      "path": "$XDG_CACHE_HOME/paru/clone",
+      "tier": "safe",
+      "action": "remove",
+      "cost": "AUR packages build from a fresh download next update"
+    },
+    {
+      "id": "yay",
+      "label": "yay build files",
+      "path": "$XDG_CACHE_HOME/yay",
+      "tier": "safe",
+      "action": "remove",
+      "cost": "AUR packages build from a fresh download next update"
+    },
+    {
+      "id": "journal",
+      "label": "System journal",
+      "path": "/var/log/journal",
+      "requires": "journalctl",
+      "tier": "safe",
+      "action": "command",
+      "command": "journalctl --vacuum-size=500M",
+      "root": true,
+      "upto": true,
+      "cost": "Keeps the newest 500 MB of system logs"
+    },
+    {
+      "id": "trash",
+      "label": "Trash",
+      "path": "$XDG_DATA_HOME/Trash",
+      "requires": "gio",
+      "tier": "safe",
+      "action": "command",
+      "command": "gio trash --empty",
+      "cost": "Files in the Trash are gone for good"
+    },
+    {
+      "id": "uv",
+      "label": "uv cache",
+      "paths": ["$UV_CACHE_DIR", "$XDG_CACHE_HOME/uv"],
+      "requires": "uv",
+      "tier": "safe",
+      "action": "command",
+      "command": "uv cache clean --cache-dir {path}",
+      "cost": "Python packages download again on the next uv sync"
+    },
+    {
+      "id": "pip",
+      "label": "pip cache",
+      "path": "$XDG_CACHE_HOME/pip",
+      "tier": "safe",
+      "action": "remove",
+      "cost": "Python packages download again on the next pip install"
+    },
+    {
+      "id": "npm",
+      "label": "npm cache",
+      "path": "~/.npm/_cacache",
+      "tier": "safe",
+      "action": "remove",
+      "cost": "Packages download again on the next npm install"
+    },
+    {
+      "id": "cargo",
+      "label": "Cargo download cache",
+      "paths": ["$CARGO_HOME/registry/cache", "~/.cargo/registry/cache"],
+      "tier": "safe",
+      "action": "remove",
+      "cost": "Crates download again on the next build"
+    },
+    {
+      "id": "go-build",
+      "label": "Go build cache",
+      "path": "$XDG_CACHE_HOME/go-build",
+      "tier": "safe",
+      "action": "remove",
+      "cost": "The next Go build is slower"
+    },
+    {
+      "id": "flatpak",
+      "label": "Unused Flatpak runtimes",
+      "requires": "flatpak",
+      "size": "none",
+      "detail": "Runtimes no installed app uses",
+      "tier": "safe",
+      "action": "command",
+      "command": "flatpak uninstall --unused -y",
+      "cost": "None: no installed app needs them"
+    },
+    {
+      "id": "docker",
+      "label": "Docker leftovers",
+      "requires": "docker",
+      "size": "none",
+      "detail": "Stopped containers, unused networks, dangling images, build cache",
+      "tier": "review",
+      "action": "command",
+      "command": "docker system prune -f",
+      "cost": "Stopped containers are deleted; images rebuild or download again"
+    },
+    {
+      "id": "snapper",
+      "label": "Old snapshots",
+      "path": "/.snapshots",
+      "requires": "snapper",
+      "size": "none",
+      "detail_command": "n=$(snapper --csvout -c root list --columns number 2>/dev/null | tail -n +2 | wc -l); [ \"$n\" -gt 0 ] && echo \"$n snapshots; snapper's number cleanup keeps the configured count\"",
+      "tier": "review",
+      "action": "command",
+      "command": "snapper -c root cleanup number",
+      "root": true,
+      "cost": "Fewer points to roll back to; sizes need btrfs quotas, so the freed space shows after the cleanup"
+    },
+    {
+      "id": "app-caches",
+      "label": "App caches",
+      "path": "$XDG_CACHE_HOME",
+      "children": {"min_bytes": 314572800, "max": 8, "group": true},
+      "tier": "safe",
+      "action": "remove",
+      "cost": "Apps rebuild them as you use them; close an app before cleaning its cache"
+    },
+    {
+      "id": "downloads",
+      "label": "Downloads",
+      "path": "$XDG_DOWNLOAD_DIR",
+      "tier": "review",
+      "action": "open",
+      "cost": "Your files: open the folder and sort them yourself"
+    }
+  ]
+}
