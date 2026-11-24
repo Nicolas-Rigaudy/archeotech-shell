@@ -49,17 +49,51 @@ QtObject {
     readonly property bool scanning: _scan.running
     readonly property var groups: Logic.groups(entries)
 
+    // ── Run (item_182) ────────────────────────────────────────────────────────
+    // run([{id, commands}]): the commands the confirm page showed. The helper
+    // plans them again and runs only what its fresh plan still produces (admin
+    // ones behind one pkexec prompt), then a rescan refreshes the list.
+    readonly property bool running: _run.running
+    property var  runStatus: ({})         // id -> "queued" | "running" | "done" | "failed"
+    property var  runErrors: ({})         // id -> error text of a failed entry
+    property var  lastResult: null        // helper's result line: { ok, freed, failed, before, after }
+    property var  runPlan: []             // the rows of the last run(), as the panel shows them
+    property bool resultUnseen: false     // a run finished and no panel has shown its result yet
+
     signal scanned()
+    signal ran(var result)
     // A scoped tree for one folder (Explore drill-down), already grafted into `tree`.
     signal folderScanned(string path)
 
     readonly property string _tool: decodeURIComponent(Qt.resolvedUrl("../../scripts/storage-scan.py").toString().replace("file://", ""))
 
+    // A rescan asked for while one runs (the one after a cleanup) runs once it ends.
+    property bool _rescanPending: false
     function rescan() {
-        if (_scan.running) return
+        if (_scan.running) { root._rescanPending = true; return }
         root.error = ""
         _scan.running = true
     }
+    // list: [{id, commands}] for the helper; plan: the same rows with their labels
+    // and sizes, kept so a panel reopened mid-run can show it. Returns false when
+    // it cannot start (a scan or another run is in progress): nothing ran.
+    function run(list, plan) {
+        if (_run.running || _scan.running || !list || !list.length) return false
+        root.runPlan = plan || list
+        var st = {}
+        for (var i = 0; i < list.length; i++) st[list[i].id] = "queued"
+        root.runStatus = st
+        root.runErrors = ({})
+        root.lastResult = null
+        _run.command = ["python3", root._tool, "--run", JSON.stringify({ entries: list })]
+        _run.running = true
+        return true
+    }
+    function _setStatus(id, state, err) {
+        var st = Object.assign({}, root.runStatus); st[id] = state; root.runStatus = st
+        if (err) { var e = Object.assign({}, root.runErrors); e[id] = err; root.runErrors = e }
+    }
+
     function readRoot() { if (!_root.running) _root.running = true }
 
     // Deeper tree of one folder (item_183): a scoped walk of that folder only.
@@ -113,6 +147,37 @@ QtObject {
         }
         stderr: StdioCollector {
             onStreamFinished: if (this.text.trim()) console.warn("storage-scan:", this.text.trim())
+        }
+        onExited: {
+            if (!root._rescanPending) return
+            root._rescanPending = false
+            Qt.callLater(root.rescan)
+        }
+    }
+
+    property var _run: Process {
+        running: false
+        stdout: SplitParser {
+            onRead: line => {
+                var ev = Logic.parseEvent(line)
+                if (!ev) return
+                if (ev.event === "start") root._setStatus(ev.id, "running")
+                else if (ev.event === "done") root._setStatus(ev.id, ev.ok ? "done" : "failed", ev.error || "")
+                else if (ev.event === "result") {
+                    root.lastResult = ev
+                    if (ev.after) root.rootInfo = ev.after
+                }
+            }
+        }
+        stderr: StdioCollector {
+            onStreamFinished: if (this.text.trim()) console.warn("storage-scan --run:", this.text.trim())
+        }
+        onExited: (code, status) => {
+            if (!root.lastResult)
+                root.lastResult = { ok: false, freed: 0, failed: -1, error: "The cleanup helper stopped (exit " + code + ")" }
+            root.resultUnseen = true
+            root.ran(root.lastResult)
+            Qt.callLater(root.rescan)
         }
     }
 

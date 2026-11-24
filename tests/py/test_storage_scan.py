@@ -336,3 +336,90 @@ class Partial(TempHome):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Run(TempHome):
+    """--run (item_182): what the panel confirmed is planned again; only commands
+    the fresh plan produces run, admin ones first behind one wrapper call."""
+
+    def run_(self, entries, src, pkexec="env"):
+        out = io.StringIO()
+        argv = ["--no-user-sources", "--sources", src, "--run", json.dumps({"entries": entries})]
+        with mock.patch.object(ss, "SHIPPED", self.h("none.json")), \
+                mock.patch.dict(os.environ, {"STORAGE_SCAN_PKEXEC": pkexec}), \
+                contextlib.redirect_stdout(out):
+            code = ss.main(argv)
+        lines = [json.loads(l) for l in out.getvalue().splitlines()]
+        done = {l["id"]: l for l in lines if l["event"] == "done"}
+        return code, lines, done, lines[-1]
+
+    def setUp(self):
+        super().setUp()
+        self.log = self.h("ran.log")
+        blob(self.h(".cache/junk/a"), MB)
+        self.src = self.sources([
+            {"id": "junk", "label": "Junk", "path": "~/.cache/junk", "tier": "safe", "action": "remove"},
+            {"id": "sys", "label": "Sys", "path": self.h(".pkgs"), "tier": "safe", "action": "command",
+             "command": "echo sys >> '%s'" % self.log, "root": True, "size": "none"},
+            {"id": "look", "label": "Look", "path": "~/.cache", "tier": "review", "action": "open"}])
+        os.makedirs(self.h(".pkgs"))
+        _, scan = self.scan("--sources", self.src)
+        self.by = {e["id"]: e for e in scan["entries"]}
+
+    def ask(self, *ids):
+        return [{"id": i, "commands": self.by[i]["commands"]} for i in ids]
+
+    def test_runs_admin_first_then_user_and_reports(self):
+        code, lines, done, res = self.run_(self.ask("junk", "sys"), self.src)
+        self.assertEqual(code, 0)
+        self.assertTrue(done["junk"]["ok"] and done["sys"]["ok"], lines)
+        self.assertFalse(os.path.exists(self.h(".cache/junk")))
+        self.assertEqual(pathlib.Path(self.log).read_text(), "sys\n")
+        order = [l["id"] for l in lines if l["event"] == "start"]
+        self.assertEqual(order, ["sys", "junk"])
+        self.assertEqual(res["event"], "result")
+        self.assertTrue(res["ok"])
+        self.assertEqual(res["failed"], 0)
+        self.assertIn("free", res["after"])
+
+    def test_a_command_the_plan_does_not_produce_never_runs(self):
+        code, _, done, res = self.run_([{"id": "junk", "commands": ["rm -rf -- '%s'" % self.home]}], self.src)
+        self.assertIn("changed since the scan", done["junk"]["error"])
+        self.assertTrue(os.path.isdir(self.home) and os.path.exists(self.h(".cache/junk/a")))
+        self.assertFalse(res["ok"])
+
+    def test_an_entry_gone_since_the_scan_is_refused(self):
+        _, _, done, _ = self.run_([{"id": "nope", "commands": ["true"]}], self.src)
+        self.assertIn("rescan", done["nope"]["error"])
+
+    def test_open_entries_run_nothing(self):
+        _, _, done, _ = self.run_([{"id": "look", "commands": []}], self.src)
+        self.assertFalse(done["look"]["ok"])
+        self.assertTrue(os.path.exists(self.h(".cache/junk/a")))
+
+    def test_a_cancelled_password_prompt_is_reported_and_user_jobs_still_run(self):
+        _, _, done, res = self.run_(self.ask("junk", "sys"), self.src, pkexec="sh -c 'exit 126' x")
+        self.assertEqual(done["sys"]["error"], "password prompt cancelled")
+        self.assertFalse(os.path.exists(self.log))
+        self.assertTrue(done["junk"]["ok"])
+        self.assertEqual(res["failed"], 1)
+
+    def test_a_failing_admin_command_names_its_error(self):
+        src = self.sources([{"id": "bad", "label": "Bad", "path": self.h(".pkgs"), "tier": "safe",
+                             "action": "command", "command": "echo nope >&2; exit 3", "root": True,
+                             "size": "none"}], "bad.json")
+        _, _, done, _ = self.run_([{"id": "bad", "commands": ["echo nope >&2; exit 3"]}], src)
+        self.assertFalse(done["bad"]["ok"])
+        self.assertEqual(done["bad"]["error"], "nope")
+
+    def test_balance_is_a_fixed_command(self):
+        jobs, refused = ss.run_jobs([], [ss.BALANCE, {"id": "@balance", "commands": ["rm -rf /"]}],
+                                    ss.Clock(5), [])
+        self.assertEqual(jobs, [("@balance", True, ss.BALANCE["commands"])])
+        self.assertEqual(len(refused), 1)
+
+    def test_a_bad_request_is_an_error(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(ss.main(["--no-user-sources", "--run", "{not json"]), 2)
+        self.assertFalse(json.loads(out.getvalue())["ok"])

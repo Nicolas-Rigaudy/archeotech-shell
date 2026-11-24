@@ -117,4 +117,20 @@ TestCase {
         verify(!("tier" in S.graft(tree, "/h/ab", { path: "/h/ab", kind: "dir", bytes: 4 }).children[1]),
                "no tier key when the node had none")
     }
+
+    function test_run_list_and_events() {
+        var es = [ { id: "u", commands: ["rm -rf -- '/h/.cache/x'"] },
+                   { id: "o", action: "open", commands: [] },
+                   { id: "r", root: true, commands: ["journalctl --vacuum-size=500M"] },
+                   { id: "n", commands: ["true"] } ]
+        compare(S.runList(es, { u: true, o: true, r: true }),
+                [ { id: "r", commands: ["journalctl --vacuum-size=500M"] },
+                  { id: "u", commands: ["rm -rf -- '/h/.cache/x'"] } ], "admin first; open rows never run")
+        compare(S.runList(es, null), [])
+        compare(S.parseEvent('{"event":"done","id":"u","ok":true}').id, "u")
+        compare(S.parseEvent('{"root":{}}'), null)
+        compare(S.parseEvent("not json"), null)
+        compare(S.tilde("rm -rf -- /h/me/.cache/a /h/me/.npm", "/h/me"), "rm -rf -- ~/.cache/a ~/.npm")
+        compare(S.tilde("/h/meow/x", "/h/me"), "/h/meow/x", "a prefix that is not the home folder stays")
+    }
 }

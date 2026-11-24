@@ -15,6 +15,31 @@ function parse(text) {
     return d
 }
 
+// The --run request for the ticked rows: [{id, commands}], admin rows first
+// (the order the helper runs them, so the running page reads top to bottom).
+function runList(entries, sel) {
+    var root = [], user = []
+    for (var i = 0; i < (entries || []).length; i++) {
+        var e = entries[i]
+        if (!sel || !sel[e.id] || e.action === "open" || !(e.commands || []).length) continue
+        ;(e.root ? root : user).push({ id: e.id, commands: e.commands.slice() })
+    }
+    return root.concat(user)
+}
+
+// A command or path as shown on screen: $HOME/… → ~/… (the run gets the real one).
+function tilde(text, home) {
+    if (!text || !home) return text || ""
+    return text.split(home + "/").join("~/")
+}
+
+// One JSON line of `storage-scan.py --run` ({event: start|done|result, ...}); null otherwise.
+function parseEvent(line) {
+    var d
+    try { d = JSON.parse(line) } catch (e) { return null }
+    return d && typeof d === "object" && typeof d.event === "string" ? d : null
+}
+
 // Free-space level for / with the same rules as dotfiles disk-alert.sh:
 // "critical" at free <= crit % or when btrfs metadata has under 1 GiB free and
 // no unallocated space left to grow into; "warn" at free <= warn %; else "ok".

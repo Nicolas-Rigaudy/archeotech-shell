@@ -4,8 +4,10 @@
     storage-scan.py --root                    free space only (instant)
     storage-scan.py [--depth N]               free space, cleanup entries, size tree of ~
     storage-scan.py --tree PATH [--depth N]   size tree of one folder (Explore drill-down)
+    storage-scan.py --run '{"entries":[{"id":..,"commands":[..]}]}'
+                                              run what the user confirmed (JSON lines)
 
-Prints one JSON object and never deletes anything: each cleanup entry carries
+A scan prints one JSON object and never deletes anything: each cleanup entry carries
 the exact shell commands the panel shows and, once the user confirms, runs
 (entries with "root": true run behind one pkexec prompt).
 
@@ -16,6 +18,11 @@ ${XDG_CONFIG_HOME:-~/.config}/archeotech/storage-sources.json, then any
 "disabled": true hides it. A source that would remove or trash a personal
 folder ($HOME, the XDG user dirs and what is inside them, ~/.config, ~/.ssh,
 system folders) is never offered: it is listed under "rejected" instead.
+
+--run plans each confirmed entry again from the sources and runs only the
+commands that fresh plan still produces (admin ones first, behind one pkexec
+prompt; STORAGE_SCAN_PKEXEC overrides the wrapper for tests). It prints
+{"event":"start"|"done",...} lines, then {"event":"result","freed":N,...}.
 
 --timeout S (default 25) bounds the whole scan. A scan that runs out of time
 reports what it has with "partial": true.
@@ -549,6 +556,86 @@ def build_tree(root, depth, lines, complete, rows):
     return tree
 
 
+# ── run (after the user confirmed) ───────────────────────────────────────────
+# Offered by the result screen after a big cleanup leaves btrfs no unallocated
+# space (same command disk-report.sh suggests). Fixed here, never from a source.
+BALANCE = {"id": "@balance", "root": True, "commands": ["btrfs balance start -dusage=50 /"]}
+CMD_TIMEOUT = 1800          # one cleanup command (a balance can take minutes)
+
+
+def run_jobs(sources, wanted, clock, rejected):
+    """The panel's confirmed list [{id, commands}] -> ([(id, root, commands)], [(id, why)]).
+    Each entry is planned again from the sources (same guard as the scan) and
+    only commands the fresh plan still produces run: a hand-made or stale
+    request runs nothing."""
+    plans = {p[3]: p for p in plan_entries(sources, clock, rejected)}
+    jobs, refused = [], []
+    for w in wanted:
+        eid, asked = w.get("id"), w.get("commands") or []
+        if eid == BALANCE["id"]:
+            fresh, root = BALANCE["commands"], True
+        elif eid in plans:
+            s, paths = plans[eid][0], plans[eid][1]
+            fresh, root = commands_for(s, paths), bool(s.get("root"))
+        else:
+            refused.append((eid, "not found any more; rescan"))
+            continue
+        if not asked or any(c not in fresh for c in asked):
+            refused.append((eid, "changed since the scan; rescan"))
+            continue
+        jobs.append((eid, root, list(asked)))
+    return jobs, refused
+
+
+def _emit(**ev):
+    print(json.dumps(ev, separators=(",", ":")), flush=True)
+
+
+def run_cleanup(jobs, pkexec):
+    """Admin jobs first, all in one `pkexec sh -c` (one password prompt, asked
+    straight away), then the user's own. Prints one JSON line per event."""
+    failed = 0
+    root_jobs = [j for j in jobs if j[1]]
+    if root_jobs:
+        script = ["set +e"]
+        for i, (eid, _, cmds) in enumerate(root_jobs):
+            script.append("rc=0")
+            script += ["( %s ) </dev/null >&2 || rc=$?" % c for c in cmds]
+            script.append("echo \"@@rc %d $rc\"" % i)
+        for eid, _, _ in root_jobs:
+            _emit(event="start", id=eid)
+        try:
+            p = subprocess.run(pkexec + ["sh", "-c", "\n".join(script)], capture_output=True,
+                               text=True, timeout=CMD_TIMEOUT * len(root_jobs))
+            out, err, code = p.stdout, p.stderr, p.returncode
+        except (OSError, subprocess.TimeoutExpired) as e:
+            out, err, code = "", str(e), -1
+        rcs = {int(m.group(1)): int(m.group(2)) for m in re.finditer(r"^@@rc (\d+) (\d+)$", out, re.M)}
+        last = (err.strip().splitlines() or [""])[-1][:200]
+        for i, (eid, _, _) in enumerate(root_jobs):
+            failed += rcs.get(i, 1) != 0
+            if i in rcs:
+                _emit(event="done", id=eid, ok=rcs[i] == 0, error="" if rcs[i] == 0 else last or "exit %d" % rcs[i])
+            else:                       # 126/127: the prompt was dismissed or not authorized
+                _emit(event="done", id=eid, ok=False,
+                      error="password prompt cancelled" if code in (126, 127) else last or "did not run")
+    for eid, _, cmds in [j for j in jobs if not j[1]]:
+        _emit(event="start", id=eid)
+        ok, last = True, ""
+        for c in cmds:
+            try:
+                p = subprocess.run(["sh", "-c", c], stdin=subprocess.DEVNULL, capture_output=True,
+                                   text=True, timeout=CMD_TIMEOUT)
+                if p.returncode:
+                    ok, last = False, ((p.stderr.strip().splitlines() or [""])[-1][:200]
+                                       or "exit %d" % p.returncode)
+            except (OSError, subprocess.TimeoutExpired) as e:
+                ok, last = False, str(e)[:200]
+        failed += not ok
+        _emit(event="done", id=eid, ok=ok, error=last)
+    return failed
+
+
 # ── main ─────────────────────────────────────────────────────────────────────
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
@@ -559,10 +646,13 @@ def main(argv=None):
     ap.add_argument("--mount", default="/")
     ap.add_argument("--sources", action="append", default=[], help="extra source file (repeatable)")
     ap.add_argument("--no-user-sources", action="store_true")
+    ap.add_argument("--run", metavar="JSON", help='run confirmed entries: {"entries":[{"id","commands"}]}')
     a = ap.parse_args(argv)
 
     setup_env()
     started = time.monotonic()
+    if a.run is not None:
+        return main_run(a)
     clock = Clock(a.timeout)
     out = {"version": 1, "generated": dt.datetime.now().astimezone().isoformat(timespec="seconds"),
            "root": root_info(a.mount)}
@@ -595,6 +685,29 @@ def main(argv=None):
     out["partial"] = clock.partial
     out["elapsed"] = round(time.monotonic() - started, 2)
     print(json.dumps(out, separators=(",", ":")))
+    return 0
+
+
+def main_run(a):
+    try:
+        wanted = json.loads(a.run)["entries"]
+        assert isinstance(wanted, list) and all(isinstance(w, dict) for w in wanted)
+    except (ValueError, KeyError, TypeError, AssertionError):
+        _emit(event="result", ok=False, error="bad --run request", freed=0)
+        return 2
+    errors, rejected = [], []
+    user = [] if a.no_user_sources else [
+        os.path.join(os.environ["XDG_CONFIG_HOME"], "archeotech", "storage-sources.json")]
+    sources = load_sources([SHIPPED] + user + a.sources, errors)
+    before = root_info(a.mount)
+    jobs, refused = run_jobs(sources, wanted, Clock(60), rejected)
+    for eid, why in refused:
+        _emit(event="done", id=eid, ok=False, error=why)
+    pkexec = shlex.split(os.environ.get("STORAGE_SCAN_PKEXEC", "pkexec"))
+    failed = run_cleanup(jobs, pkexec) + len(refused)
+    after = root_info(a.mount)
+    freed = max(0, (after or {}).get("free", 0) - (before or {}).get("free", 0))
+    _emit(event="result", ok=failed == 0, before=before, after=after, freed=freed, failed=failed)
     return 0
 
 

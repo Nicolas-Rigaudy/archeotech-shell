@@ -71,6 +71,14 @@ QtObject {
             // scrolling list over the keyboard diagram, so the height is a cap.
             size:     900,
             axisSize: 1180
+        },
+        storage: {
+            content:  _storageComp,
+            side:     "bottom",
+            // Storage panel (item_182): the cleanup list beside the "Selected"
+            // card; both scroll, so the height is a cap.
+            size:     860,
+            axisSize: 1320
         }
     })
 
@@ -104,4 +112,5 @@ QtObject {
     property Component _settingsComp:  Component { Content.SettingsPanel       {} }
     property Component _layoutComp:    Component { Content.LayoutPicker        {} }
     property Component _keybindsComp:  Component { Content.KeybindsPanel       {} }
+    property Component _storageComp:   Component { Content.StoragePanel        {} }
 }
