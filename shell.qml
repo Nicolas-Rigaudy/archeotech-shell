@@ -277,6 +277,13 @@ ShellRoot {
         function close()            { ShellServices.ShellState.closeAllAcross() }
     }
 
+    // Storage panel (item_184): the disk-alert notice's Open action calls this.
+    IpcHandler {
+        target: "storage"
+        function open()   { ShellServices.ShellState.openGlobal("storage")   }
+        function toggle() { ShellServices.ShellState.toggleGlobal("storage") }
+    }
+
     // Hover/click popups without a pointer (headless renders, item_116).
     IpcHandler {
         target: "popup"

@@ -133,4 +133,95 @@ TestCase {
         compare(S.tilde("rm -rf -- /h/me/.cache/a /h/me/.npm", "/h/me"), "rm -rf -- ~/.cache/a ~/.npm")
         compare(S.tilde("/h/meow/x", "/h/me"), "/h/meow/x", "a prefix that is not the home folder stays")
     }
+
+    // item_183: squarified layout, the lazy-scan rule, breadcrumb, search, source lookup.
+    function test_treemap_areas_proportional() {
+        var items = [{ bytes: 60 }, { bytes: 25 }, { bytes: 10 }, { bytes: 4 }, { bytes: 1 }, { bytes: 0 }, { bytes: -3 }]
+        var w = 640, h = 400
+        var r = S.treemap(items, 10, 20, w, h)
+        compare(r.length, 5, "empty and negative items are left out")
+        compare(r[0].item.bytes, 60, "largest first")
+        var area = 0
+        for (var i = 0; i < r.length; i++) {
+            var b = r[i]
+            area += b.w * b.h
+            fuzzyCompare(b.w * b.h / (w * h), b.item.bytes / 100, 1e-9, "area share = byte share")
+            verify(b.x >= 10 - 1e-9 && b.y >= 20 - 1e-9 && b.x + b.w <= 10 + w + 1e-6 && b.y + b.h <= 20 + h + 1e-6, "inside the rectangle")
+            for (var j = 0; j < i; j++) {
+                var o = r[j]
+                var ox = Math.min(b.x + b.w, o.x + o.w) - Math.max(b.x, o.x)
+                var oy = Math.min(b.y + b.h, o.y + o.h) - Math.max(b.y, o.y)
+                verify(ox <= 1e-6 || oy <= 1e-6, "boxes do not overlap")
+            }
+        }
+        fuzzyCompare(area, w * h, 1e-6, "the boxes fill the rectangle")
+        compare(S.treemap([], 0, 0, 10, 10).length, 0)
+        compare(S.treemap(items, 0, 0, 0, 10).length, 0, "no room")
+        compare(S.treemap(null, 0, 0, 10, 10).length, 0)
+    }
+
+    function test_treemap_squarish() {
+        // Equal items in a square: squarified rows keep each box near square.
+        var items = []
+        for (var i = 0; i < 16; i++) items.push({ bytes: 1 })
+        var r = S.treemap(items, 0, 0, 400, 400)
+        for (i = 0; i < r.length; i++) {
+            var ratio = Math.max(r[i].w / r[i].h, r[i].h / r[i].w)
+            verify(ratio < 2, "aspect " + ratio)
+        }
+    }
+
+    function test_needs_scan() {
+        verify(!S.needsScan(null))
+        verify(!S.needsScan({ kind: "more", bytes: 5 }))
+        verify(!S.needsScan({ kind: "dir", bytes: 0 }), "empty folder")
+        verify(S.needsScan({ kind: "dir", bytes: 5 }), "contents not scanned")
+        verify(S.needsScan({ kind: "dir", bytes: 5, children: [{ kind: "dir", bytes: 3 }, { kind: "files", bytes: 2 }] }),
+               "a sub-folder was cut off by the depth")
+        verify(!S.needsScan({ kind: "dir", bytes: 5, children: [{ kind: "dir", bytes: 3, children: [] }, { kind: "file", bytes: 2 }] }))
+    }
+
+    function test_crumbs_and_parent() {
+        compare(S.crumbs("/home/u", "/home/u", "~"), [{ name: "~", path: "/home/u" }])
+        compare(S.crumbs("/home/u/.cache/paru", "/home/u", "~"),
+                [{ name: "~", path: "/home/u" }, { name: ".cache", path: "/home/u/.cache" },
+                 { name: "paru", path: "/home/u/.cache/paru" }])
+        compare(S.crumbs("/elsewhere", "/home/u", "~").length, 1, "outside the map: the top only")
+        compare(S.crumbs("/home/user2", "/home/u", "~").length, 1, "a sibling with the same prefix is outside")
+        compare(S.parentPath("/home/u/.cache"), "/home/u")
+        compare(S.parentPath("/home"), "/")
+    }
+
+    function test_search_tree() {
+        var t = { name: "u", path: "/u", kind: "dir", bytes: 100, children: [
+            { name: "Cache", path: "/u/Cache", kind: "dir", bytes: 40, children: [
+                { name: "cache-b", path: "/u/Cache/cache-b", kind: "dir", bytes: 30 },
+                { name: "2 more folders", path: "/u/Cache", kind: "more", bytes: 10 }] },
+            { name: "notes.cache", path: "/u/notes.cache", kind: "file", bytes: 50 },
+            { name: "other files", path: "/u", kind: "files", bytes: 10 }] }
+        var r = S.search(t, " CACHE ", 10)
+        compare(r.map(n => n.name), ["notes.cache", "Cache", "cache-b"], "largest first; more/files boxes left out")
+        compare(S.search(t, "cache", 1).length, 1)
+        compare(S.search(t, "", 10).length, 0)
+        compare(S.search(null, "x", 10).length, 0)
+    }
+
+    function test_source_for() {
+        var es = [{ id: "app", paths: ["/u/.cache/zen", "/u/.cache/aws"] }, { id: "zen-sub", paths: ["/u/.cache/zen/x/"] },
+                  { id: "none" }]
+        compare(S.sourceFor(es, "/u/.cache/aws").id, "app")
+        compare(S.sourceFor(es, "/u/.cache/zen/a").id, "app")
+        compare(S.sourceFor(es, "/u/.cache/zen/x/y").id, "zen-sub", "the most specific source wins")
+        compare(S.sourceFor(es, "/u/.cache/zenith"), null, "a prefix of the name is not the folder")
+        compare(S.sourceFor(es, "/u/.cache"), null)
+    }
+
+    function test_inside_entries() {
+        var es = [{ id: "a", paths: ["/h/.cdx/profiles/x"] }, { id: "b", paths: ["/h/.cache/"] },
+                  { id: "c", paths: ["/h/.cdx/"] }, { id: "d" }]
+        compare(S.inside(es, "/h/.cdx").map(e => e.id), ["a"])
+        compare(S.inside(es, "/h").map(e => e.id), ["a", "b", "c"])
+        compare(S.inside(es, "/h/.cache").length, 0)
+        compare(S.inside(null, "/h").length, 0)
+    }
 }

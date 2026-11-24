@@ -618,7 +618,8 @@ def run_cleanup(jobs, pkexec):
                 _emit(event="done", id=eid, ok=rcs[i] == 0, error="" if rcs[i] == 0 else last or "exit %d" % rcs[i])
             else:                       # 126/127: the prompt was dismissed or not authorized
                 _emit(event="done", id=eid, ok=False,
-                      error="password prompt cancelled" if code in (126, 127) else last or "did not run")
+                      error=("no password prompt: no polkit agent running" if "authentication agent" in err
+                             else "password prompt cancelled" if code in (126, 127) else last or "did not run"))
     for eid, _, cmds in [j for j in jobs if not j[1]]:
         _emit(event="start", id=eid)
         ok, last = True, ""

@@ -165,3 +165,124 @@ function graft(tree, path, sub) {
     })
     return changed ? Object.assign({}, tree, { children: kids }) : tree
 }
+
+// ── Explore (item_183) ──────────────────────────────────────────────────────
+
+// Squarified treemap (Bruls, Huizing, van Wijk 2000): items [{bytes, ...}] in the
+// rectangle (x, y, w, h) -> [{x, y, w, h, item}], largest first, each box's area
+// proportional to its bytes. Items of 0 bytes or less are left out.
+function treemap(items, x, y, w, h) {
+    var out = [], tot = 0
+    var its = (items || []).filter(function (i) { return typeof i.bytes === "number" && i.bytes > 0 })
+                           .sort(function (a, b) { return b.bytes - a.bytes })
+    for (var i = 0; i < its.length; i++) tot += its[i].bytes
+    if (tot <= 0 || !(w > 0) || !(h > 0)) return out
+    var vals = its.map(function (it) { return { item: it, a: it.bytes * w * h / tot } })
+    var row = []
+
+    // The worst aspect ratio of a row laid along a side of length `side`.
+    function worst(r, side) {
+        var s = 0, mx = 0, mn = Infinity
+        for (var k = 0; k < r.length; k++) { s += r[k].a; mx = Math.max(mx, r[k].a); mn = Math.min(mn, r[k].a) }
+        return Math.max(side * side * mx / (s * s), (s * s) / (side * side * mn))
+    }
+    // Lay the row along the short side, then shrink the free rectangle.
+    function place() {
+        var s = 0, k
+        for (k = 0; k < row.length; k++) s += row[k].a
+        if (w >= h) {
+            var cw = s / h, yy = y
+            for (k = 0; k < row.length; k++) {
+                var rh = row[k].a / cw
+                out.push({ x: x, y: yy, w: cw, h: rh, item: row[k].item })
+                yy += rh
+            }
+            x += cw; w -= cw
+        } else {
+            var rh2 = s / w, xx = x
+            for (k = 0; k < row.length; k++) {
+                var rw = row[k].a / rh2
+                out.push({ x: xx, y: y, w: rw, h: rh2, item: row[k].item })
+                xx += rw
+            }
+            y += rh2; h -= rh2
+        }
+        row = []
+    }
+    while (vals.length) {
+        var side = Math.min(w, h)
+        if (row.length === 0 || worst(row.concat([vals[0]]), side) <= worst(row, side)) row.push(vals.shift())
+        else place()
+    }
+    if (row.length) place()
+    return out
+}
+
+// A folder whose map would show boxes without their contents: it has no children
+// yet, or some sub-folder of it was cut off by the scan depth. The panel then
+// asks the helper for a scoped scan of it (once per folder).
+function needsScan(node) {
+    if (!node || node.kind !== "dir" || !(node.bytes > 0)) return false
+    if (!node.children) return true
+    return node.children.some(function (c) { return c.kind === "dir" && c.bytes > 0 && !c.children })
+}
+
+// The folder that holds `path` ("/a/b/c" -> "/a/b").
+function parentPath(path) {
+    var i = (path || "").lastIndexOf("/")
+    return i > 0 ? path.slice(0, i) : "/"
+}
+
+// Breadcrumb from the map's top folder `base` down to `path`:
+// [{ name, path }], the first one named `baseName` ("~" for the home folder).
+function crumbs(path, base, baseName) {
+    var out = [{ name: baseName || base, path: base }]
+    if (!path || path === base || path.indexOf(base + "/") !== 0) return out
+    var parts = path.slice(base.length + 1).split("/"), p = base
+    for (var i = 0; i < parts.length; i++) {
+        p += "/" + parts[i]
+        out.push({ name: parts[i], path: p })
+    }
+    return out
+}
+
+// Folders and named files in the scanned tree whose name contains `query`
+// (case-insensitive), largest first, at most `limit` of them.
+function search(tree, query, limit) {
+    var q = (query || "").trim().toLowerCase(), out = []
+    if (!tree || !q) return out
+    ;(function walk(n) {
+        var ch = n.children || []
+        for (var i = 0; i < ch.length; i++) {
+            var c = ch[i]
+            if (c.kind !== "dir" && c.kind !== "file") continue
+            if (c.name.toLowerCase().indexOf(q) >= 0) out.push(c)
+            if (c.kind === "dir") walk(c)
+        }
+    })(tree)
+    out.sort(function (a, b) { return b.bytes - a.bytes })
+    return out.slice(0, limit || 50)
+}
+
+// The cleanup entry whose folder holds `path` (the most specific one), or null:
+// what "Show in Clean up" points at.
+function sourceFor(entries, path) {
+    var best = null, bestLen = -1
+    for (var i = 0; i < (entries || []).length; i++) {
+        var ps = entries[i].paths || []
+        for (var j = 0; j < ps.length; j++) {
+            var p = ps[j].replace(/\/+$/, "")
+            if ((path === p || path.indexOf(p + "/") === 0) && p.length > bestLen) { best = entries[i]; bestLen = p.length }
+        }
+    }
+    return best
+}
+
+// The cleanup entries with a folder inside `path` (strictly below it): what an
+// untiered folder such as ~/.cdx holds for Clean up.
+function inside(entries, path) {
+    var pre = (path || "").replace(/\/+$/, "") + "/"
+    return (entries || []).filter(function (e) {
+        return (e.paths || []).some(function (p) { return p.indexOf(pre) === 0 && p.replace(/\/+$/, "") + "/" !== pre })
+    })
+}

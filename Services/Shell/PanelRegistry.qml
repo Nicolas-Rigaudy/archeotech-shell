@@ -76,8 +76,9 @@ QtObject {
             content:  _storageComp,
             side:     "bottom",
             // Storage panel (item_182): the cleanup list beside the "Selected"
-            // card; both scroll, so the height is a cap.
-            size:     860,
+            // card; both scroll, so the height is a cap. 1000 gives Explore's
+            // size map (item_183) about 430 px above its list and detail card.
+            size:     1000,
             axisSize: 1320
         }
     })

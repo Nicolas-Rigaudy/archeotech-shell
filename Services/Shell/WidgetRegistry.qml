@@ -32,6 +32,7 @@ QtObject {
         { id: "network",       name: "Network",            icon: "󰤨", bar: true,  strip: false },
         { id: "bluetooth",     name: "Bluetooth",          icon: "󰂯", bar: true,  strip: false },
         { id: "battery",       name: "Battery",            icon: "󰁹", bar: true,  strip: false },
+        { id: "storage",       name: "Storage",            icon: "󰋊", bar: true,  strip: false },
         { id: "notifications", name: "Notifications",      icon: "󰂚", bar: true,  strip: false },
         { id: "tray",          name: "System Tray",        icon: "󰀻", bar: true,  strip: false },
         { id: "settings",      name: "Settings",           icon: "󰒓", bar: true,  strip: true  },

@@ -47,6 +47,8 @@ QtObject {
     property string error: ""             // the last scan failed (helper missing, bad output)
     property string folderError: ""       // the last scanFolder() failed
     readonly property bool scanning: _scan.running
+    readonly property bool folderScanning: _folder.running
+    readonly property string folderPath: _folder.path     // the folder being (or last) measured
     readonly property var groups: Logic.groups(entries)
 
     // ── Run (item_182) ────────────────────────────────────────────────────────

@@ -13,11 +13,13 @@ import "Storage/Glyph.js" as G
 //   Clean up  the cleanups the scan found, Safe first, then Review; tick, read
 //             the exact commands, Free → confirm → run (admin ones under one
 //             polkit prompt) → "Freed X", with the Trash and btrfs follow-ups.
-//   Explore   the size map of the home folder (item_183).
+//   Explore   the size map of the home folder (item_183): drill into folders,
+//             see what each one is, jump to its Clean up row. Read-only.
 // Data and the run: Services/System/Storage.qml over scripts/storage-scan.py.
 // The scan is on demand: the first open scans, later opens show the cached
-// result with its age and a Rescan button. Tab switches tabs; Esc steps back
-// (confirm → list, search → cleared) and then closes.
+// result with its age and a Rescan button. Tab switches tabs (and clears the
+// search: each tab searches its own list); Esc steps back (confirm → list,
+// search → cleared, Explore folder → its parent) and then closes.
 Item {
     id: root
     anchors.fill: parent
@@ -37,7 +39,8 @@ Item {
     property bool _selInit: false         // the default ticks were applied once
     property real _now: Date.now()
 
-    readonly property var _shown: Logic.filter(store.entries, query)
+    readonly property string _cleanQuery: tab === "clean" ? query : ""
+    readonly property var _shown: Logic.filter(store.entries, _cleanQuery)
     readonly property bool _hasData: store.scannedAt > 0
 
     Connections {
@@ -65,6 +68,7 @@ Item {
         _now = Date.now()
         searchInput.text = ""
         query = ""
+        explore.reset()
         // A run still going, or one that finished while the panel was closed, opens
         // on its page; the run continues if the panel closes.
         if (store.running || store.resultUnseen) { plan = store.runPlan; stage = "run" }
@@ -73,9 +77,14 @@ Item {
         _focus()
         Qt.callLater(_focus)
     }
-    function _focus() { if (stage === "list" && tab === "clean") searchInput.forceActiveFocus(); else root.forceActiveFocus() }
+    function _focus() { if (stage === "list") searchInput.forceActiveFocus(); else root.forceActiveFocus() }
     onStageChanged: Qt.callLater(_focus)
-    onTabChanged: Qt.callLater(_focus)
+    onTabChanged: { searchInput.text = ""; Qt.callLater(_focus) }
+    // Explore's "Show in Clean up": the Clean up tab, searched for that row.
+    function showInCleanup(q) {
+        tab = "clean"
+        searchInput.text = q
+    }
 
     function toggle(id) {
         var s = Object.assign({}, sel)
@@ -107,6 +116,7 @@ Item {
         if (stage === "confirm") { stage = "list"; return }
         if (stage === "run" && !store.running) { stage = "list"; return }
         if (searchInput.text.length) { searchInput.text = ""; return }
+        if (tab === "explore" && explore.up()) return
         if (root.panelRoot) root.panelRoot.close()
     }
 
@@ -177,7 +187,6 @@ Item {
                                                       : Commons.Appearance.colors.glassBorder
                 border.width: searchInput.activeFocus ? 2 : 1
                 radius: Commons.Appearance.radius.md
-                opacity: root.tab === "clean" ? 1 : 0.5
                 Behavior on border.color { Commons.ColorAnim {} }
 
                 Text {
@@ -194,22 +203,26 @@ Item {
                         right: notice.left; rightMargin: Commons.Appearance.spacing.s3
                         verticalCenter: parent.verticalCenter
                     }
-                    enabled: root.tab === "clean"
                     color: Commons.Appearance.colors.textPrimary
                     font { family: Commons.Appearance.font.family; pixelSize: Commons.Appearance.font.sizeMd }
                     selectByMouse: true
                     clip: true
                     onTextChanged: root.query = text
                     Keys.onEscapePressed: root.back()
-                    Keys.onTabPressed: root.tab = "explore"
-                    Keys.onBacktabPressed: root.tab = "explore"
+                    Keys.onTabPressed: root.tab = root.tab === "clean" ? "explore" : "clean"
+                    Keys.onBacktabPressed: root.tab = root.tab === "clean" ? "explore" : "clean"
+                    // Explore: Up / Down pick a row, Enter opens it.
+                    Keys.onUpPressed: ev => { if (root.tab === "explore") explore.move(-1); else ev.accepted = false }
+                    Keys.onDownPressed: ev => { if (root.tab === "explore") explore.move(1); else ev.accepted = false }
+                    Keys.onReturnPressed: ev => { if (root.tab === "explore") explore.activate(); else ev.accepted = false }
+                    Keys.onEnterPressed: ev => { if (root.tab === "explore") explore.activate(); else ev.accepted = false }
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         width: parent.width
                         elide: Text.ElideRight
                         visible: searchInput.text.length === 0
-                        text: root.tab === "explore" ? "Search arrives with the size map"
+                        text: root.tab === "explore" ? "Find a folder or file in ~…"
                             : "Search " + root.store.entries.length + " cleanups…"
                         color: Commons.Appearance.colors.textMuted
                         font: searchInput.font
@@ -218,7 +231,8 @@ Item {
                 Text {
                     id: notice
                     anchors { right: parent.right; rightMargin: Commons.Appearance.spacing.s4; verticalCenter: parent.verticalCenter }
-                    text: root.query ? root._shown.length + " found" : ""
+                    text: !root.query ? "" : root.tab === "clean" ? root._shown.length + " found"
+                                                                  : explore.results.length >= 50 ? "first 50" : explore.results.length + " found"
                     color: Commons.Appearance.colors.textMuted
                     font.family: Commons.Appearance.font.family
                     font.pixelSize: Commons.Appearance.font.sizeSm
@@ -229,7 +243,7 @@ Item {
         // A scan that hit its time limit, or source files the helper skipped.
         Text {
             Layout.fillWidth: true
-            visible: root.stage === "list" && root.tab === "clean" && root._hasData
+            visible: root.stage === "list" && root._hasData
                      && (root.store.partial || root.store.sourceErrors.length > 0 || root.store.error.length > 0)
             text: G.alert + "  " + (root.store.error ? "The last rescan failed: " + root.store.error
                   : root.store.partial ? "The scan ran out of time: some sizes are missing or too small. Rescan to finish it."
@@ -251,7 +265,7 @@ Item {
                 entries: root._shown
                 sel: root.sel
                 home: root.home
-                query: root.query
+                query: root._cleanQuery
                 ageText: Logic.age(root.store.scannedAt, root._now)
                 onToggle: id => root.toggle(id)
                 onRescan: root.store.rescan()
@@ -261,7 +275,7 @@ Item {
             // First scan running, or it failed with nothing cached.
             ColumnLayout {
                 anchors.centerIn: parent
-                visible: root.stage === "list" && root.tab === "clean" && !root._hasData
+                visible: root.stage === "list" && !root._hasData
                 spacing: Commons.Appearance.spacing.s3
                 Prim.Spinner {
                     Layout.alignment: Qt.AlignHCenter
@@ -272,7 +286,7 @@ Item {
                 Prim.EmptyState {
                     Layout.preferredWidth: 520
                     icon: root.store.scanning ? "" : G.alert
-                    title: root.store.scanning ? "Measuring caches and leftovers…" : root.store.error ? "The scan failed" : "Not scanned yet"
+                    title: root.store.scanning ? (root.tab === "clean" ? "Measuring caches and leftovers…" : "Measuring your home folder…") : root.store.error ? "The scan failed" : "Not scanned yet"
                     hint: root.store.scanning ? "Usually under a minute; big caches take longer"
                         : root.store.error || "Rescan measures what can be removed"
                 }
@@ -284,13 +298,16 @@ Item {
                 }
             }
 
-            Prim.EmptyState {
-                anchors.centerIn: parent
-                width: 560
-                visible: root.stage === "list" && root.tab === "explore"
-                icon: G.disk
-                title: "Explore"
-                hint: "The size map of your home folder arrives in the next update"
+            ExploreView {
+                id: explore
+                anchors.fill: parent
+                visible: root.stage === "list" && root.tab === "explore" && root._hasData
+                home: root.home
+                query: root.tab === "explore" ? root.query : ""
+                ageText: Logic.age(root.store.scannedAt, root._now)
+                onRescan: root.store.rescan()
+                onShowInCleanup: q => root.showInCleanup(q)
+                onClearQuery: searchInput.text = ""
             }
 
             RunView {
