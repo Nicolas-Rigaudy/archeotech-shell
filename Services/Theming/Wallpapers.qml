@@ -16,8 +16,10 @@ QtObject {
     id: root
 
     // [{ path, name, thumb, pack }] — bound by the picker; never cleared on open.
-    // `pack` is the id of the active pack that ships the wallpaper, "" for the
-    // user's own (~/.config/archeotech/wallpapers). Pack ones come first.
+    // `pack` is the id of the pack the wallpaper belongs to (shipped, or the
+    // user's private folder for it), "" for the user's own
+    // (~/.config/archeotech/wallpapers). Every pack's are listed, the active
+    // pack's first; the pickers hide the others until Show all (offered()).
     property var list: []
     // Bumped when thumbnail generation finishes so delegates retry the thumb.
     property int thumbGen: 0
@@ -159,7 +161,7 @@ QtObject {
     readonly property bool perScreen: root.layout === "screens"
     readonly property var screens: Persistence.Config.get("wallpaper.screens")
     function _imagesFor(mode) {
-        return Logic.screenImages(root.layout, root.screens, mode, p => root.list.some(w => w.path === p))
+        return Logic.screenImages(root.layout, root.screens, mode)
     }
     function setLayout(v) {
         if (v === Persistence.Config.defaultFor("wallpaper.layout")) Persistence.Config.reset("wallpaper.layout")
@@ -303,16 +305,61 @@ QtObject {
     function _applyModeSlot() {
         if (!Persistence.Config.ready || !root._currentRead || !root._scanned || !root._paletteReady) return
         if (root.applying) return
-        // Only wallpapers still in the catalogue: a deleted file would leave the
-        // screen on the old one while the picker marks the missing one. An empty
-        // main slot keeps the image on screen.
-        var main = root.slotPath(root.mode)
-        if (!main || !root.list.some(w => w.path === main)) main = root.currentPath
+        // Any saved wallpaper applies, in the catalogue or not (another pack's,
+        // a file outside the wallpaper folders; owner, 2026-11-24): only files
+        // that no longer exist are dropped (_existProc), so a deleted one is
+        // never handed to wallpaper-set.sh. An empty main slot keeps the image
+        // on screen.
+        var main = root.slotPath(root.mode) || root.currentPath
         if (!main) return
         var im = root._imagesFor(root.mode)
         var sig = Logic.signature(main, im)
+        var key = sig + "\n" + Logic.signature(root.currentPath, root.currentScreens)
         if (sig === Logic.signature(root.currentPath, root.currentScreens) || sig === root._failedSig) return
-        root.apply(main, im)
+        // Already checked against this screen state: its missing files left
+        // nothing to apply. Skips a bash run on every readCurrent.
+        if (key === root._checkedKey) return
+        if (existProc.running) { existProc.again = true; return }
+        existProc.key = key
+        existProc.main = main
+        existProc.images = im
+        existProc.found = ({})
+        var paths = [main]
+        for (var k in im) paths.push(im[k])
+        existProc.command = ["bash", "-c", "for p; do [ -f \"$p\" ] && printf '%s\\n' \"$p\"; done; true", "_"].concat(paths)
+        existProc.running = true
+    }
+    property string _checkedKey: ""
+    // Which of a mode plan's files exist; applies the plan without the missing
+    // ones (a missing main falls back to the image on screen).
+    property Process _existProc: Process {
+        id: existProc
+        property string key: ""
+        property string main: ""
+        property var images: ({})
+        property var found: ({})
+        property bool again: false
+        running: false
+        stdout: SplitParser {
+            onRead: line => { if (line) existProc.found[line] = true }
+        }
+        onExited: {
+            if (existProc.again) { existProc.again = false; root._applyModeSlot(); return }
+            // A pick started meanwhile wins; its readCurrent re-runs this check.
+            if (root.applying) return
+            var f = existProc.found
+            var path = f[existProc.main] ? existProc.main : root.currentPath
+            if (!path) return
+            var im = {}
+            for (var k in existProc.images)
+                if (f[existProc.images[k]]) im[k] = existProc.images[k]
+            var sig = Logic.signature(path, im)
+            if (sig === Logic.signature(root.currentPath, root.currentScreens) || sig === root._failedSig) {
+                root._checkedKey = existProc.key
+                return
+            }
+            root.apply(path, im)
+        }
     }
     onModeChanged: _followMode()
     onLightPathChanged: _followMode()
@@ -330,10 +377,9 @@ QtObject {
     // pack) join the catalogue while that pack is active and leave it when the
     // pack changes. Their thumbs are keyed "pack-<id>-<file>" so a pack's
     // netrunner.png never shares a thumb with a user file of the same name; the
-    // user's own ones for the pack (see _packNow) are keyed "pack-<id>~own~<file>".
+    // user's own ones for the pack (see _packsNow) are keyed "pack-<id>~own~<file>".
     readonly property string packId: Persistence.Config.get("appearance.activePack", "")
     readonly property string packDir: ShellServices.PackRegistry.wallpaperDirFor(root.packId)
-    onPackDirChanged: refresh()
     onPackIdChanged: refresh()
     // Display name of the active pack ("" for the base look), for picker labels.
     readonly property string packName: {
@@ -344,31 +390,42 @@ QtObject {
     // What a picker offers for `mode` (owner, 2026-11-06): while the active pack
     // ships wallpapers that suit the mode, only those, with `keep` (the marked
     // one) first so the carousel opens on it and the pack's sit beside it;
-    // otherwise every wallpaper that suits the mode. `packOnly` says which one a
-    // list is, for the label. Show all lifts both filters.
+    // otherwise the user's own that suit the mode. Other packs' wallpapers are
+    // never offered by default (owner, 2026-11-24: a cyberdeck one in the base
+    // look is hidden, not unavailable). `packOnly` says which one a list is, for
+    // the label. Show all lifts every filter: anything listed can be applied.
     function offered(mode, keep) {
         var all = root.list
         if (root.showAll) return { list: all, packOnly: false }
         var m = mode || root.mode
         var pk = all.filter(w => w.pack && w.pack === root.packId && root.suits(w.path, m))
         if (pk.length)
-            return { list: all.filter(w => w.path === keep && !w.pack).concat(pk), packOnly: true }
-        return { list: all.filter(w => w.path === keep || root.suits(w.path, m)), packOnly: false }
+            return { list: all.filter(w => w.path === keep).concat(pk.filter(w => w.path !== keep)), packOnly: true }
+        return { list: all.filter(w => w.path === keep || (!w.pack && root.suits(w.path, m))), packOnly: false }
     }
     // Read fresh by each pass (not from bindings, which may not have settled
-    // when onPackDirChanged runs): [pack dir, its thumb prefix, pack id,
-    // own dir, its thumb prefix]. The own dir is the user's private folder for
-    // a pack, ~/.local/share/archeotech/pack-wallpapers/<id>/ (subfolders
-    // included): wallpapers that can't ship publicly with the pack (franchise
-    // art) but count as the pack's in the pickers. Basenames must be unique
-    // across its subfolders (thumbs are keyed by basename).
-    function _packNow() {
-        var id = root.packId
-        if (!id || !/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(id)) return ["", "", "", "", ""]
-        var dir = ShellServices.PackRegistry.wallpaperDirFor(id)
-        return [dir || "", "pack-" + id + "-", id,
-                "pack-wallpapers/" + id, "pack-" + id + "~own~"]
+    // when onPackIdChanged runs): flat [id, shipped dir, id, shipped dir, ...]
+    // for every known pack, the active one first (its wallpapers lead the
+    // list). Each pack's own folder is the user's private one,
+    // ~/.local/share/archeotech/pack-wallpapers/<id>/ (subfolders included):
+    // wallpapers that can't ship publicly with the pack (franchise art) but
+    // count as the pack's in the pickers. Basenames must be unique across its
+    // subfolders (thumbs are keyed by basename). Thumb prefixes:
+    // "pack-<id>-" (shipped), "pack-<id>~own~" (own).
+    function _packsNow() {
+        var ids = (ShellServices.PackRegistry.packs || []).map(p => p.id)
+        if (root.packId && ids.indexOf(root.packId) < 0) ids.push(root.packId)
+        ids.sort((a, b) => (b === root.packId) - (a === root.packId))
+        var out = []
+        for (var i = 0; i < ids.length; i++) {
+            var id = ids[i]
+            if (!id || !/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(id)) continue
+            out.push(id, ShellServices.PackRegistry.wallpaperDirFor(id) || "")
+        }
+        return out
     }
+    readonly property var _knownPacks: ShellServices.PackRegistry.packs
+    on_KnownPacksChanged: refresh()
 
     // Re-scan + regenerate stale thumbs. Runs at startup and when the active
     // pack's wallpapers change; call again only to pick up newly-added
@@ -390,23 +447,16 @@ QtObject {
         id: scanProc
         running: false
         property bool again: false
-        property string _pack: ""
-        property string _prefix: ""
-        property string _ownPrefix: ""
         function start() {
-            var pk = root._packNow()
-            scanProc._prefix = pk[1]
-            scanProc._pack = pk[2]
-            scanProc._ownPrefix = pk[4]
             scanProc.command = ["bash", "-c",
-                "ls1(){ [ -n \"$2\" ] && [ -d \"$2\" ] || return 0; " +
-                "find -L \"$2\" $3 -type f -regextype posix-extended " +
+                "ls1(){ [ -n \"$3\" ] && [ -d \"$3\" ] || return 0; " +
+                "find -L \"$3\" $4 -type f -regextype posix-extended " +
                 "-iregex '.*\\.(jpe?g|png|webp)$' | sort | " +
-                "while IFS= read -r f; do printf '%s\\t%s\\n' \"$1\" \"$f\"; done; }; " +
-                "ls1 p \"$1\" '-maxdepth 1'; " +
-                "[ -n \"$2\" ] && ls1 o \"$HOME/.local/share/archeotech/$2\" ''; " +
-                "ls1 u \"$HOME/.config/archeotech/wallpapers\" '-maxdepth 1'",
-                "_", pk[0], pk[3]]
+                "while IFS= read -r f; do printf '%s\\t%s\\t%s\\n' \"$1\" \"$2\" \"$f\"; done; }; " +
+                "while [ $# -ge 2 ]; do ls1 p \"$1\" \"$2\" '-maxdepth 1'; " +
+                "ls1 o \"$1\" \"$HOME/.local/share/archeotech/pack-wallpapers/$1\" ''; shift 2; done; " +
+                "ls1 u '' \"$HOME/.config/archeotech/wallpapers\" '-maxdepth 1'",
+                "_"].concat(root._packsNow())
             scanProc.running = true
         }
         property var _buf: []
@@ -414,10 +464,11 @@ QtObject {
         stdout: SplitParser {
             onRead: line => {
                 var tab = line.indexOf("\t")
-                if (tab < 0) return
+                var tab2 = tab < 0 ? -1 : line.indexOf("\t", tab + 1)
+                if (tab2 < 0) return
                 var tag = line.substring(0, tab)
-                var fromPack = tag === "p" || tag === "o"
-                var p = line.substring(tab + 1).trim()
+                var pack = line.substring(tab + 1, tab2)
+                var p = line.substring(tab2 + 1).trim()
                 if (!p || (scanProc._buf || []).some(w => w.path === p)) return
                 var slash = p.lastIndexOf("/")
                 var dot   = p.lastIndexOf(".")
@@ -425,10 +476,10 @@ QtObject {
                 var name  = stem.replace(/[_-]/g, " ")
                 // Thumb keyed by full basename (+.jpg) so a.png/a.jpg don't collide.
                 var thumb = root._thumbsDir + "/"
-                    + (tag === "p" ? scanProc._prefix : tag === "o" ? scanProc._ownPrefix : "")
+                    + (tag === "p" ? "pack-" + pack + "-" : tag === "o" ? "pack-" + pack + "~own~" : "")
                     + p.substring(slash + 1) + ".jpg"
                 scanProc._buf = (scanProc._buf || []).concat([
-                    { path: p, name: name, thumb: thumb, pack: fromPack ? scanProc._pack : "" }])
+                    { path: p, name: name, thumb: thumb, pack: tag === "u" ? "" : pack }])
             }
         }
         onExited: {
@@ -442,11 +493,9 @@ QtObject {
         running: false
         property bool again: false
         // Thumbnail, then its brightness (cached as <thumb>.lum); prints
-        // "<wallpaper>\t<lum>" per wallpaper. $1/$2 = the pack's wallpaper dir (may
-        // be empty) + thumb prefix, $3/$4 = the user's own dir for the pack +
-        // prefix (same keys as the scan).
+        // "<wallpaper>\t<lum>" per wallpaper. Args: pairs of pack id + shipped
+        // dir (may be empty), as _packsNow (same thumb keys as the scan).
         function start() {
-            var pk = root._packNow()
             thumbsProc.command = ["bash", "-c",
             "export TH=\"$HOME/.cache/archeotech/wallpaper-thumbs\"; mkdir -p \"$TH\"; " +
             "one(){ [ -n \"$1\" ] && [ -d \"$1\" ] || return 0; export PFX=\"$2\"; " +
@@ -459,10 +508,10 @@ QtObject {
             "{ [ -s \"$l\" ] && [ ! \"$t\" -nt \"$l\" ]; } || " +
             "magick \"$t\" -alpha off -resize 1x1! -colorspace Gray -format \"%[fx:mean]\" info: > \"$l\"; " +
             "printf \"%s\\t%s\\n\" \"$1\" \"$(cat \"$l\")\"' _ {}; }; " +
-            "one \"$1\" \"$2\" '-maxdepth 1'; " +
-            "[ -n \"$3\" ] && one \"$HOME/.local/share/archeotech/$3\" \"$4\" ''; " +
+            "while [ $# -ge 2 ]; do one \"$2\" \"pack-$1-\" '-maxdepth 1'; " +
+            "one \"$HOME/.local/share/archeotech/pack-wallpapers/$1\" \"pack-$1~own~\" ''; shift 2; done; " +
             "one \"$HOME/.config/archeotech/wallpapers\" '' '-maxdepth 1'",
-            "_", pk[0], pk[1], pk[3], pk[4]]
+            "_"].concat(root._packsNow())
             thumbsProc.running = true
         }
         property var _buf: ({})
