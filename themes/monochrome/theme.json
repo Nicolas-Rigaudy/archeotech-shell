@@ -1,5 +1,8 @@
 {
   "name": "monochrome",
+  "family": "monochrome",
+  "flavor": "dark",
+  "mode": "dark",
   "colors": {
     "base": "#1c1c1c",
     "mantle": "#141414",
@@ -49,7 +52,7 @@
     "urgent": "#a0a0a0"
   },
   "gtk": {
-    "theme": "Adwaita-dark",
+    "theme": "Adwaita",
     "icon":  "Papirus-Dark",
     "cursor":"catppuccin-macchiato-mauve-cursors"
   },

@@ -1,5 +1,8 @@
 {
   "name": "dracula",
+  "family": "dracula",
+  "flavor": "dracula",
+  "mode": "dark",
   "colors": {
     "base": "#282a36",
     "mantle": "#21222c",
@@ -49,7 +52,7 @@
     "urgent": "#ff5555"
   },
   "gtk": {
-    "theme": "Adwaita-dark",
+    "theme": "Adwaita",
     "icon":  "Papirus-Dark",
     "cursor":"catppuccin-macchiato-mauve-cursors"
   },

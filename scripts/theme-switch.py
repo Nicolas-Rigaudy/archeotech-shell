@@ -464,6 +464,12 @@ def apply_gtk(theme: dict, vars: Dict[str, str]) -> None:
     gtk = theme.get("gtk", {})
     if not gtk:
         return
+    # The mode travels separately from the theme name: GTK3 has no built-in
+    # "Adwaita-dark" (only gnome-themes-extra ships it; without it GTK falls
+    # back to light Adwaita), so non-Catppuccin themes use "Adwaita" + the
+    # dark-variant preference, and libadwaita/GTK4, portals and browsers read
+    # color-scheme.
+    dark = theme.get("mode", "dark") != "light"
     for ver in ("3.0", "4.0"):
         ini = HOME / ".config" / f"gtk-{ver}" / "settings.ini"
         if not ini.exists():
@@ -473,6 +479,7 @@ def apply_gtk(theme: dict, vars: Dict[str, str]) -> None:
             ("gtk-theme-name",         gtk.get("theme")),
             ("gtk-icon-theme-name",    gtk.get("icon")),
             ("gtk-cursor-theme-name",  gtk.get("cursor")),
+            ("gtk-application-prefer-dark-theme", "1" if dark else "0"),
         ):
             if val:
                 text = re.sub(rf"^{key}=.*$", f"{key}={val}", text, flags=re.M)
@@ -483,6 +490,7 @@ def apply_gtk(theme: dict, vars: Dict[str, str]) -> None:
         ("gtk-theme",     gtk.get("theme")),
         ("icon-theme",    gtk.get("icon")),
         ("cursor-theme",  gtk.get("cursor")),
+        ("color-scheme",  "prefer-dark" if dark else "prefer-light"),
     ):
         if val:
             run(["gsettings", "set", iface, prop, val])

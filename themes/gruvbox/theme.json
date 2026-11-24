@@ -1,5 +1,8 @@
 {
   "name": "gruvbox",
+  "family": "gruvbox",
+  "flavor": "dark",
+  "mode": "dark",
   "colors": {
     "base": "#282828",
     "mantle": "#1d2021",
@@ -49,7 +52,7 @@
     "urgent": "#fb4934"
   },
   "gtk": {
-    "theme": "Adwaita-dark",
+    "theme": "Adwaita",
     "icon":  "Papirus-Dark",
     "cursor":"catppuccin-macchiato-mauve-cursors"
   },

@@ -1,5 +1,8 @@
 {
   "name": "nord",
+  "family": "nord",
+  "flavor": "nord",
+  "mode": "dark",
   "colors": {
     "base": "#2e3440",
     "mantle": "#2e3440",
@@ -49,7 +52,7 @@
     "urgent": "#bf616a"
   },
   "gtk": {
-    "theme": "Adwaita-dark",
+    "theme": "Adwaita",
     "icon":  "Papirus-Dark",
     "cursor":"catppuccin-macchiato-mauve-cursors"
   },

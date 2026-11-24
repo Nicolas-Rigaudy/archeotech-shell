@@ -1,5 +1,8 @@
 {
   "name": "tokyo-night",
+  "family": "tokyo-night",
+  "flavor": "night",
+  "mode": "dark",
   "colors": {
     "base": "#1a1b26",
     "mantle": "#16161e",
@@ -49,7 +52,7 @@
     "urgent": "#f7768e"
   },
   "gtk": {
-    "theme": "Adwaita-dark",
+    "theme": "Adwaita",
     "icon":  "Papirus-Dark",
     "cursor":"catppuccin-macchiato-mauve-cursors"
   },
