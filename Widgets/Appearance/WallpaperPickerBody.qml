@@ -173,7 +173,7 @@ Item {
                     : (root.filterMode === "light" ? "For light mode · " : "For dark mode · ")
                       + (root._offer.packOnly ? Theming.Wallpapers.packName + " · " : "")
                       + root.wallpapers.length
-                color: Commons.Appearance.colors.textMuted
+                color: Commons.Appearance.colors.textSecondary
                 font.pixelSize: Commons.Appearance.font.sizeSm
                 font.family: Commons.Appearance.font.family
             }
