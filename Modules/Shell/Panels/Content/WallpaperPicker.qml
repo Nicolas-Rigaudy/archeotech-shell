@@ -73,10 +73,34 @@ Item {
             // file (also Super+Shift+O); a click runs the script.
             GlassButton {
                 id: presentBtn
-                Layout.preferredHeight: 26
-                text: root._vertical ? "󰐨" : "󰐨  Present"
+                // Tab-bar height and a bigger glyph + label than the stock
+                // sizeSm text, so the on state reads at a glance.
+                Layout.preferredHeight: 30
+                hpad: root._vertical ? 10 : 18
                 active: SystemServices.Presentation.active
                 onClicked: SystemServices.Presentation.toggle()
+                Row {
+                    spacing: 7
+                    readonly property color _fg: presentBtn.active
+                        ? Commons.Appearance._surfaceColor(Commons.Appearance.buttonSurface.activeText)
+                        : Commons.Appearance.colors.textSecondary
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "󰐨"
+                        color: parent._fg
+                        font.pixelSize: Commons.Appearance.font.sizeLg
+                        font.family: Commons.Appearance.font.family
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: !root._vertical
+                        text: "Present"
+                        color: parent._fg
+                        font.pixelSize: Commons.Appearance.font.sizeMd
+                        font.weight: presentBtn.active ? Font.DemiBold : Font.Normal
+                        font.family: Commons.Appearance.font.family
+                    }
+                }
                 Tooltip {
                     visible: presentBtn.hovered
                     text: presentBtn.active ? "Presentation mode on: new windows open opaque, popups muted"
